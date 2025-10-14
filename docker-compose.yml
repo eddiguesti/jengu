@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (optional - for future use)
+  postgres:
+    image: postgres:15-alpine
+    container_name: jengu-db
+    environment:
+      POSTGRES_USER: jengu
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: jengu
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jengu -d jengu"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jengu-network
+
+  # React Frontend (Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: jengu-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://backend:8000/api/v1
+    depends_on:
+      - backend
+    networks:
+      - jengu-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  # Node.js Express Backend (API Proxy)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jengu-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=development
+      - PORT=8000
+      - PYTHON_API_URL=http://python:8001
+    networks:
+      - jengu-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # Python ML Engine (FastAPI - optional)
+  python:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jengu-python
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://jengu:password@postgres:5432/jengu
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - jengu-network
+    volumes:
+      - ./data:/app/data
+      - ./core:/app/core
+
+networks:
+  jengu-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

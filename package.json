@@ -1,0 +1,60 @@
+{
+  "name": "jengu-monorepo",
+  "version": "2.0.0",
+  "description": "Dynamic Pricing Intelligence Platform - Monorepo",
+  "private": true,
+  "scripts": {
+    "install:all": "pnpm install && cd frontend && pnpm install && cd ../backend && pnpm install && pip install -r requirements.txt",
+    "dev:frontend": "cd frontend && pnpm run dev",
+    "dev:backend": "cd backend && pnpm start",
+    "dev:python": "python -m uvicorn core.api.main:app --reload --port 8001",
+    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
+    "build:frontend": "cd frontend && pnpm run build",
+    "build:backend": "echo 'Backend build not required (Node.js)'",
+    "build": "pnpm run build:frontend && pnpm run build:backend",
+    "test:python": "pytest tests/ -v",
+    "test:python:cov": "pytest tests/ --cov=core --cov-report=html",
+    "test:frontend": "cd frontend && pnpm test",
+    "test": "pnpm run test:python && pnpm run test:frontend",
+    "lint:python": "flake8 core/ tests/",
+    "lint:frontend": "cd frontend && pnpm run lint",
+    "lint": "pnpm run lint:python && pnpm run lint:frontend",
+    "format:python": "black core/ tests/",
+    "format:frontend": "cd frontend && pnpm run format",
+    "format": "pnpm run format:python && pnpm run format:frontend",
+    "typecheck:python": "mypy core/",
+    "typecheck:frontend": "cd frontend && pnpm run typecheck",
+    "typecheck": "pnpm run typecheck:python && pnpm run typecheck:frontend",
+    "clean:python": "find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true && find . -type f -name '*.pyc' -delete 2>/dev/null || true",
+    "clean:frontend": "cd frontend && rm -rf dist node_modules",
+    "clean:backend": "cd backend && rm -rf node_modules",
+    "clean": "pnpm run clean:python && pnpm run clean:frontend && pnpm run clean:backend",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:restart": "docker-compose restart",
+    "docker": "docker-compose up",
+    "setup": "python scripts/generate_secrets.py"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0",
+    "python": ">=3.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/jengu.git"
+  },
+  "keywords": [
+    "dynamic-pricing",
+    "hospitality",
+    "ml",
+    "analytics"
+  ],
+  "author": "Jengu Team",
+  "license": "Proprietary"
+}
