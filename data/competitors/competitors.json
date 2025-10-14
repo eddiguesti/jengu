@@ -1,0 +1,212 @@
+{
+  "hotel_mock_hotel_1": {
+    "comp_id": "hotel_mock_hotel_1",
+    "comp_type": "hotel",
+    "name": "Hotel A Plaza",
+    "region": "bandol",
+    "city": "bandol",
+    "lat": 43.17021796524719,
+    "lon": 5.7472574442786435,
+    "stars": 4,
+    "rating": 9.1,
+    "amenities": [
+      "wifi",
+      "spa",
+      "bar",
+      "gym",
+      "restaurant",
+      "parking"
+    ],
+    "size": 147,
+    "provider_ref": {
+      "makcorps_hotel_id": "mock_hotel_1"
+    },
+    "created_at": "2025-10-13T12:15:41.324555",
+    "updated_at": "2025-10-13T12:15:41.324555"
+  },
+  "hotel_mock_hotel_2": {
+    "comp_id": "hotel_mock_hotel_2",
+    "comp_type": "hotel",
+    "name": "Hotel B Plaza",
+    "region": "bandol",
+    "city": "bandol",
+    "lat": 43.11759520960892,
+    "lon": 5.791454808267549,
+    "stars": 5,
+    "rating": 8.6,
+    "amenities": [
+      "bar",
+      "parking",
+      "spa",
+      "gym"
+    ],
+    "size": 134,
+    "provider_ref": {
+      "makcorps_hotel_id": "mock_hotel_2"
+    },
+    "created_at": "2025-10-13T12:15:41.326061",
+    "updated_at": "2025-10-13T12:15:41.326061"
+  },
+  "hotel_mock_hotel_3": {
+    "comp_id": "hotel_mock_hotel_3",
+    "comp_type": "hotel",
+    "name": "Hotel C Plaza",
+    "region": "bandol",
+    "city": "bandol",
+    "lat": 43.13463394914153,
+    "lon": 5.790254727043954,
+    "stars": 5,
+    "rating": 7.8,
+    "amenities": [
+      "restaurant",
+      "bar",
+      "spa",
+      "wifi",
+      "pool",
+      "gym"
+    ],
+    "size": 119,
+    "provider_ref": {
+      "makcorps_hotel_id": "mock_hotel_3"
+    },
+    "created_at": "2025-10-13T12:15:41.338091",
+    "updated_at": "2025-10-13T12:15:41.338091"
+  },
+  "hotel_mock_hotel_4": {
+    "comp_id": "hotel_mock_hotel_4",
+    "comp_type": "hotel",
+    "name": "Hotel D Plaza",
+    "region": "bandol",
+    "city": "bandol",
+    "lat": 43.099992924287065,
+    "lon": 5.716089484617058,
+    "stars": 4,
+    "rating": 8.8,
+    "amenities": [
+      "wifi",
+      "pool",
+      "gym",
+      "restaurant",
+      "parking",
+      "spa"
+    ],
+    "size": 128,
+    "provider_ref": {
+      "makcorps_hotel_id": "mock_hotel_4"
+    },
+    "created_at": "2025-10-13T12:15:41.350145",
+    "updated_at": "2025-10-13T12:15:41.350145"
+  },
+  "hotel_mock_hotel_5": {
+    "comp_id": "hotel_mock_hotel_5",
+    "comp_type": "hotel",
+    "name": "Hotel E Plaza",
+    "region": "bandol",
+    "city": "bandol",
+    "lat": 43.14025438388966,
+    "lon": 5.758300891718218,
+    "stars": 4,
+    "rating": 9.3,
+    "amenities": [
+      "pool",
+      "gym",
+      "parking",
+      "spa",
+      "bar"
+    ],
+    "size": 55,
+    "provider_ref": {
+      "makcorps_hotel_id": "mock_hotel_5"
+    },
+    "created_at": "2025-10-13T12:15:41.362651",
+    "updated_at": "2025-10-13T12:15:41.362651"
+  },
+  "hotel_mock_hotel_6": {
+    "comp_id": "hotel_mock_hotel_6",
+    "comp_type": "hotel",
+    "name": "Hotel F Plaza",
+    "region": "bandol",
+    "city": "bandol",
+    "lat": 43.10489209617367,
+    "lon": 5.776702625353851,
+    "stars": 4,
+    "rating": 7.9,
+    "amenities": [
+      "wifi",
+      "parking",
+      "spa",
+      "gym",
+      "pool",
+      "restaurant"
+    ],
+    "size": 163,
+    "provider_ref": {
+      "makcorps_hotel_id": "mock_hotel_6"
+    },
+    "created_at": "2025-10-13T12:15:41.375175",
+    "updated_at": "2025-10-13T12:15:41.375175"
+  },
+  "hotel_mock_hotel_7": {
+    "comp_id": "hotel_mock_hotel_7",
+    "comp_type": "hotel",
+    "name": "Hotel G Plaza",
+    "region": "bandol",
+    "city": "bandol",
+    "lat": 43.12057101541796,
+    "lon": 5.762889805728856,
+    "stars": 4,
+    "rating": 9.5,
+    "amenities": [
+      "restaurant",
+      "wifi",
+      "gym",
+      "parking",
+      "spa",
+      "bar"
+    ],
+    "size": 126,
+    "provider_ref": {
+      "makcorps_hotel_id": "mock_hotel_7"
+    },
+    "created_at": "2025-10-13T12:15:41.387703",
+    "updated_at": "2025-10-13T12:15:41.387703"
+  },
+  "airbnb_market_bandol_central": {
+    "comp_id": "airbnb_market_bandol_central",
+    "comp_type": "airbnb_market",
+    "name": "bandol - City Center",
+    "region": "bandol",
+    "city": "bandol",
+    "lat": 43.14247,
+    "lon": 5.74718,
+    "stars": null,
+    "rating": null,
+    "amenities": [],
+    "size": 1250,
+    "provider_ref": {
+      "airbtics_market_id": "market_bandol_central",
+      "market_type": "urban"
+    },
+    "created_at": "2025-10-13T12:15:43.059412",
+    "updated_at": "2025-10-13T12:15:43.059412"
+  },
+  "airbnb_market_bandol_beach": {
+    "comp_id": "airbnb_market_bandol_beach",
+    "comp_type": "airbnb_market",
+    "name": "bandol - Beach Area",
+    "region": "bandol",
+    "city": "bandol",
+    "lat": 43.162470000000006,
+    "lon": 5.76718,
+    "stars": null,
+    "rating": null,
+    "amenities": [],
+    "size": 850,
+    "provider_ref": {
+      "airbtics_market_id": "market_bandol_beach",
+      "market_type": "coastal"
+    },
+    "created_at": "2025-10-13T12:15:43.062419",
+    "updated_at": "2025-10-13T12:15:43.062419"
+  }
+}

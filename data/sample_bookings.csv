@@ -1,0 +1,21 @@
+booking_id,destination,booking_date,checkin_date,checkout_date,duration_days,num_travelers,accommodation_type,season,base_price,final_price,discount_applied,include_flights
+B001,Paris,2024-01-15,2024-03-01,2024-03-08,7,2,Standard,Mid,1400,1400,0,True
+B002,Tokyo,2024-01-20,2024-04-10,2024-04-20,10,4,Premium,High,3200,3520,0,True
+B003,New York,2024-02-01,2024-03-15,2024-03-20,5,1,Budget,Low,450,450,0,False
+B004,London,2024-02-05,2024-07-01,2024-07-15,14,6,Luxury,Peak,5600,5320,280,True
+B005,Sydney,2024-02-10,2024-05-20,2024-05-27,7,2,Premium,Mid,2100,2100,0,True
+B006,Dubai,2024-02-15,2024-06-10,2024-06-13,3,8,Standard,High,2400,2280,120,True
+B007,Paris,2024-02-20,2024-08-01,2024-08-11,10,3,Luxury,Peak,4800,4800,0,True
+B008,Tokyo,2024-03-01,2024-04-05,2024-04-10,5,2,Budget,Low,800,800,0,False
+B009,New York,2024-03-05,2024-05-15,2024-05-22,7,12,Standard,Mid,3360,2856,504,True
+B010,London,2024-03-10,2024-04-20,2024-04-24,4,1,Budget,Mid,400,400,0,False
+B011,Sydney,2024-03-15,2024-06-01,2024-06-22,21,2,Premium,Low,3150,3150,0,True
+B012,Dubai,2024-03-20,2024-07-10,2024-07-17,7,5,Premium,High,3325,3159,166,False
+B013,Paris,2024-03-25,2024-12-20,2024-12-23,3,4,Standard,Peak,1920,1920,0,True
+B014,Tokyo,2024-04-01,2024-06-15,2024-06-29,14,6,Luxury,Mid,8400,7980,420,True
+B015,New York,2024-04-05,2024-07-04,2024-07-14,10,2,Standard,High,2080,2080,0,True
+B016,London,2024-04-10,2024-05-01,2024-05-08,7,3,Premium,Mid,1575,1575,0,True
+B017,Sydney,2024-04-15,2024-08-10,2024-08-20,10,4,Standard,Peak,3200,3040,160,True
+B018,Dubai,2024-04-20,2024-09-05,2024-09-12,7,2,Luxury,High,3325,3325,0,True
+B019,Paris,2024-05-01,2024-06-15,2024-06-25,10,8,Standard,High,2600,2470,130,True
+B020,Tokyo,2024-05-05,2024-07-20,2024-07-27,7,1,Premium,Peak,2520,2520,0,True

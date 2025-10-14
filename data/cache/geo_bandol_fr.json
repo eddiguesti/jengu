@@ -1,0 +1,10 @@
+{
+  "lat": 43.14247,
+  "lon": 5.74718,
+  "timezone": "Europe/Paris",
+  "name": "Bandol",
+  "country": "France",
+  "country_code": "FR",
+  "elevation": null,
+  "source": "open-meteo"
+}

@@ -1,0 +1,10 @@
+{
+  "lat": 48.85341,
+  "lon": 2.3488,
+  "timezone": "Europe/Paris",
+  "name": "Paris",
+  "country": "France",
+  "country_code": "FR",
+  "elevation": 42.0,
+  "source": "open-meteo"
+}

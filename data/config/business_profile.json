@@ -1,0 +1,16 @@
+{
+  "business_name": "camapasun",
+  "business_type": "Campsite",
+  "country": "FR",
+  "city": "bandol",
+  "latitude": 43.14247,
+  "longitude": 5.74718,
+  "timezone": "Europe/Paris",
+  "created_at": "2025-10-13T10:20:46.123597",
+  "updated_at": "2025-10-13T10:20:46.123597",
+  "currency": "EUR",
+  "operating_months": null,
+  "seasonal_pattern": "Year-Round",
+  "min_price": null,
+  "max_price": null
+}

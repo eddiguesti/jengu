@@ -1,0 +1,20 @@
+{
+  "bandol france": [
+    {
+      "base_property_id": "bandol france",
+      "comp_id": "airbnb_market_bandol_central",
+      "distance_km": 0.0,
+      "similarity_score": 0.6,
+      "rank": 1,
+      "computed_at": "2025-10-13T12:15:45.030709"
+    },
+    {
+      "base_property_id": "bandol france",
+      "comp_id": "hotel_mock_hotel_5",
+      "distance_km": 0.94,
+      "similarity_score": 0.5214,
+      "rank": 2,
+      "computed_at": "2025-10-13T12:15:45.030709"
+    }
+  ]
+}
