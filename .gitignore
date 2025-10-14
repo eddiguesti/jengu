@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Local files
+local/
+*.local
+*.local.*
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# Data & Cache
+data/cache/
+data/raw/
+data/enriched/*.parquet
+*.log
+
+# Node.js (already in frontend/backend .gitignore, but added for safety)
+node_modules/
+
+# Temporary files
+*.tmp
+*.temp
