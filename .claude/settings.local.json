@@ -9,7 +9,13 @@
       "Bash(npm run build)",
       "Bash(git check-ignore:*)",
       "Bash(npm run dev)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Bash(pnpm --version)",
+      "Bash(python3:*)",
+      "Bash(git checkout:*)",
+      "Bash(git push:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,4 +1,4 @@
-.PHONY: install dev-install clean test lint format run-ui run-api docker-build docker-up docker-down db-init db-migrate
+.PHONY: install dev-install clean test lint format run-api docker-build docker-up docker-down db-init db-migrate
 
 # Installation
 install:
@@ -34,9 +34,6 @@ type-check:
 	mypy apps/ core/
 
 # Run Applications
-run-ui:
-	streamlit run apps/ui/streamlit_app.py
-
 run-api:
 	uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 8000
 
@@ -69,5 +66,4 @@ docker-logs:
 # Development
 dev:
 	make docker-up
-	make run-api &
-	make run-ui
+	make run-api

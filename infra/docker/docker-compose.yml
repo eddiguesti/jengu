@@ -38,21 +38,5 @@ services:
       - ../../core:/app/core
       - ../../apps:/app/apps
 
-  ui:
-    build:
-      context: ../..
-      dockerfile: infra/docker/Dockerfile.ui
-    container_name: travel-pricing-ui
-    environment:
-      DATABASE_URL: postgresql://user:password@postgres:5432/travel_pricing
-    ports:
-      - "8501:8501"
-    depends_on:
-      - api
-    volumes:
-      - ../../data:/app/data
-      - ../../core:/app/core
-      - ../../apps:/app/apps
-
 volumes:
   postgres_data:

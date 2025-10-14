@@ -3,7 +3,7 @@
 **AI-powered revenue optimization for hospitality, travel, and accommodation businesses**
 
 [![Python](https://img.shields.io/badge/Python-3.12-blue.svg)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.30-red.svg)](https://streamlit.io)
+[![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104-green.svg)](https://fastapi.tiangolo.com)
 [![License](https://img.shields.io/badge/License-Proprietary-yellow.svg)]()
 
@@ -32,7 +32,7 @@ The Dynamic Pricing Intelligence Platform is an enterprise-grade system that use
 - **Correlation Analysis**: Multi-method analysis (Pearson, Spearman, Mutual Information, ANOVA)
 - **Demand Modeling**: GLM-based demand prediction
 - **Price Optimization**: Revenue-maximizing price recommendations
-- **Premium UI**: Award-winning neon-on-dark dashboard with buttery animations
+- **Modern UI**: React-based SPA with interactive dashboards
 
 ---
 
@@ -50,7 +50,7 @@ The Dynamic Pricing Intelligence Platform is an enterprise-grade system that use
 - ✅ **Price Elasticity**: OLS-based elasticity estimation
 - ✅ **Revenue Optimization**: Grid search for optimal prices
 - ✅ **API**: RESTful FastAPI with OpenAPI docs
-- ✅ **Premium UI**: Neon-themed Streamlit with WCAG AA accessibility
+- ✅ **Modern UI**: React SPA with Vite, TypeScript, and Tailwind CSS
 
 ### **Technical Highlights**
 
@@ -72,20 +72,25 @@ The Dynamic Pricing Intelligence Platform is an enterprise-grade system that use
 │                    CLIENT LAYER                          │
 │  ┌──────────────┐          ┌──────────────┐            │
 │  │   Browser    │          │   API Client  │            │
-│  │  (Streamlit) │          │  (REST/curl)  │            │
+│  │ (React SPA)  │          │  (REST/curl)  │            │
 │  └──────────────┘          └──────────────┘            │
 └────────────┬───────────────────────┬───────────────────┘
              │                       │
 ┌────────────▼───────────────────────▼───────────────────┐
 │                  APPLICATION LAYER                      │
 │  ┌──────────────┐          ┌──────────────┐            │
-│  │  Streamlit   │          │   FastAPI    │            │
-│  │   (neon_app) │          │   (REST API) │            │
-│  └──────────────┘          └──────────────┘            │
-└────────────┬───────────────────────┬───────────────────┘
-             │                       │
-┌────────────▼───────────────────────▼───────────────────┐
-│                    BUSINESS LOGIC                       │
+│  │  React UI    │          │   Node.js    │            │
+│  │  (frontend/) │◄────────►│  (backend/)  │            │
+│  └──────────────┘          └──────┬───────┘            │
+│                                    │                     │
+│                            ┌───────▼───────┐            │
+│                            │   FastAPI     │            │
+│                            │  (REST API)   │            │
+│                            └───────────────┘            │
+└────────────────────────────────────┬───────────────────┘
+                                     │
+┌────────────────────────────────────▼───────────────────┐
+│                    BUSINESS LOGIC (Python)              │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
 │  │  Enrichment  │  │  Correlation │  │   Modeling   │ │
 │  │   Pipeline   │  │   Analysis   │  │   (GLM/OLS)  │ │
@@ -108,19 +113,22 @@ The Dynamic Pricing Intelligence Platform is an enterprise-grade system that use
 
 ### **Technology Stack**
 
+**Frontend**:
+- React 18 (UI library)
+- Vite (build tool)
+- TypeScript (type safety)
+- Tailwind CSS (styling)
+- Recharts (data visualization)
+- Zustand (state management)
+
 **Backend**:
-- Python 3.12
+- Node.js + Express (API proxy)
+- Python 3.12 (core engine)
 - FastAPI (REST API)
 - Pandas, NumPy, SciPy (data processing)
 - scikit-learn (ML)
 - statsmodels (GLM, OLS)
-- Plotly (charts)
 - joblib (caching)
-
-**Frontend**:
-- Streamlit (UI framework)
-- Custom CSS (neon theme)
-- Plotly.js (interactive charts)
 
 **Data Storage**:
 - JSON (config, profiles, cache)
@@ -136,46 +144,50 @@ The Dynamic Pricing Intelligence Platform is an enterprise-grade system that use
 
 ### **Prerequisites**
 
+- Node.js 18+ and pnpm
 - Python 3.12+
-- pip
 - Virtual environment (recommended)
 
 ### **Installation**
 
 ```bash
-# Clone repository
-cd travel-pricing
-
-# Create virtual environment
-python -m venv .venv
-
-# Activate (Windows)
-.venv\Scripts\activate
-
-# Activate (Linux/Mac)
-source .venv/bin/activate
-
-# Install dependencies
+# 1. Install Python dependencies
+python3 -m venv .venv
+source .venv/bin/activate  # Mac/Linux
+# OR: .venv\Scripts\activate  # Windows
 pip install -r requirements.txt
+
+# 2. Install Node.js backend
+cd backend
+pnpm install
+
+# 3. Install React frontend
+cd ../frontend
+pnpm install
 ```
 
-### **Run Streamlit UI (Recommended)**
+### **Running the Application**
 
 ```bash
-# Start the premium neon app
-streamlit run neon_app.py
+# Terminal 1: Node.js Backend (API proxy)
+cd backend
+pnpm start
+# Runs on http://localhost:8000
+
+# Terminal 2: React Frontend
+cd frontend
+pnpm run dev
+# Runs on http://localhost:3000 or 5173
 ```
 
-**Access**: http://localhost:8503
-
-### **Run FastAPI (Optional)**
+### **Optional: FastAPI Python Backend**
 
 ```bash
-# Start API server
-uvicorn apps.api.main:app --reload --port 8000
+# If you need the Python FastAPI server
+source .venv/bin/activate
+uvicorn apps.api.main:app --reload --port 8001
+# API Docs: http://localhost:8001/docs
 ```
-
-**API Docs**: http://localhost:8000/docs
 
 ---
 
@@ -243,14 +255,14 @@ travel-pricing/
 │   └── integration/           # Integration tests
 │       └── test_api.py
 │
-├── .streamlit/                # Streamlit config
-│   └── config.toml            # Theme & server config
+├── data/                       # Data storage
+│   ├── config/                # Business profiles (JSON)
+│   ├── enriched/              # Enriched datasets (Parquet)
+│   └── cache/                 # API caches
 │
-├── neon_app.py                # 🌟 MAIN STREAMLIT APP
 ├── requirements.txt           # Python dependencies
 ├── README.md                  # This file
-├── NEON_README.md             # Neon theme docs
-└── pyproject.toml             # Project metadata
+└── Makefile                   # Build & run commands
 ```
 
 ---
@@ -376,38 +388,36 @@ Tests run automatically on:
 
 ### **Production Deployment**
 
-#### **Streamlit Cloud**
+#### **Frontend (React)**
 
 ```bash
-# Deploy to Streamlit Cloud
-streamlit cloud deploy neon_app.py
+# Deploy to Vercel/Netlify
+cd frontend
+pnpm run build
+# Upload dist/ to hosting provider
+```
+
+#### **Backend (Node.js)**
+
+```bash
+# Deploy to Railway/Render
+cd backend
+# Set environment variables
+# Start with: node server.js
 ```
 
 #### **Docker**
 
-```dockerfile
-FROM python:3.12-slim
-
-WORKDIR /app
-COPY . .
-
-RUN pip install --no-cache-dir -r requirements.txt
-
-EXPOSE 8503
-CMD ["streamlit", "run", "neon_app.py", "--server.port=8503"]
-```
-
 ```bash
-# Build & run
-docker build -t pricing-ai .
-docker run -p 8503:8503 pricing-ai
+# Use docker-compose
+docker-compose -f infra/docker/docker-compose.yml up -d
 ```
 
-#### **AWS/GCP/Azure**
+#### **Cloud Platforms**
 
-- Use Streamlit Cloud or deploy as container
-- FastAPI can run on ECS, Cloud Run, or App Service
-- Store data in S3/GCS/Blob Storage
+- **Frontend**: Vercel, Netlify, Cloudflare Pages
+- **Backend**: Railway, Render, AWS ECS, Google Cloud Run
+- **Data**: S3, GCS, or PostgreSQL for persistence
 
 ---
 
@@ -415,29 +425,23 @@ docker run -p 8503:8503 pricing-ai
 
 ### **Environment Variables**
 
+**Backend (.env)**
 ```bash
-# .env file
+# Optional API keys for competitor intelligence
+MAKCORPS_API_KEY=your_key_here
+AIRBTICS_API_KEY=your_key_here
+```
+
+**Python (.env)**
+```bash
 PYTHONPATH=.
 LOG_LEVEL=INFO
 CACHE_DIR=data/cache
-API_PORT=8000
-STREAMLIT_PORT=8503
 ```
 
-### **Streamlit Config**
+### **Frontend Config**
 
-Edit `.streamlit/config.toml`:
-
-```toml
-[theme]
-primaryColor = "#00F0FF"      # Neon cyan
-backgroundColor = "#0B1220"    # Deep space
-textColor = "#F8FAFC"          # High contrast
-
-[server]
-port = 8503
-headless = true
-```
+No special configuration needed. Vite handles development and production builds automatically.
 
 ---
 
@@ -506,11 +510,9 @@ Proprietary - All Rights Reserved
 
 - **Open-Meteo**: Free weather API
 - **python-holidays**: Holiday calendar data
-- **Streamlit**: Amazing UI framework
+- **React**: UI library
 - **FastAPI**: Lightning-fast API framework
 
 ---
 
 **Built with 💙 by the Pricing AI Team**
-
-🌟 **Award-winning design. Buttery animations. Perfect UX.**
