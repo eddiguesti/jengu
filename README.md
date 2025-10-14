@@ -169,12 +169,12 @@ pnpm install
 # Terminal 1: Node.js Backend (API proxy)
 cd backend
 pnpm start
-# Runs on http://localhost:8000
+# Runs on http://localhost:3001
 
 # Terminal 2: React Frontend
 cd frontend
 pnpm run dev
-# Runs on http://localhost:3000 or 5173
+# Runs on http://localhost:5173
 ```
 
 ### **Optional: FastAPI Python Backend**
@@ -210,7 +210,7 @@ For AI coding assistants, see:
 
 ```
 jengu/
-├── frontend/                   # React + Next.js web application
+├── frontend/                   # React + Vite web application
 │   ├── src/
 │   │   ├── app/               # Pages (App Router)
 │   │   ├── components/        # React components
