@@ -4,10 +4,10 @@ Welcome to the Jengu Dynamic Pricing Intelligence Platform developer documentati
 
 ## Quick Links
 
-- [Architecture Overview](../../ARCHITECTURE.md) - System architecture and technology stack
-- [Setup Guide](../../SETUP_GUIDE.md) - Get started with local development
-- [Security](../../SECURITY.md) - Security configuration and best practices
-- [Deployment](../../DEPLOYMENT.md) - Production deployment guide
+- [Architecture Overview](./ARCHITECTURE.md) - System architecture and technology stack
+- [Setup Guide](./SETUP_GUIDE.md) - Get started with local development
+- [Security](./SECURITY.md) - Security configuration and best practices
+- [Deployment](./DEPLOYMENT.md) - Production deployment guide
 
 ## Project Overview
 
@@ -22,6 +22,7 @@ Jengu is a Dynamic Pricing Intelligence Platform for hospitality businesses, pro
 ## Technology Stack
 
 ### Frontend
+
 - **React 18** with Next.js 15 (App Router)
 - **TypeScript** for type safety
 - **Tailwind CSS** with shadcn/ui components
@@ -30,18 +31,21 @@ Jengu is a Dynamic Pricing Intelligence Platform for hospitality businesses, pro
 - **Zustand** for state management
 
 ### Backend
+
 - **Node.js + Express** (API proxy layer)
 - **Python 3.12** (core pricing engine)
 - **FastAPI** (REST API)
 - **PostgreSQL** (optional, for persistence)
 
 ### Core Engine
+
 - **Pandas, NumPy, SciPy** for data processing
 - **scikit-learn** for ML models
 - **statsmodels** for statistical analysis (GLM, OLS)
 - **joblib** for caching
 
 ### External APIs
+
 - **Open-Meteo** for geocoding and weather data
 - **python-holidays** for holiday calendars (190+ countries)
 
@@ -73,6 +77,7 @@ jengu/
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+ and pnpm
 - Python 3.12+
 - Git
@@ -116,11 +121,13 @@ For detailed setup instructions, see [SETUP_GUIDE.md](../../SETUP_GUIDE.md).
 ### Making Changes
 
 1. **Frontend (React/Next.js)**
+
    - Edit files in `frontend/src/`
    - Hot reload is enabled
    - Check browser console for errors
 
 2. **Backend (Node.js)**
+
    - Edit `backend/server.js`
    - Restart server to see changes
 
@@ -182,6 +189,7 @@ Grid search over price range to find revenue-maximizing price point using demand
 ### FastAPI (Python)
 
 Interactive API documentation available at:
+
 - Swagger UI: http://localhost:8001/docs
 - ReDoc: http://localhost:8001/redoc
 
@@ -196,17 +204,20 @@ The Node.js backend acts as a proxy layer between the React frontend and Python 
 Create `.env` files for configuration:
 
 **Backend (.env)**
+
 ```bash
 PORT=8000
 PYTHON_API_URL=http://localhost:8001
 ```
 
 **Frontend (.env.local)**
+
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
 **Python (.env)**
+
 ```bash
 PYTHONPATH=.
 LOG_LEVEL=INFO
@@ -218,15 +229,18 @@ CACHE_DIR=data/cache
 ### Common Issues
 
 **"Cannot connect to API"**
+
 - Ensure both Node.js and Python backends are running
 - Check CORS configuration in FastAPI
 
 **"Module not found"**
+
 - Activate Python virtual environment
 - Run `pip install -r requirements.txt`
 - For Node: run `pnpm install`
 
 **Charts not rendering**
+
 - Check browser console for errors
 - Verify Plotly.js is installed: `pnpm list plotly.js`
 
@@ -251,6 +265,7 @@ See [SETUP_GUIDE.md](../../SETUP_GUIDE.md) for more troubleshooting tips.
 ## Support
 
 For questions or issues:
+
 - Check documentation in `/docs`
 - Review GitHub Issues
 - Contact the development team
