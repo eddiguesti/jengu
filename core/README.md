@@ -1,6 +1,6 @@
 # Core Python ML Engine
 
-The `core/` directory contains the Python-based machine learning and analytics engine for the Jengu Dynamic Pricing Platform.
+The `core/` directory contains the Python-based machine learning and analytics **library** for the Jengu Dynamic Pricing Platform. This is a standalone library used by scripts and analysis tools, not a running service.
 
 ## 📂 Directory Structure
 
@@ -177,7 +177,7 @@ Configuration is managed via:
 
 - **Main docs**: `/docs/developer/`
 - **Architecture**: `/docs/developer/ARCHITECTURE.md`
-- **API docs**: Generate with `pydoc` or add FastAPI later
+- **API docs**: Generate with `pydoc` for Python modules
 
 ## 🤝 Contributing
 

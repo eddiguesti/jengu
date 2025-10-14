@@ -4,7 +4,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.12-blue.svg)](https://python.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104-green.svg)](https://fastapi.tiangolo.com)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org)
 [![License](https://img.shields.io/badge/License-Proprietary-yellow.svg)]()
 
 ---
@@ -46,7 +46,7 @@ The Dynamic Pricing Intelligence Platform is an enterprise-grade system that use
 - ✅ **Demand Modeling**: GLM with Poisson/NegativeBinomial distributions
 - ✅ **Price Elasticity**: OLS-based elasticity estimation
 - ✅ **Revenue Optimization**: Grid search for optimal prices
-- ✅ **API**: RESTful FastAPI with OpenAPI docs
+- ✅ **API**: Node.js Express backend with external API integrations
 - ✅ **Modern UI**: React SPA with Vite, TypeScript, and Tailwind CSS
 
 ### **Technical Highlights**
@@ -78,12 +78,7 @@ The Dynamic Pricing Intelligence Platform is an enterprise-grade system that use
 │  ┌──────────────┐          ┌──────────────┐            │
 │  │  React UI    │          │   Node.js    │            │
 │  │  (frontend/) │◄────────►│  (backend/)  │            │
-│  └──────────────┘          └──────┬───────┘            │
-│                                    │                     │
-│                            ┌───────▼───────┐            │
-│                            │   FastAPI     │            │
-│                            │  (REST API)   │            │
-│                            └───────────────┘            │
+│  └──────────────┘          └──────────────┘            │
 └────────────────────────────────────┬───────────────────┘
                                      │
 ┌────────────────────────────────────▼───────────────────┐
@@ -119,9 +114,8 @@ The Dynamic Pricing Intelligence Platform is an enterprise-grade system that use
 - Zustand (state management)
 
 **Backend**:
-- Node.js + Express (API proxy)
-- Python 3.12 (core engine)
-- FastAPI (REST API)
+- Node.js 18+ + Express (API proxy for external services)
+- Python 3.12 (standalone analytics library)
 - Pandas, NumPy, SciPy (data processing)
 - scikit-learn (ML)
 - statsmodels (GLM, OLS)
@@ -177,14 +171,7 @@ pnpm run dev
 # Runs on http://localhost:5173
 ```
 
-### **Optional: FastAPI Python Backend**
-
-```bash
-# If you need the Python FastAPI server
-source .venv/bin/activate
-uvicorn apps.api.main:app --reload --port 8001
-# API Docs: http://localhost:8001/docs
-```
+> **Note**: The Python `core/` library is used by standalone scripts (e.g., `scripts/generate_secrets.py`) and can be imported for analysis. It is not a running service.
 
 ---
 
@@ -516,7 +503,7 @@ Proprietary - All Rights Reserved
 - **Open-Meteo**: Free weather API
 - **python-holidays**: Holiday calendar data
 - **React**: UI library
-- **FastAPI**: Lightning-fast API framework
+- **Express.js**: Fast Node.js web framework
 
 ---
 

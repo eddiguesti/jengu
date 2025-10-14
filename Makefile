@@ -34,8 +34,11 @@ type-check:
 	mypy apps/ core/
 
 # Run Applications
-run-api:
-	uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 8000
+run-backend:
+	cd backend && pnpm start
+
+run-frontend:
+	cd frontend && pnpm run dev
 
 # Database
 db-init:

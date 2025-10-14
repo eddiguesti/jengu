@@ -17,15 +17,15 @@
 ```bash
 # Python version
 python --version
-# Should show: Python 3.12.0
+# Should show: Python 3.12.0+
 
 # Node.js version
 node --version
 # Should show: v18+ or v20+
 
-# npm version
-npm --version
-# Should show: 9+ or 10+
+# pnpm version
+pnpm --version
+# Should show: 8+
 ```
 
 ---
@@ -51,7 +51,7 @@ pip install -r requirements.txt
 
 **Verify installation:**
 ```bash
-python -c "import fastapi; import pandas; print('✓ Python packages OK')"
+python -c "import pandas; import numpy; print('✓ Python packages OK')"
 ```
 
 ---
@@ -59,39 +59,44 @@ python -c "import fastapi; import pandas; print('✓ Python packages OK')"
 ### Step 2: Install Node.js Dependencies
 
 ```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install all dependencies (using pnpm recommended)
+# Install all dependencies from project root (using pnpm workspaces)
 pnpm install
-# OR: npm install
 
-# This will install:
-# - next, react, react-dom
-# - framer-motion, plotly.js
-# - tailwindcss, zustand, axios
-# - TypeScript types
+# This will install dependencies for:
+# - Root monorepo
+# - frontend/ (React, Vite, Tailwind, etc.)
+# - backend/ (Express, axios, cors, etc.)
 ```
 
 **Expected output:**
 ```
-added 342 packages in 45s
-✓ All dependencies installed
+Packages: +450
+Progress: resolved 450, reused 420, downloaded 30, added 450, done
 ```
 
 ---
 
 ### Step 3: Configure Environment Variables
 
-Create or verify `frontend/.env.local`:
-
+**Backend `.env`** (backend/.env):
 ```bash
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-NEXT_PUBLIC_APP_NAME=Jengu
-NEXT_PUBLIC_APP_VERSION=2.0.0
+PORT=3001
+NODE_ENV=development
+FRONTEND_URL=http://localhost:5173
+
+# Optional API keys (add if you have them)
+ANTHROPIC_API_KEY=your_key_here
+OPENWEATHER_API_KEY=your_key_here
+CALENDARIFIC_API_KEY=your_key_here
+MAPBOX_TOKEN=your_token_here
 ```
 
-**No changes needed for local development.**
+**Frontend `.env`** (frontend/.env):
+```bash
+VITE_API_URL=http://localhost:3001
+```
+
+**No API keys needed for local development - the Node.js backend handles external API calls.**
 
 ---
 
@@ -103,27 +108,30 @@ Open **Terminal 1**:
 # Navigate to backend directory
 cd backend
 
-# Install dependencies (if not done)
-pnpm install
-# OR: npm install
-
 # Start the server
 pnpm start
-# OR: npm start
 ```
 
 **Expected output:**
 ```
-Server listening on http://localhost:8000
+🚀 Jengu Backend API Server
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Server running on port 3001
+✅ Environment: development
+✅ Frontend URL: http://localhost:5173
+✅ Rate limit: 60 requests/minute
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 **Verify backend is running:**
-- Open browser: http://localhost:8000
-- Should see API response or health check
+```bash
+curl http://localhost:3001/health
+# Should return: {"status":"ok","timestamp":"...","environment":"development"}
+```
 
 ---
 
-### Step 5: Start the Next.js Frontend
+### Step 5: Start the React Frontend
 
 Open **Terminal 2** (new window/tab):
 
@@ -133,20 +141,19 @@ cd frontend
 
 # Start development server
 pnpm run dev
-# OR: npm run dev
 ```
 
 **Expected output:**
 ```
-▲ Next.js 15.1.0
-- Local:        http://localhost:3000
-- Network:      http://192.168.x.x:3000
+  VITE v5.x.x  ready in 423 ms
 
-✓ Ready in 2.5s
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
 ```
 
 **Access the dashboard:**
-- Open browser: **http://localhost:3000** or **http://localhost:5173**
+- Open browser: **http://localhost:5173**
 - Navigate through the application
 
 ---
@@ -155,10 +162,11 @@ pnpm run dev
 
 Navigate through the application:
 1. **Dashboard** - View metrics and KPIs
-2. **Data** - Upload and manage data
-3. **Explore** - Analyze correlations
-4. **Optimize** - Price optimization tools
-5. **Insights** - AI-generated recommendations
+2. **Data Upload** - Upload CSV/Excel files
+3. **Enrichment** - Add weather and holiday data
+4. **Insights** - Analyze correlations
+5. **Competitors** - Track competitor pricing
+6. **Optimize** - Price optimization tools
 
 ---
 
@@ -170,31 +178,39 @@ Use 2 terminals:
 
 | Terminal | Command | Directory | URL |
 |----------|---------|-----------|-----|
-| 1 | `pnpm start` | `backend/` | http://localhost:8000 |
-| 2 | `pnpm run dev` | `frontend/` | http://localhost:3000 or 5173 |
+| 1 | `pnpm start` | `backend/` | http://localhost:3001 |
+| 2 | `pnpm run dev` | `frontend/` | http://localhost:5173 |
+
+### Alternative: Run Both at Once
+
+From project root:
+```bash
+pnpm run dev
+# Starts both backend and frontend concurrently
+```
 
 ### Making Changes
 
-**Frontend (React/Next.js):**
+**Frontend (React + Vite):**
 - Edit files in `frontend/src/`
-- Changes hot-reload automatically
+- Changes hot-reload automatically (HMR)
 - Check browser console for errors
 
-**Backend (Node.js):**
+**Backend (Node.js Express):**
 - Edit `backend/server.js`
-- Restart server to see changes
+- Server auto-restarts (nodemon)
 - Check terminal for errors
 
-**Core Engine (Python):**
+**Python Library (Standalone):**
 - Edit files in `core/`
-- Changes take effect on next API call
+- Run scripts manually: `python scripts/generate_secrets.py`
 - Run tests: `pytest tests/`
 
 ---
 
 ## 📦 Build for Production
 
-### Frontend (Next.js)
+### Frontend (React + Vite)
 
 ```bash
 cd frontend
@@ -202,9 +218,11 @@ cd frontend
 # Build optimized production bundle
 pnpm run build
 
-# Start production server
-pnpm start
+# Preview production build locally
+pnpm run preview
 ```
+
+Output in `frontend/dist/`
 
 ### Backend (Node.js)
 
@@ -219,46 +237,54 @@ NODE_ENV=production pnpm start
 
 ## 🐛 Troubleshooting
 
-### Issue: "Port 3000 already in use"
+### Issue: "Port 5173 already in use"
 
 **Solution:**
 ```bash
-# Use different port
-npm run dev -- -p 3001
-```
+# Kill process on port 5173
+# Mac/Linux:
+lsof -ti:5173 | xargs kill -9
+# Windows:
+netstat -ano | findstr :5173
+# Then: taskkill /PID <PID> /F
 
-Then update `.env.local` if needed.
+# Or use different port:
+pnpm run dev -- --port 5174
+```
 
 ---
 
 ### Issue: "Cannot connect to API"
 
 **Checklist:**
-- [ ] Is FastAPI running? Check Terminal 1
-- [ ] Is it on port 8000? Visit http://localhost:8000
-- [ ] Check `.env.local` has correct `NEXT_PUBLIC_API_URL`
-- [ ] CORS configured? Check `apps/api/main.py` line 22-33
+- [ ] Is Node.js backend running? Check Terminal 1
+- [ ] Is it on port 3001? Visit http://localhost:3001/health
+- [ ] Check `frontend/.env` has correct `VITE_API_URL`
+- [ ] CORS configured? Check `backend/server.js` for FRONTEND_URL
 
 **Debug:**
 ```bash
+# Check if port 3001 is in use
 # Mac/Linux:
-lsof -i :8000
+lsof -i :3001
 # Windows:
-netstat -ano | findstr :8000
+netstat -ano | findstr :3001
 ```
 
 ---
 
-### Issue: "Module not found" in Next.js
+### Issue: "Module not found" in React
 
 **Solution:**
 ```bash
 cd frontend
-rm -rf node_modules pnpm-lock.yaml
+rm -rf node_modules
 pnpm install
-# OR for npm:
-rm -rf node_modules package-lock.json
-npm install
+```
+
+Or from root:
+```bash
+pnpm install
 ```
 
 ---
@@ -273,49 +299,65 @@ source .venv/bin/activate
 # Windows:
 .venv\Scripts\activate
 
+# Check PYTHONPATH
+export PYTHONPATH=.
+
 # Reinstall dependencies
 pip install -r requirements.txt
 ```
 
 ---
 
-### Issue: Plotly charts not rendering
+### Issue: "pnpm: command not found"
 
-**Cause:** Plotly loaded dynamically (SSR disabled)
-
-**Check:**
-- Open browser DevTools Console
-- Look for JavaScript errors
-- Ensure `react-plotly.js` is installed: `npm list react-plotly.js`
-
-**Fix:**
+**Solution:**
 ```bash
-cd frontend
-pnpm install react-plotly.js plotly.js
+# Install pnpm globally
+npm install -g pnpm
+
+# Or use npm instead:
+npm install
+cd backend && npm start
+cd frontend && npm run dev
 ```
 
 ---
 
 ## 🧪 Testing
 
-### Test FastAPI Endpoints
+### Test Backend Endpoints
 
 ```bash
 # Health check
-curl http://localhost:8000/api/v1/health
+curl http://localhost:3001/health
 
-# Optimize endpoint
-curl -X POST http://localhost:8000/api/v1/optimize \
-  -H "Content-Type: application/json" \
-  -d '{"weather_sensitivity": 0.5, "risk_level": 0.5}'
+# Test geocoding
+curl "http://localhost:3001/api/geocoding/forward?address=Paris,France"
+
+# Test holidays
+curl "http://localhost:3001/api/holidays?country=FR&year=2024"
 ```
 
-### Test Next.js Build
+### Test Frontend Build
 
 ```bash
 cd frontend
 pnpm run build
 # Should complete without errors
+# Check: frontend/dist/ directory created
+```
+
+### Test Python Library
+
+```bash
+# Activate venv
+source .venv/bin/activate
+
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=core --cov-report=html
 ```
 
 ---
@@ -325,12 +367,17 @@ pnpm run build
 ### Check Server Status
 
 **Backend (Node.js):**
-- Status: http://localhost:8000
+- Health: http://localhost:3001/health
 - Logs: Check Terminal 1
 
-**Frontend (Next.js):**
-- Status: http://localhost:3000 or 5173
+**Frontend (React):**
+- App: http://localhost:5173
 - Logs: Check Terminal 2
+- DevTools: Press F12 in browser
+
+**Python Scripts:**
+- Run manually from command line
+- Check output in terminal
 
 ---
 
@@ -338,14 +385,15 @@ pnpm run build
 
 Before deploying to production:
 
-- [ ] Change `allow_origins=["*"]` to specific domains
+- [ ] Set `NODE_ENV=production` in backend
+- [ ] Update `FRONTEND_URL` to production domain
+- [ ] Add all required API keys to environment variables
+- [ ] Never commit `.env` files to git
 - [ ] Set up HTTPS/SSL certificates
-- [ ] Add authentication (JWT, OAuth)
-- [ ] Use environment variables for secrets
-- [ ] Enable rate limiting
-- [ ] Set up monitoring (Sentry, DataDog)
+- [ ] Configure rate limiting (adjust MAX_REQUESTS_PER_MINUTE)
+- [ ] Set up monitoring (Sentry, LogRocket)
 - [ ] Configure firewall rules
-- [ ] Regular dependency updates
+- [ ] Regular dependency updates (`pnpm update`)
 
 ---
 
@@ -353,29 +401,29 @@ Before deploying to production:
 
 After setup is complete:
 
-1. **Explore the Optimize page**
-   - Play with sliders
-   - Watch revenue curve update
-   - See AI recommendations
+1. **Explore the Dashboard**
+   - View KPI cards
+   - Check quick actions
+   - Navigate between pages
 
-2. **Review the architecture**
-   - Read: [docs/ARCHITECTURE.md](ARCHITECTURE.md)
+2. **Upload Sample Data**
+   - Go to Data Upload page
+   - Upload CSV file
+   - Review data preview
+
+3. **Review the Architecture**
+   - Read: [ARCHITECTURE.md](ARCHITECTURE.md)
    - Understand data flow
    - Review API endpoints
 
-3. **Customize the design**
-   - Edit `frontend/tailwind.config.ts` for colors
+4. **Customize the Design**
+   - Edit `frontend/tailwind.config.js` for colors
    - Modify components in `frontend/src/components/`
    - Add your branding
 
-4. **Add real data**
-   - Upload CSV on `/data` page (coming soon)
-   - Connect to database
-   - Integrate with PMS/OTA APIs
-
-5. **Deploy to production**
-   - Choose hosting (Vercel, Railway, AWS)
-   - Set up CI/CD pipeline
+5. **Deploy to Production**
+   - Frontend: Vercel, Netlify, Cloudflare Pages
+   - Backend: Railway, Render, Fly.io
    - Configure domain and SSL
 
 ---
@@ -383,15 +431,16 @@ After setup is complete:
 ## 🎓 Learning Resources
 
 ### Documentation
-- Next.js: https://nextjs.org/docs
-- FastAPI: https://fastapi.tiangolo.com
+- React: https://react.dev
+- Vite: https://vitejs.dev
+- Express.js: https://expressjs.com
 - Tailwind: https://tailwindcss.com
 - Framer Motion: https://www.framer.com/motion
 
 ### Tutorials
-- Next.js App Router: https://nextjs.org/docs/app
+- React Hooks: https://react.dev/reference/react
 - TypeScript: https://www.typescriptlang.org/docs
-- Plotly.js: https://plotly.com/javascript
+- Recharts: https://recharts.org
 
 ---
 
@@ -400,9 +449,9 @@ After setup is complete:
 ### Getting Help
 
 1. **Check documentation**
-   - [docs/README.md](README.md) - Documentation overview
+   - [docs/README.md](../README.md) - Documentation overview
    - [docs/ARCHITECTURE.md](ARCHITECTURE.md) - System architecture
-   - [docs/developer/](developer/) - Developer documentation
+   - [docs/SECURITY.md](SECURITY.md) - Security guide
 
 2. **Common issues**
    - Review troubleshooting section above
@@ -420,15 +469,14 @@ After following this guide, you should have:
 
 - [x] Python virtual environment activated
 - [x] All Python dependencies installed
-- [x] Node.js dependencies installed
-- [x] FastAPI running on http://localhost:8000
-- [x] Next.js running on http://localhost:3000
+- [x] Node.js dependencies installed (pnpm workspaces)
+- [x] Node.js backend running on http://localhost:3001
+- [x] React frontend running on http://localhost:5173
 - [x] Dashboard accessible in browser
-- [x] Optimize page with working sliders
-- [x] Revenue curve chart rendering
+- [x] Navigation working between pages
 - [x] No console errors
 
-**🎉 Congratulations! Your premium pricing dashboard is ready!**
+**🎉 Congratulations! Your Jengu pricing platform is ready!**
 
 ---
 
@@ -441,21 +489,30 @@ source .venv/bin/activate
 # Windows:
 .venv\Scripts\activate
 
-# Start Backend (from backend/)
-pnpm start
+# Install all dependencies (from root)
+pnpm install
 
-# Start Frontend (from frontend/)
+# Start both backend & frontend (from root)
 pnpm run dev
+
+# Start backend only (from backend/)
+cd backend && pnpm start
+
+# Start frontend only (from frontend/)
+cd frontend && pnpm run dev
 
 # Run Python tests
 pytest tests/
 
-# Build Frontend
+# Build frontend for production
 cd frontend && pnpm run build
+
+# Generate security keys
+python scripts/generate_secrets.py
 ```
 
 ---
 
 **Version:** 2.0.0
 **Last Updated:** 2025-10-14
-**Platform:** Cross-platform (Mac, Linux, Windows)
+**Architecture:** React + Vite + Node.js Express + Python Library

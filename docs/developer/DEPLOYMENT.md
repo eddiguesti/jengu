@@ -1,34 +1,38 @@
 # Deployment Guide - Jengu Dynamic Pricing Platform
 
-This guide covers deploying the Jengu platform (Next.js frontend + FastAPI backend + Python engine) to production.
+This guide covers deploying the Jengu platform (React + Vite frontend + Node.js Express backend) to production.
 
 ---
 
 ## Architecture Overview
 
 The Jengu platform consists of:
-- **Frontend**: Next.js 15 (React SPA)
-- **Backend**: FastAPI (Python) for pricing engine
-- **Optional**: Node.js Express proxy (if needed)
+- **Frontend**: React + Vite (static site)
+- **Backend**: Node.js Express (API proxy for external services)
+- **Python Library**: Standalone analytics library (not deployed as a service)
 
 ---
 
 ## Deployment Options
 
-### Option 1: Vercel + Railway (Recommended)
+###Option 1: Vercel + Railway (Recommended)
 
 **Best for**: Quick deployment with minimal configuration
 
-#### Frontend (Next.js) → Vercel
+#### Frontend (React + Vite) → Vercel
+
 ```bash
 # 1. Install Vercel CLI
 npm i -g vercel
 
-# 2. Deploy from frontend directory
+# 2. Build production bundle
 cd frontend
+pnpm run build
+
+# 3. Deploy
 vercel
 
-# 3. Follow prompts
+# Follow prompts:
 # - Connect to GitHub (recommended)
 # - Configure project settings
 # - Deploy
@@ -36,10 +40,13 @@ vercel
 
 **Environment Variables** (add in Vercel dashboard):
 ```
-NEXT_PUBLIC_API_URL=https://your-api.railway.app/api/v1
+VITE_API_URL=https://your-api.railway.app
 ```
 
-#### Backend (FastAPI) → Railway
+**Output directory**: `dist`
+
+#### Backend (Node.js) → Railway
+
 ```bash
 # 1. Install Railway CLI
 npm i -g @railway/cli
@@ -48,26 +55,67 @@ npm i -g @railway/cli
 railway login
 railway init
 
-# 3. Deploy Python backend
+# 3. Deploy Node.js backend
+cd backend
 railway up
 ```
 
 **Environment Variables** (add in Railway dashboard):
 ```bash
-DATABASE_URL=postgresql://user:pass@host:5432/db  # If using DB
-ALLOWED_ORIGINS=https://your-app.vercel.app
-LOG_LEVEL=INFO
+NODE_ENV=production
+PORT=3001
+FRONTEND_URL=https://your-app.vercel.app
+ANTHROPIC_API_KEY=your_key
+OPENWEATHER_API_KEY=your_key
+CALENDARIFIC_API_KEY=your_key
+MAPBOX_TOKEN=your_token
+MAX_REQUESTS_PER_MINUTE=60
 ```
 
 **Cost**: ~$5-10/month (Railway), Vercel free tier
 
 ---
 
-### Option 2: Docker Compose (Self-Hosted)
+### Option 2: Netlify + Render
+
+**Alternative to Vercel + Railway**
+
+#### Frontend → Netlify
+
+```bash
+# 1. Install Netlify CLI
+npm i -g netlify-cli
+
+# 2. Build and deploy
+cd frontend
+pnpm run build
+netlify deploy --prod --dir=dist
+```
+
+**Environment Variables**:
+```
+VITE_API_URL=https://your-api.render.com
+```
+
+#### Backend → Render
+
+1. Connect GitHub repository to Render
+2. Create new Web Service
+3. Configure:
+   - **Build Command**: `cd backend && pnpm install`
+   - **Start Command**: `cd backend && pnpm start`
+   - **Environment**: Node
+
+**Cost**: ~$7/month (Render), Netlify free tier
+
+---
+
+### Option 3: Docker Compose (Self-Hosted)
 
 **Best for**: Full control, custom infrastructure, on-premise deployment
 
 #### Create docker-compose.yml
+
 ```yaml
 version: '3.8'
 
@@ -77,78 +125,66 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "80:80"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000/api/v1
-    depends_on:
-      - backend
+      - VITE_API_URL=http://backend:3001
 
   backend:
     build:
-      context: .
-      dockerfile: Dockerfile.backend
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "3001:3001"
     environment:
-      - DATABASE_URL=postgresql://user:pass@db:5432/jengu
-      - ALLOWED_ORIGINS=http://localhost:3000
-    depends_on:
-      - db
+      - NODE_ENV=production
+      - FRONTEND_URL=http://localhost
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
     volumes:
       - ./data:/app/data
-
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_DB=jengu
-      - POSTGRES_USER=jengu_user
-      - POSTGRES_PASSWORD=secure_password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
-volumes:
-  postgres_data:
 ```
 
 #### Frontend Dockerfile
+
 ```dockerfile
 # frontend/Dockerfile
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+COPY pnpm-lock.yaml ./
+RUN npm install -g pnpm
+RUN pnpm install
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
-FROM node:18-alpine
-WORKDIR /app
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
-EXPOSE 3000
-CMD ["npm", "start"]
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
 ```
 
 #### Backend Dockerfile
+
 ```dockerfile
-# Dockerfile.backend
-FROM python:3.12-slim
+# backend/Dockerfile
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY package*.json ./
+COPY pnpm-lock.yaml ./
+RUN npm install -g pnpm
+RUN pnpm install --prod
 
 COPY . .
 
-EXPOSE 8000
-CMD ["uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 3001
+CMD ["pnpm", "start"]
 ```
 
 #### Deploy
+
 ```bash
 # Build and start all services
 docker-compose up -d
@@ -160,142 +196,103 @@ docker-compose logs -f
 docker-compose down
 ```
 
-**Cost**: VPS hosting (DigitalOcean, AWS, etc.) ~$10-50/month
+**Cost**: VPS hosting (DigitalOcean, Linode, Hetzner) ~$5-20/month
 
 ---
 
-### Option 3: AWS (Enterprise)
+### Option 4: Static Hosting + Serverless
 
-**Best for**: Large scale, enterprise requirements, high availability
+**Best for**: Low traffic, cost optimization
 
-#### Frontend → AWS Amplify or S3 + CloudFront
+#### Frontend → Cloudflare Pages / GitHub Pages
+
 ```bash
-# 1. Build production bundle
+# Build frontend
 cd frontend
-npm run build
+pnpm run build
 
-# 2. Deploy to S3
-aws s3 sync out/ s3://your-bucket-name/ --acl public-read
-
-# 3. Configure CloudFront distribution
-aws cloudfront create-distribution \
-  --origin-domain-name your-bucket.s3.amazonaws.com
+# Deploy to Cloudflare Pages
+# - Connect GitHub repo
+# - Build command: pnpm run build
+# - Output directory: dist
 ```
 
-#### Backend → AWS ECS or Lambda
+#### Backend → Fly.io / Railway
+
+Fly.io offers excellent pricing for small apps:
+
 ```bash
-# 1. Create ECR repository
-aws ecr create-repository --repository-name jengu-backend
+# Install Fly CLI
+curl -L https://fly.io/install.sh | sh
 
-# 2. Build and push Docker image
-docker build -t jengu-backend .
-docker tag jengu-backend:latest $ECR_URL/jengu-backend:latest
-docker push $ECR_URL/jengu-backend:latest
-
-# 3. Deploy to ECS
-aws ecs create-service --cluster jengu-cluster \
-  --service-name jengu-backend \
-  --task-definition jengu-backend:1 \
-  --desired-count 2
+# Deploy backend
+cd backend
+fly launch
+fly deploy
 ```
 
-**Cost**: Variable, typically $50-500+/month depending on usage
-
----
-
-### Option 4: Google Cloud Platform
-
-**Best for**: Global distribution, serverless options
-
-#### Frontend → Firebase Hosting
-```bash
-# 1. Install Firebase CLI
-npm install -g firebase-tools
-
-# 2. Initialize Firebase
-firebase login
-firebase init hosting
-
-# 3. Deploy
-cd frontend
-npm run build
-firebase deploy --only hosting
-```
-
-#### Backend → Cloud Run
-```bash
-# 1. Build container
-gcloud builds submit --tag gcr.io/PROJECT_ID/jengu-backend
-
-# 2. Deploy to Cloud Run
-gcloud run deploy jengu-backend \
-  --image gcr.io/PROJECT_ID/jengu-backend \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
-```
-
-**Cost**: Pay-per-use, typically $10-100/month
+**Cost**: ~$3-5/month (Fly.io)
 
 ---
 
 ## Pre-Deployment Checklist
 
 ### Security
-- [ ] Generate and set secure `SECRET_KEY` for JWT
+- [ ] Set secure environment variables for all API keys
 - [ ] Configure HTTPS/SSL certificates
-- [ ] Set up CORS for production domains only
-- [ ] Enable rate limiting
-- [ ] Configure security headers
-- [ ] Set up environment variables (never commit secrets)
+- [ ] Set up CORS for production domains only (`FRONTEND_URL`)
+- [ ] Enable rate limiting (configured in backend)
+- [ ] Never commit `.env` files to git
 - [ ] Review SECURITY.md for compliance requirements
 
 ### Performance
-- [ ] Enable production build optimizations
+- [ ] Enable production build optimizations (Vite does this automatically)
 - [ ] Configure CDN for static assets
-- [ ] Set up caching (Redis recommended)
-- [ ] Optimize database queries and indexes
-- [ ] Configure log levels (avoid verbose in prod)
+- [ ] Optimize images (use WebP format)
+- [ ] Test with Lighthouse for performance scores
+- [ ] Configure log levels (set `NODE_ENV=production`)
 
 ### Monitoring
 - [ ] Set up error tracking (Sentry recommended)
-- [ ] Configure application monitoring (DataDog, New Relic)
-- [ ] Set up uptime monitoring
-- [ ] Configure alerting for errors and downtime
+- [ ] Configure uptime monitoring (UptimeRobot, Pingdom)
 - [ ] Set up log aggregation
+- [ ] Configure alerting for errors and downtime
 
-### Database
-- [ ] Set up automated backups
-- [ ] Configure connection pooling
-- [ ] Set up read replicas (if needed)
-- [ ] Test backup restoration
-- [ ] Document recovery procedures
+### Testing
+- [ ] Test production build locally before deploying
+- [ ] Verify all environment variables are set
+- [ ] Test API endpoints from production frontend
+- [ ] Check CORS configuration
+- [ ] Verify SSL certificates
 
 ---
 
 ## Environment Variables
 
 ### Frontend (.env.production)
+
 ```bash
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api/v1
-NEXT_PUBLIC_APP_NAME=Jengu
-NEXT_PUBLIC_ENVIRONMENT=production
+VITE_API_URL=https://api.yourdomain.com
 ```
 
 ### Backend (.env)
-```bash
-# Required
-SECRET_KEY=your-secure-secret-key-here
-DATABASE_URL=postgresql://user:pass@host:5432/jengu
-ALLOWED_ORIGINS=https://app.yourdomain.com,https://www.yourdomain.com
 
-# Optional
-ENVIRONMENT=production
-LOG_LEVEL=INFO
-CACHE_DIR=/app/data/cache
-ENABLE_API_DOCS=false  # Disable Swagger in production
-RATE_LIMIT_ENABLED=true
-RATE_LIMIT_PER_MINUTE=60
+```bash
+# Server Configuration
+NODE_ENV=production
+PORT=3001
+FRONTEND_URL=https://app.yourdomain.com
+
+# External API Keys
+ANTHROPIC_API_KEY=your_anthropic_key_here
+OPENWEATHER_API_KEY=your_openweather_key_here
+CALENDARIFIC_API_KEY=your_calendarific_key_here
+MAPBOX_TOKEN=your_mapbox_token_here
+SCRAPERAPI_KEY=your_scraperapi_key_here
+MAKCORPS_API_KEY=your_makcorps_key_here
+
+# Rate Limiting
+MAX_REQUESTS_PER_MINUTE=60
 ```
 
 ---
@@ -303,6 +300,7 @@ RATE_LIMIT_PER_MINUTE=60
 ## SSL/HTTPS Configuration
 
 ### Option 1: Let's Encrypt (Free)
+
 ```bash
 # Install certbot
 sudo apt-get install certbot
@@ -319,27 +317,36 @@ sudo certbot certonly --standalone -d yourdomain.com -d www.yourdomain.com
 ```
 
 ### Option 2: Cloud Provider SSL
-Most cloud providers (Vercel, Railway, AWS) offer automatic SSL:
+
+Most cloud providers offer automatic SSL:
 - **Vercel**: Automatic SSL for all deployments
+- **Netlify**: Automatic SSL for all sites
 - **Railway**: Automatic SSL for custom domains
-- **AWS**: Use ACM (AWS Certificate Manager)
-- **GCP**: Use Google-managed SSL certificates
+- **Cloudflare Pages**: Automatic SSL with Cloudflare proxy
 
 ---
 
 ## Custom Domain Setup
 
 ### Vercel (Frontend)
+
 1. Go to Vercel Dashboard → Project → Settings → Domains
 2. Add custom domain: `app.yourdomain.com`
 3. Configure DNS:
    ```
+   Type: A
+   Name: app
+   Value: 76.76.21.21 (Vercel's IP)
+
+   OR:
+
    Type: CNAME
    Name: app
    Value: cname.vercel-dns.com
    ```
 
 ### Railway (Backend)
+
 1. Go to Railway Dashboard → Project → Settings
 2. Add custom domain: `api.yourdomain.com`
 3. Configure DNS:
@@ -353,72 +360,76 @@ Most cloud providers (Vercel, Railway, AWS) offer automatic SSL:
 
 ## Monitoring & Logging
 
-### Recommended Tools
+### Error Tracking: Sentry
 
-#### Error Tracking: Sentry
 ```bash
 # Install Sentry SDK
-npm install @sentry/nextjs  # Frontend
-pip install sentry-sdk[fastapi]  # Backend
-
-# Configure (Next.js)
-# sentry.client.config.js
-import * as Sentry from '@sentry/nextjs';
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  environment: process.env.NEXT_PUBLIC_ENVIRONMENT,
-});
-
-# Configure (FastAPI)
-# apps/api/main.py
-import sentry_sdk
-sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN"),
-    environment=os.getenv("ENVIRONMENT"),
-)
+npm install @sentry/react @sentry/vite-plugin  # Frontend
+npm install @sentry/node  # Backend
 ```
 
-#### Application Monitoring
-- **Frontend**: Vercel Analytics (built-in)
-- **Backend**: Railway metrics or DataDog APM
-- **Database**: PostgreSQL monitoring tools
+**Frontend Setup** (`frontend/src/main.tsx`):
+```typescript
+import * as Sentry from '@sentry/react';
 
-#### Uptime Monitoring
-- UptimeRobot (free)
-- Pingdom
-- StatusCake
+Sentry.init({
+  dsn: import.meta.env.VITE_SENTRY_DSN,
+  environment: import.meta.env.MODE,
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+});
+```
+
+**Backend Setup** (`backend/server.js`):
+```javascript
+const Sentry = require('@sentry/node');
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.NODE_ENV,
+  tracesSampleRate: 1.0,
+});
+
+// Add to Express app
+app.use(Sentry.Handlers.requestHandler());
+app.use(Sentry.Handlers.errorHandler());
+```
+
+### Uptime Monitoring
+
+Recommended free options:
+- **UptimeRobot**: Monitor every 5 minutes (free)
+- **StatusCake**: Monitor uptime and performance
+- **Pingdom**: Basic uptime monitoring
 
 ---
 
 ## Backup Strategy
 
-### Database Backups
-```bash
-# Automated daily backups (add to cron)
-#!/bin/bash
-# backup-db.sh
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-pg_dump $DATABASE_URL > backup_$TIMESTAMP.sql
-aws s3 cp backup_$TIMESTAMP.sql s3://your-backups-bucket/
-```
-
 ### Application Data Backups
+
 ```bash
-# Backup data directory
+# Backup data directory (if using file storage)
 tar -czf data-backup-$(date +%Y%m%d).tar.gz data/
 aws s3 cp data-backup-$(date +%Y%m%d).tar.gz s3://your-backups-bucket/
 ```
 
-### Retention Policy
-- **Daily backups**: Keep 7 days
-- **Weekly backups**: Keep 4 weeks
-- **Monthly backups**: Keep 12 months
+### Environment Variables Backup
+
+Store environment variables securely:
+- Use a password manager (1Password, LastPass)
+- Keep encrypted backup in secure location
+- Document all required variables
 
 ---
 
 ## Rollback Procedures
 
 ### Vercel Rollback
+
 ```bash
 # List deployments
 vercel ls
@@ -428,11 +439,13 @@ vercel rollback [deployment-url]
 ```
 
 ### Railway Rollback
+
 - Go to Railway Dashboard → Deployments
 - Click on previous successful deployment
 - Click "Redeploy"
 
 ### Docker Rollback
+
 ```bash
 # Tag previous version
 docker tag jengu-backend:current jengu-backend:rollback
@@ -447,73 +460,123 @@ docker-compose up -d
 ## Troubleshooting
 
 ### Frontend Issues
+
 ```bash
 # Check build logs
 vercel logs
 
 # Test production build locally
-npm run build
-npm start
+cd frontend
+pnpm run build
+pnpm run preview
 ```
 
 ### Backend Issues
+
 ```bash
 # Check application logs
 railway logs
 
-# Test FastAPI locally
-uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
+# Test backend locally
+cd backend
+NODE_ENV=production pnpm start
 
 # Check health endpoint
-curl https://api.yourdomain.com/api/v1/health
+curl https://api.yourdomain.com/health
 ```
 
-### Database Issues
-```bash
-# Check connection
-pg_isready -h host -p 5432 -U user
+### CORS Issues
 
-# Monitor active connections
-SELECT count(*) FROM pg_stat_activity;
-```
+If you see CORS errors:
+1. Check `FRONTEND_URL` in backend environment variables
+2. Ensure it matches exactly (including protocol: https://)
+3. Restart backend after changing environment variables
 
 ---
 
 ## Cost Optimization
 
-### Tips for Reducing Costs
+### Recommended Free/Low-Cost Stack
 
-1. **Use Free Tiers**
-   - Vercel: Free for personal projects
-   - Railway: $5 credit monthly
-   - Supabase: Free PostgreSQL tier
+**For hobby/personal projects:**
+- Frontend: Vercel (Free tier)
+- Backend: Railway ($5/month)
+- Monitoring: UptimeRobot (Free)
+- Error Tracking: Sentry (Free tier)
 
-2. **Optimize Resource Usage**
-   - Enable caching to reduce API calls
-   - Use serverless functions for sporadic workloads
-   - Optimize database queries
+**Total: ~$5/month**
 
-3. **Monitor Usage**
-   - Set up billing alerts
-   - Review usage dashboards monthly
-   - Scale down in non-peak hours
+**For production:**
+- Frontend: Vercel Pro ($20/month)
+- Backend: Railway Pro ($20/month) or dedicated VPS ($10/month)
+- Monitoring: Paid plan with better SLA
+- Error Tracking: Sentry paid plan
+
+**Total: ~$40-50/month**
+
+---
+
+## Performance Optimization
+
+### Frontend
+
+1. **Code Splitting**: Vite handles this automatically
+2. **Image Optimization**: Use WebP format, lazy loading
+3. **Bundle Analysis**:
+   ```bash
+   pnpm run build -- --analyze
+   ```
+4. **CDN**: Use Vercel's edge network or Cloudflare
+
+### Backend
+
+1. **Caching**: Implement Redis for frequent API calls
+2. **Rate Limiting**: Already configured (60 req/min)
+3. **Compression**: Enable gzip/brotli compression
+4. **Monitoring**: Track response times
 
 ---
 
 ## Support & Resources
 
 ### Documentation
+- [Vite Deployment](https://vitejs.dev/guide/static-deploy.html)
 - [Vercel Docs](https://vercel.com/docs)
 - [Railway Docs](https://docs.railway.app)
-- [Next.js Deployment](https://nextjs.org/docs/deployment)
-- [FastAPI Deployment](https://fastapi.tiangolo.com/deployment/)
+- [Express.js Production Best Practices](https://expressjs.com/en/advanced/best-practice-performance.html)
 
 ### Community
 - Vercel Discord
 - Railway Discord
-- Next.js GitHub Discussions
+- Vite Discord
+
+---
+
+## Quick Deployment Commands
+
+```bash
+# Build frontend locally
+cd frontend && pnpm run build
+
+# Test frontend production build
+cd frontend && pnpm run preview
+
+# Deploy frontend to Vercel
+cd frontend && vercel --prod
+
+# Deploy backend to Railway
+cd backend && railway up
+
+# Check backend health
+curl https://your-api.railway.app/health
+
+# View logs
+vercel logs  # Frontend
+railway logs  # Backend
+```
 
 ---
 
 **Last Updated**: 2025-10-14
-**Version**: 2.0
+**Version**: 2.0.0
+**Architecture**: React + Vite + Node.js Express

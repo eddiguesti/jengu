@@ -7,7 +7,6 @@
     "install:all": "pnpm install && cd frontend && pnpm install && cd ../backend && pnpm install && pip install -r requirements.txt",
     "dev:frontend": "cd frontend && pnpm run dev",
     "dev:backend": "cd backend && pnpm start",
-    "dev:python": "python -m uvicorn core.api.main:app --reload --port 8001",
     "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
     "build:frontend": "cd frontend && pnpm run build",
     "build:backend": "echo 'Backend build not required (Node.js)'",
