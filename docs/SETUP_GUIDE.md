@@ -1,6 +1,6 @@
-# 🚀 Setup Guide - Dynamic Pricing System
+# Setup Guide - Jengu Dynamic Pricing Platform
 
-> **Get your premium Next.js + FastAPI dashboard running in 5 minutes**
+> **Get your Jengu dashboard running in 5 minutes**
 
 ---
 
@@ -8,9 +8,9 @@
 
 ### Required Software
 
-- ✅ **Python 3.12+** (Already installed at: `Python 3.12.0`)
-- ✅ **Node.js 18+** and npm
-- ✅ **Git** (for version control)
+- **Python 3.12+**
+- **Node.js 18+** and pnpm (recommended) or npm
+- **Git** (for version control)
 
 ### Check Installations
 
@@ -35,17 +35,23 @@ npm --version
 ### Step 1: Install Python Dependencies
 
 ```bash
-# From project root (travel-pricing/)
+# Create virtual environment (if not exists)
+python3 -m venv .venv
+
+# Activate virtual environment
+# Mac/Linux:
+source .venv/bin/activate
+# Windows:
 .venv\Scripts\activate
 
 # Install/verify Python packages
-.venv\Scripts\python -m pip install --upgrade pip
-.venv\Scripts\python -m pip install -r requirements.txt
+pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
 **Verify installation:**
 ```bash
-.venv\Scripts\python -c "import fastapi; import pandas; print('✓ Python packages OK')"
+python -c "import fastapi; import pandas; print('✓ Python packages OK')"
 ```
 
 ---
@@ -53,11 +59,12 @@ npm --version
 ### Step 2: Install Node.js Dependencies
 
 ```bash
-# Navigate to Next.js app
-cd apps\web
+# Navigate to frontend directory
+cd frontend
 
-# Install all dependencies
-npm install
+# Install all dependencies (using pnpm recommended)
+pnpm install
+# OR: npm install
 
 # This will install:
 # - next, react, react-dom
@@ -76,41 +83,43 @@ added 342 packages in 45s
 
 ### Step 3: Configure Environment Variables
 
-The `.env.local` file is already created. Verify it contains:
+Create or verify `frontend/.env.local`:
 
 ```bash
-# apps/web/.env.local
 NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-NEXT_PUBLIC_APP_NAME=Dynamic Pricing Engine
-NEXT_PUBLIC_APP_VERSION=1.0.0
+NEXT_PUBLIC_APP_NAME=Jengu
+NEXT_PUBLIC_APP_VERSION=2.0.0
 ```
 
-**No changes needed unless you want to use different ports.**
+**No changes needed for local development.**
 
 ---
 
-### Step 4: Start the FastAPI Backend
+### Step 4: Start the Node.js Backend
 
-Open **Terminal 1** (or PowerShell):
+Open **Terminal 1**:
 
 ```bash
-# From project root
-.venv\Scripts\python -m uvicorn apps.api.main:app --reload --port 8000
+# Navigate to backend directory
+cd backend
+
+# Install dependencies (if not done)
+pnpm install
+# OR: npm install
+
+# Start the server
+pnpm start
+# OR: npm start
 ```
 
 **Expected output:**
 ```
-INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process
-INFO:     Started server process
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
+Server listening on http://localhost:8000
 ```
 
-**Verify API is running:**
+**Verify backend is running:**
 - Open browser: http://localhost:8000
-- Should see: `{"message": "Dynamic Pricing API", "version": "1.0.0", ...}`
-- API docs: http://localhost:8000/docs
+- Should see API response or health check
 
 ---
 
@@ -119,11 +128,12 @@ INFO:     Application startup complete.
 Open **Terminal 2** (new window/tab):
 
 ```bash
-# Navigate to Next.js app
-cd apps\web
+# Navigate to frontend directory
+cd frontend
 
 # Start development server
-npm run dev
+pnpm run dev
+# OR: npm run dev
 ```
 
 **Expected output:**
@@ -136,33 +146,19 @@ npm run dev
 ```
 
 **Access the dashboard:**
-- Open browser: **http://localhost:3000**
-- You'll be redirected to: http://localhost:3000/dashboard
+- Open browser: **http://localhost:3000** or **http://localhost:5173**
+- Navigate through the application
 
 ---
 
 ### Step 6: Explore the Dashboard 🎉
 
-1. **Dashboard** (`/dashboard`) - View metrics overview
-2. **Optimize** (`/optimize`) - Interactive pricing optimization
-   - Adjust sliders for weather, risk, competitor, elasticity
-   - See real-time revenue curve updates
-   - View recommended vs current price
-
----
-
-## 🛠️ Optional: Run Streamlit UI (Alternative)
-
-If you want to run the existing Streamlit UI alongside Next.js:
-
-Open **Terminal 3**:
-
-```bash
-# From project root
-.venv\Scripts\streamlit run apps\ui\streamlit_app.py --server.port=8502
-```
-
-Access at: http://localhost:8502
+Navigate through the application:
+1. **Dashboard** - View metrics and KPIs
+2. **Data** - Upload and manage data
+3. **Explore** - Analyze correlations
+4. **Optimize** - Price optimization tools
+5. **Insights** - AI-generated recommendations
 
 ---
 
@@ -170,52 +166,53 @@ Access at: http://localhost:8502
 
 ### Running All Services
 
-Use 3 terminals:
+Use 2 terminals:
 
-| Terminal | Command | URL |
-|----------|---------|-----|
-| 1 | `uvicorn apps.api.main:app --reload --port 8000` | http://localhost:8000 |
-| 2 | `cd apps/web && npm run dev` | http://localhost:3000 |
-| 3 (opt) | `streamlit run apps/ui/streamlit_app.py` | http://localhost:8502 |
+| Terminal | Command | Directory | URL |
+|----------|---------|-----------|-----|
+| 1 | `pnpm start` | `backend/` | http://localhost:8000 |
+| 2 | `pnpm run dev` | `frontend/` | http://localhost:3000 or 5173 |
 
 ### Making Changes
 
-**Frontend (Next.js):**
-- Edit files in `apps/web/src/`
+**Frontend (React/Next.js):**
+- Edit files in `frontend/src/`
 - Changes hot-reload automatically
 - Check browser console for errors
 
-**Backend (FastAPI):**
-- Edit `apps/api/main.py`
-- Server reloads automatically (--reload flag)
+**Backend (Node.js):**
+- Edit `backend/server.js`
+- Restart server to see changes
 - Check terminal for errors
 
-**Core Engine:**
+**Core Engine (Python):**
 - Edit files in `core/`
-- Restart FastAPI to see changes
+- Changes take effect on next API call
 - Run tests: `pytest tests/`
 
 ---
 
 ## 📦 Build for Production
 
-### Next.js
+### Frontend (Next.js)
 
 ```bash
-cd apps\web
+cd frontend
 
 # Build optimized production bundle
-npm run build
+pnpm run build
 
 # Start production server
-npm start
+pnpm start
 ```
 
-### FastAPI
+### Backend (Node.js)
 
 ```bash
-# Production mode (no reload)
-.venv\Scripts\python -m uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
+cd backend
+
+# Start production server
+NODE_ENV=production pnpm start
 ```
 
 ---
@@ -244,7 +241,9 @@ Then update `.env.local` if needed.
 
 **Debug:**
 ```bash
-# Check what's running on port 8000
+# Mac/Linux:
+lsof -i :8000
+# Windows:
 netstat -ano | findstr :8000
 ```
 
@@ -254,7 +253,10 @@ netstat -ano | findstr :8000
 
 **Solution:**
 ```bash
-cd apps\web
+cd frontend
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
+# OR for npm:
 rm -rf node_modules package-lock.json
 npm install
 ```
@@ -266,6 +268,9 @@ npm install
 **Solution:**
 ```bash
 # Ensure virtual environment is activated
+# Mac/Linux:
+source .venv/bin/activate
+# Windows:
 .venv\Scripts\activate
 
 # Reinstall dependencies
@@ -285,8 +290,8 @@ pip install -r requirements.txt
 
 **Fix:**
 ```bash
-cd apps\web
-npm install react-plotly.js plotly.js
+cd frontend
+pnpm install react-plotly.js plotly.js
 ```
 
 ---
@@ -308,8 +313,8 @@ curl -X POST http://localhost:8000/api/v1/optimize \
 ### Test Next.js Build
 
 ```bash
-cd apps\web
-npm run build
+cd frontend
+pnpm run build
 # Should complete without errors
 ```
 
@@ -319,18 +324,13 @@ npm run build
 
 ### Check Server Status
 
-**FastAPI:**
-- Health: http://localhost:8000/api/v1/health
-- Docs: http://localhost:8000/docs
+**Backend (Node.js):**
+- Status: http://localhost:8000
 - Logs: Check Terminal 1
 
-**Next.js:**
-- Status: http://localhost:3000
+**Frontend (Next.js):**
+- Status: http://localhost:3000 or 5173
 - Logs: Check Terminal 2
-
-**Streamlit (optional):**
-- Status: http://localhost:8502
-- Logs: Check Terminal 3
 
 ---
 
@@ -359,13 +359,13 @@ After setup is complete:
    - See AI recommendations
 
 2. **Review the architecture**
-   - Read: [ARCHITECTURE.md](ARCHITECTURE.md)
+   - Read: [docs/ARCHITECTURE.md](ARCHITECTURE.md)
    - Understand data flow
    - Review API endpoints
 
 3. **Customize the design**
-   - Edit `apps/web/tailwind.config.ts` for colors
-   - Modify components in `apps/web/src/components/`
+   - Edit `frontend/tailwind.config.ts` for colors
+   - Modify components in `frontend/src/components/`
    - Add your branding
 
 4. **Add real data**
@@ -400,8 +400,9 @@ After setup is complete:
 ### Getting Help
 
 1. **Check documentation**
-   - [README.md](apps/web/README.md) - Frontend docs
-   - [ARCHITECTURE.md](ARCHITECTURE.md) - System overview
+   - [docs/README.md](README.md) - Documentation overview
+   - [docs/ARCHITECTURE.md](ARCHITECTURE.md) - System architecture
+   - [docs/developer/](developer/) - Developer documentation
 
 2. **Common issues**
    - Review troubleshooting section above
@@ -409,7 +410,7 @@ After setup is complete:
 3. **Development tips**
    - Use browser DevTools (F12)
    - Check terminal logs
-   - Enable verbose logging
+   - Review error messages carefully
 
 ---
 
@@ -435,26 +436,26 @@ After following this guide, you should have:
 
 ```bash
 # Activate Python env
+# Mac/Linux:
+source .venv/bin/activate
+# Windows:
 .venv\Scripts\activate
 
-# Start FastAPI
-.venv\Scripts\python -m uvicorn apps.api.main:app --reload --port 8000
+# Start Backend (from backend/)
+pnpm start
 
-# Start Next.js (from apps/web)
-npm run dev
+# Start Frontend (from frontend/)
+pnpm run dev
 
-# Start Streamlit (optional)
-.venv\Scripts\streamlit run apps\ui\streamlit_app.py
-
-# Run tests
+# Run Python tests
 pytest tests/
 
-# Build Next.js
-cd apps\web && npm run build
+# Build Frontend
+cd frontend && pnpm run build
 ```
 
 ---
 
-**Version:** 1.0.0
-**Last Updated:** 2025-10-11
-**Platform:** Windows (PowerShell/CMD)
+**Version:** 2.0.0
+**Last Updated:** 2025-10-14
+**Platform:** Cross-platform (Mac, Linux, Windows)

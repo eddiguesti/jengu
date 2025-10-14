@@ -13,14 +13,11 @@
 
 1. [Overview](#overview)
 2. [Features](#features)
-3. [Architecture](#architecture)
-4. [Quick Start](#quick-start)
+3. [Quick Start](#quick-start)
+4. [Documentation](#documentation)
 5. [Project Structure](#project-structure)
 6. [Development](#development)
-7. [API Documentation](#api-documentation)
-8. [Testing](#testing)
-9. [Deployment](#deployment)
-10. [Contributing](#contributing)
+7. [Contributing](#contributing)
 
 ---
 
@@ -191,34 +188,47 @@ uvicorn apps.api.main:app --reload --port 8001
 
 ---
 
+## 📚 **Documentation**
+
+Comprehensive documentation is available in the `/docs` directory:
+
+- **[Setup Guide](docs/SETUP_GUIDE.md)** - Detailed installation and configuration instructions
+- **[Architecture](docs/ARCHITECTURE.md)** - System architecture and technology stack
+- **[Security](docs/SECURITY.md)** - Security configuration and best practices
+- **[Deployment](docs/DEPLOYMENT.md)** - Production deployment guide
+- **[Developer Docs](docs/developer/)** - Developer-specific documentation
+- **[Tasks](docs/tasks.md)** - Task management and planning
+
+For AI coding assistants, see:
+- **[CLAUDE.md](CLAUDE.md)** - Claude Code instructions
+- **[AGENTS.md](AGENTS.md)** - AI agent configuration
+- **[GEMINI.md](GEMINI.md)** - Gemini instructions
+
+---
+
 ## 📂 **Project Structure**
 
 ```
-travel-pricing/
-├── apps/                       # Application layer
-│   ├── api/                    # FastAPI REST API
-│   │   ├── main.py            # API entry point
-│   │   ├── routers/           # API route handlers
-│   │   │   ├── health.py      # Health check
-│   │   │   └── pricing.py     # Pricing endpoints
-│   │   └── schemas.py         # Pydantic models
-│   └── ui/                     # Streamlit frontend
-│       ├── neon_theme.py      # Premium neon theme (MAIN)
-│       ├── components.py      # Reusable UI components
-│       ├── setup_wizard.py    # 3-step onboarding
-│       └── pages/             # Page modules
-│           ├── data_page.py   # Data upload
-│           ├── enrichment_page.py  # Enrichment UI
-│           └── insights_page.py    # Insights UI
+jengu/
+├── frontend/                   # React + Next.js web application
+│   ├── src/
+│   │   ├── app/               # Pages (App Router)
+│   │   ├── components/        # React components
+│   │   ├── lib/               # Utils & API client
+│   │   └── types/             # TypeScript types
+│   └── package.json
 │
-├── core/                       # Business logic core
-│   ├── analysis/              # Correlation & analysis
+├── backend/                    # Node.js Express API proxy
+│   ├── server.js
+│   └── package.json
+│
+├── core/                       # Python pricing engine
+│   ├── analysis/              # Correlation & insights
 │   │   ├── correlations.py    # Multi-method correlation
 │   │   └── pricing_weights.py # Auto weight generation
 │   ├── connectors/            # External data sources
 │   │   ├── weather.py         # Open-Meteo connector
-│   │   ├── holidays.py        # Holiday data
-│   │   └── csv_import.py      # CSV data import
+│   │   └── holidays.py        # Holiday data
 │   ├── features/              # Feature engineering
 │   │   ├── build.py           # Feature builder
 │   │   └── encoders.py        # Encoders (cyclical, etc.)
@@ -226,43 +236,36 @@ travel-pricing/
 │   │   └── business_profile.py # Business profile model
 │   ├── modeling/              # ML models
 │   │   ├── demand_glm.py      # GLM demand model
-│   │   ├── elasticity_ols.py  # OLS elasticity
-│   │   └── validate.py        # Model validation
-│   ├── optimize/              # Optimization
-│   │   └── price_search.py    # Price optimization
+│   │   └── elasticity_ols.py  # OLS elasticity
+│   ├── optimize/              # Price optimization
+│   │   └── price_search.py    # Optimization algorithms
 │   ├── services/              # Business services
-│   │   ├── enrichment_pipeline.py # Enrichment orchestration
-│   │   └── geocoding.py       # Geocoding service
+│   │   └── enrichment_pipeline.py # Enrichment orchestration
 │   └── utils/                 # Utilities
-│       ├── geocode.py         # Geocoding helpers
-│       ├── logging.py         # Structured logging
 │       └── config.py          # Configuration
-│
-├── data/                       # Data storage
-│   ├── config/                # Business profiles (JSON)
-│   ├── raw/                   # Uploaded datasets
-│   ├── enriched/              # Enriched datasets (Parquet)
-│   ├── cache/                 # API caches
-│   │   ├── geocode/           # Geocoding cache
-│   │   ├── weather/           # Weather cache
-│   │   └── correlation_cache/ # Correlation cache
-│   └── weights/               # Pricing weights
-│
-├── tests/                      # Test suite
-│   ├── unit/                  # Unit tests
-│   │   ├── test_pricing.py
-│   │   └── test_policy.py
-│   └── integration/           # Integration tests
-│       └── test_api.py
 │
 ├── data/                       # Data storage
 │   ├── config/                # Business profiles (JSON)
 │   ├── enriched/              # Enriched datasets (Parquet)
 │   └── cache/                 # API caches
 │
+├── docs/                       # Documentation
+│   ├── SETUP_GUIDE.md         # Installation guide
+│   ├── ARCHITECTURE.md        # System architecture
+│   ├── SECURITY.md            # Security configuration
+│   ├── DEPLOYMENT.md          # Deployment guide
+│   ├── developer/             # Developer documentation
+│   └── archived/              # Historical documentation
+│
+├── tests/                      # Test suite
+│   ├── unit/                  # Unit tests
+│   └── integration/           # Integration tests
+│
 ├── requirements.txt           # Python dependencies
 ├── README.md                  # This file
-└── Makefile                   # Build & run commands
+├── CLAUDE.md                  # Claude Code instructions
+├── AGENTS.md                  # AI agent configuration
+└── GEMINI.md                  # Gemini instructions
 ```
 
 ---
@@ -449,11 +452,12 @@ No special configuration needed. Vite handles development and production builds 
 
 ### **Workflow**
 
-1. Fork repository
-2. Create feature branch (`feature/amazing-feature`)
-3. Commit changes (conventional commits)
-4. Push to branch
-5. Open Pull Request
+1. Review [docs/developer/README.md](docs/developer/README.md) for development guidelines
+2. Fork repository
+3. Create feature branch (`feature/amazing-feature`)
+4. Commit changes (conventional commits)
+5. Push to branch
+6. Open Pull Request
 
 ### **Commit Convention**
 
@@ -475,9 +479,10 @@ Proprietary - All Rights Reserved
 
 ## 📞 **Support**
 
-- **Documentation**: See `/docs` folder
+- **Documentation**: See [docs/](docs/) directory
+- **Setup Help**: [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md)
 - **Issues**: GitHub Issues
-- **Email**: support@example.com
+- **Developer Docs**: [docs/developer/](docs/developer/)
 
 ---
 
