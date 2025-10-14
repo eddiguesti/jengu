@@ -4,9 +4,7 @@ numpy==2.2.3
 scipy==1.15.1
 scikit-learn==1.6.1
 
-# Web & API
-fastapi==0.115.6
-uvicorn[standard]==0.34.0
+# API Client
 httpx==0.28.1
 
 # Data Processing
@@ -33,16 +31,9 @@ pydantic-settings==2.11.0
 # Logging
 structlog==25.3.0
 
-# Database (optional)
-sqlalchemy==2.0.36
-
-# Security & Authentication
-python-jose[cryptography]==3.3.0  # JWT tokens
-passlib[bcrypt]==1.7.4  # Password hashing
+# Security & Utilities
 python-dotenv==1.0.1  # Environment variable management
-cryptography==44.0.0  # Encryption at rest
-slowapi==0.1.9  # Rate limiting
-itsdangerous==2.2.0  # Secure session management
+cryptography==44.0.0  # Used by scripts/generate_secrets.py
 
 # Development
 pytest==8.3.5
