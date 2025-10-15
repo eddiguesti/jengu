@@ -9,6 +9,8 @@ interface UploadedFile {
   columns: number
   uploaded_at: string
   status: 'uploaded' | 'enriching' | 'complete' | 'error'
+  enrichment_status?: 'none' | 'pending' | 'completed' | 'failed' // Enrichment status from backend
+  enriched_at?: string // Timestamp when enrichment completed
   preview?: any[] // Store preview data for quick display
   // Note: csvData is NO LONGER stored here - fetch from backend API instead
   // Use GET /api/files/:fileId/data to retrieve full CSV data

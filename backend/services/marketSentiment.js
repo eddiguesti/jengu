@@ -265,7 +265,7 @@ Format each insight as a bullet point starting with a category emoji (📊 📈 
     const response = await axios.post(
       'https://api.anthropic.com/v1/messages',
       {
-        model: 'claude-3-5-sonnet-20240620',
+        model: 'claude-3-sonnet-20240229',
         max_tokens: 1024,
         messages: [
           {

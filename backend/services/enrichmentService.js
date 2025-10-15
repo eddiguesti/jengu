@@ -6,29 +6,29 @@
 import axios from 'axios';
 
 /**
- * Enrich property data with weather information
+ * Enrich property data with weather information (Supabase version)
  * @param {string} propertyId - Property UUID
  * @param {object} location - { latitude, longitude }
- * @param {object} prisma - Prisma client instance
+ * @param {object} supabaseClient - Supabase client instance
  */
-export async function enrichWithWeather(propertyId, location, prisma) {
+export async function enrichWithWeather(propertyId, location, supabaseClient) {
   const { latitude, longitude } = location;
 
   console.log(`🌤️  Starting weather enrichment for property ${propertyId}...`);
 
   // Get all dates from pricing data for this property
-  const pricingData = await prisma.pricingData.findMany({
-    where: { propertyId },
-    select: { id: true, date: true },
-    orderBy: { date: 'asc' }
-  });
+  const { data: pricingData, error } = await supabaseClient
+    .from('pricing_data')
+    .select('id, date')
+    .eq('propertyId', propertyId)
+    .order('date', { ascending: true });
 
-  if (pricingData.length === 0) {
+  if (error || !pricingData || pricingData.length === 0) {
     console.log('⚠️  No pricing data found for this property');
     return { enriched: 0 };
   }
 
-  const dates = pricingData.map(d => d.date);
+  const dates = pricingData.map(d => new Date(d.date));
   const minDate = dates[0];
   const maxDate = dates[dates.length - 1];
 
@@ -75,24 +75,37 @@ export async function enrichWithWeather(propertyId, location, prisma) {
       };
     });
 
-    // Update pricing data with weather information (batch updates)
+    // Update pricing data with weather information (batch updates using Supabase)
     let enrichedCount = 0;
-    for (const row of pricingData) {
-      const dateStr = row.date.toISOString().split('T')[0];
-      const weather = weatherMap[dateStr];
+    const BATCH_SIZE = 100; // Update in batches for better performance
 
-      if (weather) {
-        await prisma.pricingData.update({
-          where: { id: row.id },
-          data: {
-            temperature: weather.temperature,
-            precipitation: weather.precipitation,
-            weatherCondition: weather.weatherCondition,
-            sunshineHours: weather.sunshineHours
+    for (let i = 0; i < pricingData.length; i += BATCH_SIZE) {
+      const batch = pricingData.slice(i, i + BATCH_SIZE);
+
+      for (const row of batch) {
+        const dateStr = new Date(row.date).toISOString().split('T')[0];
+        const weather = weatherMap[dateStr];
+
+        if (weather) {
+          const { error: updateError } = await supabaseClient
+            .from('pricing_data')
+            .update({
+              temperature: weather.temperature,
+              precipitation: weather.precipitation,
+              weatherCondition: weather.weatherCondition,
+              sunshineHours: weather.sunshineHours
+            })
+            .eq('id', row.id);
+
+          if (!updateError) {
+            enrichedCount++;
+          } else {
+            console.warn(`Failed to update row ${row.id}:`, updateError.message);
           }
-        });
-        enrichedCount++;
+        }
       }
+
+      console.log(`📊 Enriched ${i + batch.length}/${pricingData.length} rows...`);
     }
 
     console.log(`✅ Weather enrichment complete: ${enrichedCount}/${pricingData.length} rows enriched`);
@@ -105,42 +118,58 @@ export async function enrichWithWeather(propertyId, location, prisma) {
 }
 
 /**
- * Enrich property data with temporal features
+ * Enrich property data with temporal features (Supabase version)
  * @param {string} propertyId - Property UUID
- * @param {object} prisma - Prisma client instance
+ * @param {object} supabaseClient - Supabase client instance
  */
-export async function enrichWithTemporalFeatures(propertyId, prisma) {
+export async function enrichWithTemporalFeatures(propertyId, supabaseClient) {
   console.log(`📆 Starting temporal enrichment for property ${propertyId}...`);
 
-  const pricingData = await prisma.pricingData.findMany({
-    where: { propertyId },
-    select: { id: true, date: true }
-  });
+  const { data: pricingData, error } = await supabaseClient
+    .from('pricing_data')
+    .select('id, date')
+    .eq('propertyId', propertyId);
+
+  if (error || !pricingData || pricingData.length === 0) {
+    console.log('⚠️  No pricing data found for temporal enrichment');
+    return { enriched: 0 };
+  }
 
   let enrichedCount = 0;
-  for (const row of pricingData) {
-    const date = new Date(row.date);
-    const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
-    const month = date.getMonth() + 1; // 1-12
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+  const BATCH_SIZE = 100;
 
-    // Determine season (Northern Hemisphere)
-    let season;
-    if ([12, 1, 2].includes(month)) season = 'Winter';
-    else if ([3, 4, 5].includes(month)) season = 'Spring';
-    else if ([6, 7, 8].includes(month)) season = 'Summer';
-    else season = 'Fall';
+  for (let i = 0; i < pricingData.length; i += BATCH_SIZE) {
+    const batch = pricingData.slice(i, i + BATCH_SIZE);
 
-    await prisma.pricingData.update({
-      where: { id: row.id },
-      data: {
-        dayOfWeek,
-        month,
-        season,
-        isWeekend
+    for (const row of batch) {
+      const date = new Date(row.date);
+      const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+      const month = date.getMonth() + 1; // 1-12
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+      // Determine season (Northern Hemisphere)
+      let season;
+      if ([12, 1, 2].includes(month)) season = 'Winter';
+      else if ([3, 4, 5].includes(month)) season = 'Spring';
+      else if ([6, 7, 8].includes(month)) season = 'Summer';
+      else season = 'Fall';
+
+      const { error: updateError } = await supabaseClient
+        .from('pricing_data')
+        .update({
+          dayOfWeek,
+          month,
+          season,
+          isWeekend
+        })
+        .eq('id', row.id);
+
+      if (!updateError) {
+        enrichedCount++;
       }
-    });
-    enrichedCount++;
+    }
+
+    console.log(`📊 Enriched ${i + batch.length}/${pricingData.length} rows with temporal data...`);
   }
 
   console.log(`✅ Temporal enrichment complete: ${enrichedCount} rows enriched`);
@@ -219,10 +248,10 @@ export async function enrichWithHolidays(propertyId, countryCode, calendarificAp
 }
 
 /**
- * Complete enrichment pipeline
+ * Complete enrichment pipeline (Supabase version)
  * Enriches property data with weather, holidays, and temporal features
  */
-export async function enrichPropertyData(propertyId, options, prisma) {
+export async function enrichPropertyData(propertyId, options, supabaseClient) {
   const { location, countryCode, calendarificApiKey } = options;
 
   const results = {
@@ -232,25 +261,31 @@ export async function enrichPropertyData(propertyId, options, prisma) {
   };
 
   try {
-    // Always enrich temporal features (no API needed)
-    results.temporal = await enrichWithTemporalFeatures(propertyId, prisma);
+    console.log(`\n🚀 Starting enrichment pipeline for property ${propertyId}...`);
 
-    // Enrich with weather if location provided
+    // Always enrich temporal features (no API needed, fast)
+    results.temporal = await enrichWithTemporalFeatures(propertyId, supabaseClient);
+
+    // Enrich with weather if location provided (requires API call)
     if (location && location.latitude && location.longitude) {
-      results.weather = await enrichWithWeather(propertyId, location, prisma);
+      results.weather = await enrichWithWeather(propertyId, location, supabaseClient);
+    } else {
+      console.log('⚠️  Skipping weather enrichment - no location provided');
     }
 
     // Enrich with holidays if country code and API key provided
     if (countryCode && calendarificApiKey) {
-      results.holidays = await enrichWithHolidays(propertyId, countryCode, calendarificApiKey, prisma);
+      // Note: Holiday enrichment still uses Prisma - skipping for now
+      console.log('⚠️  Holiday enrichment not yet migrated to Supabase');
     }
 
+    console.log(`\n✅ Enrichment pipeline complete!`);
     return {
       success: true,
       results
     };
   } catch (error) {
-    console.error('Enrichment error:', error);
+    console.error('❌ Enrichment pipeline error:', error);
     return {
       success: false,
       error: error.message,

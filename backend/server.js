@@ -22,6 +22,7 @@ import {
   generatePricingRecommendations,
 } from './services/marketSentiment.js';
 import { transformDataForAnalytics, validateDataQuality } from './services/dataTransform.js';
+import { enrichPropertyData } from './services/enrichmentService.js';
 
 // ES Module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
@@ -283,6 +284,80 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
     // Delete uploaded file (data is now in DB)
     fs.unlinkSync(filePath);
 
+    // ENRICHMENT PIPELINE - Run AFTER response (but with setImmediate to ensure it runs)
+    setImmediate(async () => {
+      try {
+        console.log(`\n🔍 Checking for enrichment settings...`);
+
+        // Get user's business settings for coordinates
+        const { data: settings, error: settingsError } = await supabaseAdmin
+          .from('business_settings')
+          .select('latitude, longitude, country')
+          .eq('userid', userId)
+          .single();
+
+        if (settingsError) {
+          console.log(`ℹ️  No business settings found for user ${userId} - skipping auto-enrichment`);
+          return;
+        }
+
+        if (settings && settings.latitude && settings.longitude) {
+          console.log(`\n🌤️  Starting automatic enrichment for property ${property.id}...`);
+          console.log(`📍 Location: ${settings.latitude}, ${settings.longitude}`);
+
+          const enrichmentResult = await enrichPropertyData(
+            property.id,
+            {
+              location: {
+                latitude: settings.latitude,
+                longitude: settings.longitude
+              },
+              countryCode: settings.country || 'FR',
+              calendarificApiKey: process.env.CALENDARIFIC_API_KEY
+            },
+            supabaseAdmin
+          );
+
+          if (enrichmentResult.success) {
+            console.log(`✅ Auto-enrichment complete:`, enrichmentResult.results);
+
+            // Mark property as enriched in database
+            const { error: enrichUpdateError } = await supabaseAdmin
+              .from('properties')
+              .update({
+                enrichmentStatus: 'completed',
+                enrichedAt: new Date().toISOString()
+              })
+              .eq('id', property.id);
+
+            if (enrichUpdateError) {
+              console.error('⚠️  Failed to update enrichment status:', enrichUpdateError);
+            } else {
+              console.log(`✅ Property marked as enriched`);
+            }
+          } else {
+            console.warn(`⚠️  Auto-enrichment failed:`, enrichmentResult.error);
+
+            // Mark enrichment as failed
+            await supabaseAdmin
+              .from('properties')
+              .update({
+                enrichmentStatus: 'failed',
+                enrichmentError: enrichmentResult.error
+              })
+              .eq('id', property.id);
+          }
+        } else {
+          console.log(`ℹ️  No coordinates in business settings - skipping auto-enrichment`);
+          console.log(`   To enable automatic enrichment, update your business settings with latitude/longitude`);
+        }
+      } catch (enrichError) {
+        // Don't fail the upload if enrichment fails
+        console.error('⚠️  Enrichment error (non-fatal):', enrichError.message);
+        console.error(enrichError.stack);
+      }
+    });
+
     // Return metadata
     res.json({
       success: true,
@@ -311,8 +386,11 @@ app.get('/api/files/:fileId/data', authenticateUser, async (req, res) => {
   try {
     const { fileId } = req.params;
     const userId = req.userId;
-    const limit = parseInt(req.query.limit) || 1000; // Default 1000 rows
+    const limit = parseInt(req.query.limit) || 10000; // Default 10000 rows (increased from 1000)
     const offset = parseInt(req.query.offset) || 0;
+
+    // Supabase has a max limit, cap at 10000 to avoid errors
+    const actualLimit = Math.min(limit, 10000);
 
     // Check if property exists and belongs to user using Supabase
     const { data: property, error: propertyError } = await supabaseAdmin
@@ -326,22 +404,33 @@ app.get('/api/files/:fileId/data', authenticateUser, async (req, res) => {
       return res.status(404).json({ error: 'File not found' });
     }
 
-    // Fetch pricing data with pagination and total count using Supabase
-    const [dataResult, countResult] = await Promise.all([
-      supabaseAdmin
+    // Get total count first
+    const { count: total } = await supabaseAdmin
+      .from('pricing_data')
+      .select('*', { count: 'exact', head: true })
+      .eq('propertyId', fileId);
+
+    // Fetch ALL data in batches (Supabase has 1000 row limit per query)
+    const SUPABASE_LIMIT = 1000;
+    const allData = [];
+    const totalToFetch = Math.min(actualLimit, total || 0);
+
+    for (let i = offset; i < offset + totalToFetch; i += SUPABASE_LIMIT) {
+      const batchLimit = Math.min(SUPABASE_LIMIT, offset + totalToFetch - i);
+
+      const { data: batchData } = await supabaseAdmin
         .from('pricing_data')
         .select('date, price, occupancy, bookings, temperature, precipitation, weatherCondition, sunshineHours, dayOfWeek, month, season, isWeekend, isHoliday, holidayName, extraData')
         .eq('propertyId', fileId)
         .order('date', { ascending: true })
-        .range(offset, offset + limit - 1),
-      supabaseAdmin
-        .from('pricing_data')
-        .select('*', { count: 'exact', head: true })
-        .eq('propertyId', fileId)
-    ]);
+        .range(i, i + batchLimit - 1);
 
-    const data = dataResult.data || [];
-    const total = countResult.count || 0;
+      if (batchData && batchData.length > 0) {
+        allData.push(...batchData);
+      }
+    }
+
+    const data = allData;
 
     // Transform data to match expected format (flatten extraData)
     const transformedData = data.map(row => {
@@ -386,7 +475,7 @@ app.get('/api/files', authenticateUser, async (req, res) => {
 
     const { data: properties, error } = await supabaseAdmin
       .from('properties')
-      .select('id, originalName, size, rows, columns, uploadedAt, status')
+      .select('id, originalName, size, rows, columns, uploadedAt, status, enrichmentStatus, enrichedAt')
       .eq('userId', userId)
       .order('uploadedAt', { ascending: false });
 
@@ -401,7 +490,9 @@ app.get('/api/files', authenticateUser, async (req, res) => {
       rows: prop.rows,
       columns: prop.columns,
       uploaded_at: prop.uploadedAt,
-      status: prop.status
+      status: prop.status,
+      enrichment_status: prop.enrichmentStatus || 'none',
+      enriched_at: prop.enrichedAt
     }));
 
     res.json({ success: true, files });

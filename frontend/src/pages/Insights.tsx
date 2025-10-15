@@ -35,6 +35,7 @@ import {
 } from '../lib/services/analyticsService'
 import { useBusinessStore } from '../store'
 import axios from 'axios'
+import { getAccessToken } from '../lib/supabase'
 
 export const Insights = () => {
   const navigate = useNavigate()
@@ -91,14 +92,32 @@ export const Insights = () => {
 
       console.log(`📥 Fetching data from backend for file: ${firstFile.name} (ID: ${fileId})`)
 
-      // Fetch all data from backend
+      // Get auth token
+      const token = await getAccessToken()
+      if (!token) {
+        console.error('❌ No access token available')
+        throw new Error('Not authenticated')
+      }
+
+      // Fetch ALL data from backend (no pagination limit)
       const response = await axios.get(
-        `http://localhost:3001/api/files/${fileId}/data`
+        `http://localhost:3001/api/files/${fileId}/data?limit=10000`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       )
 
       if (response.data.success && response.data.data) {
         const data = response.data.data
         console.log(`✅ Loaded ${data.length} rows from backend for file: ${firstFile.name}`)
+
+        // If we got exactly the limit, there might be more data
+        if (data.length === response.data.limit && data.length < response.data.total) {
+          console.warn(`⚠️ Loaded ${data.length} rows but total is ${response.data.total}. Consider increasing limit or implementing pagination.`)
+        }
+
         return data
       }
 
@@ -295,11 +314,8 @@ export const Insights = () => {
       {/* ML Analytics (Forecast & Correlations) - NEW (Always show with loading/empty states) */}
       <MLAnalyticsCard demandForecast={demandForecast} weatherAnalysis={weatherAnalysis} />
 
-      {/* Show original insights when data is available */}
-      {hasAnyData && (
-        <>
-
-      {/* Key Insights */}
+      {/* Key Insights - Always show */}
+      <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card variant="elevated">
           <div className="space-y-2">
@@ -617,7 +633,6 @@ export const Insights = () => {
         </Card.Body>
       </Card>
       </>
-      )}
     </motion.div>
   )
 }

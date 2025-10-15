@@ -57,3 +57,4 @@ backend/uploads/*.xls
 # Lock files (keep pnpm-lock.yaml but ignore others)
 package-lock.json
 yarn.lock
+nul

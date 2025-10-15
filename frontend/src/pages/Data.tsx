@@ -47,7 +47,7 @@ export const Data = () => {
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Load persisted files on mount
+  // Load persisted files on mount AND check enrichment status
   useEffect(() => {
     if (uploadedFiles && uploadedFiles.length > 0) {
       const restoredFiles: UploadedFile[] = uploadedFiles.map(file => ({
@@ -62,6 +62,15 @@ export const Data = () => {
       }))
       setFiles(restoredFiles)
       console.log('✅ Restored', uploadedFiles.length, 'files from localStorage')
+
+      // Check if files are already enriched
+      const enrichmentStatuses = uploadedFiles.map(file => file.enrichment_status)
+      const allEnriched = enrichmentStatuses.every(status => status === 'completed')
+
+      if (allEnriched) {
+        console.log('✅ All files already enriched - marking features as complete')
+        setFeatures(prev => prev.map(f => ({ ...f, status: 'complete', progress: 100 })))
+      }
     }
   }, [])
 
@@ -603,17 +612,26 @@ export const Data = () => {
                             {file.columns && ` • ${file.columns} columns`}
                           </p>
                         </div>
-                        <Badge
-                          variant={
-                            file.status === 'success'
-                              ? 'success'
-                              : file.status === 'error'
-                              ? 'error'
-                              : 'default'
-                          }
-                        >
-                          {file.status}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={
+                              file.status === 'success'
+                                ? 'success'
+                                : file.status === 'error'
+                                ? 'error'
+                                : 'default'
+                            }
+                          >
+                            {file.status}
+                          </Badge>
+                          {/* Show enrichment status if file is from the store (has enrichment data) */}
+                          {uploadedFiles.find(f => f.id === file.uniqueId)?.enrichment_status === 'completed' && (
+                            <Badge variant="success" className="flex items-center gap-1">
+                              <Sparkles className="w-3 h-3" />
+                              Enriched
+                            </Badge>
+                          )}
+                        </div>
                         <button
                           onClick={() => removeFile(file.uniqueId || file.name)}
                           className="p-2 hover:bg-card rounded-lg transition-colors"

@@ -50,7 +50,14 @@
       "Bash(sqlite3:*)",
       "Bash(node:*)",
       "Bash(pnpm remove:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(Select-String -Pattern \"Claude API Error\" -Context 0,5)",
+      "Bash(Select-Object -Last 1)",
+      "Bash(Select-Object Id, StartTime)",
+      "Bash(git config:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(del nul)"
     ],
     "deny": [],
     "ask": []
