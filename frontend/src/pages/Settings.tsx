@@ -4,11 +4,14 @@ import { Save, Building2, MapPin, DollarSign, Clock, CheckCircle2, Loader2 } fro
 import { Card, Button, Input, Select } from '../components/ui'
 import { useBusinessStore } from '../store'
 import axios from 'axios'
+import { getAccessToken } from '../lib/supabase'
 
 export const Settings = () => {
   const { profile, setProfile } = useBusinessStore()
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [isGeocoding, setIsGeocoding] = useState(false)
   const [geocodeError, setGeocodeError] = useState<string | null>(null)
 
@@ -22,6 +25,61 @@ export const Settings = () => {
     timezone: profile?.timezone || 'Europe/Paris',
     property_type: profile?.property_type || 'hotel',
   })
+
+  // Load settings from database on component mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const token = await getAccessToken()
+        if (!token) {
+          console.error('No access token available')
+          setIsLoading(false)
+          return
+        }
+
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+        const response = await axios.get(`${API_URL}/settings`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+
+        if (response.data.success && response.data.settings) {
+          const settings = response.data.settings
+
+          // Populate form with loaded settings
+          setFormData({
+            business_name: settings.business_name || '',
+            city: settings.city || '',
+            country: settings.country || '',
+            latitude: settings.latitude || 0,
+            longitude: settings.longitude || 0,
+            currency: settings.currency || 'EUR',
+            timezone: settings.timezone || 'Europe/Paris',
+            property_type: settings.property_type || 'hotel',
+          })
+
+          // Also update the store
+          setProfile({
+            business_name: settings.business_name,
+            location: {
+              city: settings.city,
+              country: settings.country,
+              latitude: settings.latitude,
+              longitude: settings.longitude,
+            },
+            currency: settings.currency,
+            timezone: settings.timezone,
+            property_type: settings.property_type,
+          })
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSettings()
+  }, [])
 
   // Auto-geocode when city and country are both filled
   useEffect(() => {
@@ -69,29 +127,50 @@ export const Settings = () => {
   const handleSave = async () => {
     setIsSaving(true)
     setSaveSuccess(false)
+    setSaveError(null)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      const token = await getAccessToken()
+      if (!token) {
+        throw new Error('Not authenticated. Please sign in again.')
+      }
 
-    // Update store
-    setProfile({
-      business_name: formData.business_name,
-      location: {
-        city: formData.city,
-        country: formData.country,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
-      },
-      currency: formData.currency as any,
-      timezone: formData.timezone,
-      property_type: formData.property_type as any,
-    })
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
-    setIsSaving(false)
-    setSaveSuccess(true)
+      // Save to backend database
+      const response = await axios.post(`${API_URL}/settings`, formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
 
-    // Clear success message after 3 seconds
-    setTimeout(() => setSaveSuccess(false), 3000)
+      if (response.data.success) {
+        // Update local store after successful save
+        setProfile({
+          business_name: formData.business_name,
+          location: {
+            city: formData.city,
+            country: formData.country,
+            latitude: formData.latitude,
+            longitude: formData.longitude,
+          },
+          currency: formData.currency as any,
+          timezone: formData.timezone,
+          property_type: formData.property_type as any,
+        })
+
+        setSaveSuccess(true)
+
+        // Clear success message after 3 seconds
+        setTimeout(() => setSaveSuccess(false), 3000)
+      }
+    } catch (error: any) {
+      console.error('Failed to save settings:', error)
+      setSaveError(error.response?.data?.message || error.message || 'Failed to save settings. Please try again.')
+
+      // Clear error message after 5 seconds
+      setTimeout(() => setSaveError(null), 5000)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -107,13 +186,36 @@ export const Settings = () => {
         <p className="text-muted mt-2">Manage your business profile and preferences</p>
       </div>
 
+      {/* Loading State */}
+      {isLoading && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <Card variant="elevated" className="bg-primary/5 border-primary/20">
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-5 h-5 text-primary animate-spin" />
+              <p className="text-sm font-medium text-primary">Loading your settings...</p>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Success Message */}
       {saveSuccess && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <Card variant="elevated" className="bg-success/5 border-success/20">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-5 h-5 text-success" />
-              <p className="text-sm font-medium text-success">Settings saved successfully!</p>
+              <p className="text-sm font-medium text-success">Settings saved successfully to database!</p>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Error Message */}
+      {saveError && (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+          <Card variant="elevated" className="bg-error/5 border-error/20">
+            <div className="flex items-center gap-3">
+              <p className="text-sm font-medium text-error">{saveError}</p>
             </div>
           </Card>
         </motion.div>

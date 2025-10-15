@@ -1167,6 +1167,123 @@ app.post('/api/analytics/pricing-recommendations', async (req, res) => {
   }
 });
 
+// ========================================
+// BUSINESS SETTINGS
+// ========================================
+
+// Get user's business settings
+app.get('/api/settings', authenticateUser, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const { data: settings, error } = await supabaseAdmin
+      .from('business_settings')
+      .select('*')
+      .eq('userid', userId)  // PostgreSQL column is lowercase
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found (not an error)
+      throw error;
+    }
+
+    // Return settings or empty object if not found
+    res.json({
+      success: true,
+      settings: settings || {}
+    });
+  } catch (error) {
+    console.error('Get Settings Error:', error);
+    res.status(500).json({
+      error: 'Failed to get settings',
+      message: error.message
+    });
+  }
+});
+
+// Save/update user's business settings
+app.post('/api/settings', authenticateUser, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const {
+      business_name,
+      property_type,
+      city,
+      country,
+      latitude,
+      longitude,
+      currency,
+      timezone
+    } = req.body;
+
+    console.log(`💾 Saving settings for user: ${userId}`);
+
+    // Check if settings already exist
+    const { data: existingSettings } = await supabaseAdmin
+      .from('business_settings')
+      .select('id')
+      .eq('userid', userId)  // PostgreSQL column is lowercase
+      .single();
+
+    let result;
+    if (existingSettings) {
+      // Update existing settings
+      const { data, error } = await supabaseAdmin
+        .from('business_settings')
+        .update({
+          business_name,
+          property_type,
+          city,
+          country,
+          latitude,
+          longitude,
+          currency,
+          timezone,
+          updatedat: new Date().toISOString()  // PostgreSQL column is lowercase
+        })
+        .eq('userid', userId)  // PostgreSQL column is lowercase
+        .select()
+        .single();
+
+      if (error) throw error;
+      result = data;
+      console.log('✅ Settings updated');
+    } else {
+      // Insert new settings
+      const { data, error } = await supabaseAdmin
+        .from('business_settings')
+        .insert({
+          userid: userId,  // PostgreSQL column is lowercase
+          business_name,
+          property_type,
+          city,
+          country,
+          latitude,
+          longitude,
+          currency,
+          timezone
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      result = data;
+      console.log('✅ Settings created');
+    }
+
+    res.json({
+      success: true,
+      message: 'Settings saved successfully',
+      settings: result
+    });
+  } catch (error) {
+    console.error('Save Settings Error:', error);
+    res.status(500).json({
+      error: 'Failed to save settings',
+      message: error.message
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server Error:', err);
