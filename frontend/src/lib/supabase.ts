@@ -107,6 +107,24 @@ export async function getAccessToken() {
 }
 
 /**
+ * Sign in with Google OAuth
+ */
+export async function signInWithGoogle() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/`
+    }
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+/**
  * Subscribe to auth state changes
  */
 export function onAuthStateChange(callback: (event: string, session: any) => void) {
