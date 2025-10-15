@@ -2,6 +2,30 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { randomUUID } from 'crypto';
+import csv from 'csv-parser';
+import { authenticateUser, optionalAuth, supabaseAdmin } from './lib/supabase.js';
+import {
+  analyzeWeatherImpact,
+  forecastDemand,
+  analyzeCompetitorPricing,
+  calculateFeatureImportance,
+  generateAnalyticsSummary,
+} from './services/mlAnalytics.js';
+import {
+  analyzeMarketSentiment,
+  generateClaudeInsights,
+  generatePricingRecommendations,
+} from './services/marketSentiment.js';
+import { transformDataForAnalytics, validateDataQuality } from './services/dataTransform.js';
+
+// ES Module __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config();
@@ -11,7 +35,7 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: ['http://localhost:5173', 'http://localhost:5174', process.env.FRONTEND_URL].filter(Boolean),
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -45,6 +69,38 @@ function rateLimit(req, res, next) {
 
 app.use(rateLimit);
 
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, 'uploads');
+    // Create uploads directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename: timestamp-originalname
+    const uniqueName = `${Date.now()}-${file.originalname}`;
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Only allow CSV files
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV files are allowed'));
+    }
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
@@ -52,6 +108,351 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
+});
+
+// ========================================
+// FILE UPLOAD & MANAGEMENT
+// ========================================
+
+// Upload CSV file with streaming and batch inserts
+app.post('/api/files/upload', authenticateUser, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const userId = req.userId; // From authentication middleware
+    const filePath = req.file.path;
+    console.log(`📥 Processing CSV file: ${req.file.originalname} (${req.file.size} bytes) for user: ${userId}`);
+
+    // Create property record in database using Supabase
+    console.log('⏳ Creating property record...');
+    const propertyId = randomUUID();
+    const { data: property, error: propertyError } = await supabaseAdmin
+      .from('properties')
+      .insert({
+        id: propertyId,
+        name: req.file.filename,
+        originalName: req.file.originalname,
+        size: req.file.size,
+        rows: 0, // Will update after processing
+        columns: 0,
+        status: 'processing',
+        userId: userId // Link to authenticated user
+      })
+      .select()
+      .single();
+
+    if (propertyError) {
+      console.error('Failed to create property:', propertyError);
+      throw new Error(`Database error: ${propertyError.message}`);
+    }
+
+    console.log(`✅ Created property record: ${property.id}`);
+
+    // Stream CSV and batch insert rows
+    const results = [];
+    const batch = [];
+    const BATCH_SIZE = 1000;
+    let totalRows = 0;
+    let columnCount = 0;
+    let preview = [];
+
+    // Helper function to parse date flexibly
+    const parseDate = (dateStr) => {
+      if (!dateStr) return null;
+      try {
+        const date = new Date(dateStr);
+        return isNaN(date.getTime()) ? null : date;
+      } catch {
+        return null;
+      }
+    };
+
+    // Helper function to parse float
+    const parseFloat = (val) => {
+      if (val === null || val === undefined || val === '') return null;
+      const num = Number(val);
+      return isNaN(num) ? null : num;
+    };
+
+    // Helper function to parse int
+    const parseInt = (val) => {
+      if (val === null || val === undefined || val === '') return null;
+      const num = Number(val);
+      return isNaN(num) ? null : Math.floor(num);
+    };
+
+    // Process CSV stream - collect all rows first
+    const allRows = [];
+    await new Promise((resolve, reject) => {
+      fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('headers', (headers) => {
+          columnCount = headers.length;
+          console.log(`📊 CSV Columns (${columnCount}):`, headers);
+        })
+        .on('data', (row) => {
+          totalRows++;
+          allRows.push(row);
+
+          // Store preview (first 5 rows)
+          if (preview.length < 5) {
+            preview.push(row);
+          }
+        })
+        .on('end', () => resolve())
+        .on('error', reject);
+    });
+
+    console.log(`📥 Parsed ${totalRows} rows, now inserting to database...`);
+
+    // Insert rows in batches
+    for (let i = 0; i < allRows.length; i += BATCH_SIZE) {
+      const batchRows = allRows.slice(i, i + BATCH_SIZE);
+      const batchData = [];
+
+      for (const row of batchRows) {
+        // Normalize column names (handle different CSV formats)
+        const normalizedRow = {};
+        Object.keys(row).forEach(key => {
+          normalizedRow[key.trim().toLowerCase()] = row[key];
+        });
+
+        // Map CSV columns to database fields (flexible mapping)
+        const dateField = normalizedRow.date || normalizedRow.booking_date || normalizedRow.check_in || normalizedRow.checkin;
+        const priceField = normalizedRow.price || normalizedRow.rate || normalizedRow.amount;
+        const occupancyField = normalizedRow.occupancy || normalizedRow.occupancy_rate;
+        const bookingsField = normalizedRow.bookings || normalizedRow.reservations;
+        const temperatureField = normalizedRow.temperature || normalizedRow.temp;
+        const weatherField = normalizedRow.weather || normalizedRow.weather_condition;
+
+        // Create pricing data record
+        const pricingData = {
+          id: randomUUID(), // Generate UUID for each row
+          propertyId: property.id,
+          date: parseDate(dateField),
+          price: parseFloat(priceField),
+          occupancy: parseFloat(occupancyField),
+          bookings: parseInt(bookingsField),
+          temperature: parseFloat(temperatureField),
+          weatherCondition: weatherField || null,
+          extraData: normalizedRow // Store all fields as JSON for flexibility
+        };
+
+        // Only insert if we have a valid date
+        if (pricingData.date) {
+          batchData.push(pricingData);
+        }
+      }
+
+      // Batch insert using Supabase
+      if (batchData.length > 0) {
+        try {
+          const { error: batchError } = await supabaseAdmin
+            .from('pricing_data')
+            .insert(batchData);
+
+          if (batchError) {
+            console.error('Batch insert error:', batchError);
+          } else {
+            console.log(`✅ Inserted batch ${Math.floor(i/BATCH_SIZE) + 1} (${batchData.length} rows, ${i + batchData.length}/${totalRows} total)`);
+          }
+        } catch (error) {
+          console.error('Batch insert error:', error);
+        }
+      }
+    }
+
+    // Update property with final counts using Supabase
+    const { error: updateError } = await supabaseAdmin
+      .from('properties')
+      .update({
+        rows: totalRows,
+        columns: columnCount,
+        status: 'complete'
+      })
+      .eq('id', property.id);
+
+    if (updateError) {
+      console.error('Failed to update property:', updateError);
+    }
+
+    console.log(`✅ Processing complete: ${totalRows} rows, ${columnCount} columns`);
+
+    // Delete uploaded file (data is now in DB)
+    fs.unlinkSync(filePath);
+
+    // Return metadata
+    res.json({
+      success: true,
+      file: {
+        id: property.id,
+        name: req.file.originalname,
+        size: req.file.size,
+        rows: totalRows,
+        columns: columnCount,
+        preview,
+        uploaded_at: property.uploadedAt, // Already a string from Supabase
+        status: 'complete'
+      }
+    });
+  } catch (error) {
+    console.error('File Upload Error:', error);
+    res.status(500).json({
+      error: 'Failed to upload file',
+      message: error.message
+    });
+  }
+});
+
+// Get file data (with pagination for large files)
+app.get('/api/files/:fileId/data', authenticateUser, async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const userId = req.userId;
+    const limit = parseInt(req.query.limit) || 1000; // Default 1000 rows
+    const offset = parseInt(req.query.offset) || 0;
+
+    // Check if property exists and belongs to user using Supabase
+    const { data: property, error: propertyError } = await supabaseAdmin
+      .from('properties')
+      .select('id')
+      .eq('id', fileId)
+      .eq('userId', userId)
+      .single();
+
+    if (propertyError || !property) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Fetch pricing data with pagination and total count using Supabase
+    const [dataResult, countResult] = await Promise.all([
+      supabaseAdmin
+        .from('pricing_data')
+        .select('date, price, occupancy, bookings, temperature, precipitation, weatherCondition, sunshineHours, dayOfWeek, month, season, isWeekend, isHoliday, holidayName, extraData')
+        .eq('propertyId', fileId)
+        .order('date', { ascending: true })
+        .range(offset, offset + limit - 1),
+      supabaseAdmin
+        .from('pricing_data')
+        .select('*', { count: 'exact', head: true })
+        .eq('propertyId', fileId)
+    ]);
+
+    const data = dataResult.data || [];
+    const total = countResult.count || 0;
+
+    // Transform data to match expected format (flatten extraData)
+    const transformedData = data.map(row => {
+      const { extraData, ...coreFields } = row;
+
+      // Format date as string for frontend
+      const formattedRow = {
+        ...coreFields,
+        date: new Date(row.date).toISOString().split('T')[0],
+        weather: row.weatherCondition,
+      };
+
+      // Merge extraData if present
+      if (extraData && typeof extraData === 'object') {
+        Object.assign(formattedRow, extraData);
+      }
+
+      return formattedRow;
+    });
+
+    res.json({
+      success: true,
+      data: transformedData,
+      total,
+      offset,
+      limit: transformedData.length,
+      hasMore: offset + transformedData.length < total
+    });
+  } catch (error) {
+    console.error('File Read Error:', error);
+    res.status(500).json({
+      error: 'Failed to read file',
+      message: error.message
+    });
+  }
+});
+
+// List all uploaded files
+app.get('/api/files', authenticateUser, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const { data: properties, error } = await supabaseAdmin
+      .from('properties')
+      .select('id, originalName, size, rows, columns, uploadedAt, status')
+      .eq('userId', userId)
+      .order('uploadedAt', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    const files = (properties || []).map(prop => ({
+      id: prop.id,
+      name: prop.originalName,
+      size: prop.size,
+      rows: prop.rows,
+      columns: prop.columns,
+      uploaded_at: prop.uploadedAt,
+      status: prop.status
+    }));
+
+    res.json({ success: true, files });
+  } catch (error) {
+    console.error('List Files Error:', error);
+    res.status(500).json({
+      error: 'Failed to list files',
+      message: error.message
+    });
+  }
+});
+
+// Delete file
+app.delete('/api/files/:fileId', authenticateUser, async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const userId = req.userId;
+
+    // Check if property exists and belongs to user using Supabase
+    const { data: property, error: findError } = await supabaseAdmin
+      .from('properties')
+      .select('id')
+      .eq('id', fileId)
+      .eq('userId', userId)
+      .single();
+
+    if (findError || !property) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Delete property using Supabase (cascade will delete all pricing data via database ON DELETE CASCADE)
+    const { error: deleteError } = await supabaseAdmin
+      .from('properties')
+      .delete()
+      .eq('id', fileId);
+
+    if (deleteError) {
+      throw deleteError;
+    }
+
+    res.json({
+      success: true,
+      message: 'File deleted successfully'
+    });
+  } catch (error) {
+    console.error('File Delete Error:', error);
+    res.status(500).json({
+      error: 'Failed to delete file',
+      message: error.message
+    });
+  }
 });
 
 // ========================================
@@ -64,7 +465,7 @@ app.post('/api/assistant/message', async (req, res) => {
     const response = await axios.post(
       'https://api.anthropic.com/v1/messages',
       {
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 2048,
         messages: [
           ...conversationHistory,
@@ -92,7 +493,7 @@ app.post('/api/assistant/message', async (req, res) => {
 });
 
 // ========================================
-// OPENWEATHER API (Weather Data)
+// OPEN-METEO API (Weather Data - FREE, No API Key!)
 // ========================================
 app.post('/api/weather/historical', async (req, res) => {
   try {
@@ -102,28 +503,205 @@ app.post('/api/weather/historical', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields: latitude, longitude, dates' });
     }
 
-    const weatherPromises = dates.map(async (timestamp) => {
-      const response = await axios.get(
-        `https://api.openweathermap.org/data/3.0/onecall/timemachine`,
-        {
-          params: {
-            lat: latitude,
-            lon: longitude,
-            dt: timestamp,
-            appid: process.env.OPENWEATHER_API_KEY,
-            units: 'metric'
-          }
-        }
-      );
-      return response.data;
+    // Convert Unix timestamps to YYYY-MM-DD format
+    const formattedDates = dates.map(timestamp => {
+      const date = new Date(timestamp * 1000);
+      return date.toISOString().split('T')[0];
     });
 
-    const weatherData = await Promise.all(weatherPromises);
-    res.json({ success: true, data: weatherData });
+    // Get unique dates and determine date range
+    const uniqueDates = [...new Set(formattedDates)].sort();
+    const startDate = uniqueDates[0];
+    const endDate = uniqueDates[uniqueDates.length - 1];
+
+    // Call Open-Meteo Historical Weather API (FREE - No API key needed!)
+    const response = await axios.get(
+      'https://archive-api.open-meteo.com/v1/archive',
+      {
+        params: {
+          latitude: latitude,
+          longitude: longitude,
+          start_date: startDate,
+          end_date: endDate,
+          daily: 'temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,weathercode',
+          timezone: 'auto'
+        }
+      }
+    );
+
+    // Transform Open-Meteo response to match expected format
+    const weatherData = response.data.daily.time.map((date, index) => {
+      const weathercode = response.data.daily.weathercode[index];
+
+      // Map weathercode to weather description
+      // https://open-meteo.com/en/docs#weathervariables
+      let weatherDescription = 'Clear';
+      if (weathercode === 0) weatherDescription = 'Clear';
+      else if ([1, 2, 3].includes(weathercode)) weatherDescription = 'Partly Cloudy';
+      else if ([45, 48].includes(weathercode)) weatherDescription = 'Foggy';
+      else if ([51, 53, 55, 56, 57].includes(weathercode)) weatherDescription = 'Drizzle';
+      else if ([61, 63, 65, 66, 67, 80, 81, 82].includes(weathercode)) weatherDescription = 'Rainy';
+      else if ([71, 73, 75, 77, 85, 86].includes(weathercode)) weatherDescription = 'Snowy';
+      else if ([95, 96, 99].includes(weathercode)) weatherDescription = 'Thunderstorm';
+      else if ([1, 2, 3].includes(weathercode)) weatherDescription = 'Cloudy';
+
+      return {
+        date: date,
+        temperature: {
+          max: response.data.daily.temperature_2m_max[index],
+          min: response.data.daily.temperature_2m_min[index],
+          mean: response.data.daily.temperature_2m_mean[index]
+        },
+        precipitation: response.data.daily.precipitation_sum[index],
+        weather: weatherDescription,
+        weathercode: weathercode
+      };
+    });
+
+    res.json({
+      success: true,
+      data: weatherData,
+      source: 'Open-Meteo (Free)',
+      message: 'Historical weather data from Open-Meteo - No API key required!'
+    });
   } catch (error) {
-    console.error('OpenWeather API Error:', error.response?.data || error.message);
+    console.error('Open-Meteo API Error:', error.response?.data || error.message);
     res.status(500).json({
       error: 'Failed to fetch weather data',
+      message: error.response?.data?.message || error.message
+    });
+  }
+});
+
+// ========================================
+// OPENWEATHER API (Current & Forecast Weather - FREE)
+// ========================================
+
+// Current weather endpoint (FREE - for live pricing decisions)
+app.get('/api/weather/current', async (req, res) => {
+  try {
+    const { latitude, longitude } = req.query;
+
+    if (!latitude || !longitude) {
+      return res.status(400).json({ error: 'Missing required parameters: latitude, longitude' });
+    }
+
+    const response = await axios.get(
+      'https://api.openweathermap.org/data/2.5/weather',
+      {
+        params: {
+          lat: latitude,
+          lon: longitude,
+          appid: process.env.OPENWEATHER_API_KEY,
+          units: 'metric'
+        }
+      }
+    );
+
+    // Transform to consistent format
+    const weatherData = {
+      location: response.data.name,
+      temperature: {
+        current: response.data.main.temp,
+        feels_like: response.data.main.feels_like,
+        min: response.data.main.temp_min,
+        max: response.data.main.temp_max
+      },
+      weather: response.data.weather[0].main,
+      description: response.data.weather[0].description,
+      humidity: response.data.main.humidity,
+      wind_speed: response.data.wind.speed,
+      timestamp: new Date(response.data.dt * 1000).toISOString(),
+      source: 'OpenWeather (Free)'
+    };
+
+    res.json({
+      success: true,
+      data: weatherData,
+      message: 'Current weather data - perfect for live pricing optimization!'
+    });
+  } catch (error) {
+    console.error('OpenWeather Current API Error:', error.response?.data || error.message);
+    res.status(500).json({
+      error: 'Failed to fetch current weather',
+      message: error.response?.data?.message || error.message
+    });
+  }
+});
+
+// 5-day weather forecast endpoint (FREE - for pricing optimization)
+app.get('/api/weather/forecast', async (req, res) => {
+  try {
+    const { latitude, longitude } = req.query;
+
+    if (!latitude || !longitude) {
+      return res.status(400).json({ error: 'Missing required parameters: latitude, longitude' });
+    }
+
+    const response = await axios.get(
+      'https://api.openweathermap.org/data/2.5/forecast',
+      {
+        params: {
+          lat: latitude,
+          lon: longitude,
+          appid: process.env.OPENWEATHER_API_KEY,
+          units: 'metric'
+        }
+      }
+    );
+
+    // Transform forecast data - group by day
+    const dailyForecasts = {};
+
+    response.data.list.forEach(item => {
+      const date = item.dt_txt.split(' ')[0];
+
+      if (!dailyForecasts[date]) {
+        dailyForecasts[date] = {
+          date: date,
+          temperatures: [],
+          weather: [],
+          humidity: [],
+          precipitation: item.rain ? item.rain['3h'] || 0 : 0
+        };
+      }
+
+      dailyForecasts[date].temperatures.push(item.main.temp);
+      dailyForecasts[date].weather.push(item.weather[0].main);
+      dailyForecasts[date].humidity.push(item.main.humidity);
+    });
+
+    // Calculate daily summaries
+    const forecastData = Object.values(dailyForecasts).map(day => {
+      const temps = day.temperatures;
+      const mostCommonWeather = day.weather.sort((a,b) =>
+        day.weather.filter(v => v===a).length - day.weather.filter(v => v===b).length
+      ).pop();
+
+      return {
+        date: day.date,
+        temperature: {
+          min: Math.min(...temps),
+          max: Math.max(...temps),
+          avg: temps.reduce((a, b) => a + b, 0) / temps.length
+        },
+        weather: mostCommonWeather,
+        humidity_avg: day.humidity.reduce((a, b) => a + b, 0) / day.humidity.length,
+        precipitation: day.precipitation
+      };
+    });
+
+    res.json({
+      success: true,
+      data: forecastData,
+      location: response.data.city.name,
+      source: 'OpenWeather (Free)',
+      message: '5-day forecast - use this for dynamic pricing recommendations!'
+    });
+  } catch (error) {
+    console.error('OpenWeather Forecast API Error:', error.response?.data || error.message);
+    res.status(500).json({
+      error: 'Failed to fetch weather forecast',
       message: error.response?.data?.message || error.message
     });
   }
@@ -394,6 +972,201 @@ app.post('/api/hotels/search', async (req, res) => {
   }
 });
 
+// ========================================
+// ML ANALYTICS & INSIGHTS (Enhanced Intelligence)
+// ========================================
+
+// Comprehensive analytics summary
+app.post('/api/analytics/summary', async (req, res) => {
+  try {
+    const { data } = req.body;
+
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return res.status(400).json({ error: 'Missing or invalid data array' });
+    }
+
+    console.log(`📊 Analytics Summary Request: Received ${data.length} rows`);
+
+    // Transform data to handle different CSV formats
+    const transformedData = transformDataForAnalytics(data);
+
+    if (transformedData.length === 0) {
+      return res.status(400).json({
+        error: 'No valid data after transformation',
+        message: 'Please check your CSV format. Required columns: date, price'
+      });
+    }
+
+    // Validate data quality
+    const validation = validateDataQuality(transformedData);
+    console.log(`✅ Data quality check:`, validation);
+
+    // Generate analytics summary
+    const summary = generateAnalyticsSummary(transformedData);
+
+    // Add validation info to response
+    summary.dataQuality = {
+      ...summary.dataQuality,
+      validation: {
+        isValid: validation.isValid,
+        warnings: validation.warnings,
+        errors: validation.errors
+      }
+    };
+
+    res.json({ success: true, data: summary });
+  } catch (error) {
+    console.error('Analytics Summary Error:', error.message);
+    res.status(500).json({
+      error: 'Failed to generate analytics summary',
+      message: error.message
+    });
+  }
+});
+
+// Weather impact analysis
+app.post('/api/analytics/weather-impact', async (req, res) => {
+  try {
+    const { data } = req.body;
+
+    if (!data || !Array.isArray(data)) {
+      return res.status(400).json({ error: 'Missing or invalid data array' });
+    }
+
+    const analysis = analyzeWeatherImpact(data);
+    res.json({ success: true, data: analysis });
+  } catch (error) {
+    console.error('Weather Impact Analysis Error:', error.message);
+    res.status(500).json({
+      error: 'Failed to analyze weather impact',
+      message: error.message
+    });
+  }
+});
+
+// Demand forecasting
+app.post('/api/analytics/demand-forecast', async (req, res) => {
+  try {
+    const { data, daysAhead } = req.body;
+
+    if (!data || !Array.isArray(data)) {
+      return res.status(400).json({ error: 'Missing or invalid data array' });
+    }
+
+    const forecast = forecastDemand(data, daysAhead || 14);
+    res.json({ success: true, data: forecast });
+  } catch (error) {
+    console.error('Demand Forecast Error:', error.message);
+    res.status(500).json({
+      error: 'Failed to generate demand forecast',
+      message: error.message
+    });
+  }
+});
+
+// Competitor pricing analysis
+app.post('/api/analytics/competitor-analysis', async (req, res) => {
+  try {
+    const { yourData, competitorData } = req.body;
+
+    if (!yourData || !competitorData) {
+      return res.status(400).json({ error: 'Missing yourData or competitorData' });
+    }
+
+    const analysis = analyzeCompetitorPricing(yourData, competitorData);
+    res.json({ success: true, data: analysis });
+  } catch (error) {
+    console.error('Competitor Analysis Error:', error.message);
+    res.status(500).json({
+      error: 'Failed to analyze competitor pricing',
+      message: error.message
+    });
+  }
+});
+
+// Feature importance calculation
+app.post('/api/analytics/feature-importance', async (req, res) => {
+  try {
+    const { data } = req.body;
+
+    if (!data || !Array.isArray(data)) {
+      return res.status(400).json({ error: 'Missing or invalid data array' });
+    }
+
+    const importance = calculateFeatureImportance(data);
+    res.json({ success: true, data: importance });
+  } catch (error) {
+    console.error('Feature Importance Error:', error.message);
+    res.status(500).json({
+      error: 'Failed to calculate feature importance',
+      message: error.message
+    });
+  }
+});
+
+// Market sentiment analysis
+app.post('/api/analytics/market-sentiment', async (req, res) => {
+  try {
+    const { weatherData, occupancyData, competitorData, yourPricing, historicalTrends } = req.body;
+
+    const sentiment = analyzeMarketSentiment({
+      weatherData,
+      occupancyData,
+      competitorData,
+      yourPricing,
+      historicalTrends,
+    });
+
+    res.json({ success: true, data: sentiment });
+  } catch (error) {
+    console.error('Market Sentiment Error:', error.message);
+    res.status(500).json({
+      error: 'Failed to analyze market sentiment',
+      message: error.message
+    });
+  }
+});
+
+// Claude-powered insights generation
+app.post('/api/analytics/ai-insights', async (req, res) => {
+  try {
+    const { analyticsData } = req.body;
+
+    if (!analyticsData) {
+      return res.status(400).json({ error: 'Missing analyticsData object' });
+    }
+
+    const insights = await generateClaudeInsights(analyticsData, process.env.ANTHROPIC_API_KEY);
+    res.json({ success: true, data: insights });
+  } catch (error) {
+    console.error('AI Insights Error:', error.message);
+    res.status(500).json({
+      error: 'Failed to generate AI insights',
+      message: error.message
+    });
+  }
+});
+
+// Pricing recommendations
+app.post('/api/analytics/pricing-recommendations', async (req, res) => {
+  try {
+    const { sentimentAnalysis, currentPrice } = req.body;
+
+    if (!sentimentAnalysis || !currentPrice) {
+      return res.status(400).json({ error: 'Missing sentimentAnalysis or currentPrice' });
+    }
+
+    const recommendations = generatePricingRecommendations(sentimentAnalysis, currentPrice);
+    res.json({ success: true, data: recommendations });
+  } catch (error) {
+    console.error('Pricing Recommendations Error:', error.message);
+    res.status(500).json({
+      error: 'Failed to generate pricing recommendations',
+      message: error.message
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server Error:', err);
@@ -408,25 +1181,61 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
 });
 
+// Graceful shutdown handler
+process.on('SIGINT', () => {
+  console.log('\n🛑 Shutting down gracefully...');
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('\n🛑 Shutting down gracefully...');
+  process.exit(0);
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`
-🚀 Jengu Backend API Server
+🚀 Jengu Backend API Server (Supabase + PostgreSQL)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ Server running on port ${PORT}
 ✅ Environment: ${process.env.NODE_ENV || 'development'}
+✅ Database: Supabase PostgreSQL (REST API)
 ✅ Frontend URL: ${process.env.FRONTEND_URL}
 ✅ Rate limit: ${RATE_LIMIT} requests/minute
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📡 Available endpoints:
    - GET  /health
+
+   📁 File Management (Supabase):
+   - POST   /api/files/upload (streaming + batch inserts)
+   - GET    /api/files
+   - GET    /api/files/:fileId/data (paginated)
+   - DELETE /api/files/:fileId
+
+   🤖 AI Assistant:
    - POST /api/assistant/message
-   - POST /api/weather/historical
+
+   🌤️  Weather & Location:
+   - POST /api/weather/historical (Open-Meteo - FREE)
+   - GET  /api/weather/current (OpenWeather - FREE)
+   - GET  /api/weather/forecast (OpenWeather - FREE)
    - GET  /api/holidays
    - GET  /api/geocoding/forward
    - GET  /api/geocoding/reverse
+
+   🏨 Competitor Data:
    - POST /api/competitor/scrape
    - POST /api/hotels/search
+
+   📊 ML Analytics & AI Insights:
+   - POST /api/analytics/summary
+   - POST /api/analytics/weather-impact
+   - POST /api/analytics/demand-forecast
+   - POST /api/analytics/competitor-analysis
+   - POST /api/analytics/feature-importance
+   - POST /api/analytics/market-sentiment
+   - POST /api/analytics/ai-insights (Claude-powered)
+   - POST /api/analytics/pricing-recommendations
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   `);
 });

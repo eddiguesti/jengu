@@ -2,10 +2,11 @@
 
 **AI-powered revenue optimization for hospitality, travel, and accommodation businesses**
 
-[![Python](https://img.shields.io/badge/Python-3.12-blue.svg)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.30-red.svg)](https://streamlit.io)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104-green.svg)](https://fastapi.tiangolo.com)
-[![License](https://img.shields.io/badge/License-Proprietary-yellow.svg)]()
+[![React](https://img.shields.io/badge/React-18.3-blue.svg)](https://react.dev)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org)
+[![pnpm](https://img.shields.io/badge/pnpm-10.18-orange.svg)](https://pnpm.io)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue.svg)](https://typescriptlang.org)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)]()
 
 ---
 
@@ -26,13 +27,14 @@
 
 ## 🌟 **Overview**
 
-The Dynamic Pricing Intelligence Platform is an enterprise-grade system that uses AI and machine learning to optimize pricing strategies for hospitality businesses. It combines:
+The Dynamic Pricing Intelligence Platform (Jengu) is an enterprise-grade React + Node.js system that uses AI and machine learning to optimize pricing strategies for hospitality businesses. It combines:
 
-- **Data Enrichment**: Auto-fetches weather, holidays, and temporal features
-- **Correlation Analysis**: Multi-method analysis (Pearson, Spearman, Mutual Information, ANOVA)
-- **Demand Modeling**: GLM-based demand prediction
-- **Price Optimization**: Revenue-maximizing price recommendations
-- **Premium UI**: Award-winning neon-on-dark dashboard with buttery animations
+- **ML Analytics**: Statistical analysis with Pearson correlation, R², MAPE forecasting
+- **AI-Powered Insights**: Claude 3.5 Sonnet integration for natural language business recommendations
+- **Market Sentiment**: Weighted scoring combining weather, occupancy, competitors, demand, and seasonal factors
+- **Real-time Data**: Weather enrichment (Open-Meteo), holiday calendars, competitor monitoring
+- **Premium UI**: Modern React dashboard with Framer Motion animations and dark theme
+- **Data Persistence**: localStorage-backed data storage with Zustand state management
 
 ---
 
@@ -72,36 +74,35 @@ The Dynamic Pricing Intelligence Platform is an enterprise-grade system that use
 │                    CLIENT LAYER                          │
 │  ┌──────────────┐          ┌──────────────┐            │
 │  │   Browser    │          │   API Client  │            │
-│  │  (Streamlit) │          │  (REST/curl)  │            │
+│  │  (React App) │          │  (REST/curl)  │            │
 │  └──────────────┘          └──────────────┘            │
 └────────────┬───────────────────────┬───────────────────┘
              │                       │
 ┌────────────▼───────────────────────▼───────────────────┐
 │                  APPLICATION LAYER                      │
 │  ┌──────────────┐          ┌──────────────┐            │
-│  │  Streamlit   │          │   FastAPI    │            │
-│  │   (neon_app) │          │   (REST API) │            │
+│  │   React UI   │          │  Express API │            │
+│  │ (TypeScript) │          │  (Node.js)   │            │
 │  └──────────────┘          └──────────────┘            │
 └────────────┬───────────────────────┬───────────────────┘
              │                       │
 ┌────────────▼───────────────────────▼───────────────────┐
 │                    BUSINESS LOGIC                       │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │  Enrichment  │  │  Correlation │  │   Modeling   │ │
-│  │   Pipeline   │  │   Analysis   │  │   (GLM/OLS)  │ │
+│  │  Supabase    │  │  ML Services │  │  Claude AI   │ │
+│  │     Auth     │  │   Analytics  │  │   Insights   │ │
 │  └──────────────┘  └──────────────┘  └──────────────┘ │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │  Connectors  │  │   Features   │  │  Optimization│ │
-│  │ (Weather/    │  │  Engineering │  │  (Price      │ │
-│  │  Holidays)   │  │              │  │   Search)    │ │
+│  │  File Upload │  │   Weather    │  │  Competitor  │ │
+│  │   Service    │  │  Enrichment  │  │  Intelligence│ │
 │  └──────────────┘  └──────────────┘  └──────────────┘ │
 └────────────┬───────────────────────────────────────────┘
              │
 ┌────────────▼───────────────────────────────────────────┐
 │                      DATA LAYER                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │   Business   │  │   Parquet    │  │    JSON      │ │
-│  │   Profiles   │  │   Datasets   │  │    Cache     │ │
+│  │   Supabase   │  │   Uploaded   │  │  localStorage│ │
+│  │  PostgreSQL  │  │     Files    │  │   (Client)   │ │
 │  └──────────────┘  └──────────────┘  └──────────────┘ │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -109,25 +110,28 @@ The Dynamic Pricing Intelligence Platform is an enterprise-grade system that use
 ### **Technology Stack**
 
 **Backend**:
-- Python 3.12
-- FastAPI (REST API)
-- Pandas, NumPy, SciPy (data processing)
-- scikit-learn (ML)
-- statsmodels (GLM, OLS)
-- Plotly (charts)
-- joblib (caching)
+- Node.js 20+ with Express
+- Supabase JavaScript Client (REST API)
+- Axios (HTTP client)
+- CSV Parser (streaming CSV processing)
+- Multer (file uploads)
 
 **Frontend**:
-- Streamlit (UI framework)
-- Custom CSS (neon theme)
-- Plotly.js (interactive charts)
+- React 18 + TypeScript
+- Vite (build tool)
+- TailwindCSS + Framer Motion
+- Zustand (state management)
+- Recharts (data visualization)
 
-**Data Storage**:
-- JSON (config, profiles, cache)
-- Parquet (datasets, enriched data)
+**Database & Auth**:
+- Supabase PostgreSQL (managed database)
+- Supabase Auth (JWT authentication)
+- Row-Level Security (RLS policies)
 
 **External APIs**:
-- Open-Meteo (geocoding, weather)
+- Open-Meteo (weather data)
+- OpenWeather (current/forecast)
+- Anthropic Claude (AI insights)
 - python-holidays (190+ countries)
 
 ---
@@ -136,9 +140,8 @@ The Dynamic Pricing Intelligence Platform is an enterprise-grade system that use
 
 ### **Prerequisites**
 
-- Python 3.12+
-- pip
-- Virtual environment (recommended)
+- Node.js 20+
+- pnpm 10+ (installed globally)
 
 ### **Installation**
 
@@ -146,36 +149,78 @@ The Dynamic Pricing Intelligence Platform is an enterprise-grade system that use
 # Clone repository
 cd travel-pricing
 
-# Create virtual environment
-python -m venv .venv
+# Install pnpm globally (if not installed)
+npm install -g pnpm
 
-# Activate (Windows)
-.venv\Scripts\activate
-
-# Activate (Linux/Mac)
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
+# Install all workspace dependencies
+pnpm install
 ```
 
-### **Run Streamlit UI (Recommended)**
+### **Configuration**
+
+Create environment files:
 
 ```bash
-# Start the premium neon app
-streamlit run neon_app.py
+# backend/.env
+SUPABASE_URL="https://your-project.supabase.co"
+SUPABASE_ANON_KEY="your-anon-key"
+SUPABASE_SERVICE_KEY="your-service-key"
+DATABASE_URL="postgresql://postgres:password@db.your-project.supabase.co:5432/postgres"
+
+# frontend/.env
+VITE_SUPABASE_URL="https://your-project.supabase.co"
+VITE_SUPABASE_ANON_KEY="your-anon-key"
 ```
 
-**Access**: http://localhost:8503
+See [SETUP_GUIDE.md](./SETUP_GUIDE.md) for detailed Supabase setup instructions.
 
-### **Run FastAPI (Optional)**
+### **Run Development Servers**
+
+#### **Backend (Express + Node.js) - Port 3001**
 
 ```bash
-# Start API server
-uvicorn apps.api.main:app --reload --port 8000
+cd backend
+pnpm run dev
 ```
 
-**API Docs**: http://localhost:8000/docs
+**Backend Features**:
+- Supabase PostgreSQL with REST API
+- ML Analytics API (8 endpoints)
+- Claude AI integration
+- Weather & holiday enrichment
+- Competitor intelligence
+- Auto-restart with `--watch`
+
+#### **Frontend (React + Vite) - Port 5173**
+
+```bash
+cd frontend
+pnpm run dev
+```
+
+**Frontend Features**:
+- React 18 with TypeScript
+- Supabase Auth integration
+- Vite for instant HMR
+- Framer Motion animations
+- Recharts visualizations
+- Zustand state management
+- Protected routing
+
+**Access**:
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3001
+- Backend Health: http://localhost:3001/health
+
+### **Build for Production**
+
+```bash
+cd frontend
+pnpm run build
+
+# Preview production build
+pnpm run preview
+```
 
 ---
 
@@ -183,74 +228,56 @@ uvicorn apps.api.main:app --reload --port 8000
 
 ```
 travel-pricing/
-├── apps/                       # Application layer
-│   ├── api/                    # FastAPI REST API
-│   │   ├── main.py            # API entry point
-│   │   ├── routers/           # API route handlers
-│   │   │   ├── health.py      # Health check
-│   │   │   └── pricing.py     # Pricing endpoints
-│   │   └── schemas.py         # Pydantic models
-│   └── ui/                     # Streamlit frontend
-│       ├── neon_theme.py      # Premium neon theme (MAIN)
-│       ├── components.py      # Reusable UI components
-│       ├── setup_wizard.py    # 3-step onboarding
-│       └── pages/             # Page modules
-│           ├── data_page.py   # Data upload
-│           ├── enrichment_page.py  # Enrichment UI
-│           └── insights_page.py    # Insights UI
+├── backend/                   # Node.js Express API
+│   ├── lib/
+│   │   └── supabase.js       # Supabase client & auth
+│   ├── services/             # Business logic services
+│   │   ├── mlAnalytics.js    # ML analytics functions
+│   │   ├── marketSentiment.js # AI insights
+│   │   └── dataTransform.js  # Data transformation
+│   ├── uploads/              # Temporary CSV uploads
+│   ├── .env                  # Environment variables
+│   ├── .gitignore
+│   ├── package.json
+│   ├── pnpm-lock.yaml
+│   └── server.js             # Main API server
 │
-├── core/                       # Business logic core
-│   ├── analysis/              # Correlation & analysis
-│   │   ├── correlations.py    # Multi-method correlation
-│   │   └── pricing_weights.py # Auto weight generation
-│   ├── connectors/            # External data sources
-│   │   ├── weather.py         # Open-Meteo connector
-│   │   ├── holidays.py        # Holiday data
-│   │   └── csv_import.py      # CSV data import
-│   ├── features/              # Feature engineering
-│   │   ├── build.py           # Feature builder
-│   │   └── encoders.py        # Encoders (cyclical, etc.)
-│   ├── models/                # Data models
-│   │   └── business_profile.py # Business profile model
-│   ├── modeling/              # ML models
-│   │   ├── demand_glm.py      # GLM demand model
-│   │   ├── elasticity_ols.py  # OLS elasticity
-│   │   └── validate.py        # Model validation
-│   ├── optimize/              # Optimization
-│   │   └── price_search.py    # Price optimization
-│   ├── services/              # Business services
-│   │   ├── enrichment_pipeline.py # Enrichment orchestration
-│   │   └── geocoding.py       # Geocoding service
-│   └── utils/                 # Utilities
-│       ├── geocode.py         # Geocoding helpers
-│       ├── logging.py         # Structured logging
-│       └── config.py          # Configuration
+├── frontend/                  # React + TypeScript UI
+│   ├── public/
+│   │   └── sample_booking_data.csv
+│   ├── src/
+│   │   ├── components/       # Reusable components
+│   │   ├── contexts/
+│   │   │   └── AuthContext.tsx  # Authentication
+│   │   ├── lib/
+│   │   │   ├── api/
+│   │   │   │   ├── client.ts    # Axios with auth
+│   │   │   │   └── services/    # API services
+│   │   │   └── supabase.ts      # Supabase client
+│   │   ├── pages/
+│   │   │   ├── Login.tsx        # Login page
+│   │   │   ├── SignUp.tsx       # Registration
+│   │   │   ├── Data.tsx         # File upload
+│   │   │   ├── Insights.tsx     # ML insights
+│   │   │   ├── Enrichment.tsx   # Data enrichment
+│   │   │   └── ...
+│   │   ├── store/
+│   │   │   └── useDataStore.ts  # Zustand store
+│   │   ├── App.tsx              # Protected routing
+│   │   ├── main.tsx
+│   │   └── index.css
+│   ├── .env                     # Frontend environment
+│   ├── package.json
+│   ├── pnpm-lock.yaml
+│   ├── vite.config.ts
+│   └── tailwind.config.js
 │
-├── data/                       # Data storage
-│   ├── config/                # Business profiles (JSON)
-│   ├── raw/                   # Uploaded datasets
-│   ├── enriched/              # Enriched datasets (Parquet)
-│   ├── cache/                 # API caches
-│   │   ├── geocode/           # Geocoding cache
-│   │   ├── weather/           # Weather cache
-│   │   └── correlation_cache/ # Correlation cache
-│   └── weights/               # Pricing weights
-│
-├── tests/                      # Test suite
-│   ├── unit/                  # Unit tests
-│   │   ├── test_pricing.py
-│   │   └── test_policy.py
-│   └── integration/           # Integration tests
-│       └── test_api.py
-│
-├── .streamlit/                # Streamlit config
-│   └── config.toml            # Theme & server config
-│
-├── neon_app.py                # 🌟 MAIN STREAMLIT APP
-├── requirements.txt           # Python dependencies
+├── .gitignore                 # Comprehensive ignores
+├── pnpm-lock.yaml             # Workspace lock file
+├── pnpm-workspace.yaml        # Monorepo config
 ├── README.md                  # This file
-├── NEON_README.md             # Neon theme docs
-└── pyproject.toml             # Project metadata
+├── SETUP_GUIDE.md             # Setup instructions
+└── SUPABASE_MIGRATION_COMPLETE.md  # Migration docs
 ```
 
 ---
@@ -369,6 +396,73 @@ Tests run automatically on:
 - Pull requests
 - Commits to main
 - Pre-deployment
+
+---
+
+## 🧹 **Troubleshooting & Maintenance**
+
+### **Port Already in Use**
+
+```bash
+# Windows
+netstat -ano | findstr :3001
+taskkill /PID <PID> /F
+
+# Linux/Mac
+lsof -ti:3001 | xargs kill -9
+```
+
+### **Clear Browser Data**
+
+If you see old/stale data in the UI:
+
+1. Open http://localhost:5173
+2. Press `F12` → **Application** tab
+3. **Local Storage** → Right-click → **Clear**
+4. **Session Storage** → Right-click → **Clear**
+5. Press `Ctrl + Shift + R` to hard refresh
+
+### **Authentication Issues**
+
+- Verify `.env` files have correct Supabase credentials
+- Check Supabase dashboard for user status
+- Clear browser localStorage and retry login
+
+### **Database Connection Errors**
+
+- Confirm Supabase project is active
+- Check RLS policies are enabled in Supabase SQL Editor
+- Verify service role key has proper permissions
+- Ensure tables exist in Supabase dashboard
+
+### **Common Issues**
+
+| Issue | Solution |
+|-------|----------|
+| "Unauthorized" errors | Check Supabase credentials in `.env` files |
+| "Port already in use" | Kill existing Node process on that port |
+| "Old data showing" | Clear browser localStorage |
+| "Upload fails" | Check backend logs, verify `backend/uploads/` directory exists |
+| "Module not found" | Run `pnpm install` in affected workspace |
+
+### **Quick Commands**
+
+```bash
+# Check backend health
+curl http://localhost:3001/health
+
+# Restart servers
+# Terminal 1
+cd backend && pnpm run dev
+
+# Terminal 2
+cd frontend && pnpm run dev
+
+# View Supabase dashboard
+open https://supabase.com/dashboard
+```
+
+See [SUPABASE_MIGRATION_COMPLETE.md](./SUPABASE_MIGRATION_COMPLETE.md) for detailed setup and troubleshooting.
 
 ---
 

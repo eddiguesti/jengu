@@ -48,13 +48,19 @@ export async function getHolidays(
     const response = await fetch(url)
 
     if (!response.ok) {
-      throw new Error(`Calendarific API error: ${response.statusText}`)
+      const errorText = response.statusText || `HTTP ${response.status}`
+      throw new Error(`Calendarific API error: ${errorText}. Using mock holiday data instead.`)
     }
 
     const data = await response.json()
 
+    // Check for API error responses
+    if (data.meta?.error_detail) {
+      throw new Error(`Calendarific API error: ${data.meta.error_detail}. Using mock holiday data instead.`)
+    }
+
     if (!data.response?.holidays) {
-      throw new Error('Invalid response from Calendarific API')
+      throw new Error('Invalid response from Calendarific API. Using mock holiday data instead.')
     }
 
     // Transform API response to our format

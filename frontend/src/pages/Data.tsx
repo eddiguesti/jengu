@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Upload, FileText, CheckCircle2, AlertCircle, X, Cloud,
@@ -9,6 +9,8 @@ import { useNavigate } from 'react-router-dom'
 import { useDataStore, useBusinessStore } from '../store'
 import { getHistoricalWeatherBatch } from '../lib/api/services/weather'
 import { getHolidaysForDates, getCountryCode } from '../lib/api/services/holidays'
+import axios from 'axios'
+import { supabase } from '../lib/supabase'
 import clsx from 'clsx'
 
 interface UploadedFile {
@@ -19,6 +21,7 @@ interface UploadedFile {
   rows?: number
   columns?: number
   preview?: any[]
+  uniqueId?: string
 }
 
 interface EnrichmentFeature {
@@ -35,7 +38,7 @@ type Step = 'upload' | 'enrichment'
 
 export const Data = () => {
   const navigate = useNavigate()
-  const { addFile } = useDataStore()
+  const { uploadedFiles, addFile } = useDataStore()
   const { profile } = useBusinessStore()
   const [currentStep, setCurrentStep] = useState<Step>('upload')
 
@@ -43,6 +46,24 @@ export const Data = () => {
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Load persisted files on mount
+  useEffect(() => {
+    if (uploadedFiles && uploadedFiles.length > 0) {
+      const restoredFiles: UploadedFile[] = uploadedFiles.map(file => ({
+        name: file.name,
+        size: file.size,
+        type: 'text/csv',
+        status: 'success',
+        rows: file.rows,
+        columns: file.columns,
+        preview: file.preview || [],
+        uniqueId: file.id, // Use the stored ID as uniqueId
+      }))
+      setFiles(restoredFiles)
+      console.log('✅ Restored', uploadedFiles.length, 'files from localStorage')
+    }
+  }, [])
 
   // Enrichment State
   const [features, setFeatures] = useState<EnrichmentFeature[]>([
@@ -101,56 +122,131 @@ export const Data = () => {
     }
   }
 
-  const processFiles = (fileList: File[]) => {
-    const newFiles: UploadedFile[] = fileList.map((file) => ({
+  const processFiles = async (fileList: File[]) => {
+    const timestamp = Date.now()
+    const newFiles: UploadedFile[] = fileList.map((file, index) => ({
       name: file.name,
       size: file.size,
       type: file.type,
       status: 'pending',
+      uniqueId: `${file.name}-${file.size}-${timestamp}-${index}`,
     }))
 
     setFiles((prev) => [...prev, ...newFiles])
 
-    // Simulate file processing
-    newFiles.forEach((file, index) => {
-      setTimeout(() => {
+    // Upload each file to backend API
+    for (let index = 0; index < fileList.length; index++) {
+      const file = fileList[index]
+      const uniqueId = `${file.name}-${file.size}-${timestamp}-${index}`
+
+      try {
+        // Mark as processing
         setFiles((prev) =>
           prev.map((f) =>
-            f.name === file.name ? { ...f, status: 'processing' } : f
+            f.uniqueId === uniqueId ? { ...f, status: 'processing' } : f
           )
         )
 
-        setTimeout(() => {
-          const rows = Math.floor(Math.random() * 5000) + 1000
-          const columns = Math.floor(Math.random() * 20) + 5
+        // Create FormData for file upload
+        const formData = new FormData()
+        formData.append('file', file)
 
-          setFiles((prev) =>
-            prev.map((f) =>
-              f.name === file.name
-                ? {
-                    ...f,
-                    status: 'success',
-                    rows,
-                    columns,
-                    preview: generateMockPreview(),
-                  }
-                : f
-            )
+        // Get Supabase session token
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (!session?.access_token) {
+          throw new Error('Not authenticated. Please log in.')
+        }
+
+        // Upload to backend
+        console.log(`📤 Uploading ${file.name} to backend...`)
+        const response = await axios.post(
+          'http://localhost:3001/api/files/upload',
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+          }
+        )
+
+        const uploadedFile = response.data.file
+        console.log(`✅ Uploaded ${file.name}: ${uploadedFile.rows} rows, ${uploadedFile.columns} columns`)
+
+        // Update local state
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.uniqueId === uniqueId
+              ? {
+                  ...f,
+                  status: 'success',
+                  rows: uploadedFile.rows,
+                  columns: uploadedFile.columns,
+                  preview: uploadedFile.preview,
+                }
+              : f
           )
+        )
 
-          // Add to Zustand store
-          addFile({
-            id: Date.now().toString() + index,
-            name: file.name,
-            size: file.size,
-            rows,
-            columns,
-            uploaded_at: new Date().toISOString(),
-            status: 'complete',
-          })
-        }, 2000)
-      }, index * 500)
-    })
+        // Add to Zustand store (only metadata, not the CSV content)
+        addFile({
+          id: uploadedFile.id, // Backend file ID
+          name: uploadedFile.name,
+          size: uploadedFile.size,
+          rows: uploadedFile.rows,
+          columns: uploadedFile.columns,
+          uploaded_at: uploadedFile.uploaded_at,
+          status: 'complete',
+          preview: uploadedFile.preview, // Store preview for display
+          // No csvData field - data is on the server now!
+        })
+
+      } catch (error) {
+        console.error(`❌ Failed to upload ${file.name}:`, error)
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.uniqueId === uniqueId ? { ...f, status: 'error' } : f
+          )
+        )
+      }
+
+      // Small delay between uploads
+      await new Promise(resolve => setTimeout(resolve, 300))
+    }
+  }
+
+  // Parse CSV and return first 5 rows as preview
+  const parseCSVPreview = (csvContent: string): any[] => {
+    const lines = csvContent.trim().split('\n')
+    if (lines.length < 2) return []
+
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
+    const preview: any[] = []
+
+    for (let i = 1; i < Math.min(6, lines.length); i++) {
+      const values = lines[i].split(',')
+      const row: any = {}
+      headers.forEach((header, idx) => {
+        const value = values[idx]?.trim() || ''
+        // Try to parse numbers
+        row[header] = isNaN(Number(value)) ? value : Number(value)
+      })
+      preview.push(row)
+    }
+
+    return preview
+  }
+
+  // Count total rows in CSV
+  const countCSVRows = (csvContent: string): number => {
+    return csvContent.trim().split('\n').length - 1 // -1 for header
+  }
+
+  // Count columns in CSV
+  const countCSVColumns = (csvContent: string): number => {
+    const firstLine = csvContent.trim().split('\n')[0]
+    return firstLine ? firstLine.split(',').length : 0
   }
 
   const generateMockPreview = () => {
@@ -163,8 +259,8 @@ export const Data = () => {
     ]
   }
 
-  const removeFile = (fileName: string) => {
-    setFiles((prev) => prev.filter((f) => f.name !== fileName))
+  const removeFile = (uniqueId: string) => {
+    setFiles((prev) => prev.filter((f) => f.uniqueId !== uniqueId))
   }
 
   const formatFileSize = (bytes: number) => {
@@ -495,7 +591,7 @@ export const Data = () => {
                   <div className="space-y-3">
                     {files.map((file) => (
                       <div
-                        key={file.name}
+                        key={file.uniqueId || file.name}
                         className="flex items-center gap-4 p-4 bg-elevated rounded-lg border border-border"
                       >
                         {getStatusIcon(file.status)}
@@ -519,7 +615,7 @@ export const Data = () => {
                           {file.status}
                         </Badge>
                         <button
-                          onClick={() => removeFile(file.name)}
+                          onClick={() => removeFile(file.uniqueId || file.name)}
                           className="p-2 hover:bg-card rounded-lg transition-colors"
                         >
                           <X className="w-4 h-4 text-muted hover:text-text" />

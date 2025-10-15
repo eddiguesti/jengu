@@ -2,13 +2,16 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 interface UploadedFile {
-  id: string
+  id: string // Backend file ID (e.g., "1728931234567-bookings.csv")
   name: string
   size: number
   rows: number
   columns: number
   uploaded_at: string
   status: 'uploaded' | 'enriching' | 'complete' | 'error'
+  preview?: any[] // Store preview data for quick display
+  // Note: csvData is NO LONGER stored here - fetch from backend API instead
+  // Use GET /api/files/:fileId/data to retrieve full CSV data
 }
 
 interface DataStore {

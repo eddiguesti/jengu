@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Database, Zap, LineChart, MessageCircle, Settings, Sparkles, Building2 } from 'lucide-react'
+import { Home, Database, Zap, LineChart, MessageCircle, Settings, Sparkles, Building2, LogOut, User } from 'lucide-react'
 import clsx from 'clsx'
+import { useAuth } from '../../contexts/AuthContext'
 
 // Workflow Order: Setup → Data Collection → Analysis → Optimization → Monitor
 const navItems = [
@@ -15,6 +16,16 @@ const navItems = [
 
 export const Sidebar = () => {
   const location = useLocation()
+  const { user, signOut } = useAuth()
+
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      // User will be redirected to login by the ProtectedRoute
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
 
   return (
     <aside className="w-64 h-screen bg-card border-r border-border flex flex-col fixed left-0 top-0">
@@ -67,11 +78,35 @@ export const Sidebar = () => {
         </ul>
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-border">
-        <div className="bg-elevated rounded-lg p-3">
+      {/* User Profile & Logout */}
+      <div className="p-4 border-t border-border space-y-3">
+        {/* User Info */}
+        <div className="bg-elevated rounded-lg p-3 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <User className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-text truncate">
+              {user?.user_metadata?.name || user?.email?.split('@')[0] || 'User'}
+            </p>
+            <p className="text-xs text-muted truncate">{user?.email}</p>
+          </div>
+        </div>
+
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-sm
+                     bg-elevated hover:bg-red-500/10 hover:text-red-500
+                     text-muted transition-all duration-200 group"
+        >
+          <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
+          <span>Logout</span>
+        </button>
+
+        {/* Footer */}
+        <div className="text-center">
           <p className="text-xs text-muted">Jengu v1.0.0</p>
-          <p className="text-xs text-muted mt-1">© 2025 All rights reserved</p>
         </div>
       </div>
     </aside>

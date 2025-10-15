@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from 'axios'
+import { supabase } from '../supabase'
 
 // Create axios instance with default config
 const apiClient: AxiosInstance = axios.create({
@@ -11,12 +12,14 @@ const apiClient: AxiosInstance = axios.create({
 
 // Request interceptor
 apiClient.interceptors.request.use(
-  (config) => {
-    // Add auth token if exists
-    const token = localStorage.getItem('auth_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+  async (config) => {
+    // Get Supabase session token
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (session?.access_token) {
+      config.headers.Authorization = `Bearer ${session.access_token}`
     }
+
     return config
   },
   (error) => {
@@ -27,14 +30,14 @@ apiClient.interceptors.request.use(
 // Response interceptor
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
     if (error.response) {
       // Server responded with error status
       const status = error.response.status
 
       if (status === 401) {
-        // Unauthorized - clear auth and redirect to login
-        localStorage.removeItem('auth_token')
+        // Unauthorized - sign out from Supabase and redirect to login
+        await supabase.auth.signOut()
         window.location.href = '/login'
       } else if (status === 500) {
         console.error('Server error:', error.response.data)

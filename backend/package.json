@@ -8,13 +8,21 @@
     "start": "node server.js",
     "dev": "node --watch server.js"
   },
-  "keywords": ["api", "proxy", "pricing", "hotel"],
+  "keywords": [
+    "api",
+    "proxy",
+    "pricing",
+    "hotel"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
+    "@supabase/supabase-js": "^2.75.0",
+    "axios": "^1.6.8",
     "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
     "dotenv": "^16.4.5",
-    "axios": "^1.6.8"
+    "express": "^4.18.2",
+    "multer": "^2.0.2"
   }
 }
