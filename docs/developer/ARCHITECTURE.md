@@ -274,7 +274,7 @@ const apiClient = axios.create({
 })
 
 // Interceptor adds JWT automatically
-apiClient.interceptors.request.use(async (config) => {
+apiClient.interceptors.request.use(async config => {
   const token = await getAccessToken()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -479,10 +479,7 @@ app.post('/api/your-endpoint', authenticateUser, async (req, res) => {
     }
 
     // Query database (always filter by userId)
-    const { data, error } = await supabaseAdmin
-      .from('your_table')
-      .select('*')
-      .eq('userId', userId)
+    const { data, error } = await supabaseAdmin.from('your_table').select('*').eq('userId', userId)
 
     if (error) throw error
 

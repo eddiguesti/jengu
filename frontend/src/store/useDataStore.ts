@@ -33,40 +33,35 @@ interface DataStore {
 
 export const useDataStore = create<DataStore>()(
   persist(
-    (set) => ({
+    set => ({
       // Initial state
       uploadedFiles: [],
       currentFileId: null,
       isUploading: false,
 
       // Actions
-      addFile: (file) =>
-        set((state) => ({
+      addFile: file =>
+        set(state => ({
           uploadedFiles: [...state.uploadedFiles, file],
           currentFileId: file.id,
         })),
 
-      removeFile: (fileId) =>
-        set((state) => ({
-          uploadedFiles: state.uploadedFiles.filter((f) => f.id !== fileId),
+      removeFile: fileId =>
+        set(state => ({
+          uploadedFiles: state.uploadedFiles.filter(f => f.id !== fileId),
           currentFileId: state.currentFileId === fileId ? null : state.currentFileId,
         })),
 
       updateFileStatus: (fileId, status) =>
-        set((state) => ({
-          uploadedFiles: state.uploadedFiles.map((f) =>
-            f.id === fileId ? { ...f, status } : f
-          ),
+        set(state => ({
+          uploadedFiles: state.uploadedFiles.map(f => (f.id === fileId ? { ...f, status } : f)),
         })),
 
-      setCurrentFile: (fileId) =>
-        set({ currentFileId: fileId }),
+      setCurrentFile: fileId => set({ currentFileId: fileId }),
 
-      setUploading: (isUploading) =>
-        set({ isUploading }),
+      setUploading: isUploading => set({ isUploading }),
 
-      clearFiles: () =>
-        set({ uploadedFiles: [], currentFileId: null }),
+      clearFiles: () => set({ uploadedFiles: [], currentFileId: null }),
     }),
     {
       name: 'jengu-data-storage',

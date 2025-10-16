@@ -13,9 +13,11 @@ This means Google couldn't find the OAuth configuration. There are a few possibl
 Since your OAuth app is in "Testing" mode, you MUST add your email as a test user.
 
 ### Go to Google Cloud Console:
+
 **URL:** https://console.cloud.google.com/apis/credentials/consent
 
 ### Steps:
+
 1. Scroll down to **"Test users"** section
 2. Click **"+ ADD USERS"**
 3. Enter your email: `restaurantlasavane@campasun.eu` (the one you tried to sign in with)
@@ -27,9 +29,11 @@ Since your OAuth app is in "Testing" mode, you MUST add your email as a test use
 ## ✅ Fix #2: Verify Redirect URIs in Web Application OAuth Client
 
 ### Go to Credentials:
+
 **URL:** https://console.cloud.google.com/apis/credentials
 
 ### Find Your WEB APPLICATION Client:
+
 - **NOT** the Desktop client (Jengu)
 - Look for the **Web application** client
 - Client ID should start with: `2657374221-eq0fi10l38h8rf4cbbo8l1ci5edc9bed...`
@@ -37,17 +41,20 @@ Since your OAuth app is in "Testing" mode, you MUST add your email as a test use
 ### Click on It and Verify These Settings:
 
 **Authorized JavaScript origins:**
+
 ```
 http://localhost:5174
 https://geehtuuyyxhyissplfjb.supabase.co
 ```
 
 **Authorized redirect URIs:**
+
 ```
 https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback
 ```
 
 **IMPORTANT:**
+
 - ✅ Must be `https://` (not `http://`)
 - ✅ Must be exact: `https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback`
 - ✅ No trailing slash
@@ -60,21 +67,25 @@ Click **"Save"**
 ## ✅ Fix #3: Double-Check Supabase Has Correct Credentials
 
 ### Go to Supabase:
+
 **URL:** https://supabase.com/dashboard/project/geehtuuyyxhyissplfjb/auth/providers
 
 ### Click "Google" and verify:
 
 **Client IDs:**
+
 ```
 2657374221-eq0fi10l38h8rf4cbbo8l1ci5edc9bed.apps.googleusercontent.com
 ```
 
 **Client Secret:**
+
 ```
 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
 ```
 
 **Callback URL (for OAuth):** Should show:
+
 ```
 https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback
 ```
@@ -86,16 +97,19 @@ Click **"Save"** if you made any changes.
 ## ✅ Fix #4: Publishing Status (Check This)
 
 ### Go to OAuth Consent Screen:
+
 **URL:** https://console.cloud.google.com/apis/credentials/consent
 
 ### Check Publishing Status:
 
 **If it says "Testing":**
+
 - ✅ This is NORMAL for development
 - ⚠️ You MUST add test users (see Fix #1 above)
 - Only test users can sign in
 
 **If you want anyone to sign in:**
+
 - Click **"PUBLISH APP"**
 - This will allow any Google user to sign in
 - May require verification for production use
@@ -107,6 +121,7 @@ Click **"Save"** if you made any changes.
 Google can take a few minutes to propagate OAuth changes.
 
 After making changes:
+
 1. Wait 5 minutes
 2. Clear your browser cache
 3. Try signing in again
@@ -116,6 +131,7 @@ After making changes:
 ## Complete Checklist:
 
 ### Google Cloud Console - OAuth Consent Screen:
+
 - [ ] App name: "Jengu Dynamic Pricing" (or similar)
 - [ ] User support email: Your email
 - [ ] Developer contact: Your email
@@ -123,6 +139,7 @@ After making changes:
 - [ ] Scopes added: `userinfo.email` and `userinfo.profile`
 
 ### Google Cloud Console - Credentials (Web Application):
+
 - [ ] Application type: **Web application** (NOT Desktop!)
 - [ ] Authorized JavaScript origins:
   - [ ] `http://localhost:5174`
@@ -132,6 +149,7 @@ After making changes:
 - [ ] Clicked "Save"
 
 ### Supabase Dashboard - Google Provider:
+
 - [ ] Client ID: `2657374221-eq0fi10l38h8rf4cbbo8l1ci5edc9bed.apps.googleusercontent.com`
 - [ ] Client Secret: `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`
 - [ ] Clicked "Save"
@@ -180,18 +198,22 @@ Then come back to fix Google OAuth later.
 ## Common Mistakes:
 
 ❌ **Using Desktop OAuth client instead of Web application**
+
 - Desktop clients don't have redirect URIs
 - Must use Web application type
 
 ❌ **Not adding test users**
+
 - If app is in "Testing" mode, ONLY test users can sign in
 - Must add your email to test users list
 
 ❌ **Wrong redirect URI**
+
 - Must be: `https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback`
 - NOT: `http://localhost:5174/auth/callback`
 
 ❌ **Using old credentials**
+
 - Make sure Supabase has the NEW web application credentials
 - Not the old Desktop credentials
 
@@ -202,6 +224,7 @@ Then come back to fix Google OAuth later.
 **Most likely cause:** You need to add your email as a test user.
 
 **Quick fix:**
+
 1. Go to: https://console.cloud.google.com/apis/credentials/consent
 2. Scroll to "Test users"
 3. Click "+ ADD USERS"

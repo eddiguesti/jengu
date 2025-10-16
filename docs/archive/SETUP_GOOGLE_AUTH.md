@@ -46,19 +46,23 @@ You need to create a Google OAuth app to get Client ID and Client Secret.
 #### 2.4 Configure OAuth Consent Screen
 
 **App Information:**
+
 - App name: `Jengu Dynamic Pricing`
 - User support email: `edd.guest@gmail.com` (your email)
 - App logo: (optional - upload your logo)
 
 **App Domain:**
+
 - Application home page: `http://localhost:5174` (for development)
 - Privacy policy: (optional for development)
 - Terms of service: (optional for development)
 
 **Authorized domains:**
+
 - Add: `supabase.co`
 
 **Developer contact:**
+
 - Email: `edd.guest@gmail.com`
 
 Click **"Save and Continue"**
@@ -68,6 +72,7 @@ Click **"Save and Continue"**
 Click **"Add or Remove Scopes"**
 
 Select these scopes:
+
 - ✅ `.../auth/userinfo.email`
 - ✅ `.../auth/userinfo.profile`
 
@@ -76,6 +81,7 @@ Click **"Update"** → **"Save and Continue"**
 #### 2.6 Add Test Users (Development Only)
 
 Add your email as a test user:
+
 - Email: `edd.guest@gmail.com`
 
 Click **"Save and Continue"**
@@ -88,6 +94,7 @@ Click **"Save and Continue"**
 4. Name: `Jengu Web Client`
 
 **Authorized JavaScript origins:**
+
 ```
 http://localhost:5174
 http://localhost:5173
@@ -95,6 +102,7 @@ https://geehtuuyyxhyissplfjb.supabase.co
 ```
 
 **Authorized redirect URIs:**
+
 ```
 https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback
 http://localhost:5174/auth/callback
@@ -105,6 +113,7 @@ Click **"Create"**
 #### 2.8 Copy Client ID and Client Secret
 
 You'll see a popup with:
+
 - **Client ID:** `1234567890-abcdefg.apps.googleusercontent.com`
 - **Client Secret:** `GOCSPX-abc123xyz...`
 
@@ -133,14 +142,14 @@ const handleGoogleSignIn = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: 'http://localhost:5174'
-    }
-  });
+      redirectTo: 'http://localhost:5174',
+    },
+  })
 
   if (error) {
-    console.error('Google sign-in error:', error);
+    console.error('Google sign-in error:', error)
   }
-};
+}
 ```
 
 ---
@@ -158,6 +167,7 @@ const handleGoogleSignIn = async () => {
 ## What Users Will See
 
 ### Before (Email Only):
+
 ```
 ┌─────────────────────────┐
 │   Email: [________]     │
@@ -167,6 +177,7 @@ const handleGoogleSignIn = async () => {
 ```
 
 ### After (Email + Google):
+
 ```
 ┌─────────────────────────┐
 │  [🔵 Sign in with Google] │
@@ -184,11 +195,13 @@ const handleGoogleSignIn = async () => {
 ## Benefits of Both Options
 
 **Email/Password:**
+
 - ✅ Works without Google account
 - ✅ Full control over authentication
 - ✅ Works in China (Google is blocked)
 
 **Google OAuth:**
+
 - ✅ One-click login (faster)
 - ✅ No password to remember
 - ✅ More secure (Google's security)
@@ -230,6 +243,7 @@ When deploying to production, you'll need to:
 ## Need Help?
 
 I can help you:
+
 - ✅ Set up Google OAuth credentials
 - ✅ Add "Sign in with Google" button to UI
 - ✅ Configure redirect URLs

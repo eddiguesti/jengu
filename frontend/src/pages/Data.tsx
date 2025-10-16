@@ -1,8 +1,20 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Upload, FileText, CheckCircle2, AlertCircle, X, Cloud,
-  Calendar, Clock, Play, Sparkles, ArrowRight, Database, MapPin, Settings as SettingsIcon
+  Upload,
+  FileText,
+  CheckCircle2,
+  AlertCircle,
+  X,
+  Cloud,
+  Calendar,
+  Clock,
+  Play,
+  Sparkles,
+  ArrowRight,
+  Database,
+  MapPin,
+  Settings as SettingsIcon,
 } from 'lucide-react'
 import { Card, Button, Table, Badge, Progress } from '../components/ui'
 import { useNavigate } from 'react-router-dom'
@@ -140,7 +152,7 @@ export const Data = () => {
       uniqueId: `${file.name}-${file.size}-${timestamp}-${index}`,
     }))
 
-    setFiles((prev) => [...prev, ...newFiles])
+    setFiles(prev => [...prev, ...newFiles])
 
     // Upload each file to backend API
     for (let index = 0; index < fileList.length; index++) {
@@ -149,10 +161,8 @@ export const Data = () => {
 
       try {
         // Mark as processing
-        setFiles((prev) =>
-          prev.map((f) =>
-            f.uniqueId === uniqueId ? { ...f, status: 'processing' } : f
-          )
+        setFiles(prev =>
+          prev.map(f => (f.uniqueId === uniqueId ? { ...f, status: 'processing' } : f))
         )
 
         // Create FormData for file upload
@@ -160,7 +170,9 @@ export const Data = () => {
         formData.append('file', file)
 
         // Get Supabase session token
-        const { data: { session } } = await supabase.auth.getSession()
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
 
         if (!session?.access_token) {
           throw new Error('Not authenticated. Please log in.')
@@ -168,23 +180,21 @@ export const Data = () => {
 
         // Upload to backend
         console.log(`📤 Uploading ${file.name} to backend...`)
-        const response = await axios.post(
-          'http://localhost:3001/api/files/upload',
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              'Authorization': `Bearer ${session.access_token}`,
-            },
-          }
-        )
+        const response = await axios.post('http://localhost:3001/api/files/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        })
 
         const uploadedFile = response.data.file
-        console.log(`✅ Uploaded ${file.name}: ${uploadedFile.rows} rows, ${uploadedFile.columns} columns`)
+        console.log(
+          `✅ Uploaded ${file.name}: ${uploadedFile.rows} rows, ${uploadedFile.columns} columns`
+        )
 
         // Update local state
-        setFiles((prev) =>
-          prev.map((f) =>
+        setFiles(prev =>
+          prev.map(f =>
             f.uniqueId === uniqueId
               ? {
                   ...f,
@@ -209,14 +219,9 @@ export const Data = () => {
           preview: uploadedFile.preview, // Store preview for display
           // No csvData field - data is on the server now!
         })
-
       } catch (error) {
         console.error(`❌ Failed to upload ${file.name}:`, error)
-        setFiles((prev) =>
-          prev.map((f) =>
-            f.uniqueId === uniqueId ? { ...f, status: 'error' } : f
-          )
-        )
+        setFiles(prev => prev.map(f => (f.uniqueId === uniqueId ? { ...f, status: 'error' } : f)))
       }
 
       // Small delay between uploads
@@ -225,7 +230,7 @@ export const Data = () => {
   }
 
   const removeFile = (uniqueId: string) => {
-    setFiles((prev) => prev.filter((f) => f.uniqueId !== uniqueId))
+    setFiles(prev => prev.filter(f => f.uniqueId !== uniqueId))
   }
 
   const formatFileSize = (bytes: number) => {
@@ -237,13 +242,15 @@ export const Data = () => {
   const getStatusIcon = (status: UploadedFile['status']) => {
     switch (status) {
       case 'success':
-        return <CheckCircle2 className="w-5 h-5 text-success" />
+        return <CheckCircle2 className="h-5 w-5 text-success" />
       case 'error':
-        return <AlertCircle className="w-5 h-5 text-error" />
+        return <AlertCircle className="h-5 w-5 text-error" />
       case 'processing':
-        return <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        return (
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        )
       default:
-        return <FileText className="w-5 h-5 text-muted" />
+        return <FileText className="h-5 w-5 text-muted" />
     }
   }
 
@@ -251,18 +258,14 @@ export const Data = () => {
   const startEnrichment = async (featureId?: string) => {
     setIsEnriching(true)
 
-    const featuresToRun = featureId
-      ? features.filter((f) => f.id === featureId)
-      : features
+    const featuresToRun = featureId ? features.filter(f => f.id === featureId) : features
 
     for (let index = 0; index < featuresToRun.length; index++) {
       const feature = featuresToRun[index]
 
       // Set to running
-      setFeatures((prev) =>
-        prev.map((f) =>
-          f.id === feature.id ? { ...f, status: 'running', progress: 0 } : f
-        )
+      setFeatures(prev =>
+        prev.map(f => (f.id === feature.id ? { ...f, status: 'running', progress: 0 } : f))
       )
 
       try {
@@ -278,17 +281,13 @@ export const Data = () => {
         }
 
         // Mark as complete
-        setFeatures((prev) =>
-          prev.map((f) =>
-            f.id === feature.id ? { ...f, status: 'complete', progress: 100 } : f
-          )
+        setFeatures(prev =>
+          prev.map(f => (f.id === feature.id ? { ...f, status: 'complete', progress: 100 } : f))
         )
       } catch (error) {
         console.error(`Error enriching ${feature.id}:`, error)
-        setFeatures((prev) =>
-          prev.map((f) =>
-            f.id === feature.id ? { ...f, status: 'error', progress: 0 } : f
-          )
+        setFeatures(prev =>
+          prev.map(f => (f.id === feature.id ? { ...f, status: 'error', progress: 0 } : f))
         )
       }
     }
@@ -313,7 +312,9 @@ export const Data = () => {
     const fileId = uploadedFiles[0].id
 
     // Get Supabase session token
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
     if (!session?.access_token) {
       throw new Error('Not authenticated. Please log in.')
@@ -324,11 +325,7 @@ export const Data = () => {
     const progressInterval = setInterval(() => {
       progress += 5
       if (progress <= 95) {
-        setFeatures((prev) =>
-          prev.map((f) =>
-            f.id === featureId ? { ...f, progress } : f
-          )
-        )
+        setFeatures(prev => prev.map(f => (f.id === featureId ? { ...f, progress } : f)))
       }
     }, 500)
 
@@ -340,21 +337,17 @@ export const Data = () => {
         {
           latitude,
           longitude,
-          country
+          country,
         },
         {
           headers: {
-            'Authorization': `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
         }
       )
 
       clearInterval(progressInterval)
-      setFeatures((prev) =>
-        prev.map((f) =>
-          f.id === featureId ? { ...f, progress: 100 } : f
-        )
-      )
+      setFeatures(prev => prev.map(f => (f.id === featureId ? { ...f, progress: 100 } : f)))
 
       console.log(`✅ Weather enrichment complete:`, response.data.results)
       return response.data
@@ -393,11 +386,7 @@ export const Data = () => {
     const progressInterval = setInterval(() => {
       progress += 10
       if (progress <= 90) {
-        setFeatures((prev) =>
-          prev.map((f) =>
-            f.id === featureId ? { ...f, progress } : f
-          )
-        )
+        setFeatures(prev => prev.map(f => (f.id === featureId ? { ...f, progress } : f)))
       }
     }, 100)
 
@@ -406,11 +395,7 @@ export const Data = () => {
       const holidayData = await getHolidaysForDates(allDates, countryCode)
 
       clearInterval(progressInterval)
-      setFeatures((prev) =>
-        prev.map((f) =>
-          f.id === featureId ? { ...f, progress: 100 } : f
-        )
-      )
+      setFeatures(prev => prev.map(f => (f.id === featureId ? { ...f, progress: 100 } : f)))
 
       console.log(`Enriched ${holidayData.size} dates with real holiday data`)
       return holidayData
@@ -422,7 +407,7 @@ export const Data = () => {
 
   // Simulated enrichment for other features
   const enrichFeatureSimulated = async (featureId: string) => {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>(resolve => {
       const duration = 2000
       const interval = 200
       const steps = duration / interval
@@ -432,10 +417,8 @@ export const Data = () => {
         currentStep++
         const progress = Math.round((currentStep / steps) * 100)
 
-        setFeatures((prev) =>
-          prev.map((f) =>
-            f.id === featureId ? { ...f, progress: Math.min(100, progress) } : f
-          )
+        setFeatures(prev =>
+          prev.map(f => (f.id === featureId ? { ...f, progress: Math.min(100, progress) } : f))
         )
 
         if (currentStep >= steps) {
@@ -460,10 +443,10 @@ export const Data = () => {
   }
 
   // === COMPUTED VALUES ===
-  const hasSuccessfulUpload = files.some((f) => f.status === 'success')
-  const allEnrichmentComplete = features.every((f) => f.status === 'complete')
-  const anyEnrichmentRunning = features.some((f) => f.status === 'running')
-  const completedEnrichmentCount = features.filter((f) => f.status === 'complete').length
+  const hasSuccessfulUpload = files.some(f => f.status === 'success')
+  const allEnrichmentComplete = features.every(f => f.status === 'complete')
+  const anyEnrichmentRunning = features.some(f => f.status === 'running')
+  const completedEnrichmentCount = features.filter(f => f.status === 'complete').length
 
   return (
     <motion.div
@@ -475,41 +458,41 @@ export const Data = () => {
       {/* Header with Step Indicator */}
       <div>
         <h1 className="text-4xl font-bold text-text">Data Management</h1>
-        <p className="text-muted mt-2">Upload and enrich your historical booking data</p>
+        <p className="mt-2 text-muted">Upload and enrich your historical booking data</p>
 
         {/* Step Indicator */}
-        <div className="flex items-center gap-4 mt-6">
+        <div className="mt-6 flex items-center gap-4">
           <button
             onClick={() => setCurrentStep('upload')}
             className={clsx(
-              'flex items-center gap-2 px-4 py-2 rounded-lg transition-all',
+              'flex items-center gap-2 rounded-lg px-4 py-2 transition-all',
               currentStep === 'upload'
-                ? 'bg-primary/10 text-primary border-2 border-primary'
+                ? 'border-2 border-primary bg-primary/10 text-primary'
                 : 'bg-elevated text-muted hover:bg-card'
             )}
           >
-            <Database className="w-4 h-4" />
+            <Database className="h-4 w-4" />
             <span className="font-medium">1. Upload</span>
-            {hasSuccessfulUpload && <CheckCircle2 className="w-4 h-4 text-success" />}
+            {hasSuccessfulUpload && <CheckCircle2 className="h-4 w-4 text-success" />}
           </button>
 
-          <ArrowRight className="w-5 h-5 text-muted" />
+          <ArrowRight className="h-5 w-5 text-muted" />
 
           <button
             onClick={() => hasSuccessfulUpload && setCurrentStep('enrichment')}
             disabled={!hasSuccessfulUpload}
             className={clsx(
-              'flex items-center gap-2 px-4 py-2 rounded-lg transition-all',
+              'flex items-center gap-2 rounded-lg px-4 py-2 transition-all',
               currentStep === 'enrichment'
-                ? 'bg-primary/10 text-primary border-2 border-primary'
+                ? 'border-2 border-primary bg-primary/10 text-primary'
                 : hasSuccessfulUpload
-                ? 'bg-elevated text-muted hover:bg-card'
-                : 'bg-elevated text-muted/50 cursor-not-allowed'
+                  ? 'bg-elevated text-muted hover:bg-card'
+                  : 'cursor-not-allowed bg-elevated text-muted/50'
             )}
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="h-4 w-4" />
             <span className="font-medium">2. Enrich</span>
-            {allEnrichmentComplete && <CheckCircle2 className="w-4 h-4 text-success" />}
+            {allEnrichmentComplete && <CheckCircle2 className="h-4 w-4 text-success" />}
           </button>
         </div>
       </div>
@@ -532,9 +515,9 @@ export const Data = () => {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 className={clsx(
-                  'border-2 border-dashed rounded-xl p-12 transition-all duration-200 cursor-pointer',
+                  'cursor-pointer rounded-xl border-2 border-dashed p-12 transition-all duration-200',
                   isDragging
-                    ? 'border-primary bg-primary/5 scale-[1.02]'
+                    ? 'scale-[1.02] border-primary bg-primary/5'
                     : 'border-border hover:border-primary/50 hover:bg-elevated/50'
                 )}
                 onClick={() => fileInputRef.current?.click()}
@@ -549,11 +532,11 @@ export const Data = () => {
                 />
 
                 <div className="flex flex-col items-center gap-4">
-                  <div className="p-4 bg-primary/10 rounded-full">
-                    <Upload className="w-8 h-8 text-primary" />
+                  <div className="rounded-full bg-primary/10 p-4">
+                    <Upload className="h-8 w-8 text-primary" />
                   </div>
                   <div className="text-center">
-                    <h3 className="text-lg font-semibold text-text mb-1">
+                    <h3 className="mb-1 text-lg font-semibold text-text">
                       Drop your files here, or click to browse
                     </h3>
                     <p className="text-sm text-muted">
@@ -578,15 +561,15 @@ export const Data = () => {
                 </Card.Header>
                 <Card.Body>
                   <div className="space-y-3">
-                    {files.map((file) => (
+                    {files.map(file => (
                       <div
                         key={file.uniqueId || file.name}
-                        className="flex items-center gap-4 p-4 bg-elevated rounded-lg border border-border"
+                        className="flex items-center gap-4 rounded-lg border border-border bg-elevated p-4"
                       >
                         {getStatusIcon(file.status)}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-text truncate">{file.name}</p>
-                          <p className="text-xs text-muted mt-1">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-text">{file.name}</p>
+                          <p className="mt-1 text-xs text-muted">
                             {formatFileSize(file.size)}
                             {file.rows && ` • ${file.rows.toLocaleString()} rows`}
                             {file.columns && ` • ${file.columns} columns`}
@@ -598,25 +581,26 @@ export const Data = () => {
                               file.status === 'success'
                                 ? 'success'
                                 : file.status === 'error'
-                                ? 'error'
-                                : 'default'
+                                  ? 'error'
+                                  : 'default'
                             }
                           >
                             {file.status}
                           </Badge>
                           {/* Show enrichment status if file is from the store (has enrichment data) */}
-                          {uploadedFiles.find(f => f.id === file.uniqueId)?.enrichment_status === 'completed' && (
+                          {uploadedFiles.find(f => f.id === file.uniqueId)?.enrichment_status ===
+                            'completed' && (
                             <Badge variant="success" className="flex items-center gap-1">
-                              <Sparkles className="w-3 h-3" />
+                              <Sparkles className="h-3 w-3" />
                               Enriched
                             </Badge>
                           )}
                         </div>
                         <button
                           onClick={() => removeFile(file.uniqueId || file.name)}
-                          className="p-2 hover:bg-card rounded-lg transition-colors"
+                          className="rounded-lg p-2 transition-colors hover:bg-card"
                         >
-                          <X className="w-4 h-4 text-muted hover:text-text" />
+                          <X className="h-4 w-4 text-muted hover:text-text" />
                         </button>
                       </div>
                     ))}
@@ -630,7 +614,7 @@ export const Data = () => {
               <Card variant="default">
                 <Card.Header>
                   <h2 className="text-xl font-semibold text-text">Data Preview</h2>
-                  <p className="text-sm text-muted mt-1">First 5 rows</p>
+                  <p className="mt-1 text-sm text-muted">First 5 rows</p>
                 </Card.Header>
                 <Card.Body>
                   <Table>
@@ -644,7 +628,7 @@ export const Data = () => {
                     </Table.Header>
                     <Table.Body>
                       {files
-                        .find((f) => f.preview)
+                        .find(f => f.preview)
                         ?.preview?.map((row, index) => (
                           <Table.Row key={index}>
                             <Table.Cell className="font-medium">{row.date}</Table.Cell>
@@ -661,14 +645,14 @@ export const Data = () => {
                   </Table>
                 </Card.Body>
                 <Card.Footer>
-                  <div className="flex items-center justify-between w-full">
+                  <div className="flex w-full items-center justify-between">
                     <p className="text-sm text-success">
-                      <CheckCircle2 className="w-4 h-4 inline mr-1" />
+                      <CheckCircle2 className="mr-1 inline h-4 w-4" />
                       Data looks good!
                     </p>
                     <Button variant="primary" onClick={() => setCurrentStep('enrichment')}>
                       Continue to Enrichment
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
                 </Card.Footer>
@@ -681,26 +665,26 @@ export const Data = () => {
                 <h3 className="text-lg font-semibold text-text">Data Requirements</h3>
               </Card.Header>
               <Card.Body>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div>
-                    <h4 className="text-sm font-semibold text-text mb-2">Required Columns</h4>
+                    <h4 className="mb-2 text-sm font-semibold text-text">Required Columns</h4>
                     <ul className="space-y-2 text-sm text-muted">
                       <li className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
                         <span>Date column (booking_date, check_in, etc.)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
                         <span>Price column (price, rate, amount, etc.)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
                         <span>Demand indicator (bookings, occupancy, etc.)</span>
                       </li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-text mb-2">Best Practices</h4>
+                    <h4 className="mb-2 text-sm font-semibold text-text">Best Practices</h4>
                     <ul className="space-y-2 text-sm text-muted">
                       <li className="flex items-start gap-2">
                         <span className="text-primary">•</span>
@@ -739,23 +723,25 @@ export const Data = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card variant="elevated" className="bg-warning/5 border-warning/20">
+                <Card variant="elevated" className="border-warning/20 bg-warning/5">
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-warning/10 rounded-lg flex-shrink-0">
-                      <MapPin className="w-6 h-6 text-warning" />
+                    <div className="flex-shrink-0 rounded-lg bg-warning/10 p-3">
+                      <MapPin className="h-6 w-6 text-warning" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-text mb-1">
+                      <h3 className="mb-1 text-lg font-semibold text-text">
                         Business Location Required
                       </h3>
-                      <p className="text-sm text-muted mb-3">
-                        Weather and Holiday enrichment require your business location to be configured.
-                        Please set your city, country, latitude, and longitude in Settings to enable these features.
+                      <p className="mb-3 text-sm text-muted">
+                        Weather and Holiday enrichment require your business location to be
+                        configured. Please set your city, country, latitude, and longitude in
+                        Settings to enable these features.
                       </p>
                       <div className="flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-warning" />
+                        <AlertCircle className="h-4 w-4 text-warning" />
                         <span className="text-xs text-muted">
-                          Without location data, Weather Data and Holidays & Events enrichment will fail
+                          Without location data, Weather Data and Holidays & Events enrichment will
+                          fail
                         </span>
                       </div>
                     </div>
@@ -765,7 +751,7 @@ export const Data = () => {
                       onClick={() => navigate('/settings')}
                       className="flex-shrink-0"
                     >
-                      <SettingsIcon className="w-4 h-4 mr-2" />
+                      <SettingsIcon className="mr-2 h-4 w-4" />
                       Go to Settings
                     </Button>
                   </div>
@@ -775,10 +761,10 @@ export const Data = () => {
 
             {/* Progress Summary */}
             <Card variant="elevated">
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4 flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-text">Enrichment Progress</h2>
-                  <p className="text-sm text-muted mt-1">
+                  <p className="mt-1 text-sm text-muted">
                     {completedEnrichmentCount} of {features.length} features completed
                   </p>
                 </div>
@@ -791,12 +777,12 @@ export const Data = () => {
                 >
                   {allEnrichmentComplete ? (
                     <>
-                      <CheckCircle2 className="w-5 h-5 mr-2" />
+                      <CheckCircle2 className="mr-2 h-5 w-5" />
                       All Complete
                     </>
                   ) : (
                     <>
-                      <Play className="w-5 h-5 mr-2" />
+                      <Play className="mr-2 h-5 w-5" />
                       Enrich All
                     </>
                   )}
@@ -811,7 +797,7 @@ export const Data = () => {
 
             {/* Feature Cards */}
             <div className="grid grid-cols-1 gap-4">
-              {features.map((feature) => {
+              {features.map(feature => {
                 const Icon = feature.icon
                 return (
                   <Card
@@ -826,40 +812,40 @@ export const Data = () => {
                     <div className="flex items-start gap-4">
                       <div
                         className={clsx(
-                          'p-3 rounded-lg',
+                          'rounded-lg p-3',
                           feature.status === 'complete'
                             ? 'bg-success/10'
                             : feature.status === 'running'
-                            ? 'bg-primary/10'
-                            : 'bg-elevated'
+                              ? 'bg-primary/10'
+                              : 'bg-elevated'
                         )}
                       >
                         <Icon
                           className={clsx(
-                            'w-6 h-6',
+                            'h-6 w-6',
                             feature.status === 'complete'
                               ? 'text-success'
                               : feature.status === 'running'
-                              ? 'text-primary'
-                              : 'text-muted'
+                                ? 'text-primary'
+                                : 'text-muted'
                           )}
                         />
                       </div>
 
                       <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="mb-2 flex items-center justify-between">
                           <h3 className="text-lg font-semibold text-text">{feature.name}</h3>
                           {getStatusBadge(feature.status)}
                         </div>
-                        <p className="text-sm text-muted mb-3">{feature.description}</p>
+                        <p className="mb-3 text-sm text-muted">{feature.description}</p>
 
                         {/* Fields */}
                         <div className="mb-3">
                           <div className="flex flex-wrap gap-2">
-                            {feature.fields.map((field) => (
+                            {feature.fields.map(field => (
                               <span
                                 key={field}
-                                className="px-2 py-1 bg-elevated text-xs text-text rounded border border-border font-mono"
+                                className="rounded border border-border bg-elevated px-2 py-1 font-mono text-xs text-text"
                               >
                                 {field}
                               </span>
@@ -880,7 +866,7 @@ export const Data = () => {
                       {/* Action Button */}
                       <div>
                         {feature.status === 'complete' ? (
-                          <CheckCircle2 className="w-6 h-6 text-success" />
+                          <CheckCircle2 className="h-6 w-6 text-success" />
                         ) : (
                           <Button
                             variant="secondary"
@@ -905,22 +891,20 @@ export const Data = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card variant="elevated" className="bg-success/5 border-success/20">
+                <Card variant="elevated" className="border-success/20 bg-success/5">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 bg-success/10 rounded-lg">
-                      <Sparkles className="w-8 h-8 text-success" />
+                    <div className="rounded-lg bg-success/10 p-3">
+                      <Sparkles className="h-8 w-8 text-success" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-text mb-1">
-                        Enrichment Complete!
-                      </h3>
+                      <h3 className="mb-1 text-lg font-semibold text-text">Enrichment Complete!</h3>
                       <p className="text-sm text-muted">
                         Your data is ready for pricing optimization and insights analysis
                       </p>
                     </div>
                     <Button variant="primary" size="lg" onClick={() => navigate('/pricing-engine')}>
                       Start Optimizing Prices
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
                 </Card>

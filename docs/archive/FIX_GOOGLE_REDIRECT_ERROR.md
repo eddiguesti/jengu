@@ -32,11 +32,13 @@ Google is blocking the sign-in because the **redirect URL** in your Google Cloud
 Scroll down to **"Authorized redirect URIs"** section.
 
 **Add this EXACT URL:**
+
 ```
 https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback
 ```
 
 **Important Notes:**
+
 - ✅ Use `https://` (not `http://`)
 - ✅ Must end with `/auth/v1/callback`
 - ✅ No trailing slash after `callback`
@@ -45,11 +47,13 @@ https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback
 ### Step 4: Remove Any Incorrect URLs
 
 If you see any of these, **DELETE THEM**:
+
 - ❌ `http://localhost:5174/auth/callback` (wrong - this is for local testing, not needed)
 - ❌ `http://localhost:5173/auth/callback` (wrong)
 - ❌ Any URL without `supabase.co` (wrong)
 
 **Keep ONLY:**
+
 - ✅ `https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback`
 
 ### Step 5: Save
@@ -78,6 +82,7 @@ Authorized redirect URIs
 While you're there, also check **"Authorized JavaScript origins"**.
 
 **Add these URLs:**
+
 ```
 http://localhost:5174
 https://geehtuuyyxhyissplfjb.supabase.co
@@ -90,9 +95,11 @@ This tells Google where your app is hosted.
 ## After Saving
 
 ### Wait 1-2 Minutes
+
 Google takes a minute or two to update the settings.
 
 ### Test Again
+
 1. Go to: http://localhost:5174/login
 2. Click **"Continue with Google"**
 3. It should work now! ✅
@@ -113,6 +120,7 @@ Google takes a minute or two to update the settings.
 ### Check Google Cloud Console Again
 
 Make sure you're editing the **correct** OAuth client:
+
 - The one with Client ID: `2657374221-sc4p014khvt11cfnaq0bshcv7prq82tv.apps.googleusercontent.com`
 - Not a different OAuth client (if you have multiple)
 
@@ -121,6 +129,7 @@ Make sure you're editing the **correct** OAuth client:
 ## Common Mistakes
 
 ### ❌ Wrong Redirect URI:
+
 ```
 http://localhost:5174/auth/callback  ← WRONG (localhost)
 http://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback  ← WRONG (http instead of https)
@@ -129,6 +138,7 @@ https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback/  ← WRONG (trailing 
 ```
 
 ### ✅ Correct Redirect URI:
+
 ```
 https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback
 ```
@@ -140,22 +150,26 @@ https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback
 Here's what your OAuth client should look like:
 
 ### Application type:
+
 ```
 Web application
 ```
 
 ### Name:
+
 ```
 Jengu Web Client (or whatever you named it)
 ```
 
 ### Authorized JavaScript origins:
+
 ```
 http://localhost:5174
 https://geehtuuyyxhyissplfjb.supabase.co
 ```
 
 ### Authorized redirect URIs:
+
 ```
 https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback
 ```
@@ -165,11 +179,13 @@ https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback
 ## Quick Copy-Paste
 
 **For Authorized redirect URIs, add this EXACT URL:**
+
 ```
 https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback
 ```
 
 **For Authorized JavaScript origins, add these:**
+
 ```
 http://localhost:5174
 https://geehtuuyyxhyissplfjb.supabase.co

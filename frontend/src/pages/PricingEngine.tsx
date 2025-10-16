@@ -146,7 +146,9 @@ export const PricingEngine: React.FC = () => {
       const seasonalDemand = 70 + Math.sin((date.getMonth() / 12) * Math.PI * 2) * 15
       const weekendBoost = isWeekend ? 20 : 0
       const dayVariation = Math.sin(i * 0.4) * 10
-      const demandForecast = Math.round(Math.max(40, Math.min(100, seasonalDemand + weekendBoost + dayVariation)))
+      const demandForecast = Math.round(
+        Math.max(40, Math.min(100, seasonalDemand + weekendBoost + dayVariation))
+      )
 
       // Current pricing strategy (basic)
       const currentPrice = isWeekend ? basePrice + 40 : basePrice
@@ -154,7 +156,7 @@ export const PricingEngine: React.FC = () => {
 
       // Optimized pricing based on parameters
       const demandMultiplier = 1 + ((demandForecast - 70) / 100) * demandSensitivity
-      const aggressionFactor = 1 + (priceAggression * 0.3)
+      const aggressionFactor = 1 + priceAggression * 0.3
       const occupancyGap = currentOccupancy - occupancyTarget
       const occupancyAdjustment = occupancyGap > 0 ? 1.1 : 0.95 // If above target, can charge more
 
@@ -166,14 +168,18 @@ export const PricingEngine: React.FC = () => {
       }
 
       // Clamp to realistic range
-      optimizedPrice = Math.round(Math.max(basePrice * 0.7, Math.min(basePrice * 1.8, optimizedPrice)))
+      optimizedPrice = Math.round(
+        Math.max(basePrice * 0.7, Math.min(basePrice * 1.8, optimizedPrice))
+      )
 
       // Calculate occupancy impact
       // Higher prices reduce occupancy if demand isn't strong enough
       const priceElasticity = 0.5
       const priceChange = (optimizedPrice - currentPrice) / currentPrice
       const occupancyImpact = -priceChange * priceElasticity * demandForecast * 0.3
-      const optimizedOccupancy = Math.round(Math.max(30, Math.min(98, currentOccupancy + occupancyImpact)))
+      const optimizedOccupancy = Math.round(
+        Math.max(30, Math.min(98, currentOccupancy + occupancyImpact))
+      )
 
       // Calculate revenues
       const revenueCurrent = Math.round((currentPrice * currentOccupancy * capacity) / 100)
@@ -199,9 +205,9 @@ export const PricingEngine: React.FC = () => {
 
   // Generate detailed recommendations for table
   const generateRecommendations = (): PriceRecommendation[] => {
-    return pricingData.map((data) => {
+    return pricingData.map(data => {
       const priceDiff = data.optimized_price - data.current_price
-      const revenueImpact = ((priceDiff / data.current_price) * 100)
+      const revenueImpact = (priceDiff / data.current_price) * 100
 
       // Calculate confidence based on demand and occupancy
       let confidence: 'high' | 'medium' | 'low' = 'medium'
@@ -227,8 +233,14 @@ export const PricingEngine: React.FC = () => {
 
   // Export recommendations
   const handleExportCSV = () => {
-    const csvContent = 'Date,Day,Current Price,Recommended Price,Expected Occupancy,Revenue Impact,Confidence\n' +
-      recommendations.map(r => `${r.date},${r.day},${r.current_price},${r.recommended_price},${r.expected_occupancy}%,${r.revenue_impact}%,${r.confidence}`).join('\n')
+    const csvContent =
+      'Date,Day,Current Price,Recommended Price,Expected Occupancy,Revenue Impact,Confidence\n' +
+      recommendations
+        .map(
+          r =>
+            `${r.date},${r.day},${r.current_price},${r.recommended_price},${r.expected_occupancy}%,${r.revenue_impact}%,${r.confidence}`
+        )
+        .join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
@@ -270,11 +282,15 @@ export const PricingEngine: React.FC = () => {
     const revenueUplift = optimizedRevenue - currentRevenue
     const upliftPercentage = (revenueUplift / currentRevenue) * 100
 
-    const avgPriceCurrent = pricingData.reduce((sum, d) => sum + d.current_price, 0) / pricingData.length
-    const avgPriceOptimized = pricingData.reduce((sum, d) => sum + d.optimized_price, 0) / pricingData.length
+    const avgPriceCurrent =
+      pricingData.reduce((sum, d) => sum + d.current_price, 0) / pricingData.length
+    const avgPriceOptimized =
+      pricingData.reduce((sum, d) => sum + d.optimized_price, 0) / pricingData.length
 
-    const avgOccupancyCurrent = pricingData.reduce((sum, d) => sum + d.occupancy_current, 0) / pricingData.length
-    const avgOccupancyOptimized = pricingData.reduce((sum, d) => sum + d.occupancy_optimized, 0) / pricingData.length
+    const avgOccupancyCurrent =
+      pricingData.reduce((sum, d) => sum + d.occupancy_current, 0) / pricingData.length
+    const avgOccupancyOptimized =
+      pricingData.reduce((sum, d) => sum + d.occupancy_optimized, 0) / pricingData.length
 
     const totalBookings = pricingData.length * 100 // Assuming 100 capacity
 
@@ -330,17 +346,15 @@ export const PricingEngine: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-text mb-2 flex items-center gap-3">
-            <Sparkles className="w-8 h-8 text-primary" />
+          <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-text">
+            <Sparkles className="h-8 w-8 text-primary" />
             Smart Pricing Engine
           </h1>
-          <p className="text-muted">
-            AI-powered demand forecasting and dynamic price optimization
-          </p>
+          <p className="text-muted">AI-powered demand forecasting and dynamic price optimization</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" size="md" onClick={handleReset}>
-            <RotateCcw className="w-4 h-4 mr-2" />
+            <RotateCcw className="mr-2 h-4 w-4" />
             Reset
           </Button>
           <Button
@@ -352,12 +366,12 @@ export const PricingEngine: React.FC = () => {
           >
             {isOptimizing ? (
               <>
-                <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
                 Optimizing...
               </>
             ) : (
               <>
-                <PlayCircle className="w-4 h-4" />
+                <PlayCircle className="h-4 w-4" />
                 Run Optimization
               </>
             )}
@@ -372,12 +386,12 @@ export const PricingEngine: React.FC = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-success/10 border border-success/30 rounded-lg p-4 flex items-center gap-3"
+            className="flex items-center gap-3 rounded-lg border border-success/30 bg-success/10 p-4"
           >
-            <CheckCircle className="w-5 h-5 text-success" />
+            <CheckCircle className="h-5 w-5 text-success" />
             <div>
-              <p className="text-success font-semibold">Pricing strategy applied successfully!</p>
-              <p className="text-sm text-muted mt-1">
+              <p className="font-semibold text-success">Pricing strategy applied successfully!</p>
+              <p className="mt-1 text-sm text-muted">
                 Your optimized prices are now active for the next {forecastHorizon} days.
               </p>
             </div>
@@ -394,18 +408,21 @@ export const PricingEngine: React.FC = () => {
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.4 }}
           >
-            <Card variant="elevated" className="bg-gradient-to-br from-primary/10 via-background to-background border-2 border-primary/20">
+            <Card
+              variant="elevated"
+              className="border-2 border-primary/20 bg-gradient-to-br from-primary/10 via-background to-background"
+            >
               <Card.Body className="p-8">
-                <div className="text-center mb-8">
+                <div className="mb-8 text-center">
                   <Badge variant="success" size="lg" className="mb-4">
-                    <Zap className="w-4 h-4 mr-2" />
+                    <Zap className="mr-2 h-4 w-4" />
                     Optimization Complete
                   </Badge>
-                  <h2 className="text-3xl font-bold text-text mb-2">Business Impact Analysis</h2>
+                  <h2 className="mb-2 text-3xl font-bold text-text">Business Impact Analysis</h2>
                   <p className="text-muted">Projected results over next {forecastHorizon} days</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-3">
                   {/* Current Strategy */}
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
@@ -413,11 +430,11 @@ export const PricingEngine: React.FC = () => {
                     transition={{ delay: 0.2 }}
                     className="text-center"
                   >
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-500/10 mb-4">
-                      <Target className="w-8 h-8 text-gray-400" />
+                    <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-500/10">
+                      <Target className="h-8 w-8 text-gray-400" />
                     </div>
-                    <p className="text-sm text-muted mb-2">Current Strategy</p>
-                    <p className="text-4xl font-bold text-gray-400 mb-1">
+                    <p className="mb-2 text-sm text-muted">Current Strategy</p>
+                    <p className="mb-1 text-4xl font-bold text-gray-400">
                       €{(metrics.current_revenue / 1000).toFixed(1)}K
                     </p>
                     <p className="text-xs text-muted">revenue</p>
@@ -431,8 +448,8 @@ export const PricingEngine: React.FC = () => {
                     className="flex items-center justify-center"
                   >
                     <div className="flex flex-col items-center gap-2">
-                      <ArrowUpRight className="w-12 h-12 text-primary animate-pulse" />
-                      <Badge variant="success" size="lg" className="text-lg px-4 py-2">
+                      <ArrowUpRight className="h-12 w-12 animate-pulse text-primary" />
+                      <Badge variant="success" size="lg" className="px-4 py-2 text-lg">
                         +{metrics.uplift_percentage}%
                       </Badge>
                     </div>
@@ -445,11 +462,11 @@ export const PricingEngine: React.FC = () => {
                     transition={{ delay: 0.6 }}
                     className="text-center"
                   >
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-                      <Sparkles className="w-8 h-8 text-primary" />
+                    <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                      <Sparkles className="h-8 w-8 text-primary" />
                     </div>
-                    <p className="text-sm text-muted mb-2">Optimized Strategy</p>
-                    <p className="text-4xl font-bold text-primary mb-1">
+                    <p className="mb-2 text-sm text-muted">Optimized Strategy</p>
+                    <p className="mb-1 text-4xl font-bold text-primary">
                       €{(metrics.optimized_revenue / 1000).toFixed(1)}K
                     </p>
                     <p className="text-xs text-muted">revenue</p>
@@ -461,14 +478,15 @@ export const PricingEngine: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 }}
-                  className="bg-primary/5 rounded-xl p-6 border border-primary/20 text-center"
+                  className="rounded-xl border border-primary/20 bg-primary/5 p-6 text-center"
                 >
-                  <p className="text-sm text-muted mb-2">Additional Revenue</p>
-                  <p className="text-5xl font-bold text-primary mb-2">
+                  <p className="mb-2 text-sm text-muted">Additional Revenue</p>
+                  <p className="mb-2 text-5xl font-bold text-primary">
                     +€{(metrics.revenue_uplift / 1000).toFixed(1)}K
                   </p>
                   <p className="text-muted">
-                    By optimizing {forecastHorizon} days of pricing with the {STRATEGIES[selectedStrategy].name.toLowerCase()} strategy
+                    By optimizing {forecastHorizon} days of pricing with the{' '}
+                    {STRATEGIES[selectedStrategy].name.toLowerCase()} strategy
                   </p>
                 </motion.div>
 
@@ -477,10 +495,10 @@ export const PricingEngine: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1.0 }}
-                  className="flex justify-center mt-8"
+                  className="mt-8 flex justify-center"
                 >
                   <Button variant="primary" size="lg" onClick={handleApply} className="px-8">
-                    <Save className="w-5 h-5 mr-2" />
+                    <Save className="mr-2 h-5 w-5" />
                     Apply Optimized Prices
                   </Button>
                 </motion.div>
@@ -494,13 +512,13 @@ export const PricingEngine: React.FC = () => {
       <Card variant="elevated">
         <Card.Header>
           <div className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" />
+            <Target className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold text-text">Pricing Strategy</h2>
           </div>
         </Card.Header>
         <Card.Body>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {(Object.keys(STRATEGIES) as Strategy[]).map((strategy) => {
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {(Object.keys(STRATEGIES) as Strategy[]).map(strategy => {
               const config = STRATEGIES[strategy]
               const isSelected = selectedStrategy === strategy
 
@@ -508,29 +526,33 @@ export const PricingEngine: React.FC = () => {
                 <button
                   key={strategy}
                   onClick={() => applyStrategy(strategy)}
-                  className={`p-6 rounded-xl border-2 transition-all text-left ${
+                  className={`rounded-xl border-2 p-6 text-left transition-all ${
                     isSelected
                       ? 'border-primary bg-primary/5'
                       : 'border-border bg-background hover:border-primary/50'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-text">{config.name}</h3>
-                    {isSelected && <CheckCircle className="w-5 h-5 text-primary" />}
+                    {isSelected && <CheckCircle className="h-5 w-5 text-primary" />}
                   </div>
-                  <p className="text-sm text-muted mb-4">{config.description}</p>
+                  <p className="mb-4 text-sm text-muted">{config.description}</p>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
                       <span className="text-muted">Demand Sensitivity</span>
-                      <span className="text-text font-medium">{(config.demandSensitivity * 100).toFixed(0)}%</span>
+                      <span className="font-medium text-text">
+                        {(config.demandSensitivity * 100).toFixed(0)}%
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted">Price Aggression</span>
-                      <span className="text-text font-medium">{(config.priceAggression * 100).toFixed(0)}%</span>
+                      <span className="font-medium text-text">
+                        {(config.priceAggression * 100).toFixed(0)}%
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted">Occupancy Target</span>
-                      <span className="text-text font-medium">{config.occupancyTarget}%</span>
+                      <span className="font-medium text-text">{config.occupancyTarget}%</span>
                     </div>
                   </div>
                 </button>
@@ -541,14 +563,18 @@ export const PricingEngine: React.FC = () => {
       </Card>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
           <Card variant="elevated" className="relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16" />
+            <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-primary/5" />
             <div className="relative p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-primary/10 rounded-xl">
-                  <DollarSign className="w-6 h-6 text-primary" />
+              <div className="mb-4 flex items-center justify-between">
+                <div className="rounded-xl bg-primary/10 p-3">
+                  <DollarSign className="h-6 w-6 text-primary" />
                 </div>
                 {metrics.uplift_percentage > 0 ? (
                   <Badge variant="success" size="sm">
@@ -560,13 +586,15 @@ export const PricingEngine: React.FC = () => {
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-muted mb-1">Revenue Uplift</p>
-              <h3 className="text-3xl font-bold text-text">€{(metrics.revenue_uplift / 1000).toFixed(1)}K</h3>
+              <p className="mb-1 text-sm text-muted">Revenue Uplift</p>
+              <h3 className="text-3xl font-bold text-text">
+                €{(metrics.revenue_uplift / 1000).toFixed(1)}K
+              </h3>
               <div className="mt-3 flex items-center gap-1 text-xs">
                 {metrics.revenue_uplift >= 0 ? (
-                  <ArrowUpRight className="w-3 h-3 text-success" />
+                  <ArrowUpRight className="h-3 w-3 text-success" />
                 ) : (
-                  <ArrowDownRight className="w-3 h-3 text-error" />
+                  <ArrowDownRight className="h-3 w-3 text-error" />
                 )}
                 <span className={metrics.revenue_uplift >= 0 ? 'text-success' : 'text-error'}>
                   vs current strategy
@@ -576,16 +604,20 @@ export const PricingEngine: React.FC = () => {
           </Card>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
           <Card variant="elevated" className="relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16" />
+            <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-blue-500/5" />
             <div className="relative p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-blue-500/10 rounded-xl">
-                  <TrendingUp className="w-6 h-6 text-blue-500" />
+              <div className="mb-4 flex items-center justify-between">
+                <div className="rounded-xl bg-blue-500/10 p-3">
+                  <TrendingUp className="h-6 w-6 text-blue-500" />
                 </div>
               </div>
-              <p className="text-sm text-muted mb-1">Avg Price (Optimized)</p>
+              <p className="mb-1 text-sm text-muted">Avg Price (Optimized)</p>
               <h3 className="text-3xl font-bold text-text">€{metrics.avg_price_optimized}</h3>
               <div className="mt-3 flex items-center gap-1 text-xs text-muted">
                 <span>Current: €{metrics.avg_price_current}</span>
@@ -594,16 +626,20 @@ export const PricingEngine: React.FC = () => {
           </Card>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
           <Card variant="elevated" className="relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full -mr-16 -mt-16" />
+            <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-purple-500/5" />
             <div className="relative p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-purple-500/10 rounded-xl">
-                  <Users className="w-6 h-6 text-purple-500" />
+              <div className="mb-4 flex items-center justify-between">
+                <div className="rounded-xl bg-purple-500/10 p-3">
+                  <Users className="h-6 w-6 text-purple-500" />
                 </div>
               </div>
-              <p className="text-sm text-muted mb-1">Avg Occupancy</p>
+              <p className="mb-1 text-sm text-muted">Avg Occupancy</p>
               <h3 className="text-3xl font-bold text-text">{metrics.avg_occupancy_optimized}%</h3>
               <div className="mt-3 flex items-center gap-1 text-xs text-muted">
                 <span>Current: {metrics.avg_occupancy_current}%</span>
@@ -612,16 +648,20 @@ export const PricingEngine: React.FC = () => {
           </Card>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
           <Card variant="elevated" className="relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full -mr-16 -mt-16" />
+            <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-orange-500/5" />
             <div className="relative p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-orange-500/10 rounded-xl">
-                  <Calendar className="w-6 h-6 text-orange-500" />
+              <div className="mb-4 flex items-center justify-between">
+                <div className="rounded-xl bg-orange-500/10 p-3">
+                  <Calendar className="h-6 w-6 text-orange-500" />
                 </div>
               </div>
-              <p className="text-sm text-muted mb-1">Forecast Period</p>
+              <p className="mb-1 text-sm text-muted">Forecast Period</p>
               <h3 className="text-3xl font-bold text-text">{forecastHorizon}</h3>
               <div className="mt-3 flex items-center gap-1 text-xs text-muted">
                 <span>days ahead</span>
@@ -636,19 +676,21 @@ export const PricingEngine: React.FC = () => {
         <Card.Header>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-primary" />
+              <Zap className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-semibold text-text">Fine-tune Optimization</h2>
             </div>
             <p className="text-xs text-muted">Adjust parameters for custom strategy</p>
           </div>
         </Card.Header>
         <Card.Body>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* Demand Sensitivity */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-text">Demand Sensitivity</label>
-                <span className="text-sm font-bold text-primary">{(demandSensitivity * 100).toFixed(0)}%</span>
+                <span className="text-sm font-bold text-primary">
+                  {(demandSensitivity * 100).toFixed(0)}%
+                </span>
               </div>
               <input
                 type="range"
@@ -656,17 +698,21 @@ export const PricingEngine: React.FC = () => {
                 max="1"
                 step="0.1"
                 value={demandSensitivity}
-                onChange={(e) => setDemandSensitivity(parseFloat(e.target.value))}
-                className="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer slider-thumb"
+                onChange={e => setDemandSensitivity(parseFloat(e.target.value))}
+                className="slider-thumb h-2 w-full cursor-pointer appearance-none rounded-lg bg-border"
               />
-              <p className="text-xs text-muted">How much demand forecast influences pricing decisions</p>
+              <p className="text-xs text-muted">
+                How much demand forecast influences pricing decisions
+              </p>
             </div>
 
             {/* Price Aggression */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-text">Price Aggression</label>
-                <span className="text-sm font-bold text-primary">{(priceAggression * 100).toFixed(0)}%</span>
+                <span className="text-sm font-bold text-primary">
+                  {(priceAggression * 100).toFixed(0)}%
+                </span>
               </div>
               <input
                 type="range"
@@ -674,10 +720,12 @@ export const PricingEngine: React.FC = () => {
                 max="1"
                 step="0.1"
                 value={priceAggression}
-                onChange={(e) => setPriceAggression(parseFloat(e.target.value))}
-                className="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer slider-thumb"
+                onChange={e => setPriceAggression(parseFloat(e.target.value))}
+                className="slider-thumb h-2 w-full cursor-pointer appearance-none rounded-lg bg-border"
               />
-              <p className="text-xs text-muted">How aggressively to adjust prices based on demand</p>
+              <p className="text-xs text-muted">
+                How aggressively to adjust prices based on demand
+              </p>
             </div>
 
             {/* Occupancy Target */}
@@ -692,24 +740,24 @@ export const PricingEngine: React.FC = () => {
                 max="95"
                 step="5"
                 value={occupancyTarget}
-                onChange={(e) => setOccupancyTarget(parseInt(e.target.value))}
-                className="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer slider-thumb"
+                onChange={e => setOccupancyTarget(parseInt(e.target.value))}
+                className="slider-thumb h-2 w-full cursor-pointer appearance-none rounded-lg bg-border"
               />
               <p className="text-xs text-muted">Target occupancy rate for optimization</p>
             </div>
 
             {/* Forecast Horizon */}
             <div className="space-y-3">
-              <label className="text-sm font-medium text-text block">Forecast Horizon</label>
+              <label className="block text-sm font-medium text-text">Forecast Horizon</label>
               <div className="flex gap-2">
-                {[7, 14, 30, 60].map((days) => (
+                {[7, 14, 30, 60].map(days => (
                   <button
                     key={days}
                     onClick={() => setForecastHorizon(days)}
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
                       forecastHorizon === days
                         ? 'bg-primary text-background'
-                        : 'bg-background border border-border text-text hover:border-primary'
+                        : 'border border-border bg-background text-text hover:border-primary'
                     }`}
                   >
                     {days} Days
@@ -728,15 +776,15 @@ export const PricingEngine: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-text">Price Optimization Timeline</h2>
-              <p className="text-sm text-muted mt-1">Current vs. Optimized pricing strategy</p>
+              <p className="mt-1 text-sm text-muted">Current vs. Optimized pricing strategy</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-gray-400" />
+                <div className="h-3 w-3 rounded-full bg-gray-400" />
                 <span className="text-xs text-muted">Current</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-primary" />
+                <div className="h-3 w-3 rounded-full bg-primary" />
                 <span className="text-xs text-muted">Optimized</span>
               </div>
             </div>
@@ -779,7 +827,13 @@ export const PricingEngine: React.FC = () => {
                 dot={false}
                 name="Current Price"
               />
-              <Bar dataKey="demand_forecast" fill="#10B981" fillOpacity={0.2} name="Demand Forecast" yAxisId="right" />
+              <Bar
+                dataKey="demand_forecast"
+                fill="#10B981"
+                fillOpacity={0.2}
+                name="Demand Forecast"
+                yAxisId="right"
+              />
               <YAxis yAxisId="right" orientation="right" stroke="#10B981" />
             </ComposedChart>
           </ResponsiveContainer>
@@ -787,7 +841,7 @@ export const PricingEngine: React.FC = () => {
       </Card>
 
       {/* Revenue Comparison */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card variant="default">
           <Card.Header>
             <h2 className="text-lg font-semibold text-text">Revenue Forecast</h2>
@@ -806,8 +860,18 @@ export const PricingEngine: React.FC = () => {
                   }}
                 />
                 <Legend />
-                <Bar dataKey="revenue_current" fill="#9CA3AF" name="Current Revenue" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="revenue_optimized" fill="#EBFF57" name="Optimized Revenue" radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="revenue_current"
+                  fill="#9CA3AF"
+                  name="Current Revenue"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey="revenue_optimized"
+                  fill="#EBFF57"
+                  name="Optimized Revenue"
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </Card.Body>
@@ -860,10 +924,10 @@ export const PricingEngine: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-text">Daily Pricing Recommendations</h2>
-                <p className="text-sm text-muted mt-1">Room/Pitch-level pricing for each day</p>
+                <p className="mt-1 text-sm text-muted">Room/Pitch-level pricing for each day</p>
               </div>
               <Button variant="outline" size="sm" onClick={handleExportCSV}>
-                <Download className="w-4 h-4 mr-2" />
+                <Download className="mr-2 h-4 w-4" />
                 Export CSV
               </Button>
             </div>
@@ -873,14 +937,30 @@ export const PricingEngine: React.FC = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">Day</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Current Price</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Recommended</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Occupancy</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Impact</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-muted uppercase tracking-wider">Confidence</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-muted uppercase tracking-wider">Action</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
+                      Day
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">
+                      Current Price
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">
+                      Recommended
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">
+                      Occupancy
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">
+                      Impact
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted">
+                      Confidence
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted">
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -899,42 +979,60 @@ export const PricingEngine: React.FC = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.02 }}
-                        className="hover:bg-elevated/50 transition-colors"
+                        className="transition-colors hover:bg-elevated/50"
                       >
                         <td className="px-4 py-3 text-sm font-medium text-text">{dateStr}</td>
                         <td className="px-4 py-3 text-sm text-muted">{rec.day}</td>
-                        <td className="px-4 py-3 text-sm text-right text-muted">€{rec.current_price}</td>
-                        <td className="px-4 py-3 text-sm text-right">
-                          <span className="font-semibold text-primary">€{rec.recommended_price}</span>
-                          <span className={`ml-2 text-xs ${priceDiff >= 0 ? 'text-success' : 'text-error'}`}>
+                        <td className="px-4 py-3 text-right text-sm text-muted">
+                          €{rec.current_price}
+                        </td>
+                        <td className="px-4 py-3 text-right text-sm">
+                          <span className="font-semibold text-primary">
+                            €{rec.recommended_price}
+                          </span>
+                          <span
+                            className={`ml-2 text-xs ${priceDiff >= 0 ? 'text-success' : 'text-error'}`}
+                          >
                             {priceDiff >= 0 ? '+' : ''}€{priceDiff}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-right">
+                        <td className="px-4 py-3 text-right text-sm">
                           <Badge
-                            variant={rec.expected_occupancy > 85 ? 'success' : rec.expected_occupancy > 70 ? 'default' : 'warning'}
+                            variant={
+                              rec.expected_occupancy > 85
+                                ? 'success'
+                                : rec.expected_occupancy > 70
+                                  ? 'default'
+                                  : 'warning'
+                            }
                             size="sm"
                           >
                             {rec.expected_occupancy}%
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-sm text-right">
-                          <span className={`font-medium ${rec.revenue_impact >= 0 ? 'text-success' : 'text-error'}`}>
-                            {rec.revenue_impact >= 0 ? '+' : ''}{rec.revenue_impact}%
+                        <td className="px-4 py-3 text-right text-sm">
+                          <span
+                            className={`font-medium ${rec.revenue_impact >= 0 ? 'text-success' : 'text-error'}`}
+                          >
+                            {rec.revenue_impact >= 0 ? '+' : ''}
+                            {rec.revenue_impact}%
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-center">
+                        <td className="px-4 py-3 text-center text-sm">
                           <Badge
                             variant={
-                              rec.confidence === 'high' ? 'success' :
-                              rec.confidence === 'medium' ? 'default' : 'warning'
+                              rec.confidence === 'high'
+                                ? 'success'
+                                : rec.confidence === 'medium'
+                                  ? 'default'
+                                  : 'warning'
                             }
                             size="sm"
                           >
                             {rec.confidence}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-sm text-center">
+                        <td className="px-4 py-3 text-center text-sm">
                           <Button variant="outline" size="sm">
                             Apply
                           </Button>
@@ -953,15 +1051,16 @@ export const PricingEngine: React.FC = () => {
       {!hasData && (
         <Card variant="default" className="border-blue-500/30 bg-blue-500/5">
           <Card.Body className="flex items-start gap-4">
-            <Database className="w-6 h-6 text-blue-500 flex-shrink-0 mt-1" />
+            <Database className="mt-1 h-6 w-6 flex-shrink-0 text-blue-500" />
             <div>
-              <h3 className="text-lg font-semibold text-text mb-2">Using Simulated Data</h3>
-              <p className="text-muted mb-3">
-                The pricing engine is currently using simulated data for demonstration. Upload your historical booking data
-                to get personalized recommendations based on your actual performance.
+              <h3 className="mb-2 text-lg font-semibold text-text">Using Simulated Data</h3>
+              <p className="mb-3 text-muted">
+                The pricing engine is currently using simulated data for demonstration. Upload your
+                historical booking data to get personalized recommendations based on your actual
+                performance.
               </p>
               <Button variant="primary" size="sm" onClick={() => navigate('/data')}>
-                <Database className="w-4 h-4 mr-2" />
+                <Database className="mr-2 h-4 w-4" />
                 Upload Historical Data
               </Button>
             </div>
@@ -973,13 +1072,14 @@ export const PricingEngine: React.FC = () => {
       {metrics.uplift_percentage < 0 && (
         <Card variant="default" className="border-orange-500/30 bg-orange-500/5">
           <Card.Body className="flex items-start gap-4">
-            <AlertTriangle className="w-6 h-6 text-orange-500 flex-shrink-0 mt-1" />
+            <AlertTriangle className="mt-1 h-6 w-6 flex-shrink-0 text-orange-500" />
             <div>
-              <h3 className="text-lg font-semibold text-text mb-2">Optimization Alert</h3>
+              <h3 className="mb-2 text-lg font-semibold text-text">Optimization Alert</h3>
               <p className="text-muted">
-                The current parameters result in lower revenue. Consider adjusting your strategy to be more aggressive
-                or review your occupancy targets. The {STRATEGIES.balanced.name.toLowerCase()} strategy typically
-                provides the best balance.
+                The current parameters result in lower revenue. Consider adjusting your strategy to
+                be more aggressive or review your occupancy targets. The{' '}
+                {STRATEGIES.balanced.name.toLowerCase()} strategy typically provides the best
+                balance.
               </p>
             </div>
           </Card.Body>

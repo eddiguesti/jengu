@@ -3,11 +3,13 @@
 ## What's Been Done
 
 ### 1. Google OAuth Credentials ✅
+
 - **Client ID:** `2657374221-sc4p014khvt11cfnaq0bshcv7prq82tv.apps.googleusercontent.com`
 - **Client Secret:** `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`
 - **Status:** Created and enabled in Google Cloud Console
 
 ### 2. Supabase Configuration ✅
+
 You need to paste these credentials into Supabase:
 
 **Go to:** https://supabase.com/dashboard/project/geehtuuyyxhyissplfjb/auth/providers
@@ -15,12 +17,14 @@ You need to paste these credentials into Supabase:
 **Click:** "Google" provider
 
 **Paste:**
+
 - **Client IDs:** `2657374221-sc4p014khvt11cfnaq0bshcv7prq82tv.apps.googleusercontent.com`
 - **Client Secret:** `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`
 
 **Click:** "Save"
 
 ### 3. Frontend Code ✅
+
 - ✅ Added `signInWithGoogle()` function to [frontend/src/lib/supabase.ts](frontend/src/lib/supabase.ts:112-125)
 - ✅ Added beautiful "Continue with Google" button to [frontend/src/pages/Auth.tsx](frontend/src/pages/Auth.tsx:204-247)
 - ✅ Added "Or continue with email" divider
@@ -118,12 +122,14 @@ User is logged in! ✅
 ### Step 3: Also Enable Email (Optional but Recommended)
 
 Users should have both options:
+
 1. Go to: https://supabase.com/dashboard/project/geehtuuyyxhyissplfjb/auth/providers
 2. Click **"Email"**
 3. Toggle **ON** "Enable Email provider"
 4. Click **"Save"**
 
 Now users can choose:
+
 - ✅ Sign in with Google (one-click)
 - ✅ Sign in with Email/Password (traditional)
 
@@ -132,6 +138,7 @@ Now users can choose:
 ## Features
 
 ### Google Sign-In Button:
+
 - ✅ Official Google logo (4 colors)
 - ✅ "Continue with Google" text
 - ✅ Smooth hover animation (scales up)
@@ -139,12 +146,14 @@ Now users can choose:
 - ✅ Matches app design (rounded corners, proper spacing)
 
 ### User Experience:
+
 - ✅ One-click sign-in (no password to remember)
 - ✅ Automatic profile info (name, email, photo from Google)
 - ✅ Secure (Google handles authentication)
 - ✅ Fast (no typing required)
 
 ### Data Persistence:
+
 - ✅ User account created in Supabase
 - ✅ Session persists across browser refreshes
 - ✅ All data linked to user (same as email auth)
@@ -155,17 +164,20 @@ Now users can choose:
 ## Both Auth Methods Supported
 
 ### Email/Password:
+
 - User types email and password
 - Creates account or logs in
 - Session saved to Supabase
 
 ### Google OAuth:
+
 - User clicks "Continue with Google"
 - Redirected to Google
 - Logs in with Google account
 - Session saved to Supabase
 
 **Both methods create the same user experience:**
+
 - ✅ Upload data
 - ✅ View analytics
 - ✅ Data persists
@@ -201,16 +213,19 @@ Now users can choose:
 ## Troubleshooting
 
 ### "OAuth flow failed"
+
 - Make sure you pasted credentials in Supabase
 - Make sure you clicked "Save" in Supabase
 - Check that Google OAuth is enabled in Supabase
 
 ### "Redirect URI mismatch"
+
 - Your callback URL should be: `https://geehtuuyyxhyissplfjb.supabase.co/auth/v1/callback`
 - Make sure this is registered in Google Cloud Console
 - Check Google Cloud Console → Credentials → OAuth client → Authorized redirect URIs
 
 ### "Access blocked"
+
 - Your OAuth consent screen may be in "Testing" mode
 - Add your email as a test user in Google Cloud Console
 - OR publish your app (requires verification for production)

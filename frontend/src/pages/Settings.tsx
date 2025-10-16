@@ -39,7 +39,7 @@ export const Settings = () => {
 
         const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
         const response = await axios.get(`${API_URL}/settings`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         })
 
         if (response.data.success && response.data.settings) {
@@ -84,7 +84,12 @@ export const Settings = () => {
   // Auto-geocode when city and country are both filled
   useEffect(() => {
     const geocodeLocation = async () => {
-      if (formData.city && formData.country && formData.city.length > 2 && formData.country.length > 2) {
+      if (
+        formData.city &&
+        formData.country &&
+        formData.city.length > 2 &&
+        formData.country.length > 2
+      ) {
         setIsGeocoding(true)
         setGeocodeError(null)
 
@@ -93,7 +98,7 @@ export const Settings = () => {
           const address = `${formData.city}, ${formData.country}`
 
           const response = await axios.get(`${API_URL}/geocoding/forward`, {
-            params: { address }
+            params: { address },
           })
 
           if (response.data && response.data.features && response.data.features.length > 0) {
@@ -102,7 +107,7 @@ export const Settings = () => {
             setFormData(prev => ({
               ...prev,
               latitude: parseFloat(latitude.toFixed(6)),
-              longitude: parseFloat(longitude.toFixed(6))
+              longitude: parseFloat(longitude.toFixed(6)),
             }))
           } else {
             setGeocodeError('Location not found. Please enter manually.')
@@ -139,7 +144,7 @@ export const Settings = () => {
 
       // Save to backend database
       const response = await axios.post(`${API_URL}/settings`, formData, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       })
 
       if (response.data.success) {
@@ -164,7 +169,11 @@ export const Settings = () => {
       }
     } catch (error: any) {
       console.error('Failed to save settings:', error)
-      setSaveError(error.response?.data?.message || error.message || 'Failed to save settings. Please try again.')
+      setSaveError(
+        error.response?.data?.message ||
+          error.message ||
+          'Failed to save settings. Please try again.'
+      )
 
       // Clear error message after 5 seconds
       setTimeout(() => setSaveError(null), 5000)
@@ -183,15 +192,15 @@ export const Settings = () => {
       {/* Header */}
       <div>
         <h1 className="text-4xl font-bold text-text">Settings</h1>
-        <p className="text-muted mt-2">Manage your business profile and preferences</p>
+        <p className="mt-2 text-muted">Manage your business profile and preferences</p>
       </div>
 
       {/* Loading State */}
       {isLoading && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <Card variant="elevated" className="bg-primary/5 border-primary/20">
+          <Card variant="elevated" className="border-primary/20 bg-primary/5">
             <div className="flex items-center gap-3">
-              <Loader2 className="w-5 h-5 text-primary animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
               <p className="text-sm font-medium text-primary">Loading your settings...</p>
             </div>
           </Card>
@@ -201,10 +210,12 @@ export const Settings = () => {
       {/* Success Message */}
       {saveSuccess && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-          <Card variant="elevated" className="bg-success/5 border-success/20">
+          <Card variant="elevated" className="border-success/20 bg-success/5">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-success" />
-              <p className="text-sm font-medium text-success">Settings saved successfully to database!</p>
+              <CheckCircle2 className="h-5 w-5 text-success" />
+              <p className="text-sm font-medium text-success">
+                Settings saved successfully to database!
+              </p>
             </div>
           </Card>
         </motion.div>
@@ -213,7 +224,7 @@ export const Settings = () => {
       {/* Error Message */}
       {saveError && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-          <Card variant="elevated" className="bg-error/5 border-error/20">
+          <Card variant="elevated" className="border-error/20 bg-error/5">
             <div className="flex items-center gap-3">
               <p className="text-sm font-medium text-error">{saveError}</p>
             </div>
@@ -225,32 +236,38 @@ export const Settings = () => {
       <Card variant="default">
         <Card.Header>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Building2 className="w-5 h-5 text-primary" />
+            <div className="rounded-lg bg-primary/10 p-2">
+              <Building2 className="h-5 w-5 text-primary" />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-text">Business Information</h2>
-              <p className="text-sm text-muted mt-1">Basic details about your property</p>
+              <p className="mt-1 text-sm text-muted">Basic details about your property</p>
             </div>
           </div>
         </Card.Header>
         <Card.Body>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="md:col-span-2">
               <Input
                 label="Business Name"
                 value={formData.business_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, business_name: e.target.value })
-                }
+                onChange={e => setFormData({ ...formData, business_name: e.target.value })}
                 placeholder="Enter your business name"
               />
             </div>
             <Select
               label="Property Type"
               value={formData.property_type}
-              onChange={(e) =>
-                setFormData({ ...formData, property_type: e.target.value as 'hotel' | 'resort' | 'vacation_rental' | 'hostel' | 'other' })
+              onChange={e =>
+                setFormData({
+                  ...formData,
+                  property_type: e.target.value as
+                    | 'hotel'
+                    | 'resort'
+                    | 'vacation_rental'
+                    | 'hostel'
+                    | 'other',
+                })
               }
               options={[
                 { value: 'hotel', label: 'Hotel' },
@@ -269,19 +286,19 @@ export const Settings = () => {
         <Card.Header>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-success/10 rounded-lg">
-                <MapPin className="w-5 h-5 text-success" />
+              <div className="rounded-lg bg-success/10 p-2">
+                <MapPin className="h-5 w-5 text-success" />
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-text">Location</h2>
-                <p className="text-sm text-muted mt-1">
+                <p className="mt-1 text-sm text-muted">
                   Used for weather data and competitor analysis
                 </p>
               </div>
             </div>
             {isGeocoding && (
               <div className="flex items-center gap-2 text-sm text-primary">
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Auto-filling coordinates...</span>
               </div>
             )}
@@ -290,23 +307,24 @@ export const Settings = () => {
         <Card.Body>
           <div className="space-y-4">
             {/* Info Banner */}
-            <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
               <p className="text-sm text-muted">
-                💡 Enter your city and country, and we'll automatically find the coordinates for you!
+                💡 Enter your city and country, and we'll automatically find the coordinates for
+                you!
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <Input
                 label="City"
                 value={formData.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                onChange={e => setFormData({ ...formData, city: e.target.value })}
                 placeholder="e.g., Nice"
               />
               <Input
                 label="Country"
                 value={formData.country}
-                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                onChange={e => setFormData({ ...formData, country: e.target.value })}
                 placeholder="e.g., France"
               />
               <div className="relative">
@@ -315,7 +333,7 @@ export const Settings = () => {
                   type="number"
                   step="0.000001"
                   value={formData.latitude || ''}
-                  onChange={(e) =>
+                  onChange={e =>
                     setFormData({ ...formData, latitude: parseFloat(e.target.value) || 0 })
                   }
                   placeholder="Auto-filled"
@@ -329,7 +347,7 @@ export const Settings = () => {
                   type="number"
                   step="0.000001"
                   value={formData.longitude || ''}
-                  onChange={(e) =>
+                  onChange={e =>
                     setFormData({ ...formData, longitude: parseFloat(e.target.value) || 0 })
                   }
                   placeholder="Auto-filled"
@@ -341,20 +359,24 @@ export const Settings = () => {
 
             {/* Geocode Error */}
             {geocodeError && (
-              <div className="p-3 bg-warning/5 border border-warning/20 rounded-lg">
+              <div className="rounded-lg border border-warning/20 bg-warning/5 p-3">
                 <p className="text-sm text-warning">{geocodeError}</p>
               </div>
             )}
 
             {/* Success Indicator */}
-            {!isGeocoding && formData.latitude !== 0 && formData.longitude !== 0 && !geocodeError && (
-              <div className="p-3 bg-success/5 border border-success/20 rounded-lg flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-success" />
-                <p className="text-sm text-success">
-                  Location coordinates auto-filled: {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
-                </p>
-              </div>
-            )}
+            {!isGeocoding &&
+              formData.latitude !== 0 &&
+              formData.longitude !== 0 &&
+              !geocodeError && (
+                <div className="flex items-center gap-2 rounded-lg border border-success/20 bg-success/5 p-3">
+                  <CheckCircle2 className="h-4 w-4 text-success" />
+                  <p className="text-sm text-success">
+                    Location coordinates auto-filled: {formData.latitude.toFixed(6)},{' '}
+                    {formData.longitude.toFixed(6)}
+                  </p>
+                </div>
+              )}
           </div>
         </Card.Body>
       </Card>
@@ -363,21 +385,34 @@ export const Settings = () => {
       <Card variant="default">
         <Card.Header>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-warning/10 rounded-lg">
-              <DollarSign className="w-5 h-5 text-warning" />
+            <div className="rounded-lg bg-warning/10 p-2">
+              <DollarSign className="h-5 w-5 text-warning" />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-text">Regional Settings</h2>
-              <p className="text-sm text-muted mt-1">Currency and timezone preferences</p>
+              <p className="mt-1 text-sm text-muted">Currency and timezone preferences</p>
             </div>
           </div>
         </Card.Header>
         <Card.Body>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <Select
               label="Currency"
               value={formData.currency}
-              onChange={(e) => setFormData({ ...formData, currency: e.target.value as 'EUR' | 'USD' | 'GBP' | 'CHF' | 'JPY' | 'AUD' | 'CAD' | 'AED' })}
+              onChange={e =>
+                setFormData({
+                  ...formData,
+                  currency: e.target.value as
+                    | 'EUR'
+                    | 'USD'
+                    | 'GBP'
+                    | 'CHF'
+                    | 'JPY'
+                    | 'AUD'
+                    | 'CAD'
+                    | 'AED',
+                })
+              }
               options={[
                 { value: 'EUR', label: 'EUR (€) - Euro' },
                 { value: 'USD', label: 'USD ($) - US Dollar' },
@@ -393,7 +428,7 @@ export const Settings = () => {
             <Select
               label="Timezone"
               value={formData.timezone}
-              onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+              onChange={e => setFormData({ ...formData, timezone: e.target.value })}
               options={[
                 { value: 'Europe/Paris', label: 'Europe/Paris (CET)' },
                 { value: 'Europe/London', label: 'Europe/London (GMT)' },
@@ -413,33 +448,33 @@ export const Settings = () => {
       <Card variant="default">
         <Card.Header>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-elevated rounded-lg">
-              <Clock className="w-5 h-5 text-muted" />
+            <div className="rounded-lg bg-elevated p-2">
+              <Clock className="h-5 w-5 text-muted" />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-text">API Integrations</h2>
-              <p className="text-sm text-muted mt-1">Connect external services (coming soon)</p>
+              <p className="mt-1 text-sm text-muted">Connect external services (coming soon)</p>
             </div>
           </div>
         </Card.Header>
         <Card.Body>
           <div className="space-y-4">
-            <div className="p-4 bg-elevated rounded-lg border border-border">
+            <div className="rounded-lg border border-border bg-elevated p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-semibold text-text">Weather API</h3>
-                  <p className="text-xs text-muted mt-1">Connect weather data provider</p>
+                  <p className="mt-1 text-xs text-muted">Connect weather data provider</p>
                 </div>
                 <Button variant="secondary" size="sm" disabled>
                   Configure
                 </Button>
               </div>
             </div>
-            <div className="p-4 bg-elevated rounded-lg border border-border">
+            <div className="rounded-lg border border-border bg-elevated p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-semibold text-text">PMS Integration</h3>
-                  <p className="text-xs text-muted mt-1">
+                  <p className="mt-1 text-xs text-muted">
                     Sync with your Property Management System
                   </p>
                 </div>
@@ -448,11 +483,11 @@ export const Settings = () => {
                 </Button>
               </div>
             </div>
-            <div className="p-4 bg-elevated rounded-lg border border-border">
+            <div className="rounded-lg border border-border bg-elevated p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-semibold text-text">Channel Manager</h3>
-                  <p className="text-xs text-muted mt-1">
+                  <p className="mt-1 text-xs text-muted">
                     Connect to booking channels (Booking.com, Expedia, etc.)
                   </p>
                 </div>
@@ -475,7 +510,7 @@ export const Settings = () => {
             'Saving...'
           ) : (
             <>
-              <Save className="w-5 h-5 mr-2" />
+              <Save className="mr-2 h-5 w-5" />
               Save Settings
             </>
           )}

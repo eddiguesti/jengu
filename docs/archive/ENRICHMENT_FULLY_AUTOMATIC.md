@@ -5,14 +5,17 @@
 The enrichment code existed but was **NEVER actually running** due to a fundamental JavaScript execution issue:
 
 ### Root Cause
+
 The enrichment was wrapped in an anonymous async IIFE (Immediately Invoked Function Expression):
+
 ```javascript
-(async () => {
+;(async () => {
   // enrichment code here
-})();
+})()
 ```
 
 This creates a "fire-and-forget" async function that:
+
 1. Gets created when the upload finishes
 2. But Node's `--watch` mode restarts the server on ANY file change
 3. The restart kills the background async context before it can execute
@@ -24,14 +27,14 @@ Changed from anonymous async IIFE to `setImmediate()`:
 
 ```javascript
 // BEFORE (NEVER RAN):
-(async () => {
+;(async () => {
   // enrichment code
-})();
+})()
 
 // AFTER (GUARANTEED TO RUN):
 setImmediate(async () => {
   // enrichment code
-});
+})
 ```
 
 ### Why setImmediate() Works
@@ -52,6 +55,7 @@ setImmediate(async () => {
    - Enrichment runs after response is sent
 
 2. **Added diagnostic logging:**
+
    ```
    🔍 Checking for enrichment settings...
    📍 Location: 43.1353, 5.7547
@@ -95,6 +99,7 @@ setImmediate(async () => {
 After enrichment, each row in `pricing_data` table contains:
 
 **Original CSV Data:**
+
 - `date` - Date of booking/price
 - `price` - Price amount
 - `bookings` - Number of bookings
@@ -102,18 +107,21 @@ After enrichment, each row in `pricing_data` table contains:
 - `extraData` - All original CSV columns as JSON
 
 **Weather Data (from Open-Meteo API):**
+
 - `temperature` - Mean daily temperature (°C)
 - `precipitation` - Daily precipitation sum (mm)
 - `weatherCondition` - Human-readable weather (Clear, Rainy, etc.)
 - `sunshineHours` - Daily sunshine duration (hours)
 
 **Temporal Features (calculated):**
+
 - `dayOfWeek` - Day of week (0=Sunday, 6=Saturday)
 - `month` - Month of year (1-12)
 - `season` - Season name (Winter, Spring, Summer, Fall)
 - `isWeekend` - Weekend indicator (true/false)
 
 **Holiday Data (future):**
+
 - `isHoliday` - Holiday indicator (true/false)
 - `holidayName` - Name of holiday
 
@@ -131,6 +139,7 @@ After enrichment, each row in `pricing_data` table contains:
    - Upload `bandol_campsite_sample.csv`
 
 3. **Check backend logs for:**
+
    ```
    ✅ Processing complete: 3972 rows, 6 columns
 
@@ -166,6 +175,7 @@ After enrichment, each row in `pricing_data` table contains:
 ## API Used
 
 ### Open-Meteo Historical Weather API (FREE)
+
 - **NO API KEY NEEDED**
 - Endpoint: `https://archive-api.open-meteo.com/v1/archive`
 - Parameters:
@@ -183,15 +193,15 @@ After enrichment, each row in `pricing_data` table contains:
 
 Open-Meteo returns numeric weather codes that we convert to readable descriptions:
 
-| Code | Description |
-|------|-------------|
-| 0 | Clear |
-| 1-3 | Partly Cloudy |
-| 45-48 | Foggy |
-| 51-57 | Drizzle |
-| 61-82 | Rainy |
-| 71-86 | Snowy |
-| 95-99 | Thunderstorm |
+| Code  | Description   |
+| ----- | ------------- |
+| 0     | Clear         |
+| 1-3   | Partly Cloudy |
+| 45-48 | Foggy         |
+| 51-57 | Drizzle       |
+| 61-82 | Rainy         |
+| 71-86 | Snowy         |
+| 95-99 | Thunderstorm  |
 
 ## Performance
 
@@ -220,21 +230,27 @@ Open-Meteo returns numeric weather codes that we convert to readable description
 ### If enrichment isn't running:
 
 1. **Check logs for this message:**
+
    ```
    ℹ️  No business settings found for user...
    ```
+
    → **Fix:** Create business settings with coordinates
 
 2. **Check logs for this message:**
+
    ```
    ℹ️  No coordinates in business settings
    ```
+
    → **Fix:** Update business settings with latitude/longitude
 
 3. **Check logs for errors:**
+
    ```
    ⚠️  Enrichment error (non-fatal): [error message]
    ```
+
    → Check error stack trace for details
 
 4. **Weather API errors:**
@@ -261,6 +277,7 @@ If you need to manually trigger enrichment for existing data:
 Currently disabled because it still uses Prisma (not yet migrated to Supabase).
 
 When enabled, will add:
+
 - `isHoliday` - Boolean flag for holidays
 - `holidayName` - Name of the holiday (e.g., "Christmas", "New Year's Day")
 

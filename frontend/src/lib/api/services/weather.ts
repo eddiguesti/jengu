@@ -70,17 +70,17 @@ export interface WeatherForecast {
  * Get current weather conditions for a location
  * Now uses backend proxy - no API key needed in frontend
  */
-export async function getCurrentWeather(
-  lat: number,
-  lon: number
-): Promise<WeatherData> {
+export async function getCurrentWeather(lat: number, lon: number): Promise<WeatherData> {
   try {
-    const response = await fetch(`${BACKEND_API}/weather/current?latitude=${lat}&longitude=${lon}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
+    const response = await fetch(
+      `${BACKEND_API}/weather/current?latitude=${lat}&longitude=${lon}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
-    })
+    )
 
     if (!response.ok) {
       throw new Error(`Weather API error: ${response.status}`)
@@ -133,8 +133,8 @@ export async function getHistoricalWeather(
       {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       }
     )
 
@@ -215,18 +215,15 @@ export async function getHistoricalWeatherBatch(
  * Get 5-day weather forecast (3-hour intervals)
  * Now uses backend proxy - no API key needed in frontend
  */
-export async function getWeatherForecast5Day(
-  lat: number,
-  lon: number
-): Promise<WeatherForecast[]> {
+export async function getWeatherForecast5Day(lat: number, lon: number): Promise<WeatherForecast[]> {
   try {
     const response = await fetch(
       `${BACKEND_API}/weather/forecast?latitude=${lat}&longitude=${lon}`,
       {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       }
     )
 
@@ -249,7 +246,7 @@ export async function getWeatherForecast5Day(
       precipitation_mm: day.precipitation || 0,
       humidity: day.humidity_avg,
       wind_speed: 0, // Backend doesn't provide this yet
-      is_good_weather: isGoodWeather(day.weather, day.precipitation || 0)
+      is_good_weather: isGoodWeather(day.weather, day.precipitation || 0),
     }))
   } catch (error) {
     console.error('Failed to fetch 5-day forecast:', error)
@@ -261,10 +258,7 @@ export async function getWeatherForecast5Day(
  * Get 8-day daily weather forecast
  * Fallback to 5-day forecast (backend doesn't support 8-day yet)
  */
-export async function getWeatherForecast8Day(
-  lat: number,
-  lon: number
-): Promise<WeatherForecast[]> {
+export async function getWeatherForecast8Day(lat: number, lon: number): Promise<WeatherForecast[]> {
   try {
     // Backend doesn't support 8-day forecast yet, fallback to 5-day
     return getWeatherForecast5Day(lat, lon)
@@ -291,11 +285,7 @@ export function isGoodWeather(weatherMain: string, precipitationMm: number): boo
  * Calculate estimated sunshine hours from weather data
  * Based on cloudiness and daylight hours
  */
-export function estimateSunshineHours(
-  clouds: number,
-  date: Date,
-  _latitude: number
-): number {
+export function estimateSunshineHours(clouds: number, date: Date, _latitude: number): number {
   // Simplified calculation - in production, use more accurate solar calculations
   const month = date.getMonth()
   const daylightHours = 12 + 4 * Math.sin((2 * Math.PI * (month - 3)) / 12) // Approximate
@@ -309,10 +299,7 @@ export function estimateSunshineHours(
  * Convert weather data to daily summary format
  * Useful for enriching historical booking data
  */
-export function weatherToDailySummary(
-  weather: WeatherData,
-  latitude: number
-): DailyWeatherSummary {
+export function weatherToDailySummary(weather: WeatherData, latitude: number): DailyWeatherSummary {
   const date = new Date(weather.timestamp * 1000)
   const sunshineHours = estimateSunshineHours(weather.clouds, date, latitude)
 

@@ -35,10 +35,10 @@ export const Progress = ({
       {showLabel && (
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted">Progress</span>
-          <span className="text-text font-medium">{clampedValue}%</span>
+          <span className="font-medium text-text">{clampedValue}%</span>
         </div>
       )}
-      <div className={clsx('w-full bg-elevated rounded-full overflow-hidden', sizes[size])}>
+      <div className={clsx('w-full overflow-hidden rounded-full bg-elevated', sizes[size])}>
         <div
           className={clsx('h-full transition-all duration-300 ease-out', variants[variant])}
           style={{ width: `${clampedValue}%` }}

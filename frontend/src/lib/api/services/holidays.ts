@@ -31,10 +31,7 @@ export interface HolidayImpact {
  * @param countryCode - ISO 3166-1 alpha-2 country code (e.g., 'US', 'GB', 'FR')
  * @param year - Year to fetch holidays for
  */
-export async function getHolidays(
-  countryCode: string,
-  year: number
-): Promise<Holiday[]> {
+export async function getHolidays(countryCode: string, year: number): Promise<Holiday[]> {
   const apiKey = import.meta.env.VITE_CALENDARIFIC_API_KEY
 
   if (!apiKey) {
@@ -56,7 +53,9 @@ export async function getHolidays(
 
     // Check for API error responses
     if (data.meta?.error_detail) {
-      throw new Error(`Calendarific API error: ${data.meta.error_detail}. Using mock holiday data instead.`)
+      throw new Error(
+        `Calendarific API error: ${data.meta.error_detail}. Using mock holiday data instead.`
+      )
     }
 
     if (!data.response?.holidays) {
@@ -74,7 +73,6 @@ export async function getHolidays(
     }))
 
     return holidays
-
   } catch (error) {
     console.error('Failed to fetch holidays:', error)
     return getMockHolidays(countryCode, year)
@@ -84,10 +82,7 @@ export async function getHolidays(
 /**
  * Check if a specific date is a holiday
  */
-export function isHoliday(
-  date: Date,
-  holidays: Holiday[]
-): HolidayImpact {
+export function isHoliday(date: Date, holidays: Holiday[]): HolidayImpact {
   const dateStr = date.toISOString().split('T')[0]
 
   const holiday = holidays.find(h => h.date === dateStr)
@@ -109,7 +104,7 @@ export function isHoliday(
     price_multiplier = 1.25 // +25% for major holidays
   } else if (holiday.type.includes('Public holiday')) {
     impact_score = 80
-    price_multiplier = 1.20 // +20% for public holidays
+    price_multiplier = 1.2 // +20% for public holidays
   } else if (holiday.type.includes('Observance')) {
     impact_score = 40
     price_multiplier = 1.05 // +5% for observances
@@ -186,9 +181,7 @@ export function getHolidayPeriods(
   // Add variable periods (like Easter)
   periodDefinitions.forEach(def => {
     if ('keywords' in def && def.keywords !== undefined) {
-      const holiday = holidays.find(h =>
-        def.keywords!.some(keyword => h.name.includes(keyword))
-      )
+      const holiday = holidays.find(h => def.keywords.some(keyword => h.name.includes(keyword)))
 
       if (holiday) {
         const date = new Date(holiday.date)
@@ -237,10 +230,7 @@ export function isInHolidayPeriod(
  * Get comprehensive holiday impact for a date
  * Combines individual holiday + holiday period analysis
  */
-export function getHolidayImpactForDate(
-  date: Date,
-  holidays: Holiday[]
-): HolidayImpact {
+export function getHolidayImpactForDate(date: Date, holidays: Holiday[]): HolidayImpact {
   // Check if it's a specific holiday
   const holidayCheck = isHoliday(date, holidays)
 
@@ -257,7 +247,7 @@ export function getHolidayImpactForDate(
       is_holiday: true,
       holiday_name: periodCheck.period_name,
       impact_score: periodCheck.impact_score,
-      price_multiplier: 1 + (periodCheck.impact_score / 500), // Scale to reasonable multiplier
+      price_multiplier: 1 + periodCheck.impact_score / 500, // Scale to reasonable multiplier
     }
   }
 
@@ -406,20 +396,20 @@ export function getCountryCode(countryName: string): string {
   const countryMap: Record<string, string> = {
     'United States': 'US',
     'United Kingdom': 'GB',
-    'France': 'FR',
-    'Germany': 'DE',
-    'Spain': 'ES',
-    'Italy': 'IT',
-    'Canada': 'CA',
-    'Australia': 'AU',
-    'Japan': 'JP',
-    'Switzerland': 'CH',
-    'Netherlands': 'NL',
-    'Belgium': 'BE',
-    'Austria': 'AT',
-    'Portugal': 'PT',
-    'Greece': 'GR',
-    'UAE': 'AE',
+    France: 'FR',
+    Germany: 'DE',
+    Spain: 'ES',
+    Italy: 'IT',
+    Canada: 'CA',
+    Australia: 'AU',
+    Japan: 'JP',
+    Switzerland: 'CH',
+    Netherlands: 'NL',
+    Belgium: 'BE',
+    Austria: 'AT',
+    Portugal: 'PT',
+    Greece: 'GR',
+    UAE: 'AE',
   }
 
   return countryMap[countryName] || 'US'
@@ -441,7 +431,6 @@ export async function testCalendarificConnection(): Promise<boolean> {
 
     const response = await fetch(url)
     return response.ok
-
   } catch (error) {
     console.error('Calendarific connection test failed:', error)
     return false

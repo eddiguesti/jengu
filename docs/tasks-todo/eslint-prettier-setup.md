@@ -10,6 +10,7 @@ Configure ESLint 9 (flat config) and Prettier at the monorepo root level to prov
 
 **Prerequisites**: ✅ TypeScript migration completed for both backend and frontend
 **Current State**:
+
 - Root workspace setup exists with `pnpm-workspace.yaml`
 - TypeScript working globally (`pnpm run type-check` works)
 - Frontend has old ESLint 8 dependencies (need to remove/upgrade)
@@ -21,20 +22,26 @@ Configure ESLint 9 (flat config) and Prettier at the monorepo root level to prov
 Understanding when to use shared vs. workspace-specific configuration:
 
 ### Prettier (Global)
+
 **Shared configuration** - Same formatting rules everywhere.
+
 - Code style (semicolons, quotes, line length) should be consistent across entire monorepo
 - Prettier plugins (like Tailwind class sorting) can be global - they only affect files that use those features
 - **Example**: Even though backend doesn't use Tailwind, the `prettier-plugin-tailwindcss` plugin won't do anything to backend files (no Tailwind classes to sort)
 
 ### ESLint (Workspace-Specific)
+
 **Different rules per workspace** - Frontend and backend have different needs.
+
 - Frontend uses React, Tailwind, browser APIs → needs React hooks rules, Tailwind class validation
 - Backend uses Node.js, Express, server APIs → needs Node-specific rules
 - ESLint flat config supports multiple configuration objects that target specific file patterns
 - **Example**: Tailwind ESLint rules only apply to `frontend/**/*.{ts,tsx}` files
 
 ### TypeScript (Hybrid)
+
 **Shared base + workspace overrides** - Common strictness, different compilation targets.
+
 - **Shared**: Type-checking strictness (`strict`, `noUnusedLocals`, etc.) should be consistent
 - **Workspace-specific**:
   - Backend: Node.js module system (`NodeNext`), ES2022 target, builds to `dist/`
@@ -57,6 +64,7 @@ pnpm add -D -w typescript-eslint eslint-config-prettier
 ```
 
 **Notes**:
+
 - `typescript-eslint` is the unified package for ESLint 9 (replaces `@typescript-eslint/parser` + `@typescript-eslint/eslint-plugin`)
 - `-w` flag installs to workspace root
 - `eslint-config-prettier` turns off ESLint rules that conflict with Prettier
@@ -122,6 +130,7 @@ export default {
 ```
 
 **Rationale**:
+
 - `semi: false` - Cleaner, modern style
 - `singleQuote: true` - Consistency with most of codebase
 - `printWidth: 100` - Readable line length
@@ -176,13 +185,7 @@ import prettier from 'eslint-config-prettier'
 export default tseslint.config(
   // Global ignores
   {
-    ignores: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/build/**',
-      '**/.next/**',
-      '**/coverage/**',
-    ],
+    ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**', '**/coverage/**'],
   },
 
   // Base JavaScript rules for all files
@@ -252,6 +255,7 @@ export default tseslint.config(
 ```
 
 **Key Features**:
+
 - ✅ Flat config format (ESLint 9 required)
 - ✅ TypeScript type-aware linting with `projectService`
 - ✅ Separate configs for frontend (React + Tailwind) vs backend (Node.js)
@@ -294,6 +298,7 @@ pnpm exec eslint --print-config eslint.config.js
 ```
 
 **Usage**:
+
 - `pnpm run lint` - Check for linting issues
 - `pnpm run lint:fix` - Auto-fix linting issues
 - `pnpm run format` - Format all files with Prettier
@@ -308,6 +313,7 @@ pnpm exec eslint --print-config eslint.config.js
 **Current frontend script**: `"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"`
 
 **Options**:
+
 1. **Option A (Recommended)**: Remove the frontend-specific lint script entirely (use root)
 2. **Option B**: Keep it for convenience, but update to: `"lint": "eslint ."`
 
@@ -337,10 +343,7 @@ Backend already has `type-check`. No additional scripts needed (linting will run
     "source.fixAll.eslint": "explicit"
   },
   "eslint.useFlatConfig": true,
-  "eslint.workingDirectories": [
-    "./frontend",
-    "./backend"
-  ]
+  "eslint.workingDirectories": ["./frontend", "./backend"]
 }
 ```
 
@@ -352,10 +355,7 @@ Backend already has `type-check`. No additional scripts needed (linting will run
 
 ```json
 {
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode"
-  ]
+  "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
 }
 ```
 
@@ -368,11 +368,13 @@ Backend already has `type-check`. No additional scripts needed (linting will run
 **Update root `.gitignore`**:
 
 Replace the line:
+
 ```
 .vscode/
 ```
 
 With:
+
 ```
 # VS Code - allow shared settings and extension recommendations
 .vscode/*
@@ -381,6 +383,7 @@ With:
 ```
 
 **Explanation**:
+
 - `.vscode/*` - Ignore everything in .vscode directory
 - `!.vscode/settings.json` - Exception: track settings.json
 - `!.vscode/extensions.json` - Exception: track extension recommendations
@@ -472,6 +475,7 @@ With:
 ```
 
 **Benefits**:
+
 - Centralized type-checking strictness settings
 - Easier to maintain consistent TypeScript behavior
 - Reduces duplication across workspace configs
@@ -521,6 +525,7 @@ pnpm run lint:fix
 ```
 
 **Strategy**:
+
 - If there are many errors, fix them incrementally by file/directory
 - Use `eslint --fix <path>` to fix specific areas
 - Consider temporarily disabling strict rules if needed (document why)
@@ -606,6 +611,7 @@ git commit -m "chore: format codebase with Prettier and ESLint
 ```
 
 **Why two commits?**
+
 - Separates config changes from code formatting
 - Makes it easier to review
 - Allows reverting formatting without losing config
@@ -614,27 +620,32 @@ git commit -m "chore: format codebase with Prettier and ESLint
 ### 8.3: Update Documentation
 
 **Files to update**:
+
 1. `CLAUDE.md` - Add section on linting/formatting workflow
 2. `docs/developer/ARCHITECTURE.md` - Document code quality tools
 
 **Add to CLAUDE.md**:
 
-```markdown
+````markdown
 ## Code Quality
 
 ### Linting and Formatting
 
 **Run all checks (from root)**:
+
 ```bash
 pnpm run check-all  # Type check + lint + format check
 ```
+````
 
 **Auto-fix issues**:
+
 ```bash
 pnpm run fix-all  # Auto-fix linting and formatting
 ```
 
 **Individual commands**:
+
 - `pnpm run type-check` - TypeScript type checking
 - `pnpm run lint` - ESLint (check only)
 - `pnpm run lint:fix` - ESLint with auto-fix
@@ -642,6 +653,7 @@ pnpm run fix-all  # Auto-fix linting and formatting
 - `pnpm run format:check` - Prettier check only (CI)
 
 **VS Code Integration**:
+
 - Install recommended extensions (ESLint, Prettier)
 - Format-on-save is enabled
 - ESLint auto-fix on save
@@ -649,17 +661,19 @@ pnpm run fix-all  # Auto-fix linting and formatting
 ### Pre-commit Workflow (Recommended)
 
 Before committing:
+
 ```bash
 pnpm run fix-all  # Auto-fix everything
 pnpm run check-all  # Verify all checks pass
 ```
-```
+
+````
 
 **Commit documentation updates**:
 ```bash
 git add CLAUDE.md docs/developer/ARCHITECTURE.md
 git commit -m "docs: add linting and formatting workflow documentation"
-```
+````
 
 ---
 
@@ -687,6 +701,7 @@ echo "pnpm exec lint-staged" > .husky/pre-commit
 ```
 
 **Benefits**:
+
 - Automatic linting/formatting on commit
 - Only processes staged files (fast)
 - Prevents committing code with errors

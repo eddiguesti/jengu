@@ -27,7 +27,7 @@ export const Badge = ({ children, variant = 'default', size = 'md', className }:
   return (
     <span
       className={clsx(
-        'inline-flex items-center justify-center font-medium rounded-full',
+        'inline-flex items-center justify-center rounded-full font-medium',
         variants[variant],
         sizes[size],
         className

@@ -3,7 +3,9 @@
     "allow": [
       "Bash(pnpm run type-check:*)",
       "Bash(pnpm run build:*)",
-      "Bash(pnpm run build:check:*)"
+      "Bash(pnpm run build:check:*)",
+      "Bash(pnpm exec eslint:*)",
+      "Bash(pnpm run lint:*)"
     ],
     "deny": [],
     "ask": []

@@ -60,7 +60,9 @@ export async function sendMessage(
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
 
   if (!apiKey) {
-    throw new Error('Anthropic API key not configured. Please add VITE_ANTHROPIC_API_KEY to your .env file.')
+    throw new Error(
+      'Anthropic API key not configured. Please add VITE_ANTHROPIC_API_KEY to your .env file.'
+    )
   }
 
   try {
@@ -71,12 +73,12 @@ export async function sendMessage(
     const messages = [
       ...conversationHistory.map(m => ({
         role: m.role,
-        content: m.content
+        content: m.content,
       })),
       {
         role: 'user' as const,
-        content: message
-      }
+        content: message,
+      },
     ]
 
     // Call Claude API with streaming
@@ -104,7 +106,6 @@ export async function sendMessage(
     // Handle streaming response
     const fullResponse = await handleStreamingResponse(response, callbacks)
     return fullResponse
-
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
     callbacks?.onError?.(new Error(errorMessage))
@@ -232,7 +233,6 @@ async function handleStreamingResponse(
             if (parsed.type === 'message_stop' || parsed.type === 'content_block_stop') {
               callbacks?.onComplete?.(fullResponse)
             }
-
           } catch (e) {
             // Skip invalid JSON
             continue
@@ -242,7 +242,6 @@ async function handleStreamingResponse(
     }
 
     return fullResponse
-
   } finally {
     reader.releaseLock()
   }
@@ -252,9 +251,7 @@ async function handleStreamingResponse(
  * Get quick pricing suggestion (non-streaming)
  * Useful for dashboard widgets or quick insights
  */
-export async function getQuickSuggestion(
-  context: AssistantContext
-): Promise<string> {
+export async function getQuickSuggestion(context: AssistantContext): Promise<string> {
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
 
   if (!apiKey) {
@@ -262,7 +259,8 @@ export async function getQuickSuggestion(
   }
 
   const systemPrompt = buildSystemPrompt(context)
-  const userPrompt = 'Based on current conditions, provide one specific pricing recommendation in 2-3 sentences.'
+  const userPrompt =
+    'Based on current conditions, provide one specific pricing recommendation in 2-3 sentences.'
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -279,8 +277,8 @@ export async function getQuickSuggestion(
         messages: [
           {
             role: 'user',
-            content: userPrompt
-          }
+            content: userPrompt,
+          },
         ],
       }),
     })
@@ -291,7 +289,6 @@ export async function getQuickSuggestion(
 
     const data = await response.json()
     return data.content[0]?.text || 'No suggestion available'
-
   } catch (error) {
     console.error('Failed to get quick suggestion:', error)
     throw error
@@ -302,15 +299,13 @@ export async function getQuickSuggestion(
  * Analyze pricing data and get insights
  * Used for batch analysis of historical data
  */
-export async function analyzePricingData(
-  data: {
-    dates: string[]
-    prices: number[]
-    occupancy: number[]
-    weather?: string[]
-    events?: string[]
-  }
-): Promise<string> {
+export async function analyzePricingData(data: {
+  dates: string[]
+  prices: number[]
+  occupancy: number[]
+  weather?: string[]
+  events?: string[]
+}): Promise<string> {
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
 
   if (!apiKey) {
@@ -335,12 +330,13 @@ Total Data Points: ${data.dates.length}
       body: JSON.stringify({
         model: 'claude-3-5-sonnet-20241022',
         max_tokens: 2048,
-        system: 'You are a pricing analyst. Analyze the data and provide insights about patterns, trends, and optimization opportunities.',
+        system:
+          'You are a pricing analyst. Analyze the data and provide insights about patterns, trends, and optimization opportunities.',
         messages: [
           {
             role: 'user',
-            content: `Analyze this pricing data and provide 3-5 key insights:\n\n${dataDescription}`
-          }
+            content: `Analyze this pricing data and provide 3-5 key insights:\n\n${dataDescription}`,
+          },
         ],
       }),
     })
@@ -351,7 +347,6 @@ Total Data Points: ${data.dates.length}
 
     const result = await response.json()
     return result.content[0]?.text || 'Analysis failed'
-
   } catch (error) {
     console.error('Failed to analyze pricing data:', error)
     throw error
@@ -404,8 +399,8 @@ Format as JSON:
         messages: [
           {
             role: 'user',
-            content: userPrompt
-          }
+            content: userPrompt,
+          },
         ],
       }),
     })
@@ -428,7 +423,6 @@ Format as JSON:
     }
 
     return recommendations
-
   } catch (error) {
     console.error('Failed to generate pricing recommendations:', error)
     throw error
@@ -459,14 +453,13 @@ export async function testConnection(): Promise<boolean> {
         messages: [
           {
             role: 'user',
-            content: 'Hi'
-          }
+            content: 'Hi',
+          },
         ],
       }),
     })
 
     return response.ok
-
   } catch (error) {
     console.error('Connection test failed:', error)
     return false

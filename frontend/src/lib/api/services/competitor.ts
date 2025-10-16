@@ -45,9 +45,7 @@ export interface ScraperConfig {
  * 3. Rate limiting and caching
  * 4. Platform-specific selectors
  */
-export async function scrapeCompetitorPrices(
-  config: ScraperConfig
-): Promise<CompetitorPrice[]> {
+export async function scrapeCompetitorPrices(config: ScraperConfig): Promise<CompetitorPrice[]> {
   const apiKey = import.meta.env.VITE_SCRAPER_API_KEY
 
   if (!apiKey) {
@@ -82,7 +80,6 @@ export async function scrapeCompetitorPrices(
 
         // Respect rate limits
         await delay(1000)
-
       } catch (error) {
         console.error(`Error scraping ${platform}:`, error)
         continue
@@ -90,7 +87,6 @@ export async function scrapeCompetitorPrices(
     }
 
     return prices.length > 0 ? prices : getMockCompetitorPrices(config)
-
   } catch (error) {
     console.error('Failed to scrape competitor prices:', error)
     return getMockCompetitorPrices(config)
@@ -129,10 +125,7 @@ function buildTargetUrls(config: ScraperConfig): { platform: string; url: string
  * Extract price data from HTML
  * This is platform-specific and would need to be customized
  */
-function extractPricesFromHTML(
-  html: string,
-  platform: string
-): CompetitorPrice[] {
+function extractPricesFromHTML(html: string, platform: string): CompetitorPrice[] {
   // In production, use proper HTML parsing (e.g., cheerio in backend)
   // This is a simplified regex approach
   const prices: CompetitorPrice[] = []
@@ -164,7 +157,8 @@ function extractPricesFromHTML(
       const priceStr = match[1]
       const price = parseInt(priceStr, 10)
 
-      if (price > 20 && price < 10000) { // Basic validation
+      if (price > 20 && price < 10000) {
+        // Basic validation
         prices.push({
           competitor_name: `${platform} Property ${count + 1}`,
           price,
@@ -190,9 +184,9 @@ function getMockCompetitorPrices(config: ScraperConfig): CompetitorPrice[] {
 
   // Generate realistic prices based on property type
   const basePrices: Record<string, number> = {
-    'hotel': 150,
-    'resort': 250,
-    'vacation_rental': 200,
+    hotel: 150,
+    resort: 250,
+    vacation_rental: 200,
   }
 
   const basePrice = basePrices[config.propertyType] || 150
@@ -305,12 +299,12 @@ export async function getHistoricalCompetitorPrices(
 
   const today = new Date()
   const basePrices: Record<string, number> = {
-    'hotel': 150,
-    'resort': 250,
-    'vacation_rental': 200,
+    hotel: 150,
+    resort: 250,
+    vacation_rental: 200,
   }
 
-  const basePrice = basePrices[propertyType as keyof typeof basePrices] || 150
+  const basePrice = basePrices[propertyType] || 150
 
   for (let i = 0; i < daysBack; i++) {
     const date = new Date(today)
@@ -347,13 +341,13 @@ export function getPriceRecommendation(
     case 'lower':
       // You're significantly below market - can increase
       recommended_price = avg_price * 0.95 // Price at 95% of average
-      reasoning = `Your price is ${Math.abs(price_gap).toFixed(0)}$ below market average. You can increase prices by ${((recommended_price - currentPrice) / currentPrice * 100).toFixed(1)}% while staying competitive.`
+      reasoning = `Your price is ${Math.abs(price_gap).toFixed(0)}$ below market average. You can increase prices by ${(((recommended_price - currentPrice) / currentPrice) * 100).toFixed(1)}% while staying competitive.`
       break
 
     case 'higher':
       // You're significantly above market - consider decreasing
       recommended_price = avg_price * 1.05 // Price at 105% of average
-      reasoning = `Your price is ${Math.abs(price_gap).toFixed(0)}$ above market average. Consider decreasing by ${((currentPrice - recommended_price) / currentPrice * 100).toFixed(1)}% to improve occupancy.`
+      reasoning = `Your price is ${Math.abs(price_gap).toFixed(0)}$ above market average. Consider decreasing by ${(((currentPrice - recommended_price) / currentPrice) * 100).toFixed(1)}% to improve occupancy.`
       break
 
     case 'competitive':
@@ -388,7 +382,6 @@ export async function testScraperConnection(): Promise<boolean> {
 
     const response = await fetch(scraperUrl)
     return response.ok
-
   } catch (error) {
     console.error('ScraperAPI connection test failed:', error)
     return false

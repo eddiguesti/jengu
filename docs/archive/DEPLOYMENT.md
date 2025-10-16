@@ -7,6 +7,7 @@ Your app is ready to deploy! The production build is in the `dist/` folder.
 ### Option 1: Netlify Drop (Easiest - 30 seconds)
 
 1. Build your app (already done):
+
    ```bash
    npm run build
    ```
@@ -22,11 +23,13 @@ Your app is ready to deploy! The production build is in the `dist/` folder.
 ### Option 2: Vercel CLI
 
 1. Login to Vercel:
+
    ```bash
    vercel login
    ```
 
 2. Deploy:
+
    ```bash
    vercel
    ```
@@ -52,6 +55,7 @@ Your app is ready to deploy! The production build is in the `dist/` folder.
 6. Every git push will automatically redeploy!
 
 **Build Settings (auto-detected):**
+
 - Framework Preset: Vite
 - Build Command: `npm run build`
 - Output Directory: `dist`
@@ -88,6 +92,7 @@ Your app is ready to deploy! The production build is in the `dist/` folder.
 3. Frontend calls your backend, not external APIs directly
 
 **Current API Keys in Frontend:**
+
 - Anthropic Claude (Assistant)
 - OpenWeatherMap (Weather data)
 - Calendarific (Holidays)
@@ -102,6 +107,7 @@ If deploying with GitHub integration:
 1. In Vercel/Netlify dashboard, go to "Settings" → "Environment Variables"
 
 2. Add these (replace with your actual keys):
+
    ```
    VITE_ANTHROPIC_API_KEY=your_key_here
    VITE_OPENWEATHER_API_KEY=your_key_here
@@ -120,12 +126,14 @@ If deploying with GitHub integration:
 ## After Deployment
 
 Your app will be live at a URL like:
+
 - Vercel: `https://jengu-pricing.vercel.app`
 - Netlify: `https://jengu-pricing.netlify.app`
 
 ### Custom Domain (Optional)
 
 Both Vercel and Netlify support free custom domains:
+
 1. Buy a domain (Namecheap, Google Domains, etc.)
 2. In hosting dashboard: "Settings" → "Domains" → "Add custom domain"
 3. Update your domain DNS settings (they provide instructions)

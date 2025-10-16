@@ -5,6 +5,7 @@
 Business settings (name, location, currency, etc.) are only saved to **browser memory** (Zustand store), NOT to Supabase database.
 
 **Result:**
+
 - ❌ Settings disappear on page refresh
 - ❌ Settings not saved between sessions
 - ❌ Settings lost when switching pages
@@ -57,6 +58,7 @@ CREATE INDEX idx_business_settings_user ON business_settings(userId);
 ## Step 2: Add Backend API Endpoint
 
 I'll create endpoints to:
+
 - `GET /api/settings` - Get user's business settings
 - `POST /api/settings` - Save/update user's business settings
 
@@ -65,6 +67,7 @@ I'll create endpoints to:
 ## Step 3: Update Frontend Settings Page
 
 Update Settings.tsx to:
+
 - Load settings from Supabase on page load
 - Save settings to Supabase when clicking "Save"
 - Show success/error messages

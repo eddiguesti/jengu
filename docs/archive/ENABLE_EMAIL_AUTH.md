@@ -1,6 +1,7 @@
 # 🔧 Enable Email Authentication in Supabase
 
 ## Problem
+
 Email signups are currently **DISABLED** in your Supabase project, which prevents users from signing up or logging in with email/password.
 
 ## Solution: Enable Email Authentication
@@ -37,6 +38,7 @@ Visit your Supabase project dashboard:
 **Enable Email Provider:** ON ✅
 
 **Confirm email:** OFF ❌
+
 - This should be **DISABLED** so users can log in immediately without email confirmation
 - If it's already OFF, perfect! Leave it that way.
 
@@ -59,12 +61,14 @@ Visit your Supabase project dashboard:
 After enabling email authentication:
 
 ### Test Signup:
+
 1. Go to: http://localhost:5174/signup
 2. Enter a new email and password
 3. Click "Create Account"
 4. You should be logged in immediately (no email confirmation needed)
 
 ### Test Login:
+
 1. Go to: http://localhost:5174/login
 2. Enter your credentials
 3. Click "Sign In"
@@ -75,11 +79,13 @@ After enabling email authentication:
 ## Expected Behavior
 
 ### Before (Email Disabled):
+
 - ❌ Cannot sign up with email
 - ❌ Cannot log in with email
 - ❌ Error: "Email signups are disabled"
 
 ### After (Email Enabled):
+
 - ✅ Can sign up with email/password
 - ✅ Can log in immediately (no email confirmation)
 - ✅ Session persists across browser refreshes
@@ -92,6 +98,7 @@ After enabling email authentication:
 If you prefer NOT to use email/password authentication, you can enable other providers:
 
 ### OAuth Providers:
+
 - **Google** - Sign in with Google account
 - **GitHub** - Sign in with GitHub account
 - **Facebook** - Sign in with Facebook account
@@ -99,10 +106,12 @@ If you prefer NOT to use email/password authentication, you can enable other pro
 - **Discord** - Sign in with Discord account
 
 ### Magic Link:
+
 - Users receive a login link via email (no password needed)
 - More secure but requires email delivery
 
 ### Phone Authentication:
+
 - Sign in with phone number + SMS code
 - Requires SMS provider (Twilio, etc.)
 
@@ -133,17 +142,20 @@ Providers
 ### If You Still Can't Sign Up:
 
 **Error: "Email signups are disabled"**
+
 - Make sure you **enabled** the Email provider
 - Make sure you clicked **Save**
 - Try refreshing the Supabase dashboard
 - Check if there's a rate limit or quota issue
 
 **Error: "Invalid login credentials"**
+
 - The user account may not exist yet
 - Try signing up first, then logging in
 - Make sure you're using the correct email/password
 
 **Error: "Email not confirmed"**
+
 - Make sure "Confirm email" is **DISABLED**
 - If it's enabled, users must click confirmation link in email
 - Disable it for immediate login without confirmation

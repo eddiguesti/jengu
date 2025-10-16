@@ -16,10 +16,9 @@ This caused the fallback to only show 5 preview rows instead of all 3972 rows fr
 The API call in `Insights.tsx` was missing the **Authorization header** with the JWT token.
 
 **Before (Broken)**:
+
 ```typescript
-const response = await axios.get(
-  `http://localhost:3001/api/files/${fileId}/data?limit=10000`
-)
+const response = await axios.get(`http://localhost:3001/api/files/${fileId}/data?limit=10000`)
 ```
 
 ## Solution Applied
@@ -27,6 +26,7 @@ const response = await axios.get(
 Added authentication token to the request headers.
 
 **After (Fixed)**:
+
 ```typescript
 // Get auth token
 const token = await getAccessToken()
@@ -36,14 +36,11 @@ if (!token) {
 }
 
 // Fetch ALL data from backend with auth
-const response = await axios.get(
-  `http://localhost:3001/api/files/${fileId}/data?limit=10000`,
-  {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  }
-)
+const response = await axios.get(`http://localhost:3001/api/files/${fileId}/data?limit=10000`, {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+})
 ```
 
 ## Changes Made
@@ -74,6 +71,7 @@ After this fix, you should see in the browser console:
 ```
 
 **NOT**:
+
 ```
 ❌ Error loading data from backend: Request failed with status code 401
 ⚠️ Using preview data (5 rows) as fallback

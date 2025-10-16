@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   darkMode: 'class',
   theme: {
     extend: {
@@ -29,9 +26,9 @@ export default {
         '2xl': '20px',
       },
       boxShadow: {
-        'card': '0 2px 8px rgba(0, 0, 0, 0.1)',
+        card: '0 2px 8px rgba(0, 0, 0, 0.1)',
         'card-hover': '0 8px 24px rgba(0, 0, 0, 0.15)',
-        'elevated': '0 12px 32px rgba(0, 0, 0, 0.2)',
+        elevated: '0 12px 32px rgba(0, 0, 0, 0.2)',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',

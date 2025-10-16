@@ -30,7 +30,7 @@ export function formatErrorResponse(
   const response: ErrorResponse = {
     error,
     message,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   }
 
   // Add details if provided
@@ -52,36 +52,36 @@ export function formatErrorResponse(
 export const ErrorTypes: Record<string, ErrorTypeConfig> = {
   VALIDATION: {
     error: 'Validation Error',
-    statusCode: 400
+    statusCode: 400,
   },
   AUTHENTICATION: {
     error: 'Authentication Error',
-    statusCode: 401
+    statusCode: 401,
   },
   AUTHORIZATION: {
     error: 'Authorization Error',
-    statusCode: 403
+    statusCode: 403,
   },
   NOT_FOUND: {
     error: 'Resource Not Found',
-    statusCode: 404
+    statusCode: 404,
   },
   RATE_LIMIT: {
     error: 'Rate Limit Exceeded',
-    statusCode: 429
+    statusCode: 429,
   },
   DATABASE: {
     error: 'Database Error',
-    statusCode: 500
+    statusCode: 500,
   },
   EXTERNAL_API: {
     error: 'External API Error',
-    statusCode: 502
+    statusCode: 502,
   },
   INTERNAL: {
     error: 'Internal Server Error',
-    statusCode: 500
-  }
+    statusCode: 500,
+  },
 }
 
 /**
@@ -94,12 +94,7 @@ export function sendError(
   details: unknown = null
 ): void {
   const errorConfig = (ErrorTypes[errorType] ?? ErrorTypes.INTERNAL) as ErrorTypeConfig
-  const response = formatErrorResponse(
-    errorConfig.error,
-    message,
-    errorConfig.statusCode,
-    details
-  )
+  const response = formatErrorResponse(errorConfig.error, message, errorConfig.statusCode, details)
 
   res.status(errorConfig.statusCode).json(response)
 }
@@ -119,11 +114,15 @@ export function asyncHandler(
 /**
  * Log error with context
  */
-export function logError(error: Error, context: string, metadata: Record<string, unknown> = {}): void {
+export function logError(
+  error: Error,
+  context: string,
+  metadata: Record<string, unknown> = {}
+): void {
   console.error(`[${context}] Error:`, {
     message: error.message,
     stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     ...metadata,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   })
 }

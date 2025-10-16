@@ -1,6 +1,15 @@
 import { motion } from 'framer-motion'
 import { Card, Badge } from '../ui'
-import { TrendingUp, TrendingDown, Minus, Cloud, Users, Building2, Calendar, Sparkles } from 'lucide-react'
+import {
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Cloud,
+  Users,
+  Building2,
+  Calendar,
+  Sparkles,
+} from 'lucide-react'
 import type { MarketSentiment } from '../../lib/services/analyticsService'
 
 interface MarketSentimentCardProps {
@@ -8,14 +17,17 @@ interface MarketSentimentCardProps {
   isLoading?: boolean
 }
 
-export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({ sentiment, isLoading }) => {
+export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({
+  sentiment,
+  isLoading,
+}) => {
   if (isLoading) {
     return (
       <Card variant="elevated" className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
         <Card.Body className="relative p-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         </Card.Body>
       </Card>
@@ -25,7 +37,7 @@ export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({ sentim
   if (!sentiment) {
     return (
       <Card variant="elevated">
-        <Card.Body className="text-center py-12">
+        <Card.Body className="py-12 text-center">
           <p className="text-muted">Market sentiment data unavailable</p>
         </Card.Body>
       </Card>
@@ -66,12 +78,12 @@ export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({ sentim
 
         <Card.Header className="relative">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-primary/10 rounded-xl">
-              <Sparkles className="w-6 h-6 text-primary" />
+            <div className="rounded-xl bg-primary/10 p-3">
+              <Sparkles className="h-6 w-6 text-primary" />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-text">Market Sentiment Analysis</h2>
-              <p className="text-sm text-muted mt-1">
+              <p className="mt-1 text-sm text-muted">
                 AI-powered demand strength indicator combining multiple factors
               </p>
             </div>
@@ -80,18 +92,11 @@ export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({ sentim
 
         <Card.Body className="relative">
           {/* Overall Sentiment Score */}
-          <div className="flex items-center justify-center mb-8">
+          <div className="mb-8 flex items-center justify-center">
             <div className="relative">
               {/* Circular progress */}
-              <svg className="w-48 h-48 transform -rotate-90">
-                <circle
-                  cx="96"
-                  cy="96"
-                  r="88"
-                  stroke="#2A2A2A"
-                  strokeWidth="12"
-                  fill="none"
-                />
+              <svg className="h-48 w-48 -rotate-90 transform">
+                <circle cx="96" cy="96" r="88" stroke="#2A2A2A" strokeWidth="12" fill="none" />
                 <motion.circle
                   cx="96"
                   cy="96"
@@ -109,11 +114,13 @@ export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({ sentim
 
               {/* Score display */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <SentimentIcon className="w-8 h-8 mb-2" style={{ color: scoreColor }} />
+                <SentimentIcon className="mb-2 h-8 w-8" style={{ color: scoreColor }} />
                 <p className="text-5xl font-bold text-text">{overallScore}</p>
-                <p className="text-sm text-muted mt-1">out of 100</p>
+                <p className="mt-1 text-sm text-muted">out of 100</p>
                 <Badge
-                  variant={overallScore >= 75 ? 'success' : overallScore >= 40 ? 'default' : 'error'}
+                  variant={
+                    overallScore >= 75 ? 'success' : overallScore >= 40 ? 'default' : 'error'
+                  }
                   size="sm"
                   className="mt-2"
                 >
@@ -124,26 +131,24 @@ export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({ sentim
           </div>
 
           {/* AI Summary */}
-          <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
-            <p className="text-sm text-text leading-relaxed">
-              {overallScore >= 75 && (
-                'Market conditions are very strong. High demand across multiple indicators suggests excellent pricing power and revenue opportunities.'
-              )}
-              {overallScore >= 60 && overallScore < 75 && (
-                'Market conditions are favorable. Good balance of demand factors supports moderate price increases while maintaining occupancy.'
-              )}
-              {overallScore >= 40 && overallScore < 60 && (
-                'Market conditions are neutral. Mixed signals suggest maintaining current strategy while monitoring for opportunities.'
-              )}
-              {overallScore < 40 && (
-                'Market conditions are challenging. Weak demand indicators suggest focusing on occupancy through competitive pricing.'
-              )}
+          <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4">
+            <p className="text-sm leading-relaxed text-text">
+              {overallScore >= 75 &&
+                'Market conditions are very strong. High demand across multiple indicators suggests excellent pricing power and revenue opportunities.'}
+              {overallScore >= 60 &&
+                overallScore < 75 &&
+                'Market conditions are favorable. Good balance of demand factors supports moderate price increases while maintaining occupancy.'}
+              {overallScore >= 40 &&
+                overallScore < 60 &&
+                'Market conditions are neutral. Mixed signals suggest maintaining current strategy while monitoring for opportunities.'}
+              {overallScore < 40 &&
+                'Market conditions are challenging. Weak demand indicators suggest focusing on occupancy through competitive pricing.'}
             </p>
           </div>
 
           {/* Component Breakdown */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-text mb-4">Contributing Factors</h3>
+            <h3 className="mb-4 text-sm font-semibold text-text">Contributing Factors</h3>
 
             {Object.entries(components).map(([key, data]) => {
               const Icon = componentIcons[key as keyof typeof componentIcons]
@@ -154,8 +159,8 @@ export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({ sentim
                 <div key={key} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Icon className="w-4 h-4 text-muted" />
-                      <span className="text-sm font-medium text-text capitalize">
+                      <Icon className="h-4 w-4 text-muted" />
+                      <span className="text-sm font-medium capitalize text-text">
                         {key === 'demand' ? 'Demand Trend' : key}
                       </span>
                       <span className="text-xs text-muted">({weight})</span>
@@ -164,7 +169,7 @@ export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({ sentim
                   </div>
 
                   {/* Progress bar */}
-                  <div className="h-2 bg-border rounded-full overflow-hidden">
+                  <div className="h-2 overflow-hidden rounded-full bg-border">
                     <motion.div
                       className="h-full rounded-full"
                       style={{ backgroundColor: getScoreColor(score) }}

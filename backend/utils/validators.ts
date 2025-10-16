@@ -36,7 +36,10 @@ interface ArrayValidationOptions {
 /**
  * Validate required fields in request body
  */
-export function validateRequiredFields(body: Record<string, unknown>, requiredFields: string[]): ValidationResultWithMissing {
+export function validateRequiredFields(
+  body: Record<string, unknown>,
+  requiredFields: string[]
+): ValidationResultWithMissing {
   const missing: string[] = []
 
   for (const field of requiredFields) {
@@ -47,7 +50,7 @@ export function validateRequiredFields(body: Record<string, unknown>, requiredFi
 
   return {
     valid: missing.length === 0,
-    missing
+    missing,
   }
 }
 
@@ -61,21 +64,21 @@ export function validateCoordinates(latitude: unknown, longitude: unknown): Vali
   if (isNaN(lat) || isNaN(lon)) {
     return {
       valid: false,
-      error: 'Latitude and longitude must be valid numbers'
+      error: 'Latitude and longitude must be valid numbers',
     }
   }
 
   if (lat < -90 || lat > 90) {
     return {
       valid: false,
-      error: 'Latitude must be between -90 and 90'
+      error: 'Latitude must be between -90 and 90',
     }
   }
 
   if (lon < -180 || lon > 180) {
     return {
       valid: false,
-      error: 'Longitude must be between -180 and 180'
+      error: 'Longitude must be between -180 and 180',
     }
   }
 
@@ -90,7 +93,7 @@ export function validateDate(dateStr: unknown): ValidationResultWithDate {
     return {
       valid: false,
       error: 'Date is required',
-      date: null
+      date: null,
     }
   }
 
@@ -100,7 +103,7 @@ export function validateDate(dateStr: unknown): ValidationResultWithDate {
     return {
       valid: false,
       error: 'Invalid date format',
-      date: null
+      date: null,
     }
   }
 
@@ -125,7 +128,7 @@ export function validateDateRange(startDate: unknown, endDate: unknown): Validat
   if (start.date && end.date && start.date > end.date) {
     return {
       valid: false,
-      error: 'Start date must be before end date'
+      error: 'Start date must be before end date',
     }
   }
 
@@ -139,21 +142,21 @@ export function validateCountryCode(countryCode: unknown): ValidationResult {
   if (!countryCode || typeof countryCode !== 'string') {
     return {
       valid: false,
-      error: 'Country code is required'
+      error: 'Country code is required',
     }
   }
 
   if (countryCode.length !== 2) {
     return {
       valid: false,
-      error: 'Country code must be 2 characters (ISO 3166-1 alpha-2)'
+      error: 'Country code must be 2 characters (ISO 3166-1 alpha-2)',
     }
   }
 
   if (!/^[A-Z]{2}$/i.test(countryCode)) {
     return {
       valid: false,
-      error: 'Country code must contain only letters'
+      error: 'Country code must contain only letters',
     }
   }
 
@@ -163,7 +166,10 @@ export function validateCountryCode(countryCode: unknown): ValidationResult {
 /**
  * Validate numeric value with optional min/max
  */
-export function validateNumeric(value: unknown, options: NumericValidationOptions = {}): ValidationResultWithValue<number> {
+export function validateNumeric(
+  value: unknown,
+  options: NumericValidationOptions = {}
+): ValidationResultWithValue<number> {
   const { min, max, fieldName = 'Value' } = options
 
   const num = Number(value)
@@ -172,7 +178,7 @@ export function validateNumeric(value: unknown, options: NumericValidationOption
     return {
       valid: false,
       error: `${fieldName} must be a valid number`,
-      value: null
+      value: null,
     }
   }
 
@@ -180,7 +186,7 @@ export function validateNumeric(value: unknown, options: NumericValidationOption
     return {
       valid: false,
       error: `${fieldName} must be at least ${min}`,
-      value: null
+      value: null,
     }
   }
 
@@ -188,7 +194,7 @@ export function validateNumeric(value: unknown, options: NumericValidationOption
     return {
       valid: false,
       error: `${fieldName} must be at most ${max}`,
-      value: null
+      value: null,
     }
   }
 
@@ -198,27 +204,30 @@ export function validateNumeric(value: unknown, options: NumericValidationOption
 /**
  * Validate array input
  */
-export function validateArray(value: unknown, options: ArrayValidationOptions = {}): ValidationResult {
+export function validateArray(
+  value: unknown,
+  options: ArrayValidationOptions = {}
+): ValidationResult {
   const { minLength, maxLength, fieldName = 'Array' } = options
 
   if (!Array.isArray(value)) {
     return {
       valid: false,
-      error: `${fieldName} must be an array`
+      error: `${fieldName} must be an array`,
     }
   }
 
   if (minLength !== undefined && value.length < minLength) {
     return {
       valid: false,
-      error: `${fieldName} must have at least ${minLength} items`
+      error: `${fieldName} must have at least ${minLength} items`,
     }
   }
 
   if (maxLength !== undefined && value.length > maxLength) {
     return {
       valid: false,
-      error: `${fieldName} must have at most ${maxLength} items`
+      error: `${fieldName} must have at most ${maxLength} items`,
     }
   }
 

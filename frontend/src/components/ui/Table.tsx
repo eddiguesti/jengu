@@ -15,9 +15,7 @@ export const Table = ({ children, className }: TableProps) => {
 }
 
 Table.Header = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <thead className={clsx('bg-elevated border-b border-border', className)}>
-    {children}
-  </thead>
+  <thead className={clsx('border-b border-border bg-elevated', className)}>{children}</thead>
 )
 
 Table.Body = ({ children, className }: { children: ReactNode; className?: string }) => (
@@ -27,7 +25,7 @@ Table.Body = ({ children, className }: { children: ReactNode; className?: string
 Table.Row = ({
   children,
   className,
-  onClick
+  onClick,
 }: {
   children: ReactNode
   className?: string
@@ -46,18 +44,11 @@ Table.Row = ({
 )
 
 Table.HeaderCell = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <th
-    className={clsx(
-      'px-4 py-3 text-left text-sm font-semibold text-text',
-      className
-    )}
-  >
+  <th className={clsx('px-4 py-3 text-left text-sm font-semibold text-text', className)}>
     {children}
   </th>
 )
 
 Table.Cell = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <td className={clsx('px-4 py-3 text-sm text-muted', className)}>
-    {children}
-  </td>
+  <td className={clsx('px-4 py-3 text-sm text-muted', className)}>{children}</td>
 )

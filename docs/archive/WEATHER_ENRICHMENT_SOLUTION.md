@@ -3,17 +3,20 @@
 ## 🔍 Problem Summary
 
 You reported two critical issues:
+
 1. **Weather data not being saved** - CSV uploads don't include weather information
 2. **"Fewer than 15 rows" error** - Frontend only receiving 5 rows instead of all 3972 uploaded rows
 
 ## 🎯 Root Causes Identified
 
 ### Issue 1: No Weather Enrichment During Upload
+
 - **What's happening**: CSV upload saves raw data to database but NEVER calls weather enrichment
 - **Why**: The enrichment service exists (`backend/services/enrichmentService.js`) but was never integrated into the upload flow
 - **Impact**: All weather-dependent analytics fail, charts show "no data"
 
 ### Issue 2: Frontend Only Receiving 5 Rows
+
 - **What's happening**: Frontend calls `/api/files/:fileId/data` without pagination parameters
 - **Backend default**: Returns only first 1000 rows (but frontend only gets 5 due to some other issue)
 - **Fix applied**: Frontend now requests `?limit=10000` to get more data
@@ -21,6 +24,7 @@ You reported two critical issues:
 ## ✅ Solutions Implemented
 
 ### Solution 1: Frontend Data Fetching (COMPLETED)
+
 **File**: `frontend/src/pages/Insights.tsx`
 
 ```typescript
@@ -34,9 +38,11 @@ const response = await axios.get(`http://localhost:3001/api/files/${fileId}/data
 **Impact**: Frontend will now request up to 10,000 rows instead of defaulting to smaller limit
 
 ### Solution 2: Enrichment Service Migration (COMPLETED)
+
 **File**: `backend/services/enrichmentService.js`
 
 **Changes made**:
+
 - ✅ Updated `enrichWithWeather()` to use Supabase instead of Prisma
 - ✅ Updated `enrichWithTemporalFeatures()` to use Supabase
 - ✅ Updated `enrichPropertyData()` pipeline to use Supabase
@@ -44,6 +50,7 @@ const response = await axios.get(`http://localhost:3001/api/files/${fileId}/data
 - ✅ Added detailed logging for debugging
 
 **Functions available**:
+
 ```javascript
 // Enrich with historical weather data from Open-Meteo (FREE API)
 await enrichWithWeather(propertyId, { latitude, longitude }, supabaseClient)
@@ -52,11 +59,15 @@ await enrichWithWeather(propertyId, { latitude, longitude }, supabaseClient)
 await enrichWithTemporalFeatures(propertyId, supabaseClient)
 
 // Complete pipeline (runs both enrichments)
-await enrichPropertyData(propertyId, {
-  location: { latitude, longitude },
-  countryCode: 'FR', // Optional
-  calendarificApiKey: process.env.CALENDARIFIC_API_KEY // Optional
-}, supabaseClient)
+await enrichPropertyData(
+  propertyId,
+  {
+    location: { latitude, longitude },
+    countryCode: 'FR', // Optional
+    calendarificApiKey: process.env.CALENDARIFIC_API_KEY, // Optional
+  },
+  supabaseClient
+)
 ```
 
 ## 🚀 Next Steps Required
@@ -71,53 +82,55 @@ await enrichPropertyData(propertyId, {
 
 ```javascript
 // Import at top of file (add to existing imports around line 24)
-import { enrichPropertyData } from './services/enrichmentService.js';
+import { enrichPropertyData } from './services/enrichmentService.js'
 
 // Then after CSV upload completes (around line 281), add:
-console.log(`✅ Processing complete: ${totalRows} rows, ${columnCount} columns`);
+console.log(`✅ Processing complete: ${totalRows} rows, ${columnCount} columns`)
 
 // ENRICHMENT PIPELINE - Run in background (don't await to avoid blocking response)
-(async () => {
+;(async () => {
   try {
     // Get user's business settings for coordinates
     const { data: settings } = await supabaseAdmin
       .from('business_settings')
       .select('latitude, longitude, country')
       .eq('userid', userId)
-      .single();
+      .single()
 
     if (settings && settings.latitude && settings.longitude) {
-      console.log(`\n🌤️  Starting automatic enrichment for property ${property.id}...`);
+      console.log(`\n🌤️  Starting automatic enrichment for property ${property.id}...`)
 
       const enrichmentResult = await enrichPropertyData(
         property.id,
         {
           location: {
             latitude: settings.latitude,
-            longitude: settings.longitude
+            longitude: settings.longitude,
           },
           countryCode: settings.country || 'FR',
-          calendarificApiKey: process.env.CALENDARIFIC_API_KEY
+          calendarificApiKey: process.env.CALENDARIFIC_API_KEY,
         },
         supabaseAdmin
-      );
+      )
 
       if (enrichmentResult.success) {
-        console.log(`✅ Enrichment complete:`, enrichmentResult.results);
+        console.log(`✅ Enrichment complete:`, enrichmentResult.results)
       } else {
-        console.warn(`⚠️  Enrichment failed:`, enrichmentResult.error);
+        console.warn(`⚠️  Enrichment failed:`, enrichmentResult.error)
       }
     } else {
-      console.log(`⚠️  No coordinates in business settings - skipping enrichment. User should update settings first.`);
+      console.log(
+        `⚠️  No coordinates in business settings - skipping enrichment. User should update settings first.`
+      )
     }
   } catch (enrichError) {
     // Don't fail the upload if enrichment fails
-    console.error('Enrichment error (non-fatal):', enrichError.message);
+    console.error('Enrichment error (non-fatal):', enrichError.message)
   }
-})();
+})()
 
 // Delete uploaded file (data is now in DB)
-fs.unlinkSync(filePath);
+fs.unlinkSync(filePath)
 ```
 
 ### Step 2: Create Manual Enrichment Endpoint
@@ -128,8 +141,8 @@ fs.unlinkSync(filePath);
 // Manual enrichment endpoint - allows re-enriching existing data
 app.post('/api/files/:fileId/enrich', authenticateUser, async (req, res) => {
   try {
-    const { fileId } = req.params;
-    const userId = req.userId;
+    const { fileId } = req.params
+    const userId = req.userId
 
     // Verify property belongs to user
     const { data: property, error } = await supabaseAdmin
@@ -137,10 +150,10 @@ app.post('/api/files/:fileId/enrich', authenticateUser, async (req, res) => {
       .select('id')
       .eq('id', fileId)
       .eq('userId', userId)
-      .single();
+      .single()
 
     if (error || !property) {
-      return res.status(404).json({ error: 'File not found' });
+      return res.status(404).json({ error: 'File not found' })
     }
 
     // Get user's coordinates
@@ -148,16 +161,16 @@ app.post('/api/files/:fileId/enrich', authenticateUser, async (req, res) => {
       .from('business_settings')
       .select('latitude, longitude, country')
       .eq('userid', userId)
-      .single();
+      .single()
 
     if (!settings || !settings.latitude || !settings.longitude) {
       return res.status(400).json({
         error: 'Missing coordinates',
-        message: 'Please update your business settings with your property location first'
-      });
+        message: 'Please update your business settings with your property location first',
+      })
     }
 
-    console.log(`🌤️  Manual enrichment requested for property ${fileId}`);
+    console.log(`🌤️  Manual enrichment requested for property ${fileId}`)
 
     // Run enrichment
     const result = await enrichPropertyData(
@@ -165,27 +178,27 @@ app.post('/api/files/:fileId/enrich', authenticateUser, async (req, res) => {
       {
         location: {
           latitude: settings.latitude,
-          longitude: settings.longitude
+          longitude: settings.longitude,
         },
         countryCode: settings.country || 'FR',
-        calendarificApiKey: process.env.CALENDARIFIC_API_KEY
+        calendarificApiKey: process.env.CALENDARIFIC_API_KEY,
       },
       supabaseAdmin
-    );
+    )
 
     res.json({
       success: true,
       message: 'Enrichment complete',
-      results: result.results
-    });
+      results: result.results,
+    })
   } catch (error) {
-    console.error('Manual Enrichment Error:', error);
+    console.error('Manual Enrichment Error:', error)
     res.status(500).json({
       error: 'Enrichment failed',
-      message: error.message
-    });
+      message: error.message,
+    })
   }
-});
+})
 ```
 
 ### Step 3: Update Frontend to Call Enrichment
@@ -197,30 +210,31 @@ app.post('/api/files/:fileId/enrich', authenticateUser, async (req, res) => {
 ```typescript
 const enrichFile = async (fileId: string) => {
   try {
-    setIsLoading(true);
-    const token = await getAccessToken();
+    setIsLoading(true)
+    const token = await getAccessToken()
 
     await axios.post(
       `http://localhost:3001/api/files/${fileId}/enrich`,
       {},
       { headers: { Authorization: `Bearer ${token}` } }
-    );
+    )
 
-    toast.success('Weather enrichment complete!');
+    toast.success('Weather enrichment complete!')
     // Refresh file list
-    loadFiles();
+    loadFiles()
   } catch (error) {
-    toast.error('Enrichment failed');
-    console.error(error);
+    toast.error('Enrichment failed')
+    console.error(error)
   } finally {
-    setIsLoading(false);
+    setIsLoading(false)
   }
-};
+}
 ```
 
 ## 📊 Expected Results After Implementation
 
 ### Before Enrichment:
+
 ```
 pricing_data row:
 {
@@ -240,6 +254,7 @@ pricing_data row:
 ```
 
 ### After Enrichment:
+
 ```
 pricing_data row:
 {
@@ -259,6 +274,7 @@ pricing_data row:
 ```
 
 ### Analytics Impact:
+
 - ✅ **Weather Impact Analysis**: Now works with real weather correlations
 - ✅ **ML Models**: Can use weather as a feature for predictions
 - ✅ **Charts**: "Price by Weather" chart now populated with real data
@@ -267,6 +283,7 @@ pricing_data row:
 ## 🔧 Testing the Solution
 
 ### Test 1: Upload New CSV
+
 1. Go to Data page
 2. Upload `bandol_campsite_sample.csv`
 3. **Expected**: File uploads successfully
@@ -274,11 +291,13 @@ pricing_data row:
 5. **Check database**: `pricing_data` rows should have `temperature`, `weatherCondition`, etc.
 
 ### Test 2: Manual Enrichment
+
 1. Use existing uploaded file
 2. Call enrichment endpoint: `POST /api/files/:fileId/enrich`
 3. **Expected**: Weather data added to existing rows
 
 ### Test 3: View in Insights
+
 1. Go to Insights page
 2. **Expected**:
    - All 3972 rows loaded (not just 5)
@@ -289,11 +308,13 @@ pricing_data row:
 ## 🎯 Performance Considerations
 
 ### Weather API Limits:
+
 - **Open-Meteo**: FREE, unlimited requests
 - **Enrichment speed**: ~100 rows/second
 - **3972 rows**: Takes ~40-60 seconds to enrich
 
 ### Optimization:
+
 - Enrichment runs in **background** (non-blocking)
 - User gets immediate upload confirmation
 - Enrichment happens asynchronously
@@ -302,12 +323,14 @@ pricing_data row:
 ## 📝 User Workflow
 
 ### Ideal Flow:
+
 1. **User sets up business settings** (must include city coordinates)
 2. **User uploads CSV** → Auto-enrichment starts
 3. **User goes to Insights** → Sees enriched data with weather
 4. **Analytics work perfectly** with 3972 rows + weather data
 
 ### If Coordinates Missing:
+
 1. User uploads CSV → Saved but NOT enriched
 2. Backend logs warning: "No coordinates - skipping enrichment"
 3. User updates Settings with coordinates
@@ -326,6 +349,7 @@ pricing_data row:
 Once enrichment is working, you can enhance ML accuracy:
 
 ### Feature Engineering:
+
 - **Temporal features**: Day of week, month, season (already added)
 - **Weather features**: Temperature, precipitation, sunshine hours (already added)
 - **Derived features**:
@@ -334,11 +358,13 @@ Once enrichment is working, you can enhance ML accuracy:
   - Weather score (Sunny=100, Cloudy=70, Rainy=40)
 
 ### Model Improvements:
+
 - **Random Forest**: Better than linear regression for weather correlations
 - **XGBoost**: State-of-the-art for tabular data
 - **Time Series**: SARIMA or Prophet for seasonality
 
 ### Validation:
+
 - **Train/Test Split**: 80/20 with time-based split
 - **Cross-Validation**: K-fold on different date ranges
 - **Metrics**: RMSE, MAE, R² for price predictions
@@ -346,18 +372,21 @@ Once enrichment is working, you can enhance ML accuracy:
 ## ✨ Summary
 
 **What was fixed:**
+
 1. ✅ Frontend now requests all rows (`limit=10000`)
 2. ✅ Enrichment service migrated to Supabase
 3. ✅ Weather API integration ready
 4. ✅ Temporal features ready
 
 **What needs to be done:**
+
 1. ⏳ Add enrichment service import to `server.js`
 2. ⏳ Call enrichment after CSV upload
 3. ⏳ Add manual enrichment endpoint
 4. ⏳ Test with real upload
 
 **Impact once complete:**
+
 - **3972 rows** will be available in Insights (not just 5)
 - **Weather data** will be fetched and saved automatically
 - **All charts** will work with full dataset

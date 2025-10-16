@@ -11,7 +11,12 @@
     @apply bg-background text-text antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold tracking-tight;
   }
 
@@ -47,39 +52,51 @@
   }
 
   /* Custom Range Slider Styling */
-  input[type="range"].slider-thumb {
+  input[type='range'].slider-thumb {
     @apply appearance-none;
   }
 
-  input[type="range"].slider-thumb::-webkit-slider-thumb {
-    @apply appearance-none w-5 h-5 rounded-full cursor-pointer transition-all duration-200;
-    background: #EBFF57;
+  input[type='range'].slider-thumb::-webkit-slider-thumb {
+    @apply h-5 w-5 cursor-pointer appearance-none rounded-full transition-all duration-200;
+    background: #ebff57;
     box-shadow: 0 2px 8px rgba(235, 255, 87, 0.4);
   }
 
-  input[type="range"].slider-thumb::-webkit-slider-thumb:hover {
+  input[type='range'].slider-thumb::-webkit-slider-thumb:hover {
     @apply scale-110;
     box-shadow: 0 4px 12px rgba(235, 255, 87, 0.6);
   }
 
-  input[type="range"].slider-thumb::-moz-range-thumb {
-    @apply w-5 h-5 rounded-full cursor-pointer transition-all duration-200 border-0;
-    background: #EBFF57;
+  input[type='range'].slider-thumb::-moz-range-thumb {
+    @apply h-5 w-5 cursor-pointer rounded-full border-0 transition-all duration-200;
+    background: #ebff57;
     box-shadow: 0 2px 8px rgba(235, 255, 87, 0.4);
   }
 
-  input[type="range"].slider-thumb::-moz-range-thumb:hover {
+  input[type='range'].slider-thumb::-moz-range-thumb:hover {
     @apply scale-110;
     box-shadow: 0 4px 12px rgba(235, 255, 87, 0.6);
   }
 
-  input[type="range"].slider-thumb::-webkit-slider-runnable-track {
+  input[type='range'].slider-thumb::-webkit-slider-runnable-track {
     @apply h-2 rounded-lg;
-    background: linear-gradient(to right, #EBFF57 0%, #EBFF57 var(--range-progress, 0%), #2A2A2A var(--range-progress, 0%), #2A2A2A 100%);
+    background: linear-gradient(
+      to right,
+      #ebff57 0%,
+      #ebff57 var(--range-progress, 0%),
+      #2a2a2a var(--range-progress, 0%),
+      #2a2a2a 100%
+    );
   }
 
-  input[type="range"].slider-thumb::-moz-range-track {
+  input[type='range'].slider-thumb::-moz-range-track {
     @apply h-2 rounded-lg;
-    background: linear-gradient(to right, #EBFF57 0%, #EBFF57 var(--range-progress, 0%), #2A2A2A var(--range-progress, 0%), #2A2A2A 100%);
+    background: linear-gradient(
+      to right,
+      #ebff57 0%,
+      #ebff57 var(--range-progress, 0%),
+      #2a2a2a var(--range-progress, 0%),
+      #2a2a2a 100%
+    );
   }
 }

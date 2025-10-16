@@ -25,6 +25,7 @@ ADD COLUMN IF NOT EXISTS "enrichmentError" TEXT;
 ```
 
 **Enrichment Status Values:**
+
 - `none` - Not enriched yet
 - `pending` - Enrichment in progress
 - `completed` - ✅ Successfully enriched
@@ -37,30 +38,33 @@ ADD COLUMN IF NOT EXISTS "enrichmentError" TEXT;
 **Automatic Status Updates:**
 
 When enrichment completes successfully:
+
 ```javascript
 await supabaseAdmin
   .from('properties')
   .update({
     enrichmentStatus: 'completed',
-    enrichedAt: new Date().toISOString()
+    enrichedAt: new Date().toISOString(),
   })
-  .eq('id', property.id);
+  .eq('id', property.id)
 ```
 
 When enrichment fails:
+
 ```javascript
 await supabaseAdmin
   .from('properties')
   .update({
     enrichmentStatus: 'failed',
-    enrichmentError: enrichmentResult.error
+    enrichmentError: enrichmentResult.error,
   })
-  .eq('id', property.id);
+  .eq('id', property.id)
 ```
 
 **API Response Includes Status:**
 
 The `/api/files` endpoint now returns:
+
 ```json
 {
   "files": [
@@ -81,25 +85,31 @@ The `/api/files` endpoint now returns:
 **Visual Indicators:**
 
 1. **"Enriched" Badge** next to uploaded files:
+
    ```tsx
-   {file.enrichment_status === 'completed' && (
-     <Badge variant="success" className="flex items-center gap-1">
-       <Sparkles className="w-3 h-3" />
-       Enriched
-     </Badge>
-   )}
+   {
+     file.enrichment_status === 'completed' && (
+       <Badge variant="success" className="flex items-center gap-1">
+         <Sparkles className="h-3 w-3" />
+         Enriched
+       </Badge>
+     )
+   }
    ```
 
 2. **Auto-complete Enrichment Features** when data is already enriched:
+
    ```typescript
    useEffect(() => {
      const allEnriched = uploadedFiles.every(f => f.enrichment_status === 'completed')
      if (allEnriched) {
-       setFeatures(prev => prev.map(f => ({
-         ...f,
-         status: 'complete',
-         progress: 100
-       })))
+       setFeatures(prev =>
+         prev.map(f => ({
+           ...f,
+           status: 'complete',
+           progress: 100,
+         }))
+       )
      }
    }, [])
    ```
@@ -111,6 +121,7 @@ The `/api/files` endpoint now returns:
 **File:** `frontend/src/store/useDataStore.ts`
 
 Added enrichment tracking to the UploadedFile interface:
+
 ```typescript
 interface UploadedFile {
   enrichment_status?: 'none' | 'pending' | 'completed' | 'failed'
@@ -167,11 +178,13 @@ interface UploadedFile {
 ### "Enrich All" Button States
 
 **Before enrichment:**
+
 ```
 [▶️ Enrich All]
 ```
 
 **After enrichment:**
+
 ```
 [✅ All Complete] (disabled, greyed out)
 ```
@@ -282,6 +295,7 @@ The migration will be part of the initial database setup.
 ### 1. Partial Enrichment Tracking
 
 Track individual features (weather, holidays, temporal) separately:
+
 ```sql
 ALTER TABLE properties
 ADD COLUMN "weatherEnriched" BOOLEAN DEFAULT FALSE;
@@ -292,15 +306,15 @@ ADD COLUMN "temporalEnriched" BOOLEAN DEFAULT FALSE;
 ### 2. Re-enrichment Button
 
 Allow users to manually re-run enrichment:
+
 ```tsx
-<Button onClick={reEnrich}>
-  🔄 Re-enrich Data
-</Button>
+<Button onClick={reEnrich}>🔄 Re-enrich Data</Button>
 ```
 
 ### 3. Enrichment Progress
 
 Show real-time progress during enrichment:
+
 ```sql
 ALTER TABLE properties
 ADD COLUMN "enrichmentProgress" INTEGER DEFAULT 0;
@@ -309,6 +323,7 @@ ADD COLUMN "enrichmentProgress" INTEGER DEFAULT 0;
 ### 4. Enrichment History
 
 Track all enrichment runs:
+
 ```sql
 CREATE TABLE enrichment_history (
   id UUID PRIMARY KEY,
@@ -361,6 +376,7 @@ CREATE TABLE enrichment_history (
 ✅ **UX:** User immediately knows when enrichment is done
 
 **Files Modified:**
+
 - `backend/server.js` - Status tracking logic
 - `frontend/src/pages/Data.tsx` - UI indicators
 - `frontend/src/store/useDataStore.ts` - Type definitions

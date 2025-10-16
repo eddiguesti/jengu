@@ -29,8 +29,8 @@ if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
 export const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
-    persistSession: false
-  }
+    persistSession: false,
+  },
 })
 
 /**
@@ -50,7 +50,10 @@ export async function getUserIdFromToken(token: string): Promise<string | null> 
     }
 
     const jwt = token.replace('Bearer ', '')
-    const { data: { user }, error } = await supabase.auth.getUser(jwt)
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(jwt)
 
     if (error || !user) {
       console.error('Token validation error:', error?.message)
@@ -75,7 +78,7 @@ export function authenticateUser(req: Request, res: Response, next: NextFunction
   if (!token) {
     res.status(401).json({
       error: 'Unauthorized',
-      message: 'No authorization token provided'
+      message: 'No authorization token provided',
     })
     return
   }
@@ -85,7 +88,7 @@ export function authenticateUser(req: Request, res: Response, next: NextFunction
       if (!userId) {
         res.status(401).json({
           error: 'Unauthorized',
-          message: 'Invalid or expired token'
+          message: 'Invalid or expired token',
         })
         return
       }
@@ -98,7 +101,7 @@ export function authenticateUser(req: Request, res: Response, next: NextFunction
       console.error('Authentication middleware error:', err)
       res.status(500).json({
         error: 'Authentication failed',
-        message: err.message
+        message: err.message,
       })
     })
 }
@@ -134,5 +137,5 @@ export default {
   supabaseAdmin,
   getUserIdFromToken,
   authenticateUser,
-  optionalAuth
+  optionalAuth,
 }

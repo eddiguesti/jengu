@@ -1,9 +1,11 @@
 # 🔧 Fix Login Issue - Disable Email Confirmation
 
 ## Problem
+
 You can't log in with existing credentials and always have to sign up again.
 
 ## Root Cause
+
 Supabase has **email confirmation** enabled by default. Users must confirm their email before they can log in.
 
 ## Solution: Disable Email Confirmation

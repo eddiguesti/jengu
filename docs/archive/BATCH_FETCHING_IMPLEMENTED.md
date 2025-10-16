@@ -1,12 +1,14 @@
 # Batch Fetching Implementation - COMPLETE
 
 ## Problem
+
 - Supabase has a hard limit of **1000 rows per `.range()` query**
 - User has 3972 rows in database
 - Frontend/analytics was only receiving 1000 rows
 - Charts showed "fewer than 15 rows" error because only 5 preview rows reached analytics
 
 ## Root Cause
+
 ```javascript
 // OLD CODE (Line 380 in server.js) - Single query limited to 1000
 const { data, error } = await supabaseAdmin
@@ -14,10 +16,11 @@ const { data, error } = await supabaseAdmin
   .select('...')
   .eq('propertyId', fileId)
   .order('date', { ascending: true })
-  .range(offset, offset + actualLimit - 1); // ❌ Limited to 1000 rows max by Supabase
+  .range(offset, offset + actualLimit - 1) // ❌ Limited to 1000 rows max by Supabase
 ```
 
 ## Solution Implemented
+
 Replaced single query with **batch fetching loop** that retrieves all data in 1000-row chunks:
 
 ```javascript
@@ -26,29 +29,31 @@ Replaced single query with **batch fetching loop** that retrieves all data in 10
 const { count: total } = await supabaseAdmin
   .from('pricing_data')
   .select('*', { count: 'exact', head: true })
-  .eq('propertyId', fileId);
+  .eq('propertyId', fileId)
 
 // Fetch ALL data in batches (Supabase has 1000 row limit per query)
-const SUPABASE_LIMIT = 1000;
-const allData = [];
-const totalToFetch = Math.min(actualLimit, total || 0);
+const SUPABASE_LIMIT = 1000
+const allData = []
+const totalToFetch = Math.min(actualLimit, total || 0)
 
 for (let i = offset; i < offset + totalToFetch; i += SUPABASE_LIMIT) {
-  const batchLimit = Math.min(SUPABASE_LIMIT, offset + totalToFetch - i);
+  const batchLimit = Math.min(SUPABASE_LIMIT, offset + totalToFetch - i)
 
   const { data: batchData } = await supabaseAdmin
     .from('pricing_data')
-    .select('date, price, occupancy, bookings, temperature, precipitation, weatherCondition, sunshineHours, dayOfWeek, month, season, isWeekend, isHoliday, holidayName, extraData')
+    .select(
+      'date, price, occupancy, bookings, temperature, precipitation, weatherCondition, sunshineHours, dayOfWeek, month, season, isWeekend, isHoliday, holidayName, extraData'
+    )
     .eq('propertyId', fileId)
     .order('date', { ascending: true })
-    .range(i, i + batchLimit - 1);
+    .range(i, i + batchLimit - 1)
 
   if (batchData && batchData.length > 0) {
-    allData.push(...batchData);
+    allData.push(...batchData)
   }
 }
 
-const data = allData; // ✅ Contains ALL rows (not limited to 1000)
+const data = allData // ✅ Contains ALL rows (not limited to 1000)
 ```
 
 ## How It Works
@@ -72,12 +77,14 @@ Total:   3972 rows ✅
 ## Impact
 
 ### Before:
+
 - ❌ Only 1000 rows returned (Supabase limit)
 - ❌ Analytics received 5 preview rows
 - ❌ Charts empty: "Unable to perform calculation with fewer than 15 rows"
 - ❌ Weather enrichment data not visible
 
 ### After:
+
 - ✅ All 3972 rows returned
 - ✅ Analytics receives full dataset
 - ✅ Charts populated with complete data
@@ -115,6 +122,7 @@ Total:   3972 rows ✅
 ## Next Steps
 
 User should:
+
 1. ✅ Refresh Insights page
 2. ✅ Verify all 3972 rows loaded in console
 3. ✅ Confirm charts populate

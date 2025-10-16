@@ -52,7 +52,7 @@ function calculateR2(actual: number[], predicted: number[]): number {
 
   if (totalSS === 0) return 0
 
-  return 1 - (residualSS / totalSS)
+  return 1 - residualSS / totalSS
 }
 
 /**
@@ -76,7 +76,10 @@ function calculateMAPE(actual: number[], predicted: number[]): number {
  * @deprecated Not currently used but kept for potential future use
  */
 // @ts-ignore - Function kept for potential future use
-function linearRegression(x: number[], y: number[]): { slope: number; intercept: number; r2: number } {
+function linearRegression(
+  x: number[],
+  y: number[]
+): { slope: number; intercept: number; r2: number } {
   if (x.length !== y.length || x.length < 2) {
     return { slope: 0, intercept: 0, r2: 0 }
   }
@@ -114,7 +117,10 @@ export function analyzeWeatherImpact(data: DataRow[]): {
     }
   }
 
-  const weatherGroups: Record<string, { prices: number[]; occupancies: number[]; temperatures: number[]; count: number }> = {}
+  const weatherGroups: Record<
+    string,
+    { prices: number[]; occupancies: number[]; temperatures: number[]; count: number }
+  > = {}
 
   data.forEach(row => {
     const weather = row.weather || row.weather_condition || 'Unknown'
@@ -143,7 +149,10 @@ export function analyzeWeatherImpact(data: DataRow[]): {
   const occupancies = data.map(r => parseFloat(String(r.occupancy || 0))).filter(o => o > 0)
 
   const tempPriceCorr = pearsonCorrelation(temperatures, prices.slice(0, temperatures.length))
-  const tempOccupancyCorr = pearsonCorrelation(temperatures, occupancies.slice(0, temperatures.length))
+  const tempOccupancyCorr = pearsonCorrelation(
+    temperatures,
+    occupancies.slice(0, temperatures.length)
+  )
   const priceOccupancyCorr = pearsonCorrelation(prices, occupancies.slice(0, prices.length))
 
   // Generate insights
@@ -159,10 +168,12 @@ export function analyzeWeatherImpact(data: DataRow[]): {
     if (stats.count < 3) return // Skip if not enough data
 
     const avgPrice = stats.prices.reduce((a: number, b: number) => a + b, 0) / stats.prices.length
-    const avgOccupancy = stats.occupancies.reduce((a: number, b: number) => a + b, 0) / stats.occupancies.length
-    const avgTemp = stats.temperatures.length > 0
-      ? stats.temperatures.reduce((a: number, b: number) => a + b, 0) / stats.temperatures.length
-      : null
+    const avgOccupancy =
+      stats.occupancies.reduce((a: number, b: number) => a + b, 0) / stats.occupancies.length
+    const avgTemp =
+      stats.temperatures.length > 0
+        ? stats.temperatures.reduce((a: number, b: number) => a + b, 0) / stats.temperatures.length
+        : null
 
     insights.push({
       weather,
@@ -197,7 +208,10 @@ export function analyzeWeatherImpact(data: DataRow[]): {
  * Forecast demand using historical patterns
  * Simple time series forecasting with seasonal adjustment
  */
-export function forecastDemand(historicalData: DataRow[], daysAhead = 14): {
+export function forecastDemand(
+  historicalData: DataRow[],
+  daysAhead = 14
+): {
   forecast: unknown[]
   accuracy: { r2: number; mape: number } | null
   method: string
@@ -229,7 +243,9 @@ export function forecastDemand(historicalData: DataRow[], daysAhead = 14): {
   }
 
   // Calculate day-of-week averages (seasonality)
-  const dayAverages = Array(7).fill(0).map(() => ({ sum: 0, count: 0 }))
+  const dayAverages = Array(7)
+    .fill(0)
+    .map(() => ({ sum: 0, count: 0 }))
 
   timeSeries.forEach(({ date, occupancy }) => {
     const dayOfWeek = date.getDay()
@@ -240,8 +256,8 @@ export function forecastDemand(historicalData: DataRow[], daysAhead = 14): {
     }
   })
 
-  const dayFactors = dayAverages.map(day =>
-    day.count > 0 ? day.sum / day.count : 70 // Default to 70% if no data
+  const dayFactors = dayAverages.map(
+    day => (day.count > 0 ? day.sum / day.count : 70) // Default to 70% if no data
   )
 
   // Calculate trend (simple moving average)
@@ -306,7 +322,10 @@ export function forecastDemand(historicalData: DataRow[], daysAhead = 14): {
 /**
  * Analyze competitor pricing patterns
  */
-export function analyzeCompetitorPricing(yourData: DataRow[], competitorData: DataRow[]): {
+export function analyzeCompetitorPricing(
+  yourData: DataRow[],
+  competitorData: DataRow[]
+): {
   yourAveragePrice?: number
   competitorAveragePrice?: number
   priceDifference?: number
@@ -323,7 +342,9 @@ export function analyzeCompetitorPricing(yourData: DataRow[], competitorData: Da
 
   // Calculate price statistics
   const yourPrices = yourData.map(r => parseFloat(String(r.price || 0))).filter(p => p > 0)
-  const competitorPrices = competitorData.map(r => parseFloat(String(r.price || 0))).filter(p => p > 0)
+  const competitorPrices = competitorData
+    .map(r => parseFloat(String(r.price || 0)))
+    .filter(p => p > 0)
 
   const yourAvg = yourPrices.reduce((a, b) => a + b, 0) / yourPrices.length
   const competitorAvg = competitorPrices.reduce((a, b) => a + b, 0) / competitorPrices.length
@@ -332,9 +353,10 @@ export function analyzeCompetitorPricing(yourData: DataRow[], competitorData: Da
 
   // Calculate occupancy if available
   const yourOccupancies = yourData.map(r => parseFloat(String(r.occupancy || 0))).filter(o => o > 0)
-  const yourAvgOccupancy = yourOccupancies.length > 0
-    ? yourOccupancies.reduce((a, b) => a + b, 0) / yourOccupancies.length
-    : null
+  const yourAvgOccupancy =
+    yourOccupancies.length > 0
+      ? yourOccupancies.reduce((a, b) => a + b, 0) / yourOccupancies.length
+      : null
 
   // Generate recommendation
   let recommendation = null
@@ -434,14 +456,37 @@ export function generateAnalyticsSummary(data: DataRow[]): unknown {
     dataQuality: {
       totalRecords: data.length,
       dateRange: {
-        start: data.length > 0 ? new Date(Math.min(...data.map(r => new Date(r.date || r.check_in || '').getTime()))).toISOString().split('T')[0] : null,
-        end: data.length > 0 ? new Date(Math.max(...data.map(r => new Date(r.date || r.check_in || '').getTime()))).toISOString().split('T')[0] : null,
+        start:
+          data.length > 0
+            ? new Date(Math.min(...data.map(r => new Date(r.date || r.check_in || '').getTime())))
+                .toISOString()
+                .split('T')[0]
+            : null,
+        end:
+          data.length > 0
+            ? new Date(Math.max(...data.map(r => new Date(r.date || r.check_in || '').getTime())))
+                .toISOString()
+                .split('T')[0]
+            : null,
       },
       completeness: {
-        price: data.filter(r => typeof r.price === 'number' ? r.price > 0 : parseFloat(String(r.price || 0)) > 0).length / data.length,
-        occupancy: data.filter(r => typeof r.occupancy === 'number' ? r.occupancy > 0 : parseFloat(String(r.occupancy || 0)) > 0).length / data.length,
+        price:
+          data.filter(r =>
+            typeof r.price === 'number' ? r.price > 0 : parseFloat(String(r.price || 0)) > 0
+          ).length / data.length,
+        occupancy:
+          data.filter(r =>
+            typeof r.occupancy === 'number'
+              ? r.occupancy > 0
+              : parseFloat(String(r.occupancy || 0)) > 0
+          ).length / data.length,
         weather: data.filter(r => r.weather).length / data.length,
-        temperature: data.filter(r => typeof r.temperature === 'number' ? r.temperature > 0 : parseFloat(String(r.temperature || 0)) > 0).length / data.length,
+        temperature:
+          data.filter(r =>
+            typeof r.temperature === 'number'
+              ? r.temperature > 0
+              : parseFloat(String(r.temperature || 0)) > 0
+          ).length / data.length,
       },
     },
   }

@@ -51,7 +51,7 @@ export const Modal = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
             onClick={onClose}
           />
 
@@ -63,21 +63,21 @@ export const Modal = ({
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
               className={clsx(
-                'bg-card border border-border rounded-2xl shadow-elevated w-full',
+                'w-full rounded-2xl border border-border bg-card shadow-elevated',
                 sizes[size]
               )}
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               {/* Header */}
               {(title || showCloseButton) && (
-                <div className="flex items-center justify-between p-6 border-b border-border">
+                <div className="flex items-center justify-between border-b border-border p-6">
                   {title && <h2 className="text-xl font-semibold text-text">{title}</h2>}
                   {showCloseButton && (
                     <button
                       onClick={onClose}
-                      className="p-2 hover:bg-elevated rounded-lg transition-colors ml-auto"
+                      className="ml-auto rounded-lg p-2 transition-colors hover:bg-elevated"
                     >
-                      <X className="w-5 h-5 text-muted" />
+                      <X className="h-5 w-5 text-muted" />
                     </button>
                   )}
                 </div>
@@ -99,7 +99,12 @@ Modal.Body = ({ children, className }: { children: ReactNode; className?: string
 )
 
 Modal.Footer = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <div className={clsx('flex items-center justify-end gap-3 pt-4 mt-6 border-t border-border', className)}>
+  <div
+    className={clsx(
+      'mt-6 flex items-center justify-end gap-3 border-t border-border pt-4',
+      className
+    )}
+  >
     {children}
   </div>
 )

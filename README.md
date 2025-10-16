@@ -110,6 +110,7 @@ The Dynamic Pricing Intelligence Platform (Jengu) is an enterprise-grade React +
 ### **Technology Stack**
 
 **Backend**:
+
 - Node.js 20+ with Express
 - Supabase JavaScript Client (REST API)
 - Axios (HTTP client)
@@ -117,6 +118,7 @@ The Dynamic Pricing Intelligence Platform (Jengu) is an enterprise-grade React +
 - Multer (file uploads)
 
 **Frontend**:
+
 - React 18 + TypeScript
 - Vite (build tool)
 - TailwindCSS + Framer Motion
@@ -124,11 +126,13 @@ The Dynamic Pricing Intelligence Platform (Jengu) is an enterprise-grade React +
 - Recharts (data visualization)
 
 **Database & Auth**:
+
 - Supabase PostgreSQL (managed database)
 - Supabase Auth (JWT authentication)
 - Row-Level Security (RLS policies)
 
 **External APIs**:
+
 - Open-Meteo (weather data)
 - OpenWeather (current/forecast)
 - Anthropic Claude (AI insights)
@@ -184,6 +188,7 @@ pnpm run dev
 ```
 
 **Backend Features**:
+
 - Supabase PostgreSQL with REST API
 - ML Analytics API (8 endpoints)
 - Claude AI integration
@@ -199,6 +204,7 @@ pnpm run dev
 ```
 
 **Frontend Features**:
+
 - React 18 with TypeScript
 - Supabase Auth integration
 - Vite for instant HMR
@@ -208,6 +214,7 @@ pnpm run dev
 - Protected routing
 
 **Access**:
+
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3001
 - Backend Health: http://localhost:3001/health
@@ -337,11 +344,13 @@ pnpm run type-check:backend
 ### **Endpoints**
 
 #### **Health Check**
+
 ```
 GET /health
 ```
 
 **Response**:
+
 ```json
 {
   "status": "healthy",
@@ -351,11 +360,13 @@ GET /health
 ```
 
 #### **Get Pricing Recommendation**
+
 ```
 POST /api/pricing/recommend
 ```
 
 **Request Body**:
+
 ```json
 {
   "property_id": "prop_123",
@@ -367,6 +378,7 @@ POST /api/pricing/recommend
 ```
 
 **Response**:
+
 ```json
 {
   "recommended_price": 350.0,
@@ -401,6 +413,7 @@ open htmlcov/index.html
 ### **CI/CD**
 
 Tests run automatically on:
+
 - Pull requests
 - Commits to main
 - Pre-deployment
@@ -445,13 +458,13 @@ If you see old/stale data in the UI:
 
 ### **Common Issues**
 
-| Issue | Solution |
-|-------|----------|
-| "Unauthorized" errors | Check Supabase credentials in `.env` files |
-| "Port already in use" | Kill existing Node process on that port |
-| "Old data showing" | Clear browser localStorage |
-| "Upload fails" | Check backend logs, verify `backend/uploads/` directory exists |
-| "Module not found" | Run `pnpm install` in affected workspace |
+| Issue                 | Solution                                                       |
+| --------------------- | -------------------------------------------------------------- |
+| "Unauthorized" errors | Check Supabase credentials in `.env` files                     |
+| "Port already in use" | Kill existing Node process on that port                        |
+| "Old data showing"    | Clear browser localStorage                                     |
+| "Upload fails"        | Check backend logs, verify `backend/uploads/` directory exists |
+| "Module not found"    | Run `pnpm install` in affected workspace                       |
 
 ### **Quick Commands**
 
@@ -582,12 +595,14 @@ Proprietary - All Rights Reserved
 ## 🎯 **Roadmap**
 
 ### **v2.1** (Next Release)
+
 - [ ] Real-time pricing API
 - [ ] Model retraining automation
 - [ ] Multi-property dashboard
 - [ ] Export reports (PDF/Excel)
 
 ### **v3.0** (Future)
+
 - [ ] Deep learning models (LSTM, Transformer)
 - [ ] A/B testing framework
 - [ ] Mobile app (React Native)

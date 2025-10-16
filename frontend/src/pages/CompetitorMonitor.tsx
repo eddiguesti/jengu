@@ -1,8 +1,15 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  TrendingUp, TrendingDown, AlertCircle, Database, Download,
-  RefreshCw, Clock, MapPin, Settings as SettingsIcon
+  TrendingUp,
+  TrendingDown,
+  AlertCircle,
+  Database,
+  Download,
+  RefreshCw,
+  Clock,
+  MapPin,
+  Settings as SettingsIcon,
 } from 'lucide-react'
 import { Card, Button, Badge, Progress } from '../components/ui'
 import { useNavigate } from 'react-router-dom'
@@ -48,14 +55,17 @@ export const CompetitorMonitor = () => {
       const checkOut = new Date(checkIn)
       checkOut.setDate(checkOut.getDate() + 1)
 
-      const results = await searchHotelsByCity({
-        city_id: '1', // Would map from location
-        check_in: checkIn.toISOString().split('T')[0],
-        check_out: checkOut.toISOString().split('T')[0],
-        guests: 2,
-        rooms: 1,
-        currency: profile?.currency || 'USD',
-      }, false) // Use cache
+      const results = await searchHotelsByCity(
+        {
+          city_id: '1', // Would map from location
+          check_in: checkIn.toISOString().split('T')[0],
+          check_out: checkOut.toISOString().split('T')[0],
+          guests: 2,
+          rooms: 1,
+          currency: profile?.currency || 'USD',
+        },
+        false
+      ) // Use cache
 
       setHotels(results)
       setCacheStats(getCacheStats())
@@ -92,14 +102,17 @@ export const CompetitorMonitor = () => {
       const checkOut = new Date(checkIn)
       checkOut.setDate(checkOut.getDate() + 1)
 
-      const results = await searchHotelsByCity({
-        city_id: '1', // Would map from location
-        check_in: checkIn.toISOString().split('T')[0],
-        check_out: checkOut.toISOString().split('T')[0],
-        guests: 2,
-        rooms: 1,
-        currency: profile?.currency || 'USD',
-      }, true) // Force refresh
+      const results = await searchHotelsByCity(
+        {
+          city_id: '1', // Would map from location
+          check_in: checkIn.toISOString().split('T')[0],
+          check_out: checkOut.toISOString().split('T')[0],
+          guests: 2,
+          rooms: 1,
+          currency: profile?.currency || 'USD',
+        },
+        true
+      ) // Force refresh
 
       setHotels(results)
       setRemainingCalls(getRemainingCalls())
@@ -135,32 +148,26 @@ export const CompetitorMonitor = () => {
       {/* Header */}
       <div>
         <h1 className="text-4xl font-bold text-text">Market Data Collection</h1>
-        <p className="text-muted mt-2">
+        <p className="mt-2 text-muted">
           Automatically collect competitor pricing for {profile?.location?.city || 'your location'}
         </p>
       </div>
 
       {/* Location Status */}
       {!hasLocation ? (
-        <Card variant="elevated" className="bg-warning/5 border-warning/20">
+        <Card variant="elevated" className="border-warning/20 bg-warning/5">
           <Card.Body className="flex items-start gap-4">
-            <div className="p-3 bg-warning/10 rounded-lg flex-shrink-0">
-              <MapPin className="w-6 h-6 text-warning" />
+            <div className="flex-shrink-0 rounded-lg bg-warning/10 p-3">
+              <MapPin className="h-6 w-6 text-warning" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-text mb-1">
-                Location Required
-              </h3>
-              <p className="text-sm text-muted mb-3">
-                Configure your business location in Settings to automatically collect
-                competitor pricing data for your market.
+              <h3 className="mb-1 text-lg font-semibold text-text">Location Required</h3>
+              <p className="mb-3 text-sm text-muted">
+                Configure your business location in Settings to automatically collect competitor
+                pricing data for your market.
               </p>
-              <Button
-                variant="warning"
-                size="sm"
-                onClick={() => navigate('/settings')}
-              >
-                <SettingsIcon className="w-4 h-4 mr-2" />
+              <Button variant="warning" size="sm" onClick={() => navigate('/settings')}>
+                <SettingsIcon className="mr-2 h-4 w-4" />
                 Go to Settings
               </Button>
             </div>
@@ -170,8 +177,8 @@ export const CompetitorMonitor = () => {
         <Card variant="default">
           <Card.Body>
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-success/10 rounded-lg">
-                <MapPin className="w-6 h-6 text-success" />
+              <div className="rounded-lg bg-success/10 p-3">
+                <MapPin className="h-6 w-6 text-success" />
               </div>
               <div>
                 <p className="text-sm text-muted">Monitoring Location</p>
@@ -185,10 +192,10 @@ export const CompetitorMonitor = () => {
       )}
 
       {/* API Usage */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card variant="default">
           <Card.Body>
-            <div className="flex items-center justify-between mb-2">
+            <div className="mb-2 flex items-center justify-between">
               <span className="text-sm text-muted">API Calls Remaining</span>
               <span className="text-2xl font-bold text-primary">{remainingCalls}/30</span>
             </div>
@@ -199,7 +206,7 @@ export const CompetitorMonitor = () => {
         <Card variant="default">
           <Card.Body>
             <div className="flex items-center gap-3">
-              <Database className="w-5 h-5 text-success" />
+              <Database className="h-5 w-5 text-success" />
               <div>
                 <p className="text-sm text-muted">Hotels Tracked</p>
                 <p className="text-2xl font-bold text-text">{cacheStats.total_histories}</p>
@@ -211,7 +218,7 @@ export const CompetitorMonitor = () => {
         <Card variant="default">
           <Card.Body>
             <div className="flex items-center gap-3">
-              <Clock className="w-5 h-5 text-info" />
+              <Clock className="text-info h-5 w-5" />
               <div>
                 <p className="text-sm text-muted">Cache Size</p>
                 <p className="text-2xl font-bold text-text">{cacheStats.cache_size_kb} KB</p>
@@ -225,27 +232,28 @@ export const CompetitorMonitor = () => {
       <Card variant="default">
         <Card.Header>
           <h2 className="text-xl font-semibold text-text">Collect Competitor Data</h2>
-          <p className="text-sm text-muted mt-1">
+          <p className="mt-1 text-sm text-muted">
             Choose Historical (free, cached) or Live (uses 1 API call, real-time)
           </p>
         </Card.Header>
         <Card.Body>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Historical Data */}
-            <Card variant="elevated" className={clsx(
-              'cursor-pointer transition-all',
-              dataType === 'historical' && 'ring-2 ring-success'
-            )}>
+            <Card
+              variant="elevated"
+              className={clsx(
+                'cursor-pointer transition-all',
+                dataType === 'historical' && 'ring-2 ring-success'
+              )}
+            >
               <Card.Body onClick={fetchHistoricalData}>
                 <div className="flex items-start gap-4">
-                  <div className="p-4 bg-success/10 rounded-xl">
-                    <Database className="w-8 h-8 text-success" />
+                  <div className="rounded-xl bg-success/10 p-4">
+                    <Database className="h-8 w-8 text-success" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-text mb-1">
-                      Historical Data
-                    </h3>
-                    <p className="text-sm text-muted mb-3">
+                    <h3 className="mb-1 text-lg font-semibold text-text">Historical Data</h3>
+                    <p className="mb-3 text-sm text-muted">
                       Use cached competitor prices. No API calls used.
                     </p>
                     <Badge variant="success">FREE - No API Call</Badge>
@@ -254,18 +262,18 @@ export const CompetitorMonitor = () => {
                 <Button
                   variant="secondary"
                   size="md"
-                  className="w-full mt-4"
+                  className="mt-4 w-full"
                   onClick={fetchHistoricalData}
                   disabled={isLoading || !hasLocation}
                 >
                   {isLoading && dataType === 'historical' ? (
                     <>
-                      <RefreshCw className="w-5 h-5 animate-spin mr-2" />
+                      <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
                       Loading...
                     </>
                   ) : (
                     <>
-                      <Database className="w-5 h-5 mr-2" />
+                      <Database className="mr-2 h-5 w-5" />
                       Load Historical Data
                     </>
                   )}
@@ -274,21 +282,22 @@ export const CompetitorMonitor = () => {
             </Card>
 
             {/* Live Data */}
-            <Card variant="elevated" className={clsx(
-              'cursor-pointer transition-all',
-              dataType === 'live' && 'ring-2 ring-primary',
-              remainingCalls === 0 && 'opacity-50'
-            )}>
+            <Card
+              variant="elevated"
+              className={clsx(
+                'cursor-pointer transition-all',
+                dataType === 'live' && 'ring-2 ring-primary',
+                remainingCalls === 0 && 'opacity-50'
+              )}
+            >
               <Card.Body onClick={remainingCalls > 0 ? fetchLiveData : undefined}>
                 <div className="flex items-start gap-4">
-                  <div className="p-4 bg-primary/10 rounded-xl">
-                    <RefreshCw className="w-8 h-8 text-primary" />
+                  <div className="rounded-xl bg-primary/10 p-4">
+                    <RefreshCw className="h-8 w-8 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-text mb-1">
-                      Live Data
-                    </h3>
-                    <p className="text-sm text-muted mb-3">
+                    <h3 className="mb-1 text-lg font-semibold text-text">Live Data</h3>
+                    <p className="mb-3 text-sm text-muted">
                       Fetch real-time competitor prices. Uses 1 API call.
                     </p>
                     <Badge variant="warning">Uses 1 API Call</Badge>
@@ -297,18 +306,18 @@ export const CompetitorMonitor = () => {
                 <Button
                   variant="primary"
                   size="md"
-                  className="w-full mt-4"
+                  className="mt-4 w-full"
                   onClick={fetchLiveData}
                   disabled={isLoading || !hasLocation || remainingCalls === 0}
                 >
                   {isLoading && dataType === 'live' ? (
                     <>
-                      <RefreshCw className="w-5 h-5 animate-spin mr-2" />
+                      <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
                       Fetching...
                     </>
                   ) : (
                     <>
-                      <RefreshCw className="w-5 h-5 mr-2" />
+                      <RefreshCw className="mr-2 h-5 w-5" />
                       Fetch Live Data ({remainingCalls} calls left)
                     </>
                   )}
@@ -318,8 +327,8 @@ export const CompetitorMonitor = () => {
           </div>
 
           {error && (
-            <div className="mt-4 p-4 bg-error/10 border border-error/20 rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
+            <div className="mt-4 flex items-start gap-3 rounded-lg border border-error/20 bg-error/10 p-4">
+              <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-error" />
               <p className="text-sm text-error">{error}</p>
             </div>
           )}
@@ -327,10 +336,11 @@ export const CompetitorMonitor = () => {
           {hotels.length > 0 && (
             <div className="mt-4 flex items-center justify-between">
               <p className="text-sm text-muted">
-                {hotels.length} hotels loaded from {dataType === 'historical' ? 'cache' : 'live API'}
+                {hotels.length} hotels loaded from{' '}
+                {dataType === 'historical' ? 'cache' : 'live API'}
               </p>
               <Button variant="ghost" size="sm" onClick={handleExportData}>
-                <Download className="w-4 h-4 mr-2" />
+                <Download className="mr-2 h-4 w-4" />
                 Export Data
               </Button>
             </div>
@@ -361,15 +371,17 @@ export const CompetitorMonitor = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="p-4 bg-elevated border border-border rounded-lg hover:border-primary/50 transition-colors"
+                    className="rounded-lg border border-border bg-elevated p-4 transition-colors hover:border-primary/50"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-text mb-1">{hotel.hotel_name}</h3>
+                        <h3 className="mb-1 text-lg font-semibold text-text">{hotel.hotel_name}</h3>
                         <div className="flex items-center gap-4 text-sm text-muted">
                           <span>{hotel.city_name}</span>
                           {hasHistory && (
-                            <Badge variant="info" size="sm">{trend.data_points} records</Badge>
+                            <Badge variant="info" size="sm">
+                              {trend.data_points} records
+                            </Badge>
                           )}
                         </div>
                       </div>
@@ -378,14 +390,16 @@ export const CompetitorMonitor = () => {
                           {hotel.currency} {hotel.price.toFixed(2)}
                         </div>
                         {hasHistory && (
-                          <div className={clsx(
-                            'text-sm flex items-center justify-end gap-1 mt-1',
-                            trend.price_change_percent > 0 ? 'text-error' : 'text-success'
-                          )}>
+                          <div
+                            className={clsx(
+                              'mt-1 flex items-center justify-end gap-1 text-sm',
+                              trend.price_change_percent > 0 ? 'text-error' : 'text-success'
+                            )}
+                          >
                             {trend.price_change_percent > 0 ? (
-                              <TrendingUp className="w-4 h-4" />
+                              <TrendingUp className="h-4 w-4" />
                             ) : (
-                              <TrendingDown className="w-4 h-4" />
+                              <TrendingDown className="h-4 w-4" />
                             )}
                             {Math.abs(trend.price_change_percent).toFixed(1)}%
                           </div>
@@ -401,20 +415,28 @@ export const CompetitorMonitor = () => {
       )}
 
       {/* Info Card */}
-      <Card variant="elevated" className="bg-gradient-to-r from-primary/5 to-transparent border-l-4 border-primary">
+      <Card
+        variant="elevated"
+        className="border-l-4 border-primary bg-gradient-to-r from-primary/5 to-transparent"
+      >
         <Card.Body>
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-primary/10 rounded-lg flex-shrink-0">
-              <AlertCircle className="w-6 h-6 text-primary" />
+            <div className="flex-shrink-0 rounded-lg bg-primary/10 p-3">
+              <AlertCircle className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-text mb-2">
-                How Market Data Works
-              </h3>
+              <h3 className="mb-2 text-lg font-semibold text-text">How Market Data Works</h3>
               <ul className="space-y-2 text-sm text-muted">
-                <li>• <strong>Historical Data</strong>: Loads previously fetched prices from cache (free)</li>
-                <li>• <strong>Live Data</strong>: Fetches real-time prices using 1 API call</li>
-                <li>• All data is automatically saved and used in Insights and Pricing Optimizer</li>
+                <li>
+                  • <strong>Historical Data</strong>: Loads previously fetched prices from cache
+                  (free)
+                </li>
+                <li>
+                  • <strong>Live Data</strong>: Fetches real-time prices using 1 API call
+                </li>
+                <li>
+                  • All data is automatically saved and used in Insights and Pricing Optimizer
+                </li>
                 <li>• You have {remainingCalls} API calls remaining out of 30</li>
               </ul>
             </div>

@@ -26,19 +26,19 @@ export function calculateMarketSentiment(params: {
 
   // Weighted average of all factors
   const weights = {
-    weather: 0.20,      // 20% - Weather conditions
-    occupancy: 0.30,    // 30% - Current occupancy levels
-    competitor: 0.25,   // 25% - Competitor pricing position
-    demand: 0.15,       // 15% - Demand trend
-    seasonal: 0.10,     // 10% - Seasonal patterns
+    weather: 0.2, // 20% - Weather conditions
+    occupancy: 0.3, // 30% - Current occupancy levels
+    competitor: 0.25, // 25% - Competitor pricing position
+    demand: 0.15, // 15% - Demand trend
+    seasonal: 0.1, // 10% - Seasonal patterns
   }
 
   const sentiment = Math.round(
     weatherScore * weights.weather +
-    occupancyScore * weights.occupancy +
-    competitorScore * weights.competitor +
-    demandTrend * weights.demand +
-    seasonalFactor * weights.seasonal
+      occupancyScore * weights.occupancy +
+      competitorScore * weights.competitor +
+      demandTrend * weights.demand +
+      seasonalFactor * weights.seasonal
   )
 
   return Math.max(0, Math.min(100, sentiment))
@@ -114,10 +114,10 @@ export function competitorPricingToSentiment(yourPrice: number, competitorAvg: n
   // If you're more expensive = risk = negative
 
   if (diff < -15) return 70 // Much cheaper - opportunity
-  if (diff < -5) return 60  // Slightly cheaper - good position
-  if (diff < 5) return 50   // Similar pricing - neutral
-  if (diff < 15) return 40  // Slightly expensive - caution
-  return 30                  // Much expensive - risk
+  if (diff < -5) return 60 // Slightly cheaper - good position
+  if (diff < 5) return 50 // Similar pricing - neutral
+  if (diff < 15) return 40 // Slightly expensive - caution
+  return 30 // Much expensive - risk
 }
 
 /**
@@ -154,13 +154,7 @@ export function calculateDemandTrend(historicalOccupancy: number[]): number {
  * Generate comprehensive market sentiment analysis
  */
 export function analyzeMarketSentiment(data: any): unknown {
-  const {
-    weatherData,
-    occupancyData,
-    competitorData,
-    yourPricing,
-    historicalTrends,
-  } = data
+  const { weatherData, occupancyData, competitorData, yourPricing, historicalTrends } = data
 
   // Calculate individual scores
   const weatherScore = weatherToSentiment(weatherData || {})
@@ -173,9 +167,7 @@ export function analyzeMarketSentiment(data: any): unknown {
     competitorData?.average
   )
 
-  const demandTrend = calculateDemandTrend(
-    historicalTrends?.occupancy || []
-  )
+  const demandTrend = calculateDemandTrend(historicalTrends?.occupancy || [])
 
   // Seasonal factor (simplified - could be enhanced with actual seasonal data)
   const currentMonth = new Date().getMonth()
@@ -251,7 +243,12 @@ Demand Forecast:
 - Model Error (MAPE): ${demandForecast?.accuracy?.mape || 'N/A'}%
 
 Top Feature Importance:
-${featureImportance?.slice(0, 3).map((f: any) => `- ${f.feature}: ${f.importance}% importance`).join('\n') || 'N/A'}
+${
+  featureImportance
+    ?.slice(0, 3)
+    .map((f: any) => `- ${f.feature}: ${f.importance}% importance`)
+    .join('\n') || 'N/A'
+}
 `
 
   const prompt = `You are a pricing strategy expert analyzing hotel/accommodation pricing data.
@@ -286,13 +283,21 @@ Format each insight as a bullet point starting with a category emoji (📊 📈 
           'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
         },
-        timeout: 30000 // 30 second timeout
+        timeout: 30000, // 30 second timeout
       }
     )
 
     const insights = response.data.content[0].text
       .split('\n')
-      .filter((line: string) => line.trim().length > 0 && (line.includes('📊') || line.includes('📈') || line.includes('📉') || line.includes('⚡') || line.includes('💡')))
+      .filter(
+        (line: string) =>
+          line.trim().length > 0 &&
+          (line.includes('📊') ||
+            line.includes('📈') ||
+            line.includes('📉') ||
+            line.includes('⚡') ||
+            line.includes('💡'))
+      )
 
     return {
       summary: response.data.content[0].text,
@@ -300,9 +305,9 @@ Format each insight as a bullet point starting with a category emoji (📊 📈 
       generatedAt: new Date().toISOString(),
     }
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorData = (error as any)?.response?.data;
-    console.error('Claude API Error:', errorData || errorMessage);
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorData = (error as any)?.response?.data
+    console.error('Claude API Error:', errorData || errorMessage)
     return {
       summary: 'Unable to generate AI insights at this time.',
       insights: [
@@ -318,7 +323,10 @@ Format each insight as a bullet point starting with a category emoji (📊 📈 
 /**
  * Generate pricing recommendations based on market sentiment
  */
-export function generatePricingRecommendations(sentimentAnalysis: any, currentPrice: number): unknown[] {
+export function generatePricingRecommendations(
+  sentimentAnalysis: any,
+  currentPrice: number
+): unknown[] {
   const { overallScore, components } = sentimentAnalysis
 
   const recommendations = []
@@ -343,7 +351,7 @@ export function generatePricingRecommendations(sentimentAnalysis: any, currentPr
       confidence: 'medium',
     })
   } else if (overallScore < 40) {
-    const decrease = Math.round(currentPrice * 0.10)
+    const decrease = Math.round(currentPrice * 0.1)
     recommendations.push({
       action: 'decrease',
       amount: decrease,
@@ -373,7 +381,8 @@ export function generatePricingRecommendations(sentimentAnalysis: any, currentPr
   if (components.competitor.score <= 35) {
     recommendations.push({
       type: 'competitor',
-      message: 'Your prices are significantly higher than competitors - monitor for occupancy impact',
+      message:
+        'Your prices are significantly higher than competitors - monitor for occupancy impact',
       action: 'review',
     })
   }

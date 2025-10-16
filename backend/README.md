@@ -53,16 +53,19 @@ MAX_REQUESTS_PER_MINUTE=60
 ### 3. Start the Server
 
 **Development mode** (with auto-reload):
+
 ```bash
 npm run dev
 ```
 
 **Production mode**:
+
 ```bash
 npm start
 ```
 
 You should see:
+
 ```
 🚀 Jengu Backend API Server
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -75,6 +78,7 @@ You should see:
 ## API Endpoints
 
 ### Health Check
+
 ```
 GET /health
 ```
@@ -82,6 +86,7 @@ GET /health
 Returns server status and timestamp.
 
 ### AI Assistant (Anthropic Claude)
+
 ```
 POST /api/assistant/message
 Content-Type: application/json
@@ -97,6 +102,7 @@ Content-Type: application/json
 ```
 
 ### Weather Data (OpenWeatherMap)
+
 ```
 POST /api/weather/historical
 Content-Type: application/json
@@ -109,6 +115,7 @@ Content-Type: application/json
 ```
 
 ### Holidays (Calendarific)
+
 ```
 GET /api/holidays?country=FR&year=2024
 ```
@@ -116,16 +123,19 @@ GET /api/holidays?country=FR&year=2024
 ### Geocoding (Mapbox)
 
 Forward geocoding:
+
 ```
 GET /api/geocoding/forward?address=Nice, France
 ```
 
 Reverse geocoding:
+
 ```
 GET /api/geocoding/reverse?latitude=43.7102&longitude=7.2620
 ```
 
 ### Competitor Scraping (ScraperAPI)
+
 ```
 POST /api/competitor/scrape
 Content-Type: application/json
@@ -136,6 +146,7 @@ Content-Type: application/json
 ```
 
 ### Hotel Search (Makcorps)
+
 ```
 POST /api/hotels/search
 Content-Type: application/json
@@ -153,6 +164,7 @@ Content-Type: application/json
 ## Security Best Practices
 
 ### Development
+
 - ✅ API keys in `.env` file (gitignored)
 - ✅ CORS limited to frontend URL
 - ✅ Rate limiting enabled
@@ -161,11 +173,13 @@ Content-Type: application/json
 ### Production Deployment
 
 **Option 1: Deploy to Vercel/Netlify Serverless Functions**
+
 - Export functions from `server.js`
 - Configure environment variables in hosting dashboard
 - Deploy with automatic CI/CD
 
 **Option 2: Deploy to Railway/Render/Heroku**
+
 1. Push code to GitHub
 2. Connect repository to hosting platform
 3. Set environment variables in dashboard:
@@ -179,6 +193,7 @@ Content-Type: application/json
 4. Deploy!
 
 **Option 3: VPS (AWS, DigitalOcean, etc.)**
+
 1. SSH into server
 2. Install Node.js: `curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs`
 3. Clone repository
@@ -198,6 +213,7 @@ Content-Type: application/json
 Default: 60 requests per minute per IP address.
 
 To change, update `MAX_REQUESTS_PER_MINUTE` in `.env`:
+
 ```env
 MAX_REQUESTS_PER_MINUTE=100
 ```
@@ -211,19 +227,20 @@ FRONTEND_URL=https://your-production-frontend.com
 ```
 
 For multiple origins, edit `server.js`:
+
 ```javascript
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://your-production-frontend.com'
-  ],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: ['http://localhost:5173', 'https://your-production-frontend.com'],
+    credentials: true,
+  })
+)
 ```
 
 ## Monitoring & Logs
 
 All errors are logged to console. In production, consider adding:
+
 - **Winston** for structured logging
 - **Sentry** for error tracking
 - **New Relic** or **Datadog** for performance monitoring
@@ -231,11 +248,13 @@ All errors are logged to console. In production, consider adding:
 ## Testing
 
 Test the server is running:
+
 ```bash
 curl http://localhost:3001/health
 ```
 
 Expected response:
+
 ```json
 {
   "status": "ok",
@@ -247,35 +266,39 @@ Expected response:
 ## Troubleshooting
 
 **Problem: "EADDRINUSE" error**
+
 - Port 3001 is already in use
 - Solution: Change `PORT` in `.env` or kill the process using port 3001
 
 **Problem: "API key invalid" errors**
+
 - Check `.env` file has correct API keys
 - Restart server after changing `.env`
 
 **Problem: CORS errors in frontend**
+
 - Verify `FRONTEND_URL` matches your frontend URL exactly
 - Include protocol (http:// or https://)
 
 **Problem: Rate limit too restrictive**
+
 - Increase `MAX_REQUESTS_PER_MINUTE` in `.env`
 - Restart server
 
 ## Environment Variables Reference
 
-| Variable | Required | Description | Example |
-|----------|----------|-------------|---------|
-| `PORT` | No | Server port | `3001` |
-| `NODE_ENV` | No | Environment | `development` or `production` |
-| `FRONTEND_URL` | Yes | Frontend URL for CORS | `http://localhost:5173` |
-| `ANTHROPIC_API_KEY` | Yes | Claude AI API key | `sk-ant-...` |
-| `OPENWEATHER_API_KEY` | Yes | Weather data key | `abc123...` |
-| `CALENDARIFIC_API_KEY` | Yes | Holiday API key | `abc123...` |
-| `SCRAPERAPI_KEY` | Yes | Web scraping key | `abc123...` |
-| `MAPBOX_TOKEN` | Yes | Geocoding token | `pk.abc123...` |
-| `MAKCORPS_API_KEY` | Yes | Hotel prices key | `68ed86...` |
-| `MAX_REQUESTS_PER_MINUTE` | No | Rate limit | `60` |
+| Variable                  | Required | Description           | Example                       |
+| ------------------------- | -------- | --------------------- | ----------------------------- |
+| `PORT`                    | No       | Server port           | `3001`                        |
+| `NODE_ENV`                | No       | Environment           | `development` or `production` |
+| `FRONTEND_URL`            | Yes      | Frontend URL for CORS | `http://localhost:5173`       |
+| `ANTHROPIC_API_KEY`       | Yes      | Claude AI API key     | `sk-ant-...`                  |
+| `OPENWEATHER_API_KEY`     | Yes      | Weather data key      | `abc123...`                   |
+| `CALENDARIFIC_API_KEY`    | Yes      | Holiday API key       | `abc123...`                   |
+| `SCRAPERAPI_KEY`          | Yes      | Web scraping key      | `abc123...`                   |
+| `MAPBOX_TOKEN`            | Yes      | Geocoding token       | `pk.abc123...`                |
+| `MAKCORPS_API_KEY`        | Yes      | Hotel prices key      | `68ed86...`                   |
+| `MAX_REQUESTS_PER_MINUTE` | No       | Rate limit            | `60`                          |
 
 ## License
 

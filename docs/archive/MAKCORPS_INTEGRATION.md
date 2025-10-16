@@ -12,24 +12,28 @@ The Makcorps Hotel API integration provides **real-time hotel pricing data** wit
 ## 🚀 Key Features
 
 ### 1. **Intelligent Caching System**
+
 - ✅ Every API call is automatically cached to localStorage
 - ✅ Cache expires after 24 hours
 - ✅ Search cached data without using API calls
 - ✅ Force refresh option when needed
 
 ### 2. **Historical Price Database**
+
 - ✅ Automatically builds database of historical prices
 - ✅ Track price trends over time
 - ✅ Compare prices across dates
 - ✅ Export all data for analysis
 
 ### 3. **API Call Management**
+
 - ✅ Real-time API call counter (30 calls limit)
 - ✅ Warning when calls are running low
 - ✅ Cache-first strategy to preserve calls
 - ✅ Visual progress tracking
 
 ### 4. **Price Analytics**
+
 - ✅ Price trend visualization
 - ✅ Average, min, max price calculations
 - ✅ Price change percentage tracking
@@ -64,6 +68,7 @@ getCacheStats(): CacheStats
 ```
 
 **Key Features:**
+
 - 600+ lines of production code
 - Automatic caching on every API call
 - Historical price tracking per hotel
@@ -74,6 +79,7 @@ getCacheStats(): CacheStats
 ### 2. **UI Component** - [frontend/src/pages/CompetitorMonitor.tsx](frontend/src/pages/CompetitorMonitor.tsx)
 
 **Features:**
+
 - Search hotel prices by city
 - Real-time API usage tracking
 - Cache statistics dashboard
@@ -99,11 +105,13 @@ Navigate to **Competitor Monitor** in the sidebar or visit `/competitor-monitor`
 ### Step 3: Choose Search Mode
 
 **Option A: Search (Use Cache)** ✅ Recommended
+
 - Uses cached data if available
 - No API call used
 - Returns instantly
 
 **Option B: Force Refresh** ⚠️ Use sparingly
+
 - Always makes API call
 - Uses 1 of 30 calls
 - Gets latest data
@@ -118,6 +126,7 @@ Navigate to **Competitor Monitor** in the sidebar or visit `/competitor-monitor`
 ### Step 5: Analyze Price History
 
 Price history modal shows:
+
 - Current vs. average price
 - Price range (min-max)
 - Price change percentage
@@ -127,6 +136,7 @@ Price history modal shows:
 ### Step 6: Export Data
 
 Click **"Export All Data"** to download:
+
 - All hotel search results
 - Complete price histories
 - API usage statistics
@@ -139,12 +149,14 @@ Click **"Export All Data"** to download:
 ### Maximize Your 30 Calls
 
 **1. Use Cache First (90% of searches)**
+
 ```typescript
 // This checks cache first, NO API call if found
 await searchHotelsByCity(params, false)
 ```
 
 **2. Force Refresh Only When Needed**
+
 ```typescript
 // Only use when absolutely need fresh data
 await searchHotelsByCity(params, true)
@@ -152,15 +164,16 @@ await searchHotelsByCity(params, true)
 
 **3. Strategic Call Planning**
 
-| Use Case | API Calls | Strategy |
-|----------|-----------|----------|
-| Initial city search | 1 call | Force refresh to get initial data |
-| Same search next hour | 0 calls | Use cache |
-| New city/dates | 1 call | Force refresh |
-| Checking cached city | 0 calls | Use cache |
-| Weekly price check | ~5 calls | One per city you monitor |
+| Use Case              | API Calls | Strategy                          |
+| --------------------- | --------- | --------------------------------- |
+| Initial city search   | 1 call    | Force refresh to get initial data |
+| Same search next hour | 0 calls   | Use cache                         |
+| New city/dates        | 1 call    | Force refresh                     |
+| Checking cached city  | 0 calls   | Use cache                         |
+| Weekly price check    | ~5 calls  | One per city you monitor          |
 
 **Recommendation**:
+
 - Use 5-10 calls for initial setup (different cities/dates)
 - Save remaining 20-25 calls for weekly price checks
 - Always try cache first!
@@ -172,16 +185,19 @@ await searchHotelsByCity(params, true)
 ### LocalStorage Schema
 
 **Cache Keys:**
+
 ```
 makcorps_hotel_prices_{city_id}_{check_in}_{check_out}_{guests}_{rooms}
 ```
 
 **History Keys:**
+
 ```
 makcorps_history_{hotel_id}
 ```
 
 **Counter Key:**
+
 ```
 makcorps_api_calls_count
 ```
@@ -240,11 +256,13 @@ makcorps_api_calls_count
 ## 🔍 Search Parameters
 
 ### Required
+
 - `city_id` - City identifier from Makcorps (e.g., "1", "paris", etc.)
 - `check_in` - Date in YYYY-MM-DD format
 - `check_out` - Date in YYYY-MM-DD format
 
 ### Optional
+
 - `guests` - Number of guests (default: 2)
 - `rooms` - Number of rooms (default: 1)
 - `currency` - USD, EUR, GBP, CAD (default: USD)
@@ -258,7 +276,7 @@ const params = {
   check_out: '2024-12-05',
   guests: 2,
   rooms: 1,
-  currency: 'USD'
+  currency: 'USD',
 }
 
 const hotels = await searchHotelsByCity(params)
@@ -414,7 +432,7 @@ const data = exportAllData()
       "hotel_id": "hotel123",
       "hotel_name": "Grand Hotel Paris",
       "city_id": "paris",
-      "price": 150.00,
+      "price": 150.0,
       "currency": "USD",
       "check_in": "2024-12-01",
       "check_out": "2024-12-05",
@@ -431,13 +449,13 @@ const data = exportAllData()
       "hotel_name": "Grand Hotel Paris",
       "prices": [
         {
-          "price": 145.00,
+          "price": 145.0,
           "check_in": "2024-12-01",
           "check_out": "2024-12-05",
           "fetched_at": "2024-11-17T10:30:00Z"
         },
         {
-          "price": 150.00,
+          "price": 150.0,
           "check_in": "2024-12-01",
           "check_out": "2024-12-05",
           "fetched_at": "2024-11-24T10:30:00Z"
@@ -492,26 +510,31 @@ console.log(`Tracking ${allHistories.length} hotels`)
 ## 🎯 Best Practices
 
 ### 1. **Plan Your Searches**
+
 - Decide which cities to monitor before searching
 - Use force refresh sparingly
 - Check cache first always
 
 ### 2. **Monitor API Usage**
+
 - Watch the counter in the UI
 - Get warnings when <5 calls remain
 - Export data regularly
 
 ### 3. **Build Historical Database**
+
 - Search same cities weekly
 - Build 4-8 weeks of price history
 - Use data for trend analysis
 
 ### 4. **Export and Backup**
+
 - Export data monthly
 - Import into Excel/Python for analysis
 - Keep backups of historical data
 
 ### 5. **Cache Strategy**
+
 - Use cache for demonstrations
 - Use cache when showing clients
 - Only force refresh for fresh pricing data

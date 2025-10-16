@@ -20,20 +20,14 @@ export interface EnrichmentStatusResponse {
 }
 
 // Start enrichment process
-export const startEnrichment = async (
-  request: EnrichmentRequest
-): Promise<EnrichmentResponse> => {
+export const startEnrichment = async (request: EnrichmentRequest): Promise<EnrichmentResponse> => {
   const response = await apiClient.post<EnrichmentResponse>('/enrichment/start', request)
   return response.data
 }
 
 // Get enrichment job status
-export const getEnrichmentStatus = async (
-  jobId: string
-): Promise<EnrichmentStatusResponse> => {
-  const response = await apiClient.get<EnrichmentStatusResponse>(
-    `/enrichment/status/${jobId}`
-  )
+export const getEnrichmentStatus = async (jobId: string): Promise<EnrichmentStatusResponse> => {
+  const response = await apiClient.get<EnrichmentStatusResponse>(`/enrichment/status/${jobId}`)
   return response.data
 }
 

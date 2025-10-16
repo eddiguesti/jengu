@@ -3,6 +3,7 @@
 ## Quick Start
 
 ### 1. Install Dependencies
+
 ```bash
 # Install pnpm globally (if not installed)
 npm install -g pnpm
@@ -15,12 +16,14 @@ pnpm install
 ### 2. Start Development Servers
 
 #### Option A: Start Both Servers (Recommended)
+
 ```bash
 # Use the startup script
 ./start.sh
 ```
 
 #### Option B: Start Manually
+
 ```bash
 # Terminal 1 - Backend
 cd backend
@@ -32,6 +35,7 @@ pnpm run dev
 ```
 
 ### 3. Access Application
+
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:3001
 
@@ -40,6 +44,7 @@ pnpm run dev
 ## Features
 
 ### Core Features
+
 ✅ **ML Analytics** - Statistical analysis with ML algorithms
 ✅ **AI Insights** - Claude 3.5 Sonnet integration
 ✅ **Market Sentiment** - 0-100 scoring system
@@ -48,6 +53,7 @@ pnpm run dev
 ✅ **Competitor Monitoring** - Price tracking
 
 ### Pages
+
 - **Dashboard** - Overview and key metrics
 - **Data Management** - Upload and enrich data
 - **Insights** - ML analytics and AI insights
@@ -60,6 +66,7 @@ pnpm run dev
 ## Tech Stack
 
 ### Frontend
+
 - React 18 + TypeScript
 - Vite (dev server)
 - Tailwind CSS
@@ -69,6 +76,7 @@ pnpm run dev
 - Axios (HTTP client)
 
 ### Backend
+
 - Node.js + Express
 - ML Analytics (custom algorithms)
 - Claude AI integration
@@ -109,6 +117,7 @@ travel-pricing/
 ## Environment Variables
 
 ### Backend (.env)
+
 ```env
 PORT=3001
 NODE_ENV=development
@@ -116,7 +125,9 @@ ANTHROPIC_API_KEY=your_key_here
 ```
 
 ### Frontend
+
 Uses environment variables from Vite:
+
 - `VITE_API_URL` - Backend API URL (default: http://localhost:3001)
 
 ---
@@ -124,6 +135,7 @@ Uses environment variables from Vite:
 ## Common Commands
 
 ### Install Dependencies
+
 ```bash
 pnpm install                # Install all
 pnpm install --filter backend   # Backend only
@@ -131,12 +143,14 @@ pnpm install --filter frontend  # Frontend only
 ```
 
 ### Development
+
 ```bash
 pnpm --filter backend run dev
 pnpm --filter frontend run dev
 ```
 
 ### Build for Production
+
 ```bash
 cd frontend
 pnpm run build
@@ -144,6 +158,7 @@ pnpm run preview  # Preview production build
 ```
 
 ### Update Dependencies
+
 ```bash
 pnpm update                 # Update all
 pnpm update axios           # Update specific package
@@ -155,6 +170,7 @@ pnpm update --latest        # Update to latest (including major)
 ## Troubleshooting
 
 ### Port Already in Use
+
 ```bash
 # Kill all node processes
 taskkill /F /IM node.exe    # Windows
@@ -162,11 +178,13 @@ killall node                # Mac/Linux
 ```
 
 ### pnpm Not Found
+
 ```bash
 npm install -g pnpm
 ```
 
 ### Module Not Found Errors
+
 ```bash
 # Clean install
 rm -rf node_modules backend/node_modules frontend/node_modules
@@ -175,6 +193,7 @@ pnpm install
 ```
 
 ### CORS Errors
+
 - Backend must be running on port 3001
 - Frontend connects to http://localhost:3001
 - Check backend console for error messages
@@ -184,11 +203,13 @@ pnpm install
 ## API Endpoints
 
 ### Health Check
+
 ```
 GET /health
 ```
 
 ### ML Analytics
+
 ```
 POST /api/analytics/summary
 POST /api/analytics/weather-impact
@@ -199,6 +220,7 @@ POST /api/analytics/pricing-recommendations
 ```
 
 ### Data Services
+
 ```
 POST /api/weather/historical
 GET  /api/weather/current

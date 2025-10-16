@@ -59,14 +59,14 @@ function processUploadedData(data: any[]): Partial<InsightData> {
   }
 
   // Group by day of week
-  const dayGroups: Record<string, { prices: number[], occupancies: number[] }> = {
-    'Mon': { prices: [], occupancies: [] },
-    'Tue': { prices: [], occupancies: [] },
-    'Wed': { prices: [], occupancies: [] },
-    'Thu': { prices: [], occupancies: [] },
-    'Fri': { prices: [], occupancies: [] },
-    'Sat': { prices: [], occupancies: [] },
-    'Sun': { prices: [], occupancies: [] },
+  const dayGroups: Record<string, { prices: number[]; occupancies: number[] }> = {
+    Mon: { prices: [], occupancies: [] },
+    Tue: { prices: [], occupancies: [] },
+    Wed: { prices: [], occupancies: [] },
+    Thu: { prices: [], occupancies: [] },
+    Fri: { prices: [], occupancies: [] },
+    Sat: { prices: [], occupancies: [] },
+    Sun: { prices: [], occupancies: [] },
   }
 
   data.forEach(row => {
@@ -75,9 +75,7 @@ function processUploadedData(data: any[]): Partial<InsightData> {
     const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
 
     // Extract price (try various column names)
-    const price = parseFloat(
-      row.price || row.rate || row.daily_rate || row.room_price || 0
-    )
+    const price = parseFloat(row.price || row.rate || row.daily_rate || row.room_price || 0)
 
     // Extract occupancy (try various formats)
     let occupancy = parseFloat(row.occupancy || row.occupancy_rate || 0)
@@ -110,12 +108,14 @@ function processUploadedData(data: any[]): Partial<InsightData> {
   // Calculate averages for each day
   insights.occupancyByDay = Object.entries(dayGroups).map(([day, data]) => ({
     day,
-    price: data.prices.length > 0
-      ? Math.round(data.prices.reduce((a, b) => a + b, 0) / data.prices.length)
-      : 0,
-    occupancy: data.occupancies.length > 0
-      ? Math.round(data.occupancies.reduce((a, b) => a + b, 0) / data.occupancies.length)
-      : 0,
+    price:
+      data.prices.length > 0
+        ? Math.round(data.prices.reduce((a, b) => a + b, 0) / data.prices.length)
+        : 0,
+    occupancy:
+      data.occupancies.length > 0
+        ? Math.round(data.occupancies.reduce((a, b) => a + b, 0) / data.occupancies.length)
+        : 0,
   }))
 
   return insights
@@ -149,7 +149,7 @@ function processCompetitorData(): Partial<InsightData> {
   // Calculate competitor pricing trends
   const sortedDates = Object.keys(dateGroups).sort()
 
-  sortedDates.forEach((date) => {
+  sortedDates.forEach(date => {
     const prices = dateGroups[date]
 
     // Get competitor prices (lowest, highest, or specific hotels)
@@ -179,11 +179,14 @@ function processWeatherData(data: any[]): Partial<InsightData> {
     priceByWeather: [],
   }
 
-  const weatherGroups: Record<string, { prices: number[], bookings: number, occupancies: number[] }> = {
-    'Sunny': { prices: [], bookings: 0, occupancies: [] },
-    'Cloudy': { prices: [], bookings: 0, occupancies: [] },
-    'Rainy': { prices: [], bookings: 0, occupancies: [] },
-    'Snowy': { prices: [], bookings: 0, occupancies: [] },
+  const weatherGroups: Record<
+    string,
+    { prices: number[]; bookings: number; occupancies: number[] }
+  > = {
+    Sunny: { prices: [], bookings: 0, occupancies: [] },
+    Cloudy: { prices: [], bookings: 0, occupancies: [] },
+    Rainy: { prices: [], bookings: 0, occupancies: [] },
+    Snowy: { prices: [], bookings: 0, occupancies: [] },
   }
 
   data.forEach(row => {
@@ -201,9 +204,15 @@ function processWeatherData(data: any[]): Partial<InsightData> {
     let category = ''
     if (weather.toLowerCase().includes('sun') || weather.toLowerCase().includes('clear')) {
       category = 'Sunny'
-    } else if (weather.toLowerCase().includes('cloud') || weather.toLowerCase().includes('overcast')) {
+    } else if (
+      weather.toLowerCase().includes('cloud') ||
+      weather.toLowerCase().includes('overcast')
+    ) {
       category = 'Cloudy'
-    } else if (weather.toLowerCase().includes('rain') || weather.toLowerCase().includes('drizzle')) {
+    } else if (
+      weather.toLowerCase().includes('rain') ||
+      weather.toLowerCase().includes('drizzle')
+    ) {
       category = 'Rainy'
     } else if (weather.toLowerCase().includes('snow') || weather.toLowerCase().includes('ice')) {
       category = 'Snowy'
@@ -225,9 +234,10 @@ function processWeatherData(data: any[]): Partial<InsightData> {
       weather,
       avgPrice: Math.round(data.prices.reduce((a, b) => a + b, 0) / data.prices.length),
       bookings: data.bookings,
-      occupancy: data.occupancies.length > 0
-        ? Math.round(data.occupancies.reduce((a, b) => a + b, 0) / data.occupancies.length)
-        : 0,
+      occupancy:
+        data.occupancies.length > 0
+          ? Math.round(data.occupancies.reduce((a, b) => a + b, 0) / data.occupancies.length)
+          : 0,
     }))
 
   return insights
@@ -263,13 +273,13 @@ function calculateMetrics(data: Partial<InsightData>): InsightData['metrics'] {
 
   // Competitor position
   if (data.competitorPricing && data.competitorPricing.length > 0) {
-    const validPrices = data.competitorPricing.filter(d =>
-      d.yourPrice > 0 && (d.competitor1 || d.competitor2)
+    const validPrices = data.competitorPricing.filter(
+      d => d.yourPrice > 0 && (d.competitor1 || d.competitor2)
     )
 
     if (validPrices.length > 0) {
       const diffs = validPrices.map(d => {
-        const competitors = [d.competitor1, d.competitor2].filter(p => p !== null) as number[]
+        const competitors = [d.competitor1, d.competitor2].filter(p => p !== null)
         const avgCompetitor = competitors.reduce((a, b) => a + b, 0) / competitors.length
         return ((d.yourPrice - avgCompetitor) / avgCompetitor) * 100
       })

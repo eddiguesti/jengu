@@ -5,91 +5,92 @@
  * Matches app design system with neon yellow (#EBFF57) accents
  */
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { signInWithGoogle } from '../lib/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Mail, Lock, User, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { signInWithGoogle } from '../lib/supabase'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Sparkles, Mail, Lock, User, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 
-type AuthMode = 'login' | 'signup';
+type AuthMode = 'login' | 'signup'
 
 export default function Auth() {
-  const [mode, setMode] = useState<AuthMode>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [mode, setMode] = useState<AuthMode>('login')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
 
-  const { signIn, signUp } = useAuth();
-  const navigate = useNavigate();
+  const { signIn, signUp } = useAuth()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
     try {
       if (mode === 'login') {
-        await signIn(email, password);
+        await signIn(email, password)
       } else {
-        const result = await signUp(email, password, name);
+        const result = await signUp(email, password, name)
 
         // Check if email confirmation is required
         if (result.user && !result.session) {
-          setError('Please check your email to confirm your account before logging in.');
-          setLoading(false);
-          return;
+          setError('Please check your email to confirm your account before logging in.')
+          setLoading(false)
+          return
         }
       }
 
       // Success animation
-      setSuccess(true);
+      setSuccess(true)
       setTimeout(() => {
-        navigate('/');
-      }, 1200);
+        navigate('/')
+      }, 1200)
     } catch (err: any) {
       // Provide helpful error messages
-      let errorMessage = err.message;
+      let errorMessage = err.message
 
       if (errorMessage.includes('Invalid login credentials')) {
-        errorMessage = 'Invalid email or password. Please check your credentials or sign up for a new account.';
+        errorMessage =
+          'Invalid email or password. Please check your credentials or sign up for a new account.'
       } else if (errorMessage.includes('Email not confirmed')) {
-        errorMessage = 'Please check your email and click the confirmation link before logging in.';
+        errorMessage = 'Please check your email and click the confirmation link before logging in.'
       }
 
-      setError(errorMessage || `Failed to ${mode === 'login' ? 'sign in' : 'sign up'}`);
-      setLoading(false);
+      setError(errorMessage || `Failed to ${mode === 'login' ? 'sign in' : 'sign up'}`)
+      setLoading(false)
     }
-  };
+  }
 
   const toggleMode = () => {
-    setMode(mode === 'login' ? 'signup' : 'login');
-    setError('');
-    setEmail('');
-    setPassword('');
-    setName('');
-  };
+    setMode(mode === 'login' ? 'signup' : 'login')
+    setError('')
+    setEmail('')
+    setPassword('')
+    setName('')
+  }
 
   const handleGoogleSignIn = async () => {
     try {
-      setError('');
-      setLoading(true);
-      await signInWithGoogle();
+      setError('')
+      setLoading(true)
+      await signInWithGoogle()
       // User will be redirected to Google, then back to app
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in with Google');
-      setLoading(false);
+      setError(err.message || 'Failed to sign in with Google')
+      setLoading(false)
     }
-  };
+  }
 
   // Success overlay animation
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -99,9 +100,9 @@ export default function Auth() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-            className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/20 mb-4"
+            className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-primary/20"
           >
-            <CheckCircle2 className="w-10 h-10 text-primary" />
+            <CheckCircle2 className="h-10 w-10 text-primary" />
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
@@ -113,13 +114,13 @@ export default function Auth() {
           </motion.h2>
         </motion.div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 overflow-hidden relative">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8">
       {/* Animated background gradient */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
           animate={{
             scale: [1, 1.2, 1],
@@ -128,9 +129,9 @@ export default function Auth() {
           transition={{
             duration: 8,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: 'easeInOut',
           }}
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-[100px]"
+          className="absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-primary blur-[100px]"
         />
         <motion.div
           animate={{
@@ -140,10 +141,10 @@ export default function Auth() {
           transition={{
             duration: 10,
             repeat: Infinity,
-            ease: "easeInOut",
-            delay: 2
+            ease: 'easeInOut',
+            delay: 2,
           }}
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary rounded-full blur-[120px]"
+          className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-primary blur-[120px]"
         />
       </div>
 
@@ -151,18 +152,18 @@ export default function Auth() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md relative z-10"
+        className="relative z-10 w-full max-w-md"
       >
-        <div className="bg-card rounded-2xl shadow-elevated border border-border overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
           {/* Header with logo and title */}
-          <div className="p-8 pb-6 text-center border-b border-border bg-elevated/50">
+          <div className="border-b border-border bg-elevated/50 p-8 pb-6 text-center">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-4"
+              className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10"
             >
-              <Sparkles className="w-8 h-8 text-primary" />
+              <Sparkles className="h-8 w-8 text-primary" />
             </motion.div>
 
             <AnimatePresence mode="wait">
@@ -173,10 +174,10 @@ export default function Auth() {
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.3 }}
               >
-                <h1 className="text-3xl font-bold text-text mb-2">
+                <h1 className="mb-2 text-3xl font-bold text-text">
                   {mode === 'login' ? 'Welcome Back' : 'Create Account'}
                 </h1>
-                <p className="text-muted text-sm">
+                <p className="text-sm text-muted">
                   {mode === 'login'
                     ? 'Sign in to continue to Jengu'
                     : 'Join Jengu to start optimizing your pricing'}
@@ -194,7 +195,7 @@ export default function Auth() {
                 exit={{ opacity: 0, height: 0 }}
                 className="mx-8 mt-6"
               >
-                <div className="p-4 bg-error/10 border border-error/30 rounded-xl">
+                <div className="rounded-xl border border-error/30 bg-error/10 p-4">
                   <p className="text-sm text-error">{error}</p>
                 </div>
               </motion.div>
@@ -209,12 +210,9 @@ export default function Auth() {
               disabled={loading}
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
-              className="w-full py-3.5 px-4 bg-white text-gray-700 font-semibold rounded-xl
-                       border-2 border-border hover:border-primary/30 hover:bg-elevated
-                       transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
-                       flex items-center justify-center gap-3 group"
+              className="group flex w-full items-center justify-center gap-3 rounded-xl border-2 border-border bg-white px-4 py-3.5 font-semibold text-gray-700 transition-all duration-200 hover:border-primary/30 hover:bg-elevated disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -241,13 +239,13 @@ export default function Auth() {
                 <div className="w-full border-t border-border"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-card text-muted">Or continue with email</span>
+                <span className="bg-card px-4 text-muted">Or continue with email</span>
               </div>
             </div>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5 px-8 pb-8">
             <AnimatePresence mode="wait">
               {mode === 'signup' && (
                 <motion.div
@@ -256,19 +254,18 @@ export default function Auth() {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <label htmlFor="name" className="block text-sm font-medium text-text mb-2">
+                  <label htmlFor="name" className="mb-2 block text-sm font-medium text-text">
                     Full Name
                   </label>
                   <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted pointer-events-none" />
+                    <User className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
                     <input
                       id="name"
                       type="text"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={e => setName(e.target.value)}
                       required={mode === 'signup'}
-                      className="w-full pl-12 pr-4 py-3.5 bg-elevated border border-border rounded-xl text-text placeholder-muted
-                               focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                      className="w-full rounded-xl border border-border bg-elevated py-3.5 pl-12 pr-4 text-text placeholder-muted transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
                       placeholder="Enter your name"
                     />
                   </div>
@@ -277,49 +274,47 @@ export default function Auth() {
             </AnimatePresence>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-text mb-2">
+              <label htmlFor="email" className="mb-2 block text-sm font-medium text-text">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted pointer-events-none" />
+                <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
                 <input
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  className="w-full pl-12 pr-4 py-3.5 bg-elevated border border-border rounded-xl text-text placeholder-muted
-                           focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                  className="w-full rounded-xl border border-border bg-elevated py-3.5 pl-12 pr-4 text-text placeholder-muted transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder="you@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-text mb-2">
+              <label htmlFor="password" className="mb-2 block text-sm font-medium text-text">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted pointer-events-none" />
+                <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   required
                   autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                  className="w-full pl-12 pr-12 py-3.5 bg-elevated border border-border rounded-xl text-text placeholder-muted
-                           focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                  className="w-full rounded-xl border border-border bg-elevated py-3.5 pl-12 pr-12 text-text placeholder-muted transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-text transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted transition-colors hover:text-text"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
@@ -329,15 +324,24 @@ export default function Auth() {
               disabled={loading}
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
-              className="w-full py-3.5 px-4 bg-primary text-background font-semibold rounded-xl
-                       shadow-lg hover:shadow-primary/20 transition-all duration-200
-                       disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
+              className="group relative w-full overflow-hidden rounded-xl bg-primary px-4 py-3.5 font-semibold text-background shadow-lg transition-all duration-200 hover:shadow-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg className="-ml-1 mr-3 h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   {mode === 'login' ? 'Signing in...' : 'Creating account...'}
                 </span>
@@ -359,11 +363,11 @@ export default function Auth() {
 
           {/* Toggle mode */}
           <div className="px-8 pb-8 text-center">
-            <p className="text-muted text-sm">
+            <p className="text-sm text-muted">
               {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
               <button
                 onClick={toggleMode}
-                className="text-primary hover:text-primary/80 font-medium transition-colors inline-flex items-center gap-1 group"
+                className="group inline-flex items-center gap-1 font-medium text-primary transition-colors hover:text-primary/80"
               >
                 {mode === 'login' ? 'Sign up' : 'Sign in'}
                 <motion.span
@@ -382,12 +386,12 @@ export default function Auth() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 text-center text-muted text-xs"
+          className="mt-8 text-center text-xs text-muted"
         >
           <p>Jengu Dynamic Pricing Platform</p>
           <p className="mt-1">© 2025 All rights reserved</p>
         </motion.div>
       </motion.div>
     </div>
-  );
+  )
 }

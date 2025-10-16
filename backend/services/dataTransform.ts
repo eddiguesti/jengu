@@ -95,9 +95,7 @@ function findColumnName(data: RawDataRow[], expectedColumn: string): string | nu
   // Check mappings
   const mappings = COLUMN_MAPPINGS[expectedColumn] || []
   for (const mapping of mappings) {
-    const found = columnNames.find(col =>
-      col.toLowerCase().trim() === mapping.toLowerCase()
-    )
+    const found = columnNames.find(col => col.toLowerCase().trim() === mapping.toLowerCase())
     if (found) return found
   }
 
@@ -248,7 +246,6 @@ export function transformDataForAnalytics(rawData: RawDataRow[]): TransformedDat
 
       transformed.push(transformedRow)
       validRows++
-
     } catch (error) {
       const err = error as Error
       console.warn(`⚠️ Error transforming row ${index + 1}:`, err.message)
@@ -273,7 +270,7 @@ export function validateDataQuality(data: TransformedDataRow[]): ValidationResul
       isValid: false,
       errors: ['No data provided'],
       warnings: [],
-      stats: {} as ValidationStats
+      stats: {} as ValidationStats,
     }
   }
 
@@ -282,7 +279,9 @@ export function validateDataQuality(data: TransformedDataRow[]): ValidationResul
 
   // Check minimum data size
   if (data.length < 30) {
-    warnings.push(`Dataset is small (${data.length} rows). Recommend at least 30 rows for reliable analytics.`)
+    warnings.push(
+      `Dataset is small (${data.length} rows). Recommend at least 30 rows for reliable analytics.`
+    )
   }
 
   // Check for required fields
@@ -315,27 +314,30 @@ export function validateDataQuality(data: TransformedDataRow[]): ValidationResul
     totalRows: data.length,
     dateRange: {
       start: data[0]?.date,
-      end: data[data.length - 1]?.date
+      end: data[data.length - 1]?.date,
     },
     priceRange: {
       min: Math.min(...data.map(r => r.price)),
       max: Math.max(...data.map(r => r.price)),
-      avg: data.reduce((sum, r) => sum + r.price, 0) / data.length
+      avg: data.reduce((sum, r) => sum + r.price, 0) / data.length,
     },
-    occupancyRange: hasOccupancy ? {
-      min: Math.min(...data.filter(r => r.occupancy > 0).map(r => r.occupancy)),
-      max: Math.max(...data.filter(r => r.occupancy > 0).map(r => r.occupancy)),
-      avg: data.filter(r => r.occupancy > 0).reduce((sum, r) => sum + r.occupancy, 0) /
-            data.filter(r => r.occupancy > 0).length
-    } : null,
+    occupancyRange: hasOccupancy
+      ? {
+          min: Math.min(...data.filter(r => r.occupancy > 0).map(r => r.occupancy)),
+          max: Math.max(...data.filter(r => r.occupancy > 0).map(r => r.occupancy)),
+          avg:
+            data.filter(r => r.occupancy > 0).reduce((sum, r) => sum + r.occupancy, 0) /
+            data.filter(r => r.occupancy > 0).length,
+        }
+      : null,
     hasWeather,
-    hasTemperature
+    hasTemperature,
   }
 
   return {
     isValid: errors.length === 0,
     errors,
     warnings,
-    stats
+    stats,
   }
 }

@@ -9,9 +9,11 @@ Your entire application is fully integrated with **Supabase PostgreSQL**. Every 
 ## 🎯 What Gets Saved to Supabase
 
 ### 1. **User Authentication & Profiles**
+
 ✅ **Saved in:** `auth.users` table (Supabase Auth)
 
 **What's Stored:**
+
 - User ID (UUID) - Unique identifier for each user
 - Email address
 - Encrypted password (hashed by Supabase)
@@ -21,6 +23,7 @@ Your entire application is fully integrated with **Supabase PostgreSQL**. Every 
 - Account creation date
 
 **Example:**
+
 ```json
 {
   "id": "9af9a99c-8fe6-4d7a-ae73-fd37faa00b09",
@@ -36,9 +39,11 @@ Your entire application is fully integrated with **Supabase PostgreSQL**. Every 
 ---
 
 ### 2. **CSV Files & Properties**
+
 ✅ **Saved in:** `properties` table (Your Supabase Database)
 
 **What's Stored:**
+
 - Property ID (UUID)
 - Original filename
 - File size
@@ -51,21 +56,20 @@ Your entire application is fully integrated with **Supabase PostgreSQL**. Every 
 **Code Reference:** [backend/server.js:131-144](backend/server.js#L131-L144)
 
 ```javascript
-const { data: property } = await supabaseAdmin
-  .from('properties')
-  .insert({
-    id: propertyId,
-    name: req.file.filename,
-    originalName: req.file.originalname,
-    size: req.file.size,
-    rows: 0,
-    columns: 0,
-    status: 'processing',
-    userId: userId // 🔒 USER ISOLATION
-  });
+const { data: property } = await supabaseAdmin.from('properties').insert({
+  id: propertyId,
+  name: req.file.filename,
+  originalName: req.file.originalname,
+  size: req.file.size,
+  rows: 0,
+  columns: 0,
+  status: 'processing',
+  userId: userId, // 🔒 USER ISOLATION
+})
 ```
 
 **Example:**
+
 ```json
 {
   "id": "084e0eac-2f89-4b7f-a155-4e9a0770ccad",
@@ -83,9 +87,11 @@ const { data: property } = await supabaseAdmin
 ---
 
 ### 3. **Pricing Data (CSV Content)**
+
 ✅ **Saved in:** `pricing_data` table (Your Supabase Database)
 
 **What's Stored:**
+
 - Record ID (UUID)
 - Property ID (links to property)
 - Date
@@ -109,13 +115,14 @@ const pricingData = {
   bookings: parseInt(bookingsField),
   temperature: parseFloat(temperatureField),
   weatherCondition: weatherField || null,
-  extraData: normalizedRow // All CSV columns preserved
-};
+  extraData: normalizedRow, // All CSV columns preserved
+}
 
-await supabaseAdmin.from('pricing_data').insert(batchData);
+await supabaseAdmin.from('pricing_data').insert(batchData)
 ```
 
 **Example:**
+
 ```json
 {
   "id": "7f8e9d0c-1234-5678-9abc-def012345678",
@@ -140,18 +147,22 @@ await supabaseAdmin.from('pricing_data').insert(batchData);
 ---
 
 ### 4. **Weather Data**
+
 ✅ **Fetched from APIs and can be enriched into your data**
 
 **Data Sources:**
+
 - **Open-Meteo** (FREE, no API key) - Historical weather
 - **OpenWeather** (FREE with API key) - Current & forecast weather
 
 **Storage:**
+
 - Weather data is fetched on-demand via API endpoints
 - Can be enriched into your `pricing_data` table
 - Stored in `temperature`, `weatherCondition`, `precipitation` columns
 
 **API Endpoints:**
+
 - `POST /api/weather/historical` - Historical weather data
 - `GET /api/weather/current` - Current weather (live)
 - `GET /api/weather/forecast` - 5-day forecast
@@ -161,16 +172,20 @@ await supabaseAdmin.from('pricing_data').insert(batchData);
 ---
 
 ### 5. **Holiday Data**
+
 ✅ **Fetched from Calendarific API**
 
 **Data Source:**
+
 - **Calendarific API** - Public holidays worldwide
 
 **Storage:**
+
 - Holiday data can be enriched into `pricing_data` table
 - Stored in `isHoliday`, `holidayName` columns
 
 **API Endpoint:**
+
 - `GET /api/holidays` - Fetch holidays by country and year
 
 **Code Reference:** [backend/server.js:713-737](backend/server.js#L713-L737)
@@ -178,17 +193,21 @@ await supabaseAdmin.from('pricing_data').insert(batchData);
 ---
 
 ### 6. **Competitor Pricing Data**
+
 ✅ **Scraped and stored for analysis**
 
 **Data Sources:**
+
 - **ScraperAPI** - Web scraping for competitor prices
 - **Makcorps API** - Hotel search and pricing
 
 **Storage:**
+
 - Can be stored in separate `competitor_data` table (if you create it)
 - Or analyzed on-the-fly and stored in analytics results
 
 **API Endpoints:**
+
 - `POST /api/competitor/scrape` - Scrape competitor websites
 - `POST /api/hotels/search` - Search hotel prices
 
@@ -197,9 +216,11 @@ await supabaseAdmin.from('pricing_data').insert(batchData);
 ---
 
 ### 7. **Analytics Results**
+
 ✅ **Generated on-demand from your data**
 
 **Analytics Types:**
+
 - Summary statistics (avg price, occupancy, revenue)
 - Weather impact analysis
 - Demand forecasting (ML-powered)
@@ -210,11 +231,13 @@ await supabaseAdmin.from('pricing_data').insert(batchData);
 - Pricing recommendations
 
 **Storage:**
+
 - Analytics are computed on-demand from `pricing_data`
 - Results can be cached or stored in separate tables if needed
 - All calculations use **only your user's data** (filtered by userId)
 
 **API Endpoints:**
+
 - `POST /api/analytics/summary`
 - `POST /api/analytics/weather-impact`
 - `POST /api/analytics/demand-forecast`
@@ -233,6 +256,7 @@ await supabaseAdmin.from('pricing_data').insert(batchData);
 ### Every User Has Their Own Data
 
 **Authentication Flow:**
+
 ```
 User logs in
     ↓
@@ -248,30 +272,31 @@ All database queries filtered by userId
 ```
 
 **Code Example:**
+
 ```javascript
 // File upload - Line 118-141
 app.post('/api/files/upload', authenticateUser, async (req, res) => {
-  const userId = req.userId; // Extracted from JWT token
+  const userId = req.userId // Extracted from JWT token
 
   await supabaseAdmin.from('properties').insert({
     // ... property data ...
-    userId: userId // 🔒 Links data to user
-  });
-});
+    userId: userId, // 🔒 Links data to user
+  })
+})
 
 // File list - Line 383-415
 app.get('/api/files', authenticateUser, async (req, res) => {
-  const userId = req.userId;
+  const userId = req.userId
 
   const { data: properties } = await supabaseAdmin
     .from('properties')
     .select('*')
-    .eq('userId', userId); // 🔒 Only return this user's files
-});
+    .eq('userId', userId) // 🔒 Only return this user's files
+})
 
 // File data - Line 310-380
 app.get('/api/files/:fileId/data', authenticateUser, async (req, res) => {
-  const userId = req.userId;
+  const userId = req.userId
 
   // Check if property belongs to user
   const { data: property } = await supabaseAdmin
@@ -279,12 +304,12 @@ app.get('/api/files/:fileId/data', authenticateUser, async (req, res) => {
     .select('id')
     .eq('id', fileId)
     .eq('userId', userId) // 🔒 Verify ownership
-    .single();
+    .single()
 
   if (!property) {
-    return res.status(404).json({ error: 'File not found' });
+    return res.status(404).json({ error: 'File not found' })
   }
-});
+})
 ```
 
 ---
@@ -294,6 +319,7 @@ app.get('/api/files/:fileId/data', authenticateUser, async (req, res) => {
 ### Tables in Your Supabase Database
 
 **1. auth.users** (Supabase Auth - Managed by Supabase)
+
 ```sql
 CREATE TABLE auth.users (
   id UUID PRIMARY KEY,
@@ -307,6 +333,7 @@ CREATE TABLE auth.users (
 ```
 
 **2. properties** (Your Data - Managed by Your App)
+
 ```sql
 CREATE TABLE properties (
   id UUID PRIMARY KEY,
@@ -331,6 +358,7 @@ CREATE POLICY "Users can only access their own properties"
 ```
 
 **3. pricing_data** (Your Data - Managed by Your App)
+
 ```sql
 CREATE TABLE pricing_data (
   id UUID PRIMARY KEY,
@@ -465,16 +493,19 @@ When you log out and log back in, **EVERYTHING** is saved:
 ### Different Users Have Completely Separate Data
 
 **User A:**
+
 - Email: alice@example.com
 - User ID: aaaaa-1111-2222-3333-444444
 - Sees only their files, their data, their analytics
 
 **User B:**
+
 - Email: bob@example.com
 - User ID: bbbbb-5555-6666-7777-888888
 - Sees only their files, their data, their analytics
 
 **User A cannot see User B's data** and vice versa. This is enforced by:
+
 1. **Backend filtering** - All queries filtered by userId
 2. **Row-Level Security (RLS)** - Database-level security policies
 3. **JWT tokens** - Each user has unique authentication token
@@ -484,6 +515,7 @@ When you log out and log back in, **EVERYTHING** is saved:
 ## 🔐 Security Features
 
 ### 1. **Row-Level Security (RLS)**
+
 Supabase automatically enforces data isolation at the database level.
 
 ```sql
@@ -495,22 +527,27 @@ CREATE POLICY "Users can only access their own properties"
 ```
 
 ### 2. **JWT Authentication**
+
 Every API request includes a JWT token containing the userId.
 
 ```javascript
 // Backend middleware authenticates user
 export const authenticateUser = async (req, res, next) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  const { data: { user } } = await supabase.auth.getUser(token);
-  req.userId = user.id; // Extract userId for all queries
-  next();
-};
+  const token = req.headers.authorization?.replace('Bearer ', '')
+  const {
+    data: { user },
+  } = await supabase.auth.getUser(token)
+  req.userId = user.id // Extract userId for all queries
+  next()
+}
 ```
 
 ### 3. **HTTPS Encryption**
+
 All data transferred between frontend and Supabase is encrypted with HTTPS.
 
 ### 4. **Password Hashing**
+
 Passwords are hashed with bcrypt before storage (handled by Supabase Auth).
 
 ---
@@ -518,6 +555,7 @@ Passwords are hashed with bcrypt before storage (handled by Supabase Auth).
 ## 📈 Example: Complete User Journey
 
 **Day 1:**
+
 ```
 1. Sign up: user@example.com
 2. Upload file: bandol_campsite_sample.csv (3972 rows)
@@ -528,6 +566,7 @@ Passwords are hashed with bcrypt before storage (handled by Supabase Auth).
 ```
 
 **Day 2:**
+
 ```
 1. Log in: user@example.com (same account)
 2. See files: bandol_campsite_sample.csv still there! ✅
@@ -537,6 +576,7 @@ Passwords are hashed with bcrypt before storage (handled by Supabase Auth).
 ```
 
 **Day 30:**
+
 ```
 1. Log in: user@example.com
 2. Everything still there! ✅
@@ -551,16 +591,16 @@ Passwords are hashed with bcrypt before storage (handled by Supabase Auth).
 
 ### YES - Everything Saves to Supabase! ✅
 
-| Data Type | Saved to Supabase | User Isolated | Persists Forever |
-|-----------|------------------|---------------|------------------|
-| User accounts | ✅ auth.users | ✅ Yes | ✅ Yes |
-| Login sessions | ✅ JWT tokens | ✅ Yes | Until logout |
-| CSV files | ✅ properties | ✅ userId | ✅ Yes |
-| Pricing data | ✅ pricing_data | ✅ propertyId | ✅ Yes |
-| Weather data | ✅ Can enrich | ✅ Yes | ✅ Yes |
-| Holiday data | ✅ Can enrich | ✅ Yes | ✅ Yes |
-| Competitor data | ✅ Can store | ✅ Yes | ✅ Yes |
-| Analytics | 🔄 Computed | ✅ Yes | 🔄 On-demand |
+| Data Type       | Saved to Supabase | User Isolated | Persists Forever |
+| --------------- | ----------------- | ------------- | ---------------- |
+| User accounts   | ✅ auth.users     | ✅ Yes        | ✅ Yes           |
+| Login sessions  | ✅ JWT tokens     | ✅ Yes        | Until logout     |
+| CSV files       | ✅ properties     | ✅ userId     | ✅ Yes           |
+| Pricing data    | ✅ pricing_data   | ✅ propertyId | ✅ Yes           |
+| Weather data    | ✅ Can enrich     | ✅ Yes        | ✅ Yes           |
+| Holiday data    | ✅ Can enrich     | ✅ Yes        | ✅ Yes           |
+| Competitor data | ✅ Can store      | ✅ Yes        | ✅ Yes           |
+| Analytics       | 🔄 Computed       | ✅ Yes        | 🔄 On-demand     |
 
 ---
 

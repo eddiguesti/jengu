@@ -151,7 +151,6 @@ export async function searchHotelsByCity(
 
     console.log(`✅ Fetched ${hotels.length} hotels from Makcorps API`)
     return hotels
-
   } catch (error) {
     console.error('❌ Failed to fetch from Makcorps API:', error)
 
@@ -404,7 +403,6 @@ function getCachedData(cacheKey: string): CachedResponse | null {
     }
 
     return cached
-
   } catch (error) {
     console.error('Failed to parse cached data:', error)
     localStorage.removeItem(cacheKey)
@@ -573,7 +571,6 @@ export async function testConnection(): Promise<boolean> {
 
     const hotels = await searchHotelsByCity(testParams, true)
     return hotels.length > 0
-
   } catch (error) {
     console.error('Connection test failed:', error)
     return false

@@ -27,22 +27,20 @@ interface BusinessStore {
 
 export const useBusinessStore = create<BusinessStore>()(
   persist(
-    (set) => ({
+    set => ({
       // Initial state
       profile: null,
       isSetup: false,
 
       // Actions
-      setProfile: (profile) =>
-        set({ profile, isSetup: true }),
+      setProfile: profile => set({ profile, isSetup: true }),
 
-      updateProfile: (updates) =>
-        set((state) => ({
+      updateProfile: updates =>
+        set(state => ({
           profile: state.profile ? { ...state.profile, ...updates } : null,
         })),
 
-      clearProfile: () =>
-        set({ profile: null, isSetup: false }),
+      clearProfile: () => set({ profile: null, isSetup: false }),
     }),
     {
       name: 'jengu-business-storage',

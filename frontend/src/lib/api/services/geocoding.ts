@@ -65,7 +65,6 @@ export async function geocodeAddress(address: string): Promise<Location | null> 
 
     const feature = data.features[0]
     return parseGeocodingResult(feature)
-
   } catch (error) {
     console.error('Failed to geocode address:', error)
     return getMockLocation(address)
@@ -108,7 +107,6 @@ export async function reverseGeocode(
 
     const feature = data.features[0]
     return parseGeocodingResult(feature)
-
   } catch (error) {
     console.error('Failed to reverse geocode:', error)
     return null
@@ -156,8 +154,9 @@ export async function searchPlaces(
       return []
     }
 
-    return data.features.map((feature: any) => parseGeocodingResult(feature)).filter(Boolean) as Location[]
-
+    return data.features
+      .map((feature: any) => parseGeocodingResult(feature))
+      .filter(Boolean) as Location[]
   } catch (error) {
     console.error('Failed to search places:', error)
     return []
@@ -168,9 +167,7 @@ export async function searchPlaces(
  * Validate and enhance location data
  * Ensures location has all required fields
  */
-export async function validateLocation(
-  location: Partial<Location>
-): Promise<Location | null> {
+export async function validateLocation(location: Partial<Location>): Promise<Location | null> {
   // If we have coordinates but missing address, reverse geocode
   if (location.latitude && location.longitude && !location.address) {
     return await reverseGeocode(location.latitude, location.longitude)
@@ -191,7 +188,13 @@ export async function validateLocation(
   }
 
   // If we have all required fields, return as is
-  if (location.address && location.city && location.country && location.latitude && location.longitude) {
+  if (
+    location.address &&
+    location.city &&
+    location.country &&
+    location.latitude &&
+    location.longitude
+  ) {
     return location as Location
   }
 
@@ -202,20 +205,14 @@ export async function validateLocation(
  * Calculate distance between two locations (in kilometers)
  * Uses Haversine formula
  */
-export function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
+export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371 // Earth's radius in kilometers
   const dLat = toRad(lat2 - lat1)
   const dLon = toRad(lon2 - lon1)
 
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
   const distance = R * c
@@ -340,23 +337,23 @@ function getMockLocation(address: string): Location {
       city: 'New York',
       country: 'United States',
       latitude: 40.7128,
-      longitude: -74.0060,
+      longitude: -74.006,
     },
-    'london': {
+    london: {
       address: 'London, UK',
       city: 'London',
       country: 'United Kingdom',
       latitude: 51.5074,
       longitude: -0.1278,
     },
-    'paris': {
+    paris: {
       address: 'Paris, France',
       city: 'Paris',
       country: 'France',
       latitude: 48.8566,
       longitude: 2.3522,
     },
-    'tokyo': {
+    tokyo: {
       address: 'Tokyo, Japan',
       city: 'Tokyo',
       country: 'Japan',
@@ -405,7 +402,6 @@ export async function testMapboxConnection(): Promise<boolean> {
 
     const response = await fetch(url)
     return response.ok
-
   } catch (error) {
     console.error('Mapbox connection test failed:', error)
     return false

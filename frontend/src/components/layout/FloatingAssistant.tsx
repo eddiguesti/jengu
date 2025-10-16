@@ -5,11 +5,16 @@ import { useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 
 const QUICK_ANSWERS: Record<string, string> = {
-  upload: 'Go to Data page and drag-and-drop your CSV/Excel file. Make sure it has date, price, and occupancy columns.',
-  enrich: 'Navigate to Enrichment page and click "Enrich All" to add weather, holidays, and temporal features.',
-  insights: 'Check the Insights page for 6 interactive charts showing weather impact, occupancy patterns, and competitor dynamics.',
-  model: 'Visit Model page, select XGBoost algorithm, choose 4-6 features, and click "Train Model".',
-  optimize: 'Go to Optimize page and click "Generate Recommendations" to get AI-powered pricing suggestions.',
+  upload:
+    'Go to Data page and drag-and-drop your CSV/Excel file. Make sure it has date, price, and occupancy columns.',
+  enrich:
+    'Navigate to Enrichment page and click "Enrich All" to add weather, holidays, and temporal features.',
+  insights:
+    'Check the Insights page for 6 interactive charts showing weather impact, occupancy patterns, and competitor dynamics.',
+  model:
+    'Visit Model page, select XGBoost algorithm, choose 4-6 features, and click "Train Model".',
+  optimize:
+    'Go to Optimize page and click "Generate Recommendations" to get AI-powered pricing suggestions.',
   settings: 'Update your business profile in Settings page - location is used for weather data.',
 }
 
@@ -24,7 +29,9 @@ const SUGGESTED_QUESTIONS = [
 
 export const FloatingAssistant = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([])
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>(
+    []
+  )
   const [input, setInput] = useState('')
   const navigate = useNavigate()
 
@@ -32,10 +39,11 @@ export const FloatingAssistant = () => {
     if (!input.trim()) return
 
     const userMessage = input.toLowerCase()
-    setMessages((prev) => [...prev, { role: 'user', content: input }])
+    setMessages(prev => [...prev, { role: 'user', content: input }])
 
     // Find best answer
-    let response = "I can help with:\n• Uploading data\n• Enrichment\n• Viewing insights\n• Training models\n• Optimizing prices\n• Settings\n\nClick a suggestion below or visit the AI Assistant page for detailed help!"
+    let response =
+      'I can help with:\n• Uploading data\n• Enrichment\n• Viewing insights\n• Training models\n• Optimizing prices\n• Settings\n\nClick a suggestion below or visit the AI Assistant page for detailed help!'
 
     for (const [key, answer] of Object.entries(QUICK_ANSWERS)) {
       if (userMessage.includes(key)) {
@@ -45,7 +53,7 @@ export const FloatingAssistant = () => {
     }
 
     setTimeout(() => {
-      setMessages((prev) => [...prev, { role: 'assistant', content: response }])
+      setMessages(prev => [...prev, { role: 'assistant', content: response }])
     }, 500)
 
     setInput('')
@@ -76,7 +84,7 @@ export const FloatingAssistant = () => {
         onClick={() => setIsOpen(!isOpen)}
         className={clsx(
           'fixed bottom-6 right-6 z-50',
-          'w-14 h-14 rounded-full',
+          'h-14 w-14 rounded-full',
           'bg-primary text-background',
           'shadow-elevated hover:shadow-lg',
           'flex items-center justify-center',
@@ -85,11 +93,7 @@ export const FloatingAssistant = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
       >
-        {isOpen ? (
-          <X className="w-6 h-6" />
-        ) : (
-          <MessageCircle className="w-6 h-6" />
-        )}
+        {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
       </motion.button>
 
       {/* Chat Bubble */}
@@ -100,13 +104,13 @@ export const FloatingAssistant = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-6 z-50 w-96 bg-card border border-border rounded-2xl shadow-elevated overflow-hidden"
+            className="fixed bottom-24 right-6 z-50 w-96 overflow-hidden rounded-2xl border border-border bg-card shadow-elevated"
           >
             {/* Header */}
-            <div className="bg-elevated p-4 border-b border-border">
+            <div className="border-b border-border bg-elevated p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Sparkles className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-sm font-semibold text-text">Jengu AI Assistant</h3>
@@ -114,21 +118,21 @@ export const FloatingAssistant = () => {
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1 hover:bg-card rounded transition-colors"
+                  className="rounded p-1 transition-colors hover:bg-card"
                 >
-                  <X className="w-4 h-4 text-muted" />
+                  <X className="h-4 w-4 text-muted" />
                 </button>
               </div>
             </div>
 
             {/* Messages */}
-            <div className="h-80 overflow-y-auto p-4 space-y-3 bg-background">
+            <div className="h-80 space-y-3 overflow-y-auto bg-background p-4">
               {messages.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Sparkles className="w-8 h-8 text-primary" />
+                <div className="py-8 text-center">
+                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                    <Sparkles className="h-8 w-8 text-primary" />
                   </div>
-                  <p className="text-sm text-text font-medium mb-1">Hi! How can I help?</p>
+                  <p className="mb-1 text-sm font-medium text-text">Hi! How can I help?</p>
                   <p className="text-xs text-muted">Click a suggestion below or ask me anything</p>
                 </div>
               ) : (
@@ -143,9 +147,7 @@ export const FloatingAssistant = () => {
                     <div
                       className={clsx(
                         'max-w-[85%] rounded-lg px-3 py-2 text-sm',
-                        msg.role === 'user'
-                          ? 'bg-primary text-background'
-                          : 'bg-elevated text-text'
+                        msg.role === 'user' ? 'bg-primary text-background' : 'bg-elevated text-text'
                       )}
                     >
                       {msg.content}
@@ -157,14 +159,14 @@ export const FloatingAssistant = () => {
 
             {/* Suggested Questions */}
             {messages.length === 0 && (
-              <div className="p-4 border-t border-border bg-card space-y-2">
-                <p className="text-xs font-medium text-muted mb-2">Quick help:</p>
+              <div className="space-y-2 border-t border-border bg-card p-4">
+                <p className="mb-2 text-xs font-medium text-muted">Quick help:</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {SUGGESTED_QUESTIONS.map((q) => (
+                  {SUGGESTED_QUESTIONS.map(q => (
                     <button
                       key={q.key}
                       onClick={() => handleQuestionClick(q.key, q.action)}
-                      className="text-xs text-left px-2 py-1.5 bg-elevated hover:bg-elevated/80 rounded border border-border transition-colors text-text"
+                      className="rounded border border-border bg-elevated px-2 py-1.5 text-left text-xs text-text transition-colors hover:bg-elevated/80"
                     >
                       {q.text}
                     </button>
@@ -174,27 +176,27 @@ export const FloatingAssistant = () => {
             )}
 
             {/* Input */}
-            <div className="p-3 border-t border-border bg-card">
+            <div className="border-t border-border bg-card p-3">
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyPress={e => e.key === 'Enter' && handleSend()}
                   placeholder="Ask me anything..."
-                  className="flex-1 px-3 py-2 text-sm bg-elevated border border-border rounded-lg text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                  className="flex-1 rounded-lg border border-border bg-elevated px-3 py-2 text-sm text-text placeholder-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
                 <button
                   onClick={handleSend}
                   disabled={!input.trim()}
-                  className="p-2 bg-primary text-background rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-lg bg-primary p-2 text-background transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="h-4 w-4" />
                 </button>
               </div>
               <button
                 onClick={openFullAssistant}
-                className="w-full mt-2 text-xs text-primary hover:text-primary/80 transition-colors"
+                className="mt-2 w-full text-xs text-primary transition-colors hover:text-primary/80"
               >
                 Open full AI Assistant →
               </button>

@@ -7,12 +7,14 @@ Charts are showing as empty because the frontend is using **fallback preview dat
 ## Root Cause Analysis
 
 ### Evidence from Browser Console:
+
 ```
 ❌ Error loading data from backend: Request failed with status code 401
 ⚠️ Using preview data (5 rows) as fallback
 ```
 
 ### Evidence from Backend Logs:
+
 ```
 📊 Analytics Summary Request: Received 5 rows
 'Dataset is small (5 rows). Recommend at least 30 rows for reliable analytics.'
@@ -30,18 +32,22 @@ Charts are showing as empty because the frontend is using **fallback preview dat
 ## Possible Causes
 
 ### Cause 1: Token Expired or Invalid
+
 **Symptoms**: 401 error even with Authorization header
 **Solution**: Sign out and sign back in to get fresh token
 
 ### Cause 2: File ID Mismatch
+
 **Symptoms**: 404 or 401 error
 **Solution**: Verify file ID in `uploadedFiles` matches database
 
 ### Cause 3: RLS (Row Level Security) Policy
+
 **Symptoms**: 401 or empty data
 **Solution**: Check Supabase RLS policies on `pricing_data` table
 
 ### Cause 4: Wrong User ID
+
 **Symptoms**: Data exists but not returned
 **Solution**: Verify token's user ID matches file's user ID
 
@@ -61,6 +67,7 @@ Charts are showing as empty because the frontend is using **fallback preview dat
 ### Step 2: Check Current Token
 
 Open browser console and run:
+
 ```javascript
 // Check if token exists
 const token = await window.supabase.auth.getSession()
@@ -73,6 +80,7 @@ console.log('User ID:', token.data.session?.user?.id)
 ### Step 3: Verify Data in Database
 
 Go to Supabase Dashboard → SQL Editor and run:
+
 ```sql
 -- Check if data exists
 SELECT COUNT(*) FROM pricing_data;
@@ -89,6 +97,7 @@ WHERE id = '084e0eac-2f89-4b7f-a155-4e9a0770ccad';
 ### Step 4: Test API Endpoint Directly
 
 Use curl or Postman to test:
+
 ```bash
 # Get your token from browser (see Step 2)
 TOKEN="your-token-here"
@@ -99,6 +108,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 ```
 
 Expected response:
+
 ```json
 {
   "success": true,
@@ -141,6 +151,7 @@ If data exists but isn't returned:
 Go to Supabase Dashboard → Authentication → Policies
 
 **For `pricing_data` table**:
+
 ```sql
 -- Enable RLS
 ALTER TABLE pricing_data ENABLE ROW LEVEL SECURITY;
@@ -156,6 +167,7 @@ USING (
 ```
 
 **For `properties` table**:
+
 ```sql
 -- Enable RLS
 ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
@@ -175,39 +187,36 @@ Add this to Insights.tsx temporarily to debug:
 useEffect(() => {
   const debugDataFetch = async () => {
     try {
-      const token = await getAccessToken();
-      console.log('🔑 Token:', token ? 'EXISTS' : 'MISSING');
+      const token = await getAccessToken()
+      console.log('🔑 Token:', token ? 'EXISTS' : 'MISSING')
 
       if (!uploadedFiles || uploadedFiles.length === 0) {
-        console.log('📁 No files uploaded');
-        return;
+        console.log('📁 No files uploaded')
+        return
       }
 
-      const fileId = uploadedFiles[0].id;
-      console.log('📄 File ID:', fileId);
+      const fileId = uploadedFiles[0].id
+      console.log('📄 File ID:', fileId)
 
-      const response = await axios.get(
-        `http://localhost:3001/api/files/${fileId}/data?limit=100`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+      const response = await axios.get(`http://localhost:3001/api/files/${fileId}/data?limit=100`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
 
       console.log('✅ API Response:', {
         success: response.data.success,
         total: response.data.total,
         returned: response.data.data?.length,
-        firstRow: response.data.data?.[0]
-      });
+        firstRow: response.data.data?.[0],
+      })
     } catch (error) {
-      console.error('❌ Debug fetch error:', error.response?.status, error.response?.data);
+      console.error('❌ Debug fetch error:', error.response?.status, error.response?.data)
     }
-  };
+  }
 
-  debugDataFetch();
-}, [uploadedFiles]);
+  debugDataFetch()
+}, [uploadedFiles])
 ```
 
 This will log exactly what's happening.
@@ -258,6 +267,7 @@ This will log exactly what's happening.
 ## If Charts Are Still Empty After Sign Out/In
 
 Please provide:
+
 1. Browser console logs (full output)
 2. Network tab screenshot showing the failed request
 3. Response body from the failed request

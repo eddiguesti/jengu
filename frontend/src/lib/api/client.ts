@@ -12,9 +12,11 @@ const apiClient: AxiosInstance = axios.create({
 
 // Request interceptor
 apiClient.interceptors.request.use(
-  async (config) => {
+  async config => {
     // Get Supabase session token
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
     if (session?.access_token) {
       config.headers.Authorization = `Bearer ${session.access_token}`
@@ -22,14 +24,14 @@ apiClient.interceptors.request.use(
 
     return config
   },
-  (error) => {
+  error => {
     return Promise.reject(error)
   }
 )
 
 // Response interceptor
 apiClient.interceptors.response.use(
-  (response) => response,
+  response => response,
   async (error: AxiosError) => {
     if (error.response) {
       // Server responded with error status

@@ -17,7 +17,7 @@ const SUGGESTED_QUESTIONS = [
 ]
 
 export const Assistant = () => {
-  const profile = useBusinessStore((state) => state.profile)
+  const profile = useBusinessStore(state => state.profile)
   const { uploadedFiles } = useDataStore()
 
   const [messages, setMessages] = useState<Message[]>([
@@ -73,7 +73,7 @@ export const Assistant = () => {
       timestamp: new Date(),
     }
 
-    setMessages((prev) => [...prev, userMessage])
+    setMessages(prev => [...prev, userMessage])
     setInput('')
     setIsTyping(true)
     setStreamingContent('')
@@ -87,33 +87,28 @@ export const Assistant = () => {
       let fullResponse = ''
       const assistantMessageId = (Date.now() + 1).toString()
 
-      await sendMessage(
-        userMessage.content,
-        conversationHistory,
-        context,
-        {
-          onToken: (token) => {
-            fullResponse += token
-            setStreamingContent(fullResponse)
-          },
-          onComplete: (response) => {
-            const assistantMessage: Message = {
-              id: assistantMessageId,
-              role: 'assistant',
-              content: response,
-              timestamp: new Date(),
-            }
-            setMessages((prev) => [...prev, assistantMessage])
-            setStreamingContent('')
-            setIsTyping(false)
-          },
-          onError: (err) => {
-            setError(err.message)
-            setIsTyping(false)
-            setStreamingContent('')
-          },
-        }
-      )
+      await sendMessage(userMessage.content, conversationHistory, context, {
+        onToken: token => {
+          fullResponse += token
+          setStreamingContent(fullResponse)
+        },
+        onComplete: response => {
+          const assistantMessage: Message = {
+            id: assistantMessageId,
+            role: 'assistant',
+            content: response,
+            timestamp: new Date(),
+          }
+          setMessages(prev => [...prev, assistantMessage])
+          setStreamingContent('')
+          setIsTyping(false)
+        },
+        onError: err => {
+          setError(err.message)
+          setIsTyping(false)
+          setStreamingContent('')
+        },
+      })
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send message'
       setError(errorMessage)
@@ -136,24 +131,24 @@ export const Assistant = () => {
       {/* Header */}
       <div>
         <h1 className="text-4xl font-bold text-text">AI Assistant</h1>
-        <p className="text-muted mt-2">Get help, guidance, and personalized recommendations</p>
+        <p className="mt-2 text-muted">Get help, guidance, and personalized recommendations</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Chat Area */}
         <div className="lg:col-span-2">
-          <Card variant="default" className="flex flex-col h-[600px]">
+          <Card variant="default" className="flex h-[600px] flex-col">
             {/* Error Banner */}
             {error && (
-              <div className="bg-error/10 border-b border-error/20 px-6 py-3 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-error" />
+              <div className="flex items-center gap-2 border-b border-error/20 bg-error/10 px-6 py-3">
+                <AlertCircle className="h-4 w-4 text-error" />
                 <span className="text-sm text-error">{error}</span>
               </div>
             )}
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {messages.map((message) => (
+            <div className="flex-1 space-y-4 overflow-y-auto p-6">
+              {messages.map(message => (
                 <motion.div
                   key={message.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -165,8 +160,8 @@ export const Assistant = () => {
                   )}
                 >
                   {message.role === 'assistant' && (
-                    <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                      <Sparkles className="w-4 h-4 text-primary" />
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <Sparkles className="h-4 w-4 text-primary" />
                     </div>
                   )}
                   <div
@@ -177,10 +172,10 @@ export const Assistant = () => {
                         : 'bg-elevated text-text'
                     )}
                   >
-                    <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+                    <div className="whitespace-pre-wrap text-sm">{message.content}</div>
                     <div
                       className={clsx(
-                        'text-xs mt-2',
+                        'mt-2 text-xs',
                         message.role === 'user' ? 'text-background/60' : 'text-muted'
                       )}
                     >
@@ -191,8 +186,8 @@ export const Assistant = () => {
                     </div>
                   </div>
                   {message.role === 'user' && (
-                    <div className="flex-shrink-0 w-8 h-8 bg-elevated rounded-full flex items-center justify-center">
-                      <MessageCircle className="w-4 h-4 text-text" />
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-elevated">
+                      <MessageCircle className="h-4 w-4 text-text" />
                     </div>
                   )}
                 </motion.div>
@@ -205,11 +200,11 @@ export const Assistant = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex gap-3"
                 >
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-primary" />
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Sparkles className="h-4 w-4 text-primary" />
                   </div>
-                  <div className="max-w-[80%] bg-elevated rounded-lg px-4 py-3">
-                    <div className="text-sm whitespace-pre-wrap text-text">{streamingContent}</div>
+                  <div className="max-w-[80%] rounded-lg bg-elevated px-4 py-3">
+                    <div className="whitespace-pre-wrap text-sm text-text">{streamingContent}</div>
                   </div>
                 </motion.div>
               )}
@@ -221,11 +216,11 @@ export const Assistant = () => {
                   animate={{ opacity: 1 }}
                   className="flex gap-3"
                 >
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-primary" />
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Sparkles className="h-4 w-4 text-primary" />
                   </div>
-                  <div className="bg-elevated rounded-lg px-4 py-3">
-                    <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                  <div className="rounded-lg bg-elevated px-4 py-3">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
                   </div>
                 </motion.div>
               )}
@@ -239,10 +234,10 @@ export const Assistant = () => {
                 <input
                   type="text"
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyPress={e => e.key === 'Enter' && handleSend()}
                   placeholder="Ask me anything about Jengu..."
-                  className="flex-1 px-4 py-2 bg-elevated border border-border rounded-lg text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                  className="flex-1 rounded-lg border border-border bg-elevated px-4 py-2 text-text placeholder-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
                 <Button
                   variant="primary"
@@ -250,7 +245,7 @@ export const Assistant = () => {
                   onClick={handleSend}
                   disabled={!input.trim() || isTyping}
                 >
-                  <Send className="w-5 h-5" />
+                  <Send className="h-5 w-5" />
                 </Button>
               </div>
             </div>
@@ -263,7 +258,7 @@ export const Assistant = () => {
           <Card variant="default">
             <Card.Header>
               <h3 className="text-lg font-semibold text-text">Suggested Questions</h3>
-              <p className="text-sm text-muted mt-1">Click to ask</p>
+              <p className="mt-1 text-sm text-muted">Click to ask</p>
             </Card.Header>
             <Card.Body>
               <div className="space-y-2">
@@ -271,7 +266,7 @@ export const Assistant = () => {
                   <button
                     key={index}
                     onClick={() => handleSuggestedQuestion(question)}
-                    className="w-full text-left px-3 py-2 bg-elevated hover:bg-elevated/80 rounded-lg border border-border transition-colors text-sm text-text"
+                    className="w-full rounded-lg border border-border bg-elevated px-3 py-2 text-left text-sm text-text transition-colors hover:bg-elevated/80"
                   >
                     {question}
                   </button>
@@ -289,31 +284,31 @@ export const Assistant = () => {
               <div className="space-y-2">
                 <a
                   href="/dashboard"
-                  className="block px-3 py-2 bg-elevated hover:bg-elevated/80 rounded-lg border border-border transition-colors text-sm text-primary"
+                  className="block rounded-lg border border-border bg-elevated px-3 py-2 text-sm text-primary transition-colors hover:bg-elevated/80"
                 >
                   → Dashboard
                 </a>
                 <a
                   href="/data"
-                  className="block px-3 py-2 bg-elevated hover:bg-elevated/80 rounded-lg border border-border transition-colors text-sm text-primary"
+                  className="block rounded-lg border border-border bg-elevated px-3 py-2 text-sm text-primary transition-colors hover:bg-elevated/80"
                 >
                   → Data Management
                 </a>
                 <a
                   href="/pricing-engine"
-                  className="block px-3 py-2 bg-elevated hover:bg-elevated/80 rounded-lg border border-border transition-colors text-sm text-primary"
+                  className="block rounded-lg border border-border bg-elevated px-3 py-2 text-sm text-primary transition-colors hover:bg-elevated/80"
                 >
                   → Pricing Optimizer
                 </a>
                 <a
                   href="/insights"
-                  className="block px-3 py-2 bg-elevated hover:bg-elevated/80 rounded-lg border border-border transition-colors text-sm text-primary"
+                  className="block rounded-lg border border-border bg-elevated px-3 py-2 text-sm text-primary transition-colors hover:bg-elevated/80"
                 >
                   → View Insights
                 </a>
                 <a
                   href="/settings"
-                  className="block px-3 py-2 bg-elevated hover:bg-elevated/80 rounded-lg border border-border transition-colors text-sm text-primary"
+                  className="block rounded-lg border border-border bg-elevated px-3 py-2 text-sm text-primary transition-colors hover:bg-elevated/80"
                 >
                   → Settings
                 </a>

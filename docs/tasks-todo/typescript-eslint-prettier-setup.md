@@ -67,6 +67,7 @@ Modernize the Jengu monorepo with TypeScript, ESLint 9, and Prettier using share
 - [ ] Update `ARCHITECTURE.md` with TypeScript patterns
 
 **Phase 1 Exit Criteria**:
+
 - ✅ Backend fully TypeScript with no `any` types (or explicit `any` where needed)
 - ✅ All tests passing (if any exist)
 - ✅ Dev and prod builds working
@@ -134,6 +135,7 @@ Modernize the Jengu monorepo with TypeScript, ESLint 9, and Prettier using share
   - React-specific rules for frontend
   - Node-specific rules for backend
 - [ ] Key config sections:
+
   ```js
   export default [
     // Global ignores
@@ -144,10 +146,12 @@ Modernize the Jengu monorepo with TypeScript, ESLint 9, and Prettier using share
       files: ['**/*.{js,ts,tsx}'],
       languageOptions: {
         parser: tsParser,
-        parserOptions: { project: true }
+        parserOptions: { project: true },
       },
       plugins: { '@typescript-eslint': tsPlugin },
-      rules: { /* shared rules */ }
+      rules: {
+        /* shared rules */
+      },
     },
 
     // Frontend-specific (React)
@@ -155,13 +159,17 @@ Modernize the Jengu monorepo with TypeScript, ESLint 9, and Prettier using share
       files: ['frontend/**/*.{ts,tsx}'],
       plugins: { react, 'react-hooks': reactHooks },
       settings: { react: { version: 'detect' } },
-      rules: { /* React rules */ }
+      rules: {
+        /* React rules */
+      },
     },
 
     // Backend-specific (Node)
     {
       files: ['backend/**/*.ts'],
-      rules: { /* Node rules */ }
+      rules: {
+        /* Node rules */
+      },
     },
   ]
   ```
@@ -278,6 +286,7 @@ Modernize the Jengu monorepo with TypeScript, ESLint 9, and Prettier using share
   - Add pre-commit hook recommendations (optional)
 
 **Phase 2 Exit Criteria**:
+
 - ✅ All linting/formatting scripts working from root
 - ✅ Frontend and backend both passing type checks
 - ✅ Consistent code style across monorepo
@@ -293,16 +302,19 @@ Modernize the Jengu monorepo with TypeScript, ESLint 9, and Prettier using share
 ### Generate Types from Supabase
 
 **Prerequisites**:
+
 - Supabase service key (waiting on this from team member)
 - Backend successfully migrated to TypeScript
 
 **Command**:
+
 ```bash
 # From backend directory
 npx supabase gen types typescript --project-id geehtuuyxhyissplfjb --schema public > types/database.types.ts
 ```
 
 This will auto-generate TypeScript interfaces for all database tables, providing:
+
 - End-to-end type safety from database to client
 - Autocomplete for table/column names
 - Compile-time errors for invalid queries
@@ -311,6 +323,7 @@ This will auto-generate TypeScript interfaces for all database tables, providing
 ### After Type Generation
 
 **You may need to**:
+
 - Review generated types in `backend/types/database.types.ts`
 - Import and use the generated `Database` type with Supabase client:
   ```typescript
@@ -328,20 +341,24 @@ This will auto-generate TypeScript interfaces for all database tables, providing
 ## Notes & Considerations
 
 ### TypeScript Migration Strategy
+
 - Incremental file conversion (not all at once)
 - Keep `allowJs: true` during transition if needed
 - Focus on type safety in new code first
 
 ### ESLint 9 Breaking Changes
+
 - Flat config is mandatory (no `.eslintrc` support)
 - Some plugins may not support ESLint 9 yet (check compatibility)
 - Fallback: Use ESLint 8.x if blockers found
 
 ### Prettier Opinionated Defaults
+
 - Minimal config recommended (accept Prettier's opinions)
 - Only override if team has strong preferences
 
 ### Git Hooks (Future Enhancement)
+
 - Consider `husky` + `lint-staged` for pre-commit hooks
 - Run `lint-fix` and `format` on staged files only
 - Prevent commits with type errors

@@ -29,14 +29,47 @@ export const Card = ({ children, variant = 'default', className, onClick }: Card
   )
 }
 
-Card.Header = ({ children, className, onClick }: { children: ReactNode; className?: string; onClick?: () => void }) => (
-  <div className={clsx('mb-4', className, onClick && 'cursor-pointer')} onClick={onClick}>{children}</div>
+Card.Header = ({
+  children,
+  className,
+  onClick,
+}: {
+  children: ReactNode
+  className?: string
+  onClick?: () => void
+}) => (
+  <div className={clsx('mb-4', className, onClick && 'cursor-pointer')} onClick={onClick}>
+    {children}
+  </div>
 )
 
-Card.Body = ({ children, className, onClick }: { children: ReactNode; className?: string; onClick?: () => void }) => (
-  <div className={clsx(className, onClick && 'cursor-pointer')} onClick={onClick}>{children}</div>
+Card.Body = ({
+  children,
+  className,
+  onClick,
+}: {
+  children: ReactNode
+  className?: string
+  onClick?: () => void
+}) => (
+  <div className={clsx(className, onClick && 'cursor-pointer')} onClick={onClick}>
+    {children}
+  </div>
 )
 
-Card.Footer = ({ children, className, onClick }: { children: ReactNode; className?: string; onClick?: () => void }) => (
-  <div className={clsx('mt-6 pt-4 border-t border-border', className, onClick && 'cursor-pointer')} onClick={onClick}>{children}</div>
+Card.Footer = ({
+  children,
+  className,
+  onClick,
+}: {
+  children: ReactNode
+  className?: string
+  onClick?: () => void
+}) => (
+  <div
+    className={clsx('mt-6 border-t border-border pt-4', className, onClick && 'cursor-pointer')}
+    onClick={onClick}
+  >
+    {children}
+  </div>
 )

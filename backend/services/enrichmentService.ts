@@ -3,8 +3,8 @@
  * Enriches pricing data with weather, holidays, and temporal features
  */
 
-import axios from 'axios';
-import { mapWeatherCode } from '../utils/weatherCodes.js';
+import axios from 'axios'
+import { mapWeatherCode } from '../utils/weatherCodes.js'
 
 /**
  * Enrich property data with weather information (Supabase version)
@@ -12,73 +12,78 @@ import { mapWeatherCode } from '../utils/weatherCodes.js';
  * @param {object} location - { latitude, longitude }
  * @param {object} supabaseClient - Supabase client instance
  */
-export async function enrichWithWeather(propertyId: string, location: { latitude: number; longitude: number }, supabaseClient: any): Promise<any> {
-  const { latitude, longitude } = location;
+export async function enrichWithWeather(
+  propertyId: string,
+  location: { latitude: number; longitude: number },
+  supabaseClient: any
+): Promise<any> {
+  const { latitude, longitude } = location
 
-  console.log(`🌤️  Starting weather enrichment for property ${propertyId}...`);
+  console.log(`🌤️  Starting weather enrichment for property ${propertyId}...`)
 
   // Get all dates from pricing data for this property
   const { data: pricingData, error } = await supabaseClient
     .from('pricing_data')
     .select('id, date')
     .eq('propertyId', propertyId)
-    .order('date', { ascending: true });
+    .order('date', { ascending: true })
 
   if (error || !pricingData || pricingData.length === 0) {
-    console.log('⚠️  No pricing data found for this property');
-    return { enriched: 0 };
+    console.log('⚠️  No pricing data found for this property')
+    return { enriched: 0 }
   }
 
-  const dates = pricingData.map((d: any) => new Date(d.date));
-  const minDate = dates[0];
-  const maxDate = dates[dates.length - 1];
+  const dates = pricingData.map((d: any) => new Date(d.date))
+  const minDate = dates[0]
+  const maxDate = dates[dates.length - 1]
 
-  console.log(`📅 Date range: ${minDate.toISOString().split('T')[0]} to ${maxDate.toISOString().split('T')[0]}`);
+  console.log(
+    `📅 Date range: ${minDate.toISOString().split('T')[0]} to ${maxDate.toISOString().split('T')[0]}`
+  )
 
   // Call Open-Meteo Historical Weather API (FREE)
   try {
-    const response = await axios.get(
-      'https://archive-api.open-meteo.com/v1/archive',
-      {
-        params: {
-          latitude,
-          longitude,
-          start_date: minDate.toISOString().split('T')[0],
-          end_date: maxDate.toISOString().split('T')[0],
-          daily: 'temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,weathercode,sunshine_duration',
-          timezone: 'auto'
-        },
-        timeout: 15000 // 15 second timeout
-      }
-    );
+    const response = await axios.get('https://archive-api.open-meteo.com/v1/archive', {
+      params: {
+        latitude,
+        longitude,
+        start_date: minDate.toISOString().split('T')[0],
+        end_date: maxDate.toISOString().split('T')[0],
+        daily:
+          'temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,weathercode,sunshine_duration',
+        timezone: 'auto',
+      },
+      timeout: 15000, // 15 second timeout
+    })
 
     // Create a map of date -> weather data
-    const weatherMap: Record<string, any> = {};
+    const weatherMap: Record<string, any> = {}
     response.data.daily.time.forEach((date: string, index: number) => {
-      const weathercode = response.data.daily.weathercode[index];
+      const weathercode = response.data.daily.weathercode[index]
 
       // Use centralized weather code mapping
-      const weatherDescription = mapWeatherCode(weathercode);
+      const weatherDescription = mapWeatherCode(weathercode)
 
       weatherMap[date] = {
         temperature: response.data.daily.temperature_2m_mean[index],
         precipitation: response.data.daily.precipitation_sum[index],
         weatherCondition: weatherDescription,
-        sunshineHours: response.data.daily.sunshine_duration[index] ?
-          response.data.daily.sunshine_duration[index] / 3600 : null // Convert seconds to hours
-      };
-    });
+        sunshineHours: response.data.daily.sunshine_duration[index]
+          ? response.data.daily.sunshine_duration[index] / 3600
+          : null, // Convert seconds to hours
+      }
+    })
 
     // Update pricing data with weather information (batch updates using Supabase)
-    let enrichedCount = 0;
-    const BATCH_SIZE = 100; // Update in batches for better performance
+    let enrichedCount = 0
+    const BATCH_SIZE = 100 // Update in batches for better performance
 
     for (let i = 0; i < pricingData.length; i += BATCH_SIZE) {
-      const batch = pricingData.slice(i, i + BATCH_SIZE);
+      const batch = pricingData.slice(i, i + BATCH_SIZE)
 
       for (const row of batch) {
-        const dateStr = new Date(row.date).toISOString().split('T')[0];
-        const weather = weatherMap[dateStr as string];
+        const dateStr = new Date(row.date).toISOString().split('T')[0]
+        const weather = weatherMap[dateStr as string]
 
         if (weather) {
           const { error: updateError } = await supabaseClient
@@ -87,28 +92,29 @@ export async function enrichWithWeather(propertyId: string, location: { latitude
               temperature: weather.temperature,
               precipitation: weather.precipitation,
               weatherCondition: weather.weatherCondition,
-              sunshineHours: weather.sunshineHours
+              sunshineHours: weather.sunshineHours,
             })
-            .eq('id', row.id);
+            .eq('id', row.id)
 
           if (!updateError) {
-            enrichedCount++;
+            enrichedCount++
           } else {
-            console.warn(`Failed to update row ${row.id}:`, updateError.message);
+            console.warn(`Failed to update row ${row.id}:`, updateError.message)
           }
         }
       }
 
-      console.log(`📊 Enriched ${i + batch.length}/${pricingData.length} rows...`);
+      console.log(`📊 Enriched ${i + batch.length}/${pricingData.length} rows...`)
     }
 
-    console.log(`✅ Weather enrichment complete: ${enrichedCount}/${pricingData.length} rows enriched`);
-    return { enriched: enrichedCount, total: pricingData.length };
-
+    console.log(
+      `✅ Weather enrichment complete: ${enrichedCount}/${pricingData.length} rows enriched`
+    )
+    return { enriched: enrichedCount, total: pricingData.length }
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('Weather API Error:', errorMessage);
-    throw error;
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Weather API Error:', errorMessage)
+    throw error
   }
 }
 
@@ -117,37 +123,40 @@ export async function enrichWithWeather(propertyId: string, location: { latitude
  * @param {string} propertyId - Property UUID
  * @param {object} supabaseClient - Supabase client instance
  */
-export async function enrichWithTemporalFeatures(propertyId: string, supabaseClient: any): Promise<any> {
-  console.log(`📆 Starting temporal enrichment for property ${propertyId}...`);
+export async function enrichWithTemporalFeatures(
+  propertyId: string,
+  supabaseClient: any
+): Promise<any> {
+  console.log(`📆 Starting temporal enrichment for property ${propertyId}...`)
 
   const { data: pricingData, error } = await supabaseClient
     .from('pricing_data')
     .select('id, date')
-    .eq('propertyId', propertyId);
+    .eq('propertyId', propertyId)
 
   if (error || !pricingData || pricingData.length === 0) {
-    console.log('⚠️  No pricing data found for temporal enrichment');
-    return { enriched: 0 };
+    console.log('⚠️  No pricing data found for temporal enrichment')
+    return { enriched: 0 }
   }
 
-  let enrichedCount = 0;
-  const BATCH_SIZE = 100;
+  let enrichedCount = 0
+  const BATCH_SIZE = 100
 
   for (let i = 0; i < pricingData.length; i += BATCH_SIZE) {
-    const batch = pricingData.slice(i, i + BATCH_SIZE);
+    const batch = pricingData.slice(i, i + BATCH_SIZE)
 
     for (const row of batch) {
-      const date = new Date(row.date);
-      const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
-      const month = date.getMonth() + 1; // 1-12
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      const date = new Date(row.date)
+      const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
+      const month = date.getMonth() + 1 // 1-12
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
 
       // Determine season (Northern Hemisphere)
-      let season;
-      if ([12, 1, 2].includes(month)) season = 'Winter';
-      else if ([3, 4, 5].includes(month)) season = 'Spring';
-      else if ([6, 7, 8].includes(month)) season = 'Summer';
-      else season = 'Fall';
+      let season
+      if ([12, 1, 2].includes(month)) season = 'Winter'
+      else if ([3, 4, 5].includes(month)) season = 'Spring'
+      else if ([6, 7, 8].includes(month)) season = 'Summer'
+      else season = 'Fall'
 
       const { error: updateError } = await supabaseClient
         .from('pricing_data')
@@ -155,20 +164,20 @@ export async function enrichWithTemporalFeatures(propertyId: string, supabaseCli
           dayOfWeek,
           month,
           season,
-          isWeekend
+          isWeekend,
         })
-        .eq('id', row.id);
+        .eq('id', row.id)
 
       if (!updateError) {
-        enrichedCount++;
+        enrichedCount++
       }
     }
 
-    console.log(`📊 Enriched ${i + batch.length}/${pricingData.length} rows with temporal data...`);
+    console.log(`📊 Enriched ${i + batch.length}/${pricingData.length} rows with temporal data...`)
   }
 
-  console.log(`✅ Temporal enrichment complete: ${enrichedCount} rows enriched`);
-  return { enriched: enrichedCount };
+  console.log(`✅ Temporal enrichment complete: ${enrichedCount} rows enriched`)
+  return { enriched: enrichedCount }
 }
 
 /**
@@ -188,17 +197,22 @@ export async function enrichWithTemporalFeatures(propertyId: string, supabaseCli
  * 3. Handle date conversions properly (Supabase returns ISO strings, not Date objects)
  * 4. Add batch updates for performance (similar to enrichWithWeather)
  */
-export async function enrichWithHolidays(propertyId: string, countryCode: string, _calendarificApiKey: string | undefined, _supabaseClient: any): Promise<any> {
-  console.log(`🎉 Holiday enrichment requested for property ${propertyId} (${countryCode})...`);
-  console.warn('⚠️  Holiday enrichment is not yet migrated to Supabase - skipping');
+export async function enrichWithHolidays(
+  propertyId: string,
+  countryCode: string,
+  _calendarificApiKey: string | undefined,
+  _supabaseClient: any
+): Promise<any> {
+  console.log(`🎉 Holiday enrichment requested for property ${propertyId} (${countryCode})...`)
+  console.warn('⚠️  Holiday enrichment is not yet migrated to Supabase - skipping')
 
   // Temporary implementation - return early until migration is complete
   return {
     enriched: 0,
     total: 0,
     skipped: true,
-    reason: 'Holiday enrichment not yet migrated to Supabase'
-  };
+    reason: 'Holiday enrichment not yet migrated to Supabase',
+  }
 
   /*
   // TODO: Uncomment and test this implementation after migration
@@ -286,47 +300,56 @@ export async function enrichWithHolidays(propertyId: string, countryCode: string
  * Complete enrichment pipeline (Supabase version)
  * Enriches property data with weather, holidays, and temporal features
  */
-export async function enrichPropertyData(propertyId: string, options: any, supabaseClient: any): Promise<any> {
-  const { location, countryCode, calendarificApiKey } = options;
+export async function enrichPropertyData(
+  propertyId: string,
+  options: any,
+  supabaseClient: any
+): Promise<any> {
+  const { location, countryCode, calendarificApiKey } = options
 
   const results = {
     temporal: null,
     weather: null,
-    holidays: null
-  };
+    holidays: null,
+  }
 
   try {
-    console.log(`\n🚀 Starting enrichment pipeline for property ${propertyId}...`);
+    console.log(`\n🚀 Starting enrichment pipeline for property ${propertyId}...`)
 
     // Always enrich temporal features (no API needed, fast)
-    results.temporal = await enrichWithTemporalFeatures(propertyId, supabaseClient);
+    results.temporal = await enrichWithTemporalFeatures(propertyId, supabaseClient)
 
     // Enrich with weather if location provided (requires API call)
     if (location && location.latitude && location.longitude) {
-      results.weather = await enrichWithWeather(propertyId, location, supabaseClient);
+      results.weather = await enrichWithWeather(propertyId, location, supabaseClient)
     } else {
-      console.log('⚠️  Skipping weather enrichment - no location provided');
+      console.log('⚠️  Skipping weather enrichment - no location provided')
     }
 
     // Enrich with holidays if country code and API key provided
     if (countryCode && calendarificApiKey) {
-      results.holidays = await enrichWithHolidays(propertyId, countryCode, calendarificApiKey, supabaseClient);
+      results.holidays = await enrichWithHolidays(
+        propertyId,
+        countryCode,
+        calendarificApiKey,
+        supabaseClient
+      )
     } else {
-      console.log('⚠️  Skipping holiday enrichment - no country code or API key provided');
+      console.log('⚠️  Skipping holiday enrichment - no country code or API key provided')
     }
 
-    console.log(`\n✅ Enrichment pipeline complete!`);
+    console.log(`\n✅ Enrichment pipeline complete!`)
     return {
       success: true,
-      results
-    };
+      results,
+    }
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('❌ Enrichment pipeline error:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('❌ Enrichment pipeline error:', error)
     return {
       success: false,
       error: errorMessage,
-      results
-    };
+      results,
+    }
   }
 }

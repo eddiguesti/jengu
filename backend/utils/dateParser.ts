@@ -59,7 +59,7 @@ export function getDateRange(dates: Date[]): { min: Date; max: Date } | null {
 
   return {
     min: new Date(Math.min(...validDates.map(d => d.getTime()))),
-    max: new Date(Math.max(...validDates.map(d => d.getTime())))
+    max: new Date(Math.max(...validDates.map(d => d.getTime()))),
   }
 }
 

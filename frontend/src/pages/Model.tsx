@@ -54,7 +54,7 @@ export const Model = () => {
 
     // Simulate training progress
     const interval = setInterval(() => {
-      setTrainingProgress((prev) => {
+      setTrainingProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval)
           setIsTraining(false)
@@ -109,11 +109,11 @@ export const Model = () => {
       {/* Header */}
       <div>
         <h1 className="text-4xl font-bold text-text">Model Training</h1>
-        <p className="text-muted mt-2">Train ML models to predict optimal pricing</p>
+        <p className="mt-2 text-muted">Train ML models to predict optimal pricing</p>
       </div>
 
       {/* Algorithm Selection */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {Object.entries(algorithmInfo).map(([key, info]) => {
           const Icon = info.icon
           const isSelected = config.algorithm === key
@@ -121,21 +121,18 @@ export const Model = () => {
             <Card
               key={key}
               variant={isSelected ? 'elevated' : 'default'}
-              className={clsx(
-                'cursor-pointer transition-all',
-                isSelected && 'ring-2 ring-primary'
-              )}
+              className={clsx('cursor-pointer transition-all', isSelected && 'ring-2 ring-primary')}
               onClick={() => setConfig({ ...config, algorithm: key as any })}
             >
               <div className="flex items-start gap-4">
-                <div className={clsx('p-3 rounded-lg bg-elevated')}>
-                  <Icon className={clsx('w-6 h-6', info.color)} />
+                <div className={clsx('rounded-lg bg-elevated p-3')}>
+                  <Icon className={clsx('h-6 w-6', info.color)} />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-text mb-1">{info.name}</h3>
+                  <h3 className="mb-1 text-lg font-semibold text-text">{info.name}</h3>
                   <p className="text-sm text-muted">{info.description}</p>
                 </div>
-                {isSelected && <CheckCircle2 className="w-5 h-5 text-primary" />}
+                {isSelected && <CheckCircle2 className="h-5 w-5 text-primary" />}
               </div>
             </Card>
           )
@@ -146,20 +143,20 @@ export const Model = () => {
       <Card variant="default">
         <Card.Header>
           <h2 className="text-xl font-semibold text-text">Model Configuration</h2>
-          <p className="text-sm text-muted mt-1">Select features and training parameters</p>
+          <p className="mt-1 text-sm text-muted">Select features and training parameters</p>
         </Card.Header>
         <Card.Body>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <h3 className="text-sm font-semibold text-text mb-3">Selected Features</h3>
+              <h3 className="mb-3 text-sm font-semibold text-text">Selected Features</h3>
               <div className="space-y-2">
-                {availableFeatures.map((feature) => {
+                {availableFeatures.map(feature => {
                   const isSelected = config.features.includes(feature)
                   return (
                     <label
                       key={feature}
                       className={clsx(
-                        'flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all',
+                        'flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-all',
                         isSelected
                           ? 'border-primary bg-primary/5'
                           : 'border-border hover:border-border/60'
@@ -168,7 +165,7 @@ export const Model = () => {
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={(e) => {
+                        onChange={e => {
                           if (e.target.checked) {
                             setConfig({
                               ...config,
@@ -177,13 +174,13 @@ export const Model = () => {
                           } else {
                             setConfig({
                               ...config,
-                              features: config.features.filter((f) => f !== feature),
+                              features: config.features.filter(f => f !== feature),
                             })
                           }
                         }}
-                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                       />
-                      <span className="text-sm text-text font-mono">{feature}</span>
+                      <span className="font-mono text-sm text-text">{feature}</span>
                     </label>
                   )
                 })}
@@ -192,10 +189,10 @@ export const Model = () => {
 
             <div className="space-y-6">
               <div>
-                <h3 className="text-sm font-semibold text-text mb-3">Target Variable</h3>
+                <h3 className="mb-3 text-sm font-semibold text-text">Target Variable</h3>
                 <Select
                   value={config.target}
-                  onChange={(e) => setConfig({ ...config, target: e.target.value })}
+                  onChange={e => setConfig({ ...config, target: e.target.value })}
                   options={[
                     { value: 'price', label: 'Price' },
                     { value: 'occupancy', label: 'Occupancy' },
@@ -205,12 +202,10 @@ export const Model = () => {
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-text mb-3">Test Set Size</h3>
+                <h3 className="mb-3 text-sm font-semibold text-text">Test Set Size</h3>
                 <Select
                   value={config.test_size.toString()}
-                  onChange={(e) =>
-                    setConfig({ ...config, test_size: parseFloat(e.target.value) })
-                  }
+                  onChange={e => setConfig({ ...config, test_size: parseFloat(e.target.value) })}
                   options={[
                     { value: '0.1', label: '10% (90% training)' },
                     { value: '0.2', label: '20% (80% training)' },
@@ -219,20 +214,18 @@ export const Model = () => {
                 />
               </div>
 
-              <div className="p-4 bg-elevated rounded-lg border border-border">
-                <p className="text-xs font-medium text-muted mb-2">Selected Algorithm</p>
+              <div className="rounded-lg border border-border bg-elevated p-4">
+                <p className="mb-2 text-xs font-medium text-muted">Selected Algorithm</p>
                 <div className="flex items-center gap-2">
-                  <AlgoIcon className={clsx('w-5 h-5', currentAlgoInfo.color)} />
-                  <span className="text-sm font-semibold text-text">
-                    {currentAlgoInfo.name}
-                  </span>
+                  <AlgoIcon className={clsx('h-5 w-5', currentAlgoInfo.color)} />
+                  <span className="text-sm font-semibold text-text">{currentAlgoInfo.name}</span>
                 </div>
               </div>
             </div>
           </div>
         </Card.Body>
         <Card.Footer>
-          <div className="flex items-center justify-between w-full">
+          <div className="flex w-full items-center justify-between">
             <p className="text-sm text-muted">
               {config.features.length} features selected for training
             </p>
@@ -247,7 +240,7 @@ export const Model = () => {
                 <>Training Model...</>
               ) : (
                 <>
-                  <Play className="w-5 h-5 mr-2" />
+                  <Play className="mr-2 h-5 w-5" />
                   Train Model
                 </>
               )}
@@ -259,17 +252,15 @@ export const Model = () => {
       {/* Training Progress */}
       {isTraining && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <Card variant="elevated" className="bg-primary/5 border-primary/20">
+          <Card variant="elevated" className="border-primary/20 bg-primary/5">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Brain className="w-6 h-6 text-primary animate-pulse" />
+                <div className="rounded-lg bg-primary/10 p-2">
+                  <Brain className="h-6 w-6 animate-pulse text-primary" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-text">Training in Progress</h3>
-                  <p className="text-sm text-muted">
-                    Optimizing {currentAlgoInfo.name} model...
-                  </p>
+                  <p className="text-sm text-muted">Optimizing {currentAlgoInfo.name} model...</p>
                 </div>
               </div>
               <Progress value={trainingProgress} showLabel variant="primary" size="lg" />
@@ -281,15 +272,15 @@ export const Model = () => {
       {/* Model Results */}
       {trainedModel && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-          <Card variant="elevated" className="bg-success/5 border-success/20">
+          <Card variant="elevated" className="border-success/20 bg-success/5">
             <Card.Header>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-success/10 rounded-lg">
-                  <CheckCircle2 className="w-6 h-6 text-success" />
+                <div className="rounded-lg bg-success/10 p-2">
+                  <CheckCircle2 className="h-6 w-6 text-success" />
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-text">Model Trained Successfully</h2>
-                  <p className="text-sm text-muted mt-1">
+                  <p className="mt-1 text-sm text-muted">
                     Trained at {new Date(trainedModel.trained_at).toLocaleString()}
                   </p>
                 </div>
@@ -299,27 +290,27 @@ export const Model = () => {
               </div>
             </Card.Header>
             <Card.Body>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
                 <div className="text-center">
-                  <p className="text-sm text-muted mb-2">Accuracy</p>
+                  <p className="mb-2 text-sm text-muted">Accuracy</p>
                   <p className="text-3xl font-bold text-success">
                     {(trainedModel.metrics.accuracy * 100).toFixed(1)}%
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-muted mb-2">R² Score</p>
+                  <p className="mb-2 text-sm text-muted">R² Score</p>
                   <p className="text-3xl font-bold text-primary">
                     {trainedModel.metrics.r2_score.toFixed(2)}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-muted mb-2">MAE</p>
+                  <p className="mb-2 text-sm text-muted">MAE</p>
                   <p className="text-3xl font-bold text-text">
                     €{trainedModel.metrics.mae.toFixed(1)}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-muted mb-2">RMSE</p>
+                  <p className="mb-2 text-sm text-muted">RMSE</p>
                   <p className="text-3xl font-bold text-text">
                     €{trainedModel.metrics.rmse.toFixed(1)}
                   </p>
@@ -327,13 +318,13 @@ export const Model = () => {
               </div>
             </Card.Body>
             <Card.Footer>
-              <div className="flex items-center justify-between w-full">
+              <div className="flex w-full items-center justify-between">
                 <p className="text-sm text-muted">
                   Model performs well with {(trainedModel.metrics.r2_score * 100).toFixed(0)}%
                   variance explained
                 </p>
                 <Button variant="primary" size="lg" onClick={() => navigate('/optimize')}>
-                  <TrendingUp className="w-5 h-5 mr-2" />
+                  <TrendingUp className="mr-2 h-5 w-5" />
                   Use for Pricing
                 </Button>
               </div>
@@ -353,7 +344,7 @@ export const Model = () => {
               Our ML models analyze your historical data to identify patterns and predict optimal
               pricing. Each algorithm has different strengths:
             </p>
-            <ul className="space-y-2 ml-4">
+            <ul className="ml-4 space-y-2">
               <li className="flex items-start gap-2">
                 <span className="text-primary">•</span>
                 <span>
@@ -364,8 +355,8 @@ export const Model = () => {
               <li className="flex items-start gap-2">
                 <span className="text-primary">•</span>
                 <span>
-                  <strong className="text-text">Random Forest</strong>: Robust to outliers,
-                  provides feature importance
+                  <strong className="text-text">Random Forest</strong>: Robust to outliers, provides
+                  feature importance
                 </span>
               </li>
               <li className="flex items-start gap-2">
@@ -377,8 +368,8 @@ export const Model = () => {
               </li>
             </ul>
             <p className="pt-2">
-              The model is evaluated using Mean Absolute Error (MAE), Root Mean Square Error
-              (RMSE), and R² score. Higher R² scores indicate better predictive performance.
+              The model is evaluated using Mean Absolute Error (MAE), Root Mean Square Error (RMSE),
+              and R² score. Higher R² scores indicate better predictive performance.
             </p>
           </div>
         </Card.Body>
