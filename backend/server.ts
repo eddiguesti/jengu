@@ -376,8 +376,8 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
             const { error: enrichUpdateError } = await supabaseAdmin
               .from('properties')
               .update({
-                enrichmentStatus: 'completed',
-                enrichedAt: new Date().toISOString()
+                enrichmentstatus: 'completed',
+                enrichedat: new Date().toISOString()
               })
               .eq('id', property.id);
 
@@ -393,8 +393,8 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
             await supabaseAdmin
               .from('properties')
               .update({
-                enrichmentStatus: 'failed',
-                enrichmentError: enrichmentResult.error
+                enrichmentstatus: 'failed',
+                enrichmenterror: enrichmentResult.error
               })
               .eq('id', property.id);
           }
@@ -539,7 +539,7 @@ app.get('/api/files', authenticateUser, async (req, res) => {
 
     const { data: properties, error } = await supabaseAdmin
       .from('properties')
-      .select('id, originalName, size, rows, columns, uploadedAt, status, enrichmentStatus, enrichedAt')
+      .select('id, originalName, size, rows, columns, uploadedAt, status, enrichmentstatus, enrichedat')
       .eq('userId', userId)
       .order('uploadedAt', { ascending: false });
 
@@ -555,8 +555,8 @@ app.get('/api/files', authenticateUser, async (req, res) => {
       columns: prop.columns,
       uploaded_at: prop.uploadedAt,
       status: prop.status,
-      enrichment_status: prop.enrichmentStatus || 'none',
-      enriched_at: prop.enrichedAt
+      enrichment_status: prop.enrichmentstatus || 'none',
+      enriched_at: prop.enrichedat
     }));
 
     res.json({ success: true, files });
@@ -1370,8 +1370,8 @@ app.post('/api/files/:fileId/enrich', authenticateUser, async (req, res) => {
       await supabaseAdmin
         .from('properties')
         .update({
-          enrichmentStatus: 'completed',
-          enrichedAt: new Date().toISOString()
+          enrichmentstatus: 'completed',
+          enrichedat: new Date().toISOString()
         })
         .eq('id', fileId);
 
@@ -1385,8 +1385,8 @@ app.post('/api/files/:fileId/enrich', authenticateUser, async (req, res) => {
       await supabaseAdmin
         .from('properties')
         .update({
-          enrichmentStatus: 'failed',
-          enrichmentError: enrichmentResult.error
+          enrichmentstatus: 'failed',
+          enrichmenterror: enrichmentResult.error
         })
         .eq('id', fileId);
 

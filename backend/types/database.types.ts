@@ -148,6 +148,9 @@ export type Database = {
       properties: {
         Row: {
           columns: number
+          enrichedat: string | null
+          enrichmenterror: string | null
+          enrichmentstatus: string | null
           id: string
           name: string
           originalName: string
@@ -160,6 +163,9 @@ export type Database = {
         }
         Insert: {
           columns: number
+          enrichedat?: string | null
+          enrichmenterror?: string | null
+          enrichmentstatus?: string | null
           id: string
           name: string
           originalName: string
@@ -172,6 +178,9 @@ export type Database = {
         }
         Update: {
           columns?: number
+          enrichedat?: string | null
+          enrichmenterror?: string | null
+          enrichmentstatus?: string | null
           id?: string
           name?: string
           originalName?: string

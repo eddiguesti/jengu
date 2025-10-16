@@ -8,6 +8,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import type { Request, Response, NextFunction } from 'express'
+import type { Database } from '../types/database.types.js'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -25,7 +26,7 @@ if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
  * Uses service role key - bypasses Row Level Security (RLS)
  * Use this for admin operations, background jobs, etc.
  */
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+export const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
@@ -37,7 +38,7 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
  * Uses anon key - respects Row Level Security (RLS)
  * Use this for user-facing operations
  */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
 
 /**
  * Get user ID from JWT token
