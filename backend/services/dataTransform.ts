@@ -17,6 +17,7 @@ interface TransformedDataRow {
   availability?: number
   unit_type?: string
   channel?: string
+  [key: string]: unknown
 }
 
 interface ValidationResult {
@@ -83,6 +84,7 @@ function findColumnName(data: RawDataRow[], expectedColumn: string): string | nu
   if (!data || data.length === 0) return null
 
   const firstRow = data[0]
+  if (!firstRow) return null
   const columnNames = Object.keys(firstRow)
 
   // Check if exact match exists
@@ -127,7 +129,8 @@ function parseDate(dateStr: unknown): string | null {
   try {
     const date = new Date(String(dateStr))
     if (isNaN(date.getTime())) return null
-    return date.toISOString().split('T')[0]
+    const isoDate = date.toISOString().split('T')[0]
+    return isoDate || null
   } catch {
     return null
   }

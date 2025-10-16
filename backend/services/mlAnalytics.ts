@@ -8,7 +8,7 @@ interface DataRow {
   check_in?: string | Date
   price?: number | string
   occupancy?: number | string
-  temperature?: number | string
+  temperature?: number | string | null
   weather?: string
   weather_condition?: string
   bookings?: number | string

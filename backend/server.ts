@@ -252,11 +252,14 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
 
         // Only insert if we have a valid date
         if (parsedDate) {
+          // Convert Date to YYYY-MM-DD string
+          const dateString = parsedDate.toISOString().split('T')[0]!;
+
           // Create pricing data record with date as ISO string
           const pricingData = {
             id: randomUUID(), // Generate UUID for each row
             propertyId: property.id,
-            date: parsedDate.toISOString().split('T')[0], // Convert Date to YYYY-MM-DD string
+            date: dateString,
             price: parseFloatSafe(priceField),
             occupancy: parseFloatSafe(occupancyField),
             bookings: parseIntSafe(bookingsField),
@@ -451,7 +454,7 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
 // Get file data (with pagination for large files)
 app.get('/api/files/:fileId/data', authenticateUser, async (req: Request, res: Response) => {
   try {
-    const { fileId } = req.params
+    const fileId = req.params.fileId! // Guaranteed by route match
     const userId = req.userId! // Guaranteed by authenticateUser middleware
     const limit = parseInt(String(req.query.limit || '10000'))
     const offset = parseInt(String(req.query.offset || '0'))
@@ -524,7 +527,7 @@ app.get('/api/files/:fileId/data', authenticateUser, async (req: Request, res: R
       total,
       offset,
       limit: transformedData.length,
-      hasMore: offset + transformedData.length < total
+      hasMore: offset + transformedData.length < (total ?? 0)
     });
   } catch (error: unknown) {
     console.error('File Read Error:', error);
@@ -575,7 +578,7 @@ app.get('/api/files', authenticateUser, async (req, res) => {
 // Delete file
 app.delete('/api/files/:fileId', authenticateUser, async (req, res) => {
   try {
-    const { fileId } = req.params;
+    const fileId = req.params.fileId!; // Guaranteed by route match
     const userId = req.userId!; // Guaranteed by authenticateUser middleware
 
     // Check if property exists and belongs to user using Supabase
@@ -690,7 +693,7 @@ app.post('/api/weather/historical', async (req, res) => {
     );
 
     // Transform Open-Meteo response to match expected format
-    const weatherData = response.data.daily.time.map((date, index) => {
+    const weatherData = response.data.daily.time.map((date: string, index: number) => {
       const weathercode = response.data.daily.weathercode[index];
 
       // Use centralized weather code mapping
@@ -804,9 +807,16 @@ app.get('/api/weather/forecast', async (req, res) => {
     );
 
     // Transform forecast data - group by day
-    const dailyForecasts = {};
+    interface DailyForecast {
+      date: string
+      temperatures: number[]
+      weather: string[]
+      humidity: number[]
+      precipitation: number
+    }
+    const dailyForecasts: Record<string, DailyForecast> = {};
 
-    response.data.list.forEach(item => {
+    response.data.list.forEach((item: any) => {
       const date = item.dt_txt.split(' ')[0];
 
       if (!dailyForecasts[date]) {
@@ -825,10 +835,10 @@ app.get('/api/weather/forecast', async (req, res) => {
     });
 
     // Calculate daily summaries
-    const forecastData = Object.values(dailyForecasts).map(day => {
+    const forecastData = Object.values(dailyForecasts).map((day: DailyForecast) => {
       const temps = day.temperatures;
-      const mostCommonWeather = day.weather.sort((a,b) =>
-        day.weather.filter(v => v===a).length - day.weather.filter(v => v===b).length
+      const mostCommonWeather = day.weather.sort((a: string, b: string) =>
+        day.weather.filter((v: string) => v===a).length - day.weather.filter((v: string) => v===b).length
       ).pop();
 
       return {
@@ -836,10 +846,10 @@ app.get('/api/weather/forecast', async (req, res) => {
         temperature: {
           min: Math.min(...temps),
           max: Math.max(...temps),
-          avg: temps.reduce((a, b) => a + b, 0) / temps.length
+          avg: temps.reduce((a: number, b: number) => a + b, 0) / temps.length
         },
         weather: mostCommonWeather,
-        humidity_avg: day.humidity.reduce((a, b) => a + b, 0) / day.humidity.length,
+        humidity_avg: day.humidity.reduce((a: number, b: number) => a + b, 0) / day.humidity.length,
         precipitation: day.precipitation
       };
     });
@@ -1162,7 +1172,7 @@ app.post('/api/analytics/summary', async (req, res) => {
     console.log(`✅ Data quality check:`, validation);
 
     // Generate analytics summary
-    const summary = generateAnalyticsSummary(transformedData);
+    const summary = generateAnalyticsSummary(transformedData) as any;
 
     // Add validation info to response
     summary.dataQuality = {
@@ -1330,7 +1340,7 @@ app.post('/api/analytics/pricing-recommendations', async (req, res) => {
 // Manual enrichment endpoint
 app.post('/api/files/:fileId/enrich', authenticateUser, async (req, res) => {
   try {
-    const { fileId } = req.params;
+    const fileId = req.params.fileId!; // Guaranteed by route match
     const userId = req.userId!; // Guaranteed by authenticateUser middleware
     const { latitude, longitude, country } = req.body;
 
