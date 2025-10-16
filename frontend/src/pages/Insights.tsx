@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Card, Select, Badge, Button } from '../components/ui'
 import {
@@ -17,9 +16,9 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts'
-import { Database, TrendingUp, Sparkles, RefreshCw } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { useDataStore } from '../store'
-import { getCombinedInsights, hasRealData as checkHasRealData } from '../lib/services/insightsData'
+import { getCombinedInsights } from '../lib/services/insightsData'
 import { MarketSentimentCard } from '../components/insights/MarketSentimentCard'
 import { AIInsightsCard } from '../components/insights/AIInsightsCard'
 import { MLAnalyticsCard } from '../components/insights/MLAnalyticsCard'
@@ -27,27 +26,18 @@ import {
   getAnalyticsSummary,
   analyzeMarketSentiment,
   generateAIInsights,
-  parseSampleCSV,
   type MarketSentiment,
   type ClaudeInsights,
   type DemandForecast,
   type WeatherImpactAnalysis,
 } from '../lib/services/analyticsService'
-import { useBusinessStore } from '../store'
 import axios from 'axios'
 import { getAccessToken } from '../lib/supabase'
 
 export const Insights = () => {
-  const navigate = useNavigate()
   const { uploadedFiles } = useDataStore()
-  const { profile } = useBusinessStore()
   const [dateRange, setDateRange] = useState('6months')
   const [weatherFilter, setWeatherFilter] = useState('all')
-
-  // Check if we have real data
-  const hasUploadedData = uploadedFiles.length > 0
-  const hasCompetitorData = checkHasRealData()
-  const hasAnyData = hasUploadedData || hasCompetitorData
 
   // Get real insights data (will be empty if no data)
   const [insights, setInsights] = useState(() => getCombinedInsights())

@@ -257,60 +257,6 @@ export async function getWeatherForecast5Day(
   }
 }
 
-function parseForecast5Day(data: any): WeatherForecast[] {
-  // Group by date and aggregate to daily forecasts
-  const dailyForecasts = new Map<string, any[]>()
-
-  data.list.forEach((item: any) => {
-    const date = new Date(item.dt * 1000)
-    const dateKey = date.toISOString().split('T')[0]
-
-    if (!dailyForecasts.has(dateKey)) {
-      dailyForecasts.set(dateKey, [])
-    }
-    dailyForecasts.get(dateKey)!.push(item)
-  })
-
-  // Aggregate to daily summaries
-  const forecasts: WeatherForecast[] = []
-
-  dailyForecasts.forEach((hourlyData, dateKey) => {
-    const temps = hourlyData.map(d => d.main.temp)
-    const precip = hourlyData.reduce((sum, d) => sum + (d.rain?.['3h'] || 0), 0)
-    const humidity = hourlyData.reduce((sum, d) => sum + d.main.humidity, 0) / hourlyData.length
-    const windSpeed = hourlyData.reduce((sum, d) => sum + d.wind.speed, 0) / hourlyData.length
-
-    // Most common weather condition for the day
-    const weatherCounts = new Map<string, number>()
-    hourlyData.forEach(d => {
-      const main = d.weather[0].main
-      weatherCounts.set(main, (weatherCounts.get(main) || 0) + 1)
-    })
-    const weatherMain = Array.from(weatherCounts.entries())
-      .sort((a, b) => b[1] - a[1])[0][0]
-
-    const date = new Date(dateKey)
-    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
-
-    forecasts.push({
-      date: dateKey,
-      day: dayName,
-      temp: temps.reduce((a, b) => a + b, 0) / temps.length,
-      temp_min: Math.min(...temps),
-      temp_max: Math.max(...temps),
-      weather_main: weatherMain,
-      weather_description: hourlyData[0].weather[0].description,
-      precipitation_probability: hourlyData[0].pop * 100,
-      precipitation_mm: precip,
-      humidity,
-      wind_speed: windSpeed,
-      is_good_weather: isGoodWeather(weatherMain, precip),
-    })
-  })
-
-  return forecasts.slice(0, 5) // Return first 5 days
-}
-
 /**
  * Get 8-day daily weather forecast
  * Fallback to 5-day forecast (backend doesn't support 8-day yet)
@@ -326,29 +272,6 @@ export async function getWeatherForecast8Day(
     console.error('Failed to fetch 8-day forecast, falling back to 5-day:', error)
     return getWeatherForecast5Day(lat, lon)
   }
-}
-
-function parseForecast8Day(data: any): WeatherForecast[] {
-  return data.daily.map((day: any) => {
-    const date = new Date(day.dt * 1000)
-    const dateKey = date.toISOString().split('T')[0]
-    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
-
-    return {
-      date: dateKey,
-      day: dayName,
-      temp: day.temp.day,
-      temp_min: day.temp.min,
-      temp_max: day.temp.max,
-      weather_main: day.weather[0].main,
-      weather_description: day.weather[0].description,
-      precipitation_probability: day.pop * 100,
-      precipitation_mm: day.rain || 0,
-      humidity: day.humidity,
-      wind_speed: day.wind_speed,
-      is_good_weather: isGoodWeather(day.weather[0].main, day.rain || 0),
-    }
-  })
 }
 
 // ===== HELPER FUNCTIONS =====
@@ -371,7 +294,7 @@ export function isGoodWeather(weatherMain: string, precipitationMm: number): boo
 export function estimateSunshineHours(
   clouds: number,
   date: Date,
-  latitude: number
+  _latitude: number
 ): number {
   // Simplified calculation - in production, use more accurate solar calculations
   const month = date.getMonth()

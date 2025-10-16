@@ -7,7 +7,6 @@ import {
 import { Card, Button, Table, Badge, Progress } from '../components/ui'
 import { useNavigate } from 'react-router-dom'
 import { useDataStore, useBusinessStore } from '../store'
-import { getHistoricalWeatherBatch } from '../lib/api/services/weather'
 import { getHolidaysForDates, getCountryCode } from '../lib/api/services/holidays'
 import axios from 'axios'
 import { supabase } from '../lib/supabase'
@@ -223,49 +222,6 @@ export const Data = () => {
       // Small delay between uploads
       await new Promise(resolve => setTimeout(resolve, 300))
     }
-  }
-
-  // Parse CSV and return first 5 rows as preview
-  const parseCSVPreview = (csvContent: string): any[] => {
-    const lines = csvContent.trim().split('\n')
-    if (lines.length < 2) return []
-
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
-    const preview: any[] = []
-
-    for (let i = 1; i < Math.min(6, lines.length); i++) {
-      const values = lines[i].split(',')
-      const row: any = {}
-      headers.forEach((header, idx) => {
-        const value = values[idx]?.trim() || ''
-        // Try to parse numbers
-        row[header] = isNaN(Number(value)) ? value : Number(value)
-      })
-      preview.push(row)
-    }
-
-    return preview
-  }
-
-  // Count total rows in CSV
-  const countCSVRows = (csvContent: string): number => {
-    return csvContent.trim().split('\n').length - 1 // -1 for header
-  }
-
-  // Count columns in CSV
-  const countCSVColumns = (csvContent: string): number => {
-    const firstLine = csvContent.trim().split('\n')[0]
-    return firstLine ? firstLine.split(',').length : 0
-  }
-
-  const generateMockPreview = () => {
-    return [
-      { date: '2024-01-15', price: 245, bookings: 12, occupancy: 85 },
-      { date: '2024-01-16', price: 268, bookings: 15, occupancy: 92 },
-      { date: '2024-01-17', price: 230, bookings: 10, occupancy: 78 },
-      { date: '2024-01-18', price: 255, bookings: 14, occupancy: 88 },
-      { date: '2024-01-19', price: 290, bookings: 18, occupancy: 95 },
-    ]
   }
 
   const removeFile = (uniqueId: string) => {

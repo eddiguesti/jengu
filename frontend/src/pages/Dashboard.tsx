@@ -1,7 +1,7 @@
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
-import { TrendingUp, DollarSign, Calendar, BarChart3, ArrowUpRight, ArrowDownRight, Activity, Zap, Database } from 'lucide-react'
+import { TrendingUp, DollarSign, BarChart3, ArrowUpRight, Activity, Zap, Database } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useDataStore } from '../store'

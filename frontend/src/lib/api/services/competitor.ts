@@ -77,7 +77,7 @@ export async function scrapeCompetitorPrices(
         }
 
         const html = await response.text()
-        const extractedPrices = extractPricesFromHTML(html, platform, config)
+        const extractedPrices = extractPricesFromHTML(html, platform)
         prices.push(...extractedPrices)
 
         // Respect rate limits
@@ -131,8 +131,7 @@ function buildTargetUrls(config: ScraperConfig): { platform: string; url: string
  */
 function extractPricesFromHTML(
   html: string,
-  platform: string,
-  config: ScraperConfig
+  platform: string
 ): CompetitorPrice[] {
   // In production, use proper HTML parsing (e.g., cheerio in backend)
   // This is a simplified regex approach
@@ -141,7 +140,6 @@ function extractPricesFromHTML(
   try {
     // Different platforms have different price formats
     let priceRegex: RegExp
-    let currencySymbol = '$'
 
     switch (platform) {
       case 'Booking.com':
@@ -298,7 +296,7 @@ export function analyzeCompetitorPrices(
  * In production, this would query a database of scraped historical data
  */
 export async function getHistoricalCompetitorPrices(
-  location: string,
+  _location: string,
   propertyType: string,
   daysBack: number = 30
 ): Promise<Map<string, number>> {

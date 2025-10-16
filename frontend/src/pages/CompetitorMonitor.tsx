@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Building2, TrendingUp, TrendingDown, AlertCircle, Database, Download,
+  TrendingUp, TrendingDown, AlertCircle, Database, Download,
   RefreshCw, Clock, MapPin, Settings as SettingsIcon
 } from 'lucide-react'
 import { Card, Button, Badge, Progress } from '../components/ui'
@@ -11,12 +11,10 @@ import {
   searchHotelsByCity,
   getRemainingCalls,
   getCacheStats,
-  getHotelPriceHistory,
   getHotelPriceTrend,
   exportAllData,
   type HotelPrice,
 } from '../lib/api/services/makcorps'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import clsx from 'clsx'
 
 export const CompetitorMonitor = () => {
@@ -27,7 +25,6 @@ export const CompetitorMonitor = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [dataType, setDataType] = useState<'historical' | 'live' | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [selectedHotel, setSelectedHotel] = useState<HotelPrice | null>(null)
   const [remainingCalls, setRemainingCalls] = useState(getRemainingCalls())
   const [cacheStats, setCacheStats] = useState(getCacheStats())
 

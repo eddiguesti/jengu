@@ -244,7 +244,7 @@ export function areValidCoordinates(latitude: number, longitude: number): boolea
  * Uses Mapbox Geocoding to get timezone information
  */
 export async function getTimezoneFromCoordinates(
-  latitude: number,
+  _latitude: number,
   longitude: number
 ): Promise<string> {
   // Simplified timezone detection based on longitude

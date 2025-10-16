@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useDataStore } from '../store'
 import {
   TrendingUp,
-  TrendingDown,
   DollarSign,
   Zap,
   Target,
@@ -27,7 +26,6 @@ import {
 import {
   LineChart,
   Line,
-  AreaChart,
   Area,
   BarChart,
   Bar,

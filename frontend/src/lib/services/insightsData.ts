@@ -3,7 +3,7 @@
  * Combines uploaded CSV data, competitor pricing, and enrichment data
  */
 
-import { getAllHotelHistories, exportAllData } from '../api/services/makcorps'
+import { exportAllData } from '../api/services/makcorps'
 
 export interface InsightData {
   // Price by weather
@@ -149,9 +149,8 @@ function processCompetitorData(): Partial<InsightData> {
   // Calculate competitor pricing trends
   const sortedDates = Object.keys(dateGroups).sort()
 
-  sortedDates.forEach((date, index) => {
+  sortedDates.forEach((date) => {
     const prices = dateGroups[date]
-    const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length
 
     // Get competitor prices (lowest, highest, or specific hotels)
     const sortedPrices = [...prices].sort((a, b) => a - b)
