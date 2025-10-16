@@ -5,16 +5,17 @@ allowed-tools: [Bash]
 
 # Frontend Check Command
 
-Runs TypeScript type checking and build verification for the frontend.
+Runs TypeScript type checking, linting and build verification for the frontend and backend, and checks the changes are in line with the Architecture guide.
 
 ## Execution
 
-1. Run the comprehensive check command:
+1. Check that changes in this session are in accordance with the guidance in `docs/developer/ARCHITECTURE.md`.
+2. Run the comprehensive check command from this project's root directory
 
 ```bash
-cd /Users/danny/dev/jengu/frontend && pnpm run build:check
+pnpm run check-all
 ```
 
-2. Report results to the user:
-   - If successful: Confirm type checking and build passed
-   - If failed: Show errors and suggest fixes
+3. Fix any errors and warnings reported.
+4. Confirm you have fixed the issues by running again.
+5. Report a summary to the user.
