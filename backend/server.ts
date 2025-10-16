@@ -38,8 +38,36 @@ function getErrorMessage(error: unknown): string {
   return String(error)
 }
 
+// Types for CSV data
+interface CSVRow {
+  [key: string]: string | number | null | undefined
+}
+
+interface ParsedPricingData {
+  id: string
+  propertyId: string
+  date: string
+  price: number | null
+  occupancy: number | null
+  bookings: number | null
+  temperature: number | null
+  weatherCondition: string | null
+  extraData: CSVRow
+}
+
+// Types for axios error responses
+interface AxiosErrorResponse {
+  data?: {
+    error?: { message?: string }
+    message?: string
+    [key: string]: unknown
+  }
+}
+
 // Helper to check if error is axios error
-function isAxiosError(error: unknown): error is { response?: { data?: any }; message?: string } {
+function isAxiosError(
+  error: unknown
+): error is { response?: AxiosErrorResponse; message?: string } {
   return typeof error === 'object' && error !== null && 'isAxiosError' in error
 }
 
@@ -182,7 +210,7 @@ app.post(
       const BATCH_SIZE = 1000
       let totalRows = 0
       let columnCount = 0
-      const preview: any[] = []
+      const preview: CSVRow[] = []
 
       // Helper function to parse date flexibly
       const parseDate = (dateStr: unknown): Date | null => {
@@ -210,7 +238,7 @@ app.post(
       }
 
       // Process CSV stream - collect all rows first
-      const allRows: any[] = []
+      const allRows: CSVRow[] = []
       await new Promise<void>((resolve, reject) => {
         fs.createReadStream(filePath)
           .pipe(csv())
@@ -218,7 +246,7 @@ app.post(
             columnCount = headers.length
             console.log(`📊 CSV Columns (${columnCount}):`, headers)
           })
-          .on('data', (row: any) => {
+          .on('data', (row: CSVRow) => {
             totalRows++
             allRows.push(row)
 
@@ -240,11 +268,11 @@ app.post(
       // Insert rows in batches
       for (let i = 0; i < allRows.length; i += BATCH_SIZE) {
         const batchRows = allRows.slice(i, i + BATCH_SIZE)
-        const batchData = []
+        const batchData: ParsedPricingData[] = []
 
         for (const row of batchRows) {
           // Normalize column names (handle different CSV formats)
-          const normalizedRow: Record<string, any> = {}
+          const normalizedRow: CSVRow = {}
           Object.keys(row).forEach(key => {
             normalizedRow[key.trim().toLowerCase()] = row[key]
           })
@@ -269,6 +297,10 @@ app.post(
             // Convert Date to YYYY-MM-DD string
             const dateString = parsedDate.toISOString().split('T')[0]!
 
+            // Helper to convert weather field to string | null
+            const weatherString =
+              weatherField !== null && weatherField !== undefined ? String(weatherField) : null
+
             // Create pricing data record with date as ISO string
             const pricingData = {
               id: randomUUID(), // Generate UUID for each row
@@ -278,7 +310,7 @@ app.post(
               occupancy: parseFloatSafe(occupancyField),
               bookings: parseIntSafe(bookingsField),
               temperature: parseFloatSafe(temperatureField),
-              weatherCondition: weatherField || null,
+              weatherCondition: weatherString,
               extraData: normalizedRow, // Store all fields as JSON for flexibility
             }
 
@@ -833,9 +865,17 @@ app.get('/api/weather/forecast', async (req, res) => {
       humidity: number[]
       precipitation: number
     }
+
+    interface ForecastItem {
+      dt_txt: string
+      main: { temp: number; humidity: number }
+      weather: Array<{ main: string }>
+      rain?: { '3h'?: number }
+    }
+
     const dailyForecasts: Record<string, DailyForecast> = {}
 
-    response.data.list.forEach((item: any) => {
+    response.data.list.forEach((item: ForecastItem) => {
       const date = item.dt_txt.split(' ')[0]
 
       if (!dailyForecasts[date]) {
@@ -1216,11 +1256,11 @@ app.post('/api/analytics/summary', async (req, res) => {
     console.log(`✅ Data quality check:`, validation)
 
     // Generate analytics summary
-    const summary = generateAnalyticsSummary(transformedData) as any
+    const summary = generateAnalyticsSummary(transformedData) as Record<string, unknown>
 
     // Add validation info to response
     summary.dataQuality = {
-      ...summary.dataQuality,
+      ...((summary.dataQuality as object) || {}),
       validation: {
         isValid: validation.isValid,
         warnings: validation.warnings,
