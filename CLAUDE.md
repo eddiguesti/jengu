@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **This file (CLAUDE.md)** - High-level guidance, principles, and quick-start
 - **`docs/developer/ARCHITECTURE.md`** - Detailed technical architecture, directory structures, and "where to put code" guide
+- **`docs/developer/SUPABASE_SECURITY.md`** - Supabase security patterns and best practices
 - **`docs/developer/`** - Evergreen developer documentation for specific subsystems
 - **`docs/tasks.md`** - Task management system
 
@@ -153,7 +154,7 @@ jengu/
 - `dataTransform.ts` - Data validation & transformation
 - `enrichmentService.ts` - Weather/holiday enrichment pipeline
 
-**Adding endpoints**: Add to `server.ts`, use `authenticateUser` middleware, manually filter by `req.userId`. All route handlers are fully typed.
+**Adding endpoints**: Add to `server.ts`, use `authenticateUser` middleware, manually filter by `req.userId`. All route handlers are fully typed. See `docs/developer/SUPABASE_SECURITY.md` for security patterns.
 
 ### Frontend Development
 
@@ -353,16 +354,19 @@ taskkill /PID <PID> /F
 
 - JWT tokens managed by Supabase client (auto-refresh)
 - RLS policies on all tables
-- Backend uses service role + manual filtering
+- Backend uses service role + manual filtering by `userId`
 - Never expose service role key to frontend
+
+**See `docs/developer/SUPABASE_SECURITY.md` for detailed security patterns and best practices.**
 
 ## When Making Changes
 
 ### Before Adding Features
 
 1. Check `docs/developer/ARCHITECTURE.md` for current patterns
-2. Look for similar existing code
-3. Follow established conventions
+2. Check `docs/developer/SUPABASE_SECURITY.md` when working with database/auth
+3. Look for similar existing code
+4. Follow established conventions
 
 ### Before Refactoring
 
