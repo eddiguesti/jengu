@@ -215,6 +215,10 @@ pnpm run dev
 ### **Build for Production**
 
 ```bash
+# Type check before building (from root)
+pnpm run type-check
+
+# Build frontend
 cd frontend
 pnpm run build
 
@@ -318,8 +322,12 @@ pytest tests/unit/test_pricing.py -v
 ### **Type Checking**
 
 ```bash
-# Check types
-mypy core/ apps/
+# Type check both frontend and backend (from root)
+pnpm run type-check
+
+# Type check individual workspaces
+pnpm run type-check:frontend
+pnpm run type-check:backend
 ```
 
 ---

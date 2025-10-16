@@ -200,6 +200,13 @@ If automated setup fails, manually run SQL files via Supabase dashboard:
 ### Type Checking & Builds
 
 ```bash
+# Type check both frontend and backend (from root)
+pnpm run type-check
+
+# Type check individual workspaces (from root)
+pnpm run type-check:frontend
+pnpm run type-check:backend
+
 # Frontend type check + build
 cd frontend
 pnpm run build:check
