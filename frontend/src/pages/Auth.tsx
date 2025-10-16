@@ -364,7 +364,7 @@ export default function Auth() {
           {/* Toggle mode */}
           <div className="px-8 pb-8 text-center">
             <p className="text-sm text-muted">
-              {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
+              {mode === 'login' ? "Don&apos;t have an account?" : 'Already have an account?'}{' '}
               <button
                 onClick={toggleMode}
                 className="group inline-flex items-center gap-1 font-medium text-primary transition-colors hover:text-primary/80"

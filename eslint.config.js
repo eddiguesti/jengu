@@ -58,10 +58,29 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': 'warn',
       'react/prop-types': 'off', // Using TypeScript for prop validation
+      'react/display-name': 'off', // Allow anonymous components (common with forwardRef)
+      'react/no-unescaped-entities': 'off', // Allow apostrophes and quotes in JSX text
 
       // Tailwind CSS linting rules (frontend only)
       'tailwindcss/classnames-order': 'warn',
-      'tailwindcss/no-custom-classname': 'warn',
+      'tailwindcss/no-custom-classname': [
+        'warn',
+        {
+          whitelist: [
+            // Custom theme colors from tailwind.config.js
+            'primary.*',
+            'background.*',
+            'card.*',
+            'elevated.*',
+            'border.*',
+            'text.*',
+            'muted.*',
+            'success.*',
+            'warning.*',
+            'error.*',
+          ],
+        },
+      ],
       'tailwindcss/no-contradicting-classname': 'error',
     },
   },

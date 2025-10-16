@@ -117,7 +117,7 @@ export const Dashboard = () => {
 
             {/* Preview of what they'll get */}
             <div className="mt-8 w-full border-t border-border pt-8">
-              <p className="mb-4 text-sm text-muted">Once you upload data, you'll see:</p>
+              <p className="mb-4 text-sm text-muted">Once you upload data, you&apos;ll see:</p>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="rounded-lg border border-border bg-elevated p-4">
                   <BarChart3 className="mx-auto mb-2 h-6 w-6 text-primary" />
