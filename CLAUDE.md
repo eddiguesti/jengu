@@ -2,320 +2,326 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-See @docs/tasks.md for task management
+## Documentation Structure
+
+- **This file (CLAUDE.md)** - High-level guidance, principles, and quick-start
+- **`docs/developer/ARCHITECTURE.md`** - Detailed technical architecture, directory structures, and "where to put code" guide
+- **`docs/developer/`** - Evergreen developer documentation for specific subsystems
+- **`docs/tasks.md`** - Task management system
+
+**Always check `docs/developer/` for detailed documentation before making architectural changes.**
 
 ## Project Overview
 
-**Jengu** is a dynamic pricing intelligence platform for hospitality businesses. It's a full-stack monorepo with React frontend and Node.js/Express backend, using Supabase PostgreSQL for database and authentication.
+Jengu is a dynamic pricing intelligence platform for hospitality businesses. Full-stack TypeScript/JavaScript monorepo:
+
+- **Backend**: Node.js + Express API server
+- **Frontend**: React 18 + TypeScript SPA
+- **Database**: Supabase PostgreSQL
+- **Auth**: Supabase Auth (JWT)
+- **Monorepo**: pnpm workspaces
 
 ## Technology Stack
 
-### Backend (`backend/`)
+### Backend
+
 - **Runtime**: Node.js 20+ with ES modules
 - **Framework**: Express.js
-- **Database**: Supabase PostgreSQL (via REST API + Supabase JS Client)
-- **Auth**: Supabase Auth (JWT tokens)
-- **File Processing**: Multer (uploads), csv-parser (streaming CSV)
-- **Package Manager**: pnpm
+- **Database**: Supabase PostgreSQL (via Supabase JS Client)
+- **Auth**: Supabase Auth with JWT validation
+- **File Processing**: Streaming CSV with multer + csv-parser
+- **Package Manager**: **pnpm** (always use pnpm, not npm)
 
-### Frontend (`frontend/`)
+### Frontend
+
 - **Framework**: React 18 + TypeScript
-- **Build Tool**: Vite
-- **Styling**: TailwindCSS
-- **Animations**: Framer Motion
-- **State Management**: Zustand
-- **Charts**: Recharts
+- **Build**: Vite (with HMR)
+- **Styling**: Tailwind CSS
+- **State**: Zustand stores
 - **Routing**: React Router v6
-- **Auth**: Supabase Auth
-- **Package Manager**: pnpm
+- **Charts**: Recharts
+- **Animations**: Framer Motion
 
 ### External APIs
-- **Anthropic Claude**: AI insights (Claude Sonnet 4.5)
-- **Open-Meteo**: Historical weather data (free, no API key)
+
+- **Anthropic Claude**: AI-powered insights
+- **Open-Meteo**: Free historical weather data (no API key)
 - **OpenWeather**: Current/forecast weather
-- **Nominatim**: Geocoding (free, with Mapbox fallback)
-- **Calendarific**: Holiday data
+- **Nominatim**: Free geocoding (Mapbox fallback)
+- **Calendarific**: Holiday data (currently disabled pending migration)
 
-## Development Commands
-
-### Start Development Servers
+## Quick Start
 
 ```bash
-# Backend (port 3001)
+# Install dependencies (from project root)
+pnpm install
+
+# Backend (auto-restarts with --watch)
 cd backend
 pnpm run dev
 
-# Frontend (port 5173)
+# Frontend (with Vite HMR)
 cd frontend
 pnpm run dev
 ```
 
-The backend uses Node's `--watch` flag for auto-restart. Frontend uses Vite HMR.
+**Default development ports**: Backend API and frontend dev server use standard ports. See `docs/developer/ARCHITECTURE.md` for details.
 
-### Build & Type Check
+## Core Architectural Patterns
+
+### Monorepo Structure
+
+```
+jengu/
+├── backend/          # Express API server
+├── frontend/         # React SPA
+├── docs/
+│   ├── developer/   # Technical documentation
+│   ├── tasks*/      # Task management
+│   └── archive/     # Historical docs (may be outdated - use with caution)
+└── pnpm-workspace.yaml
+```
+
+**See `docs/developer/ARCHITECTURE.md` for complete directory trees.**
+
+### Authentication Flow
+
+1. **Frontend**: User logs in → Supabase Auth → JWT token (stored in localStorage)
+2. **Frontend**: axios client auto-attaches `Authorization: Bearer <token>` header
+3. **Backend**: `authenticateUser` middleware validates JWT via Supabase
+4. **Backend**: Attaches `req.userId` to request object
+5. **Backend**: Manually filters database queries by `userId` (using service role)
+
+**Key concept**: Backend uses Supabase service role (bypasses RLS) for batch operations. RLS is enforced manually at application level.
+
+### Data Flow Patterns
+
+**CSV Upload → Enrichment**:
+
+1. User uploads CSV via frontend
+2. Backend streams CSV (not loaded into memory)
+3. Batch insert to database (1000 rows/batch)
+4. Return success response immediately
+5. Background enrichment runs asynchronously (weather, temporal features, holidays)
+
+**Analytics**:
+
+1. Frontend fetches data from database
+2. Stores in Zustand
+3. Posts to analytics endpoints
+4. Backend runs statistical analysis
+5. Optional: AI insights via Claude API
+
+**See `docs/developer/ARCHITECTURE.md` for detailed data flow diagrams.**
+
+### Database Patterns
+
+**Tables**:
+
+- `properties` - CSV file metadata (belongs to user)
+- `pricing_data` - Time-series pricing records (belongs to property)
+- `business_settings` - User's business profile (one-per-user)
+
+**Row-Level Security**: All tables have RLS enabled. Backend uses service role and manually filters by `userId`. Frontend queries respect RLS automatically.
+
+**See `docs/developer/ARCHITECTURE.md` for complete database schema.**
+
+## Development Patterns
+
+### Backend Development
+
+**Server Structure**: Single `backend/server.js` file (~1500 lines) contains all route handlers. This is intentional for simplicity - easy to find code, simple deployment.
+
+**Services Layer**: Business logic lives in `backend/services/`:
+
+- `mlAnalytics.js` - Statistical analysis & forecasting
+- `marketSentiment.js` - AI insights via Claude
+- `dataTransform.js` - Data validation & transformation
+- `enrichmentService.js` - Weather/holiday enrichment pipeline
+
+**Adding endpoints**: Add to `server.js`, use `authenticateUser` middleware, manually filter by `req.userId`.
+
+### Frontend Development
+
+**Pages**: Top-level routes in `src/pages/` (Dashboard, Data, Insights, Settings, etc.)
+
+**Components**:
+
+- `components/ui/` - Base design system (Button, Card, Input, etc.)
+- `components/layout/` - Layout components (Sidebar, Layout wrapper)
+- `components/insights/` - Feature-specific components
+
+**State Management**:
+
+- Zustand stores for client state (`useDataStore`, `useBusinessStore`)
+- React Context for auth (`AuthContext`)
+- No server state caching yet (consider adding React Query)
+
+**API Client**: `lib/api/client.ts` provides axios instance with automatic JWT injection. Service modules in `lib/api/services/` provide type-safe API functions.
+
+### Common Code Locations
+
+**See `docs/developer/ARCHITECTURE.md` section "Where to Add New Code"** for detailed examples of:
+
+- Adding API endpoints
+- Adding service functions
+- Creating new pages
+- Adding UI components
+- Adding database tables
+
+## Development Workflow
+
+### Environment Setup
+
+**Backend** requires `.env` with:
+
+- Supabase credentials (URL, anon key, service key)
+- API keys (Anthropic, OpenWeather, etc.)
+
+**Frontend** requires `.env` with:
+
+- Supabase credentials (URL, anon key only)
+
+See `backend/.env.example` for template.
+
+### Database Setup
 
 ```bash
-# Frontend build (with TypeScript check)
+cd backend
+node setup-database.js  # Creates tables + RLS policies
+node test-db.js         # Test connection
+```
+
+If automated setup fails, manually run SQL files via Supabase dashboard:
+
+1. `backend/prisma/create-tables.sql`
+2. `backend/prisma/supabase-rls-policies.sql`
+
+### Type Checking & Builds
+
+```bash
+# Frontend type check + build
 cd frontend
 pnpm run build:check
 
-# Frontend build (skip TypeScript check)
+# Build only (skip type check)
 pnpm run build
 
 # Preview production build
 pnpm run preview
 ```
 
-### Database Setup
+## Key Principles & Conventions
 
-```bash
-# Run database setup script (creates tables + RLS policies)
-cd backend
-node setup-database.js
+### Package Management
 
-# Test database connection
-node test-db.js
-```
+- **Always use pnpm** (not npm) - this is a workspace-managed monorepo
+- Never run dev servers without being asked - suggest user runs them
 
-**Note**: If automated setup fails, manually run SQL files in Supabase dashboard:
-1. `backend/prisma/create-tables.sql` (creates tables)
-2. `backend/prisma/supabase-rls-policies.sql` (sets up RLS)
+### Code Style
 
-## Architecture
+- **Backend**: ES modules, async/await, descriptive console.logs with emojis
+- **Frontend**: Functional components, TypeScript strict, Tailwind styling
+- **File naming**: camelCase for JS, PascalCase for React components
 
-### Monorepo Structure
+### Error Handling
 
-The project uses pnpm workspaces defined in `pnpm-workspace.yaml`:
-- `backend/` - Express API server
-- `frontend/` - React SPA
+- Always return structured errors: `{ error: string, message: string }`
+- Try-catch blocks in all async route handlers
+- User-friendly error messages in frontend
 
-### Backend Architecture
+### API Conventions
 
-**Entry Point**: `backend/server.js`
+- Success: `{ success: true, data: {...} }`
+- Error: `{ error: "type", message: "details" }`
+- Always validate inputs
+- Always filter by userId in backend queries
 
-**Key Services** (`backend/services/`):
-- `mlAnalytics.js` - Statistical analysis, demand forecasting, feature importance
-- `marketSentiment.js` - AI-powered insights using Claude, pricing recommendations
-- `dataTransform.js` - Data validation and transformation
-- `enrichmentService.js` - Automatic weather/holiday data enrichment
-
-**Authentication Flow**:
-1. Frontend gets JWT from Supabase Auth (`supabase.auth.signInWithPassword()`)
-2. JWT sent in `Authorization: Bearer <token>` header to backend
-3. Backend middleware `authenticateUser()` validates JWT and extracts user ID
-4. User ID attached to `req.userId` for RLS queries
-
-**Database Access**:
-- `supabaseAdmin` - Service role key, bypasses RLS (for admin operations, batch inserts)
-- `supabase` - Anon key, respects RLS (not used much in backend)
-
-**File Upload Pipeline**:
-1. CSV uploaded via Multer to `backend/uploads/`
-2. Streaming CSV parser processes rows
-3. Batch insert (1000 rows/batch) to `pricing_data` table
-4. Automatic enrichment runs in background (weather + holidays)
-5. Original CSV deleted after import
-
-### Frontend Architecture
-
-**Entry Point**: `frontend/src/main.tsx` → `App.tsx`
-
-**Routing** (`App.tsx`):
-- Protected routes wrapped in `AuthContext`
-- Public: `/login`, `/signup`
-- Protected: `/`, `/data`, `/insights`, `/settings`, etc.
-
-**State Management**:
-- `useDataStore.ts` - Zustand store for uploaded files and pricing data
-- `useBusinessStore.ts` - Business settings (location, property type)
-- `AuthContext.tsx` - Auth state and user info
-
-**API Client** (`frontend/src/lib/api/`):
-- `client.ts` - Axios instance with auth interceptor (auto-adds JWT)
-- `services/` - Type-safe API service functions
-
-**Key Pages** (`frontend/src/pages/`):
-- `Data.tsx` - CSV upload, file management, data preview
-- `Insights.tsx` - ML analytics dashboard
-- `Settings.tsx` - Business profile with geocoding
-- `PricingEngine.tsx` - Pricing recommendations
-- `CompetitorMonitor.tsx` - Competitor tracking
-
-### Database Schema
-
-**Tables**:
-- `properties` - Uploaded CSV files metadata
-  - Links to user via `userId` (auth.users)
-  - Tracks enrichment status
-- `pricing_data` - Time-series pricing records
-  - Foreign key to `properties.id` (CASCADE delete)
-  - Contains date, price, occupancy, weather data, holidays
-- `business_settings` - User's business profile
-  - One-to-one with user (via `userid`)
-  - Stores location (lat/lon), property type, currency
-
-**RLS Policies**:
-- All tables have RLS enabled
-- Users can only access their own data (filtered by `userId` or `userid`)
-- Policies defined in `backend/prisma/supabase-rls-policies.sql`
-
-### Data Enrichment Pipeline
-
-When a CSV is uploaded:
-1. File metadata saved to `properties` table
-2. Rows parsed and batch-inserted to `pricing_data`
-3. Background enrichment triggered (via `setImmediate`):
-   - Fetches user's business settings for coordinates
-   - Calls Open-Meteo API for historical weather
-   - Matches dates to holidays (Calendarific API)
-   - Updates `pricing_data` rows with enriched fields
-   - Marks property as `enrichmentStatus: 'completed'`
-
-Enrichment runs automatically if user has set coordinates in Settings. Can also be triggered manually via `/api/files/:fileId/enrich`.
-
-## API Endpoints
-
-**Health**: `GET /health`
-
-**Files**:
-- `POST /api/files/upload` - Upload CSV (authenticated)
-- `GET /api/files` - List user's files
-- `GET /api/files/:fileId/data` - Get pricing data (paginated)
-- `DELETE /api/files/:fileId` - Delete file
-- `POST /api/files/:fileId/enrich` - Manual enrichment
-
-**Analytics**:
-- `POST /api/analytics/summary` - Comprehensive analytics
-- `POST /api/analytics/weather-impact` - Weather correlation analysis
-- `POST /api/analytics/demand-forecast` - Demand forecasting
-- `POST /api/analytics/feature-importance` - Feature importance scores
-- `POST /api/analytics/ai-insights` - Claude-powered insights
-- `POST /api/analytics/pricing-recommendations` - Pricing suggestions
-
-**External APIs**:
-- `POST /api/weather/historical` - Open-Meteo historical data
-- `GET /api/weather/current` - OpenWeather current
-- `GET /api/weather/forecast` - OpenWeather 5-day forecast
-- `GET /api/geocoding/forward` - Address to coordinates
-- `GET /api/geocoding/reverse` - Coordinates to address
-
-**Settings**:
-- `GET /api/settings` - Get user's business settings
-- `POST /api/settings` - Save/update settings
-
-## Environment Setup
-
-### Backend `.env`
-```
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-key
-DATABASE_URL=postgresql://postgres:password@db.your-project.supabase.co:5432/postgres
-
-ANTHROPIC_API_KEY=sk-ant-...
-OPENWEATHER_API_KEY=your-key
-CALENDARIFIC_API_KEY=your-key
-MAPBOX_TOKEN=pk.your-token (optional, Nominatim fallback exists)
-```
-
-### Frontend `.env`
-```
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-
-See `backend/.env.example` for full list.
-
-## Common Development Patterns
-
-### Adding a New API Endpoint
-
-1. Add route handler in `backend/server.js`
-2. Use `authenticateUser` middleware if requires auth
-3. Access user ID via `req.userId`
-4. Use `supabaseAdmin` for database operations
-5. Add TypeScript types in frontend
-6. Create service function in `frontend/src/lib/api/services/`
-
-### Working with Supabase
-
-**Backend queries** (always use `supabaseAdmin`):
-```javascript
-const { data, error } = await supabaseAdmin
-  .from('properties')
-  .select('*')
-  .eq('userId', req.userId)  // Manually filter by user
-  .single();
-```
-
-**Frontend queries** (use `supabase` from `lib/supabase.ts`):
-```typescript
-const { data, error } = await supabase
-  .from('properties')
-  .select('*');  // RLS automatically filters by authenticated user
-```
-
-### Authentication Flow
-
-**Frontend login**:
-```typescript
-import { signIn } from '@/lib/supabase';
-const { session } = await signIn(email, password);
-// Session automatically stored in localStorage
-```
-
-**Backend API calls**:
-```typescript
-import { apiClient } from '@/lib/api/client';
-// JWT automatically added to Authorization header
-const response = await apiClient.get('/api/files');
-```
-
-## Troubleshooting
+## Common Troubleshooting
 
 ### Port Already in Use
-```bash
-# Windows
-netstat -ano | findstr :3001
-taskkill /PID <PID> /F
 
+Kill process on the port and restart:
+
+```bash
 # macOS/Linux
-lsof -ti:3001 | xargs kill -9
+lsof -ti:PORT | xargs kill -9
+
+# Windows
+netstat -ano | findstr :PORT
+taskkill /PID <PID> /F
 ```
 
 ### Stale Data in Frontend
+
 1. Open DevTools → Application tab
 2. Clear Local Storage and Session Storage
 3. Hard refresh (Ctrl+Shift+R)
 
 ### Database Connection Issues
-- Verify Supabase credentials in `.env`
+
+- Verify `.env` credentials
 - Check Supabase project status in dashboard
 - Ensure RLS policies are created
 - Test with `backend/test-db.js`
 
 ### Authentication Issues
+
 - Clear browser localStorage
-- Verify JWT token is being sent (Network tab)
-- Check Supabase Auth dashboard for user status
+- Verify JWT in Network tab
+- Check user status in Supabase Auth dashboard
 - Ensure RLS policies allow authenticated access
-
-## Code Style & Conventions
-
-- **Backend**: ES modules, async/await, descriptive console logs with emojis
-- **Frontend**: TypeScript strict mode, functional components, hooks
-- **File naming**: camelCase for .js/.ts, PascalCase for React components
-- **API responses**: Always return `{ success: boolean, data?: any, error?: string }`
-- **Error handling**: Try-catch blocks with descriptive error messages
-- **Comments**: JSDoc style for functions, inline comments for complex logic
 
 ## Important Notes
 
-- Never run `pnpm run dev` unless user explicitly asks - suggest they run it instead
-- Always use `pnpm` not `npm` (workspace management)
-- Backend auto-restarts with `--watch` flag (no nodemon needed)
-- CSV uploads are streamed (not loaded into memory) for large files
-- Enrichment runs asynchronously after upload response sent
-- All dates stored as ISO 8601 strings in database
-- Weather codes mapped via `backend/utils/weatherCodes.js`
-- Rate limiting: 60 requests/minute per IP (in-memory, resets on restart)
+### Critical Constraints
+
+- **Never run `pnpm run dev`** unless user explicitly asks - suggest they run it instead
+- **Always use pnpm** not npm (monorepo workspace management)
+- **Backend auto-restarts** with `--watch` flag (no nodemon needed)
+- **Holiday enrichment is disabled** - needs Supabase migration (see TODOs in code)
+
+### Performance Characteristics
+
+- CSV uploads are **streamed** (not loaded into memory) for large files
+- Database operations use **batch inserts** (1000 rows at a time)
+- Enrichment runs **asynchronously** after upload response is sent
+- Rate limiting is **in-memory** (60 req/min per IP, resets on restart)
+
+### Security Model
+
+- JWT tokens managed by Supabase client (auto-refresh)
+- RLS policies on all tables
+- Backend uses service role + manual filtering
+- Never expose service role key to frontend
+
+## When Making Changes
+
+### Before Adding Features
+
+1. Check `docs/developer/ARCHITECTURE.md` for current patterns
+2. Look for similar existing code
+3. Follow established conventions
+
+### Before Refactoring
+
+1. Understand the current data flow
+2. Check for background jobs (e.g., enrichment)
+3. Consider impact on RLS/auth
+
+### Adding New Documentation
+
+- Detailed architecture: `docs/developer/ARCHITECTURE.md`
+- New subsystems: Create new file in `docs/developer/`
+- Task planning: Use task management system in `docs/tasks.md`
+
+## External Resources
+
+- **Supabase Docs**: [https://supabase.com/docs](https://supabase.com/docs)
+- **React Docs**: [https://react.dev](https://react.dev)
+- **Vite Docs**: [https://vitejs.dev](https://vitejs.dev)
+- **Tailwind Docs**: [https://tailwindcss.com](https://tailwindcss.com)
+
+---
+
+**For detailed technical information, always refer to `docs/developer/ARCHITECTURE.md` first.**
