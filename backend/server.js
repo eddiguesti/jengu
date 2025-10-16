@@ -23,6 +23,7 @@ import {
 } from './services/marketSentiment.js';
 import { transformDataForAnalytics, validateDataQuality } from './services/dataTransform.js';
 import { enrichPropertyData } from './services/enrichmentService.js';
+import { mapWeatherCode } from './utils/weatherCodes.js';
 
 // ES Module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
@@ -170,15 +171,15 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
       }
     };
 
-    // Helper function to parse float
-    const parseFloat = (val) => {
+    // Helper function to parse float safely
+    const parseFloatSafe = (val) => {
       if (val === null || val === undefined || val === '') return null;
       const num = Number(val);
       return isNaN(num) ? null : num;
     };
 
-    // Helper function to parse int
-    const parseInt = (val) => {
+    // Helper function to parse int safely
+    const parseIntSafe = (val) => {
       if (val === null || val === undefined || val === '') return null;
       const num = Number(val);
       return isNaN(num) ? null : Math.floor(num);
@@ -208,6 +209,10 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
 
     console.log(`📥 Parsed ${totalRows} rows, now inserting to database...`);
 
+    // Track successful inserts for rollback if needed
+    let totalInserted = 0;
+    let insertFailed = false;
+
     // Insert rows in batches
     for (let i = 0; i < allRows.length; i += BATCH_SIZE) {
       const batchRows = allRows.slice(i, i + BATCH_SIZE);
@@ -233,10 +238,10 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
           id: randomUUID(), // Generate UUID for each row
           propertyId: property.id,
           date: parseDate(dateField),
-          price: parseFloat(priceField),
-          occupancy: parseFloat(occupancyField),
-          bookings: parseInt(bookingsField),
-          temperature: parseFloat(temperatureField),
+          price: parseFloatSafe(priceField),
+          occupancy: parseFloatSafe(occupancyField),
+          bookings: parseIntSafe(bookingsField),
+          temperature: parseFloatSafe(temperatureField),
           weatherCondition: weatherField || null,
           extraData: normalizedRow // Store all fields as JSON for flexibility
         };
@@ -255,14 +260,46 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
             .insert(batchData);
 
           if (batchError) {
-            console.error('Batch insert error:', batchError);
+            console.error(`❌ Batch insert error at batch ${Math.floor(i/BATCH_SIZE) + 1}:`, batchError);
+            insertFailed = true;
+            break; // Stop processing if a batch fails
           } else {
-            console.log(`✅ Inserted batch ${Math.floor(i/BATCH_SIZE) + 1} (${batchData.length} rows, ${i + batchData.length}/${totalRows} total)`);
+            totalInserted += batchData.length;
+            console.log(`✅ Inserted batch ${Math.floor(i/BATCH_SIZE) + 1} (${batchData.length} rows, ${totalInserted}/${totalRows} total)`);
           }
         } catch (error) {
-          console.error('Batch insert error:', error);
+          console.error(`❌ Batch insert exception at batch ${Math.floor(i/BATCH_SIZE) + 1}:`, error);
+          insertFailed = true;
+          break; // Stop processing if a batch fails
         }
       }
+    }
+
+    // If any batch failed, rollback by deleting property and all inserted data
+    if (insertFailed) {
+      console.error('⚠️  Batch insert failed - rolling back transaction...');
+
+      // Delete all pricing data for this property
+      await supabaseAdmin
+        .from('pricing_data')
+        .delete()
+        .eq('propertyId', property.id);
+
+      // Delete property record
+      await supabaseAdmin
+        .from('properties')
+        .delete()
+        .eq('id', property.id);
+
+      // Clean up uploaded file
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      return res.status(500).json({
+        error: 'Database insert failed',
+        message: 'Failed to insert data. Please check your CSV format and try again.'
+      });
     }
 
     // Update property with final counts using Supabase
@@ -374,6 +411,17 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
     });
   } catch (error) {
     console.error('File Upload Error:', error);
+
+    // Clean up uploaded file on error
+    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+        console.log('🧹 Cleaned up uploaded file after error');
+      } catch (unlinkError) {
+        console.error('Failed to clean up file:', unlinkError);
+      }
+    }
+
     res.status(500).json({
       error: 'Failed to upload file',
       message: error.message
@@ -569,7 +617,8 @@ app.post('/api/assistant/message', async (req, res) => {
           'Content-Type': 'application/json',
           'x-api-key': process.env.ANTHROPIC_API_KEY,
           'anthropic-version': '2023-06-01'
-        }
+        },
+        timeout: 30000 // 30 second timeout
       }
     );
 
@@ -616,7 +665,8 @@ app.post('/api/weather/historical', async (req, res) => {
           end_date: endDate,
           daily: 'temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,weathercode',
           timezone: 'auto'
-        }
+        },
+        timeout: 15000 // 15 second timeout
       }
     );
 
@@ -624,17 +674,8 @@ app.post('/api/weather/historical', async (req, res) => {
     const weatherData = response.data.daily.time.map((date, index) => {
       const weathercode = response.data.daily.weathercode[index];
 
-      // Map weathercode to weather description
-      // https://open-meteo.com/en/docs#weathervariables
-      let weatherDescription = 'Clear';
-      if (weathercode === 0) weatherDescription = 'Clear';
-      else if ([1, 2, 3].includes(weathercode)) weatherDescription = 'Partly Cloudy';
-      else if ([45, 48].includes(weathercode)) weatherDescription = 'Foggy';
-      else if ([51, 53, 55, 56, 57].includes(weathercode)) weatherDescription = 'Drizzle';
-      else if ([61, 63, 65, 66, 67, 80, 81, 82].includes(weathercode)) weatherDescription = 'Rainy';
-      else if ([71, 73, 75, 77, 85, 86].includes(weathercode)) weatherDescription = 'Snowy';
-      else if ([95, 96, 99].includes(weathercode)) weatherDescription = 'Thunderstorm';
-      else if ([1, 2, 3].includes(weathercode)) weatherDescription = 'Cloudy';
+      // Use centralized weather code mapping
+      const weatherDescription = mapWeatherCode(weathercode);
 
       return {
         date: date,
@@ -685,7 +726,8 @@ app.get('/api/weather/current', async (req, res) => {
           lon: longitude,
           appid: process.env.OPENWEATHER_API_KEY,
           units: 'metric'
-        }
+        },
+        timeout: 10000 // 10 second timeout
       }
     );
 
@@ -737,7 +779,8 @@ app.get('/api/weather/forecast', async (req, res) => {
           lon: longitude,
           appid: process.env.OPENWEATHER_API_KEY,
           units: 'metric'
-        }
+        },
+        timeout: 10000 // 10 second timeout
       }
     );
 
@@ -814,7 +857,8 @@ app.get('/api/holidays', async (req, res) => {
         api_key: process.env.CALENDARIFIC_API_KEY,
         country,
         year
-      }
+      },
+      timeout: 10000 // 10 second timeout
     });
 
     res.json(response.data);
@@ -851,7 +895,8 @@ app.get('/api/geocoding/forward', async (req, res) => {
           },
           headers: {
             'User-Agent': 'TravelPricingApp/1.0' // Required by Nominatim
-          }
+          },
+          timeout: 10000 // 10 second timeout
         }
       );
 
@@ -891,7 +936,8 @@ app.get('/api/geocoding/forward', async (req, res) => {
           params: {
             access_token: process.env.MAPBOX_TOKEN,
             limit: 1
-          }
+          },
+          timeout: 10000 // 10 second timeout
         }
       );
 
@@ -934,7 +980,8 @@ app.get('/api/geocoding/reverse', async (req, res) => {
           },
           headers: {
             'User-Agent': 'TravelPricingApp/1.0'
-          }
+          },
+          timeout: 10000 // 10 second timeout
         }
       );
 
@@ -974,7 +1021,8 @@ app.get('/api/geocoding/reverse', async (req, res) => {
         {
           params: {
             access_token: process.env.MAPBOX_TOKEN
-          }
+          },
+          timeout: 10000 // 10 second timeout
         }
       );
 
@@ -1011,7 +1059,8 @@ app.post('/api/competitor/scrape', async (req, res) => {
         api_key: process.env.SCRAPERAPI_KEY,
         url,
         render: 'true'
-      }
+      },
+      timeout: 30000 // 30 second timeout (scraping can be slower)
     });
 
     res.json({ success: true, html: response.data });
@@ -1049,7 +1098,8 @@ app.post('/api/hotels/search', async (req, res) => {
         headers: {
           'Authorization': `Bearer ${process.env.MAKCORPS_API_KEY}`,
           'Content-Type': 'application/json'
-        }
+        },
+        timeout: 20000 // 20 second timeout
       }
     );
 
@@ -1253,6 +1303,87 @@ app.post('/api/analytics/pricing-recommendations', async (req, res) => {
     console.error('Pricing Recommendations Error:', error.message);
     res.status(500).json({
       error: 'Failed to generate pricing recommendations',
+      message: error.message
+    });
+  }
+});
+
+// Manual enrichment endpoint
+app.post('/api/files/:fileId/enrich', authenticateUser, async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const userId = req.userId;
+    const { latitude, longitude, country } = req.body;
+
+    // Validate inputs
+    if (!latitude || !longitude) {
+      return res.status(400).json({ error: 'Missing required fields: latitude, longitude' });
+    }
+
+    // Check if property exists and belongs to user
+    const { data: property, error: propertyError } = await supabaseAdmin
+      .from('properties')
+      .select('id')
+      .eq('id', fileId)
+      .eq('userId', userId)
+      .single();
+
+    if (propertyError || !property) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    console.log(`🌤️  Manual enrichment requested for property ${fileId}...`);
+    console.log(`📍 Location: ${latitude}, ${longitude}`);
+
+    // Run enrichment pipeline
+    const enrichmentResult = await enrichPropertyData(
+      fileId,
+      {
+        location: {
+          latitude: parseFloat(latitude),
+          longitude: parseFloat(longitude)
+        },
+        countryCode: country || 'FR',
+        calendarificApiKey: process.env.CALENDARIFIC_API_KEY
+      },
+      supabaseAdmin
+    );
+
+    if (enrichmentResult.success) {
+      // Mark property as enriched
+      await supabaseAdmin
+        .from('properties')
+        .update({
+          enrichmentStatus: 'completed',
+          enrichedAt: new Date().toISOString()
+        })
+        .eq('id', fileId);
+
+      res.json({
+        success: true,
+        message: 'Enrichment completed successfully',
+        results: enrichmentResult.results
+      });
+    } else {
+      // Mark enrichment as failed
+      await supabaseAdmin
+        .from('properties')
+        .update({
+          enrichmentStatus: 'failed',
+          enrichmentError: enrichmentResult.error
+        })
+        .eq('id', fileId);
+
+      res.status(500).json({
+        success: false,
+        error: 'Enrichment failed',
+        message: enrichmentResult.error
+      });
+    }
+  } catch (error) {
+    console.error('Manual Enrichment Error:', error);
+    res.status(500).json({
+      error: 'Failed to enrich data',
       message: error.message
     });
   }

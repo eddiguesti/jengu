@@ -6,10 +6,14 @@
  * - Current weather conditions
  * - 5-day/3-hour forecast
  * - 8-day daily forecast
+ *
+ * NOTE: All weather API calls now go through backend proxy to secure API keys
  */
 
-const OPENWEATHER_API_KEY = 'ad75235deeaa288b6389465006fad960'
-const BASE_URL = 'https://api.openweathermap.org'
+import { apiClient } from '../client'
+
+// Backend proxy endpoints (no API key needed in frontend)
+const BACKEND_API = 'http://localhost:3001/api'
 
 // ===== TYPES =====
 
@@ -66,15 +70,20 @@ export interface WeatherForecast {
 
 /**
  * Get current weather conditions for a location
+ * Now uses backend proxy - no API key needed in frontend
  */
 export async function getCurrentWeather(
   lat: number,
   lon: number
 ): Promise<WeatherData> {
-  const url = `${BASE_URL}/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`
-
   try {
-    const response = await fetch(url)
+    const response = await fetch(`${BACKEND_API}/weather/current?latitude=${lat}&longitude=${lon}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
     if (!response.ok) {
       throw new Error(`Weather API error: ${response.status}`)
     }
@@ -111,7 +120,7 @@ function parseCurrentWeather(data: any): WeatherData {
 
 /**
  * Get historical weather data for a specific date
- * Note: OpenWeatherMap requires Unix timestamp
+ * Now uses backend proxy - no API key needed in frontend
  */
 export async function getHistoricalWeather(
   lat: number,
@@ -119,16 +128,24 @@ export async function getHistoricalWeather(
   date: Date
 ): Promise<WeatherData> {
   const timestamp = Math.floor(date.getTime() / 1000)
-  const url = `${BASE_URL}/data/3.0/onecall/timemachine?lat=${lat}&lon=${lon}&dt=${timestamp}&appid=${OPENWEATHER_API_KEY}&units=metric`
 
   try {
-    const response = await fetch(url)
+    const response = await fetch(
+      `${BACKEND_API}/weather/historical?latitude=${lat}&longitude=${lon}&timestamp=${timestamp}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+
     if (!response.ok) {
       throw new Error(`Historical weather API error: ${response.status}`)
     }
 
     const data = await response.json()
-    return parseHistoricalWeather(data.data[0], timestamp)
+    return parseHistoricalWeather(data.data, timestamp)
   } catch (error) {
     console.error('Failed to fetch historical weather:', error)
     throw error
@@ -198,21 +215,44 @@ export async function getHistoricalWeatherBatch(
 
 /**
  * Get 5-day weather forecast (3-hour intervals)
+ * Now uses backend proxy - no API key needed in frontend
  */
 export async function getWeatherForecast5Day(
   lat: number,
   lon: number
 ): Promise<WeatherForecast[]> {
-  const url = `${BASE_URL}/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`
-
   try {
-    const response = await fetch(url)
+    const response = await fetch(
+      `${BACKEND_API}/weather/forecast?latitude=${lat}&longitude=${lon}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+
     if (!response.ok) {
       throw new Error(`Forecast API error: ${response.status}`)
     }
 
     const data = await response.json()
-    return parseForecast5Day(data)
+
+    // Backend returns already formatted data
+    return data.data.map((day: any) => ({
+      date: day.date,
+      day: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
+      temp: day.temperature.avg,
+      temp_min: day.temperature.min,
+      temp_max: day.temperature.max,
+      weather_main: day.weather,
+      weather_description: day.weather.toLowerCase(),
+      precipitation_probability: 0, // Backend doesn't provide this yet
+      precipitation_mm: day.precipitation || 0,
+      humidity: day.humidity_avg,
+      wind_speed: 0, // Backend doesn't provide this yet
+      is_good_weather: isGoodWeather(day.weather, day.precipitation || 0)
+    }))
   } catch (error) {
     console.error('Failed to fetch 5-day forecast:', error)
     throw error
@@ -274,23 +314,16 @@ function parseForecast5Day(data: any): WeatherForecast[] {
 }
 
 /**
- * Get 8-day daily weather forecast (requires One Call API 3.0)
+ * Get 8-day daily weather forecast
+ * Fallback to 5-day forecast (backend doesn't support 8-day yet)
  */
 export async function getWeatherForecast8Day(
   lat: number,
   lon: number
 ): Promise<WeatherForecast[]> {
-  const url = `${BASE_URL}/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=current,minutely,hourly,alerts&appid=${OPENWEATHER_API_KEY}&units=metric`
-
   try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      // Fallback to 5-day forecast if One Call API not available
-      return getWeatherForecast5Day(lat, lon)
-    }
-
-    const data = await response.json()
-    return parseForecast8Day(data)
+    // Backend doesn't support 8-day forecast yet, fallback to 5-day
+    return getWeatherForecast5Day(lat, lon)
   } catch (error) {
     console.error('Failed to fetch 8-day forecast, falling back to 5-day:', error)
     return getWeatherForecast5Day(lat, lon)

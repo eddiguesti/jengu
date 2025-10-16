@@ -340,49 +340,73 @@ export const Data = () => {
     setIsEnriching(false)
   }
 
-  // Enrich with REAL weather data from OpenWeatherMap
+  // Enrich with REAL weather data via backend API
   const enrichWithRealWeather = async (featureId: string) => {
     // Check if we have business location
     if (!profile?.location) {
       throw new Error('Business location not set. Please configure in Settings.')
     }
 
-    const { latitude, longitude } = profile.location
+    const { latitude, longitude, country } = profile.location
 
-    // Get all dates from uploaded data
-    const allDates: Date[] = []
-    files.forEach(file => {
-      if (file.preview) {
-        file.preview.forEach(row => {
-          allDates.push(new Date(row.date))
-        })
-      }
-    })
-
-    if (allDates.length === 0) {
-      throw new Error('No dates found in uploaded data')
+    // Get the uploaded file ID from the store
+    if (uploadedFiles.length === 0) {
+      throw new Error('No uploaded files found')
     }
 
-    // Fetch historical weather for all dates with progress callback
-    const weatherData = await getHistoricalWeatherBatch(
-      latitude,
-      longitude,
-      allDates,
-      (current, total) => {
-        const progress = Math.round((current / total) * 100)
+    const fileId = uploadedFiles[0].id
+
+    // Get Supabase session token
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (!session?.access_token) {
+      throw new Error('Not authenticated. Please log in.')
+    }
+
+    // Progress simulation
+    let progress = 0
+    const progressInterval = setInterval(() => {
+      progress += 5
+      if (progress <= 95) {
         setFeatures((prev) =>
           prev.map((f) =>
             f.id === featureId ? { ...f, progress } : f
           )
         )
       }
-    )
+    }, 500)
 
-    console.log(`Enriched ${weatherData.size} dates with real weather data`)
+    try {
+      // Call backend enrichment endpoint
+      console.log(`📤 Requesting weather enrichment for file ${fileId}...`)
+      const response = await axios.post(
+        `http://localhost:3001/api/files/${fileId}/enrich`,
+        {
+          latitude,
+          longitude,
+          country
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+        }
+      )
 
-    // Store weather data (you can save to store or state as needed)
-    // For now, just log success
-    return weatherData
+      clearInterval(progressInterval)
+      setFeatures((prev) =>
+        prev.map((f) =>
+          f.id === featureId ? { ...f, progress: 100 } : f
+        )
+      )
+
+      console.log(`✅ Weather enrichment complete:`, response.data.results)
+      return response.data
+    } catch (error) {
+      clearInterval(progressInterval)
+      console.error('Weather enrichment failed:', error)
+      throw error
+    }
   }
 
   // Enrich with REAL holiday data from Calendarific

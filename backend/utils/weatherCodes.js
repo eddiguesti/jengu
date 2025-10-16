@@ -1,0 +1,76 @@
+/**
+ * Weather Code Mapping Constants
+ * Standardized weather code to description mapping
+ * Based on Open-Meteo WMO Weather interpretation codes
+ * https://open-meteo.com/en/docs
+ */
+
+/**
+ * Map WMO weather code to human-readable description
+ * @param {number} weathercode - WMO weather code
+ * @returns {string} - Weather description
+ */
+export function mapWeatherCode(weathercode) {
+  // Clear
+  if (weathercode === 0) return 'Clear';
+
+  // Partly Cloudy
+  if ([1, 2, 3].includes(weathercode)) return 'Partly Cloudy';
+
+  // Fog
+  if ([45, 48].includes(weathercode)) return 'Foggy';
+
+  // Drizzle
+  if ([51, 53, 55, 56, 57].includes(weathercode)) return 'Drizzle';
+
+  // Rain
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(weathercode)) return 'Rainy';
+
+  // Snow
+  if ([71, 73, 75, 77, 85, 86].includes(weathercode)) return 'Snowy';
+
+  // Thunderstorm
+  if ([95, 96, 99].includes(weathercode)) return 'Thunderstorm';
+
+  // Default to Cloudy for unmapped codes
+  return 'Cloudy';
+}
+
+/**
+ * Weather code category mapping
+ */
+export const WEATHER_CATEGORIES = {
+  CLEAR: [0],
+  PARTLY_CLOUDY: [1, 2, 3],
+  FOGGY: [45, 48],
+  DRIZZLE: [51, 53, 55, 56, 57],
+  RAINY: [61, 63, 65, 66, 67, 80, 81, 82],
+  SNOWY: [71, 73, 75, 77, 85, 86],
+  THUNDERSTORM: [95, 96, 99]
+};
+
+/**
+ * Check if weather is favorable for tourism
+ * @param {number} weathercode - WMO weather code
+ * @returns {boolean} - True if good weather for tourism
+ */
+export function isGoodWeatherCode(weathercode) {
+  return WEATHER_CATEGORIES.CLEAR.includes(weathercode) ||
+         WEATHER_CATEGORIES.PARTLY_CLOUDY.includes(weathercode);
+}
+
+/**
+ * Get weather severity (0-4, where 0 is best, 4 is worst)
+ * @param {number} weathercode - WMO weather code
+ * @returns {number} - Severity level
+ */
+export function getWeatherSeverity(weathercode) {
+  if (WEATHER_CATEGORIES.CLEAR.includes(weathercode)) return 0;
+  if (WEATHER_CATEGORIES.PARTLY_CLOUDY.includes(weathercode)) return 1;
+  if (WEATHER_CATEGORIES.DRIZZLE.includes(weathercode)) return 2;
+  if (WEATHER_CATEGORIES.RAINY.includes(weathercode) ||
+      WEATHER_CATEGORIES.FOGGY.includes(weathercode)) return 3;
+  if (WEATHER_CATEGORIES.THUNDERSTORM.includes(weathercode) ||
+      WEATHER_CATEGORIES.SNOWY.includes(weathercode)) return 4;
+  return 2; // Default medium severity
+}
