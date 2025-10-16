@@ -286,6 +286,45 @@ Modernize the Jengu monorepo with TypeScript, ESLint 9, and Prettier using share
 
 ---
 
+## Post-Migration Task: Generate Supabase Database Types
+
+**Important**: After completing Phase 1 (Backend TypeScript Migration), you need to generate TypeScript types from your Supabase database schema.
+
+### Generate Types from Supabase
+
+**Prerequisites**:
+- Supabase service key (waiting on this from team member)
+- Backend successfully migrated to TypeScript
+
+**Command**:
+```bash
+# From backend directory
+npx supabase gen types typescript --project-id geehtuuyxhyissplfjb --schema public > types/database.types.ts
+```
+
+This will auto-generate TypeScript interfaces for all database tables, providing:
+- End-to-end type safety from database to client
+- Autocomplete for table/column names
+- Compile-time errors for invalid queries
+- Null/not-null constraints automatically typed
+
+### After Type Generation
+
+**You may need to**:
+- Review generated types in `backend/types/database.types.ts`
+- Import and use the generated `Database` type with Supabase client:
+  ```typescript
+  import { Database } from './types/database.types'
+  const supabaseAdmin = createClient<Database>(url, key)
+  ```
+- Update any manual type definitions that conflict with generated types
+- Fix any type errors that surface from the generated schema
+- Commit the generated types: `git add types/database.types.ts`
+
+**Note**: Re-run this command whenever you make database schema changes (add tables, columns, etc.)
+
+---
+
 ## Notes & Considerations
 
 ### TypeScript Migration Strategy

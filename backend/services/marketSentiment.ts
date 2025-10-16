@@ -9,7 +9,13 @@ import axios from 'axios'
  * Calculate market sentiment score (0-100)
  * Combines weather, occupancy, competitor pricing, and historical trends
  */
-export function calculateMarketSentiment(params) {
+export function calculateMarketSentiment(params: {
+  weatherScore?: number
+  occupancyScore?: number
+  competitorScore?: number
+  demandTrend?: number
+  seasonalFactor?: number
+}): number {
   const {
     weatherScore = 50,
     occupancyScore = 50,
@@ -41,7 +47,7 @@ export function calculateMarketSentiment(params) {
 /**
  * Convert weather conditions to sentiment score
  */
-export function weatherToSentiment(weatherData) {
+export function weatherToSentiment(weatherData: any): number {
   if (!weatherData || !weatherData.weather) {
     return 50 // Neutral if no data
   }
@@ -78,7 +84,7 @@ export function weatherToSentiment(weatherData) {
 /**
  * Convert occupancy level to sentiment score
  */
-export function occupancyToSentiment(occupancy) {
+export function occupancyToSentiment(occupancy: number | null | undefined): number {
   if (occupancy === null || occupancy === undefined) {
     return 50
   }
@@ -96,7 +102,7 @@ export function occupancyToSentiment(occupancy) {
 /**
  * Convert competitor pricing position to sentiment score
  */
-export function competitorPricingToSentiment(yourPrice, competitorAvg) {
+export function competitorPricingToSentiment(yourPrice: number, competitorAvg: number): number {
   if (!yourPrice || !competitorAvg) {
     return 50
   }
@@ -117,7 +123,7 @@ export function competitorPricingToSentiment(yourPrice, competitorAvg) {
 /**
  * Calculate demand trend score from historical data
  */
-export function calculateDemandTrend(historicalOccupancy) {
+export function calculateDemandTrend(historicalOccupancy: number[]): number {
   if (!historicalOccupancy || historicalOccupancy.length < 3) {
     return 50
   }
@@ -147,7 +153,7 @@ export function calculateDemandTrend(historicalOccupancy) {
 /**
  * Generate comprehensive market sentiment analysis
  */
-export function analyzeMarketSentiment(data) {
+export function analyzeMarketSentiment(data: any): unknown {
   const {
     weatherData,
     occupancyData,
@@ -215,7 +221,7 @@ export function analyzeMarketSentiment(data) {
 /**
  * Use Claude API to generate natural language insights
  */
-export async function generateClaudeInsights(analyticsData, apiKey) {
+export async function generateClaudeInsights(analyticsData: any, apiKey: string): Promise<unknown> {
   const {
     marketSentiment,
     weatherAnalysis,
@@ -310,7 +316,7 @@ Format each insight as a bullet point starting with a category emoji (📊 📈 
 /**
  * Generate pricing recommendations based on market sentiment
  */
-export function generatePricingRecommendations(sentimentAnalysis, currentPrice) {
+export function generatePricingRecommendations(sentimentAnalysis: any, currentPrice: number): unknown[] {
   const { overallScore, components } = sentimentAnalysis
 
   const recommendations = []

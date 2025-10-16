@@ -1,135 +1,151 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import axios from 'axios';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import { randomUUID } from 'crypto';
-import csv from 'csv-parser';
-import { authenticateUser, optionalAuth, supabaseAdmin } from './lib/supabase.js';
+import express, { Request, Response, NextFunction } from 'express'
+import cors from 'cors'
+import dotenv from 'dotenv'
+import axios from 'axios'
+import multer from 'multer'
+import path from 'path'
+import fs from 'fs'
+import { fileURLToPath } from 'url'
+import { randomUUID } from 'crypto'
+import csv from 'csv-parser'
+import { authenticateUser, supabaseAdmin } from './lib/supabase.js'
 import {
   analyzeWeatherImpact,
   forecastDemand,
   analyzeCompetitorPricing,
   calculateFeatureImportance,
   generateAnalyticsSummary,
-} from './services/mlAnalytics.js';
+} from './services/mlAnalytics.js'
 import {
   analyzeMarketSentiment,
   generateClaudeInsights,
   generatePricingRecommendations,
-} from './services/marketSentiment.js';
-import { transformDataForAnalytics, validateDataQuality } from './services/dataTransform.js';
-import { enrichPropertyData } from './services/enrichmentService.js';
-import { mapWeatherCode } from './utils/weatherCodes.js';
+} from './services/marketSentiment.js'
+import { transformDataForAnalytics, validateDataQuality } from './services/dataTransform.js'
+import { enrichPropertyData } from './services/enrichmentService.js'
+import { mapWeatherCode } from './utils/weatherCodes.js'
 
 // ES Module __dirname equivalent
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // Load environment variables
-dotenv.config();
+dotenv.config()
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+// Helper to get error message from unknown error
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  return String(error)
+}
+
+// Helper to check if error is axios error
+function isAxiosError(error: unknown): error is { response?: { data?: any }; message?: string } {
+  return typeof error === 'object' && error !== null && 'isAxiosError' in error
+}
+
+const app = express()
+const PORT = process.env.PORT || 3001
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', process.env.FRONTEND_URL].filter(Boolean),
+  origin: ['http://localhost:5173', 'http://localhost:5174', process.env.FRONTEND_URL].filter((url): url is string => Boolean(url)),
   credentials: true
-}));
-app.use(express.json({ limit: '10mb' }));
+}))
+app.use(express.json({ limit: '10mb' }))
 
 // Simple rate limiting (in-memory, for demo)
-const rateLimitMap = new Map();
-const RATE_LIMIT = parseInt(process.env.MAX_REQUESTS_PER_MINUTE || '60');
+const rateLimitMap = new Map<string, number[]>()
+const RATE_LIMIT = parseInt(process.env.MAX_REQUESTS_PER_MINUTE || '60')
 
-function rateLimit(req, res, next) {
-  const ip = req.ip || req.connection.remoteAddress;
-  const now = Date.now();
-  const windowStart = now - 60000; // 1 minute window
+function rateLimit(req: Request, res: Response, next: NextFunction): void {
+  const ip = req.ip || req.socket.remoteAddress
+  const now = Date.now()
+  const windowStart = now - 60000 // 1 minute window
+
+  if (!ip) {
+    return next()
+  }
 
   if (!rateLimitMap.has(ip)) {
-    rateLimitMap.set(ip, []);
+    rateLimitMap.set(ip, [])
   }
 
-  const requests = rateLimitMap.get(ip).filter(time => time > windowStart);
+  const requests = rateLimitMap.get(ip)!.filter(time => time > windowStart)
 
   if (requests.length >= RATE_LIMIT) {
-    return res.status(429).json({
+    res.status(429).json({
       error: 'Too many requests',
       message: `Rate limit exceeded. Max ${RATE_LIMIT} requests per minute.`
-    });
+    })
+    return
   }
 
-  requests.push(now);
-  rateLimitMap.set(ip, requests);
-  next();
+  requests.push(now)
+  rateLimitMap.set(ip, requests)
+  next()
 }
 
-app.use(rateLimit);
+app.use(rateLimit)
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, 'uploads');
+  destination: (_req, _file, cb) => {
+    const uploadDir = path.join(__dirname, 'uploads')
     // Create uploads directory if it doesn't exist
     if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+      fs.mkdirSync(uploadDir, { recursive: true })
     }
-    cb(null, uploadDir);
+    cb(null, uploadDir)
   },
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => {
     // Generate unique filename: timestamp-originalname
-    const uniqueName = `${Date.now()}-${file.originalname}`;
-    cb(null, uniqueName);
+    const uniqueName = `${Date.now()}-${file.originalname}`
+    cb(null, uniqueName)
   }
-});
+})
 
 const upload = multer({
   storage,
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit
   },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     // Only allow CSV files
     if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
-      cb(null, true);
+      cb(null, true)
     } else {
-      cb(new Error('Only CSV files are allowed'));
+      cb(new Error('Only CSV files are allowed'))
     }
   }
-});
+})
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
-  });
-});
+  })
+})
 
 // ========================================
 // FILE UPLOAD & MANAGEMENT
 // ========================================
 
 // Upload CSV file with streaming and batch inserts
-app.post('/api/files/upload', authenticateUser, upload.single('file'), async (req, res) => {
+app.post('/api/files/upload', authenticateUser, upload.single('file'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      return res.status(400).json({ error: 'No file uploaded' })
     }
 
-    const userId = req.userId; // From authentication middleware
-    const filePath = req.file.path;
-    console.log(`📥 Processing CSV file: ${req.file.originalname} (${req.file.size} bytes) for user: ${userId}`);
+    const userId = req.userId // From authentication middleware
+    const filePath = req.file.path
+    console.log(`📥 Processing CSV file: ${req.file.originalname} (${req.file.size} bytes) for user: ${userId}`)
 
     // Create property record in database using Supabase
-    console.log('⏳ Creating property record...');
-    const propertyId = randomUUID();
+    console.log('⏳ Creating property record...')
+    const propertyId = randomUUID()
     const { data: property, error: propertyError } = await supabaseAdmin
       .from('properties')
       .insert({
@@ -143,69 +159,67 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
         userId: userId // Link to authenticated user
       })
       .select()
-      .single();
+      .single()
 
     if (propertyError) {
-      console.error('Failed to create property:', propertyError);
-      throw new Error(`Database error: ${propertyError.message}`);
+      console.error('Failed to create property:', propertyError)
+      throw new Error(`Database error: ${propertyError.message}`)
     }
 
-    console.log(`✅ Created property record: ${property.id}`);
+    console.log(`✅ Created property record: ${property.id}`)
 
     // Stream CSV and batch insert rows
-    const results = [];
-    const batch = [];
-    const BATCH_SIZE = 1000;
-    let totalRows = 0;
-    let columnCount = 0;
-    let preview = [];
+    const BATCH_SIZE = 1000
+    let totalRows = 0
+    let columnCount = 0
+    let preview: any[] = []
 
     // Helper function to parse date flexibly
-    const parseDate = (dateStr) => {
-      if (!dateStr) return null;
+    const parseDate = (dateStr: unknown): Date | null => {
+      if (!dateStr) return null
       try {
-        const date = new Date(dateStr);
-        return isNaN(date.getTime()) ? null : date;
+        const date = new Date(String(dateStr))
+        return isNaN(date.getTime()) ? null : date
       } catch {
-        return null;
+        return null
       }
-    };
+    }
 
     // Helper function to parse float safely
-    const parseFloatSafe = (val) => {
-      if (val === null || val === undefined || val === '') return null;
-      const num = Number(val);
-      return isNaN(num) ? null : num;
-    };
+    const parseFloatSafe = (val: unknown): number | null => {
+      if (val === null || val === undefined || val === '') return null
+      const num = Number(val)
+      return isNaN(num) ? null : num
+    }
 
     // Helper function to parse int safely
-    const parseIntSafe = (val) => {
-      if (val === null || val === undefined || val === '') return null;
-      const num = Number(val);
-      return isNaN(num) ? null : Math.floor(num);
-    };
+    const parseIntSafe = (val: unknown): number | null => {
+      if (val === null || val === undefined || val === '') return null
+      const num = Number(val)
+      return isNaN(num) ? null : Math.floor(num)
+    }
 
     // Process CSV stream - collect all rows first
-    const allRows = [];
-    await new Promise((resolve, reject) => {
+    const allRows: any[] = []
+    await new Promise<void>((resolve, reject) => {
       fs.createReadStream(filePath)
         .pipe(csv())
         .on('headers', (headers) => {
-          columnCount = headers.length;
-          console.log(`📊 CSV Columns (${columnCount}):`, headers);
+          columnCount = headers.length
+          console.log(`📊 CSV Columns (${columnCount}):`, headers)
         })
-        .on('data', (row) => {
-          totalRows++;
-          allRows.push(row);
+        .on('data', (row: any) => {
+          totalRows++
+          allRows.push(row)
 
           // Store preview (first 5 rows)
           if (preview.length < 5) {
-            preview.push(row);
+            preview.push(row)
           }
         })
         .on('end', () => resolve())
-        .on('error', reject);
-    });
+        .on('error', reject)
+    })
 
     console.log(`📥 Parsed ${totalRows} rows, now inserting to database...`);
 
@@ -220,18 +234,18 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
 
       for (const row of batchRows) {
         // Normalize column names (handle different CSV formats)
-        const normalizedRow = {};
+        const normalizedRow: Record<string, any> = {}
         Object.keys(row).forEach(key => {
-          normalizedRow[key.trim().toLowerCase()] = row[key];
-        });
+          normalizedRow[key.trim().toLowerCase()] = row[key]
+        })
 
         // Map CSV columns to database fields (flexible mapping)
-        const dateField = normalizedRow.date || normalizedRow.booking_date || normalizedRow.check_in || normalizedRow.checkin;
-        const priceField = normalizedRow.price || normalizedRow.rate || normalizedRow.amount;
-        const occupancyField = normalizedRow.occupancy || normalizedRow.occupancy_rate;
-        const bookingsField = normalizedRow.bookings || normalizedRow.reservations;
-        const temperatureField = normalizedRow.temperature || normalizedRow.temp;
-        const weatherField = normalizedRow.weather || normalizedRow.weather_condition;
+        const dateField = normalizedRow.date || normalizedRow.booking_date || normalizedRow.check_in || normalizedRow.checkin
+        const priceField = normalizedRow.price || normalizedRow.rate || normalizedRow.amount
+        const occupancyField = normalizedRow.occupancy || normalizedRow.occupancy_rate
+        const bookingsField = normalizedRow.bookings || normalizedRow.reservations
+        const temperatureField = normalizedRow.temperature || normalizedRow.temp
+        const weatherField = normalizedRow.weather || normalizedRow.weather_condition
 
         // Create pricing data record
         const pricingData = {
@@ -267,7 +281,7 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
             totalInserted += batchData.length;
             console.log(`✅ Inserted batch ${Math.floor(i/BATCH_SIZE) + 1} (${batchData.length} rows, ${totalInserted}/${totalRows} total)`);
           }
-        } catch (error) {
+        } catch (error: unknown) {
           console.error(`❌ Batch insert exception at batch ${Math.floor(i/BATCH_SIZE) + 1}:`, error);
           insertFailed = true;
           break; // Stop processing if a batch fails
@@ -388,10 +402,12 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
           console.log(`ℹ️  No coordinates in business settings - skipping auto-enrichment`);
           console.log(`   To enable automatic enrichment, update your business settings with latitude/longitude`);
         }
-      } catch (enrichError) {
+      } catch (enrichError: unknown) {
         // Don't fail the upload if enrichment fails
-        console.error('⚠️  Enrichment error (non-fatal):', enrichError.message);
-        console.error(enrichError.stack);
+        console.error('⚠️  Enrichment error (non-fatal):', getErrorMessage(enrichError))
+        if (enrichError instanceof Error) {
+          console.error(enrichError.stack)
+        }
       }
     });
 
@@ -409,7 +425,7 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
         status: 'complete'
       }
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('File Upload Error:', error);
 
     // Clean up uploaded file on error
@@ -424,18 +440,18 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
 
     res.status(500).json({
       error: 'Failed to upload file',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
 
 // Get file data (with pagination for large files)
-app.get('/api/files/:fileId/data', authenticateUser, async (req, res) => {
+app.get('/api/files/:fileId/data', authenticateUser, async (req: Request, res: Response) => {
   try {
-    const { fileId } = req.params;
-    const userId = req.userId;
-    const limit = parseInt(req.query.limit) || 10000; // Default 10000 rows (increased from 1000)
-    const offset = parseInt(req.query.offset) || 0;
+    const { fileId } = req.params
+    const userId = req.userId
+    const limit = parseInt(String(req.query.limit || '10000'))
+    const offset = parseInt(String(req.query.offset || '0'))
 
     // Supabase has a max limit, cap at 10000 to avoid errors
     const actualLimit = Math.min(limit, 10000);
@@ -456,12 +472,12 @@ app.get('/api/files/:fileId/data', authenticateUser, async (req, res) => {
     const { count: total } = await supabaseAdmin
       .from('pricing_data')
       .select('*', { count: 'exact', head: true })
-      .eq('propertyId', fileId);
+      .eq('propertyId', fileId)
 
     // Fetch ALL data in batches (Supabase has 1000 row limit per query)
-    const SUPABASE_LIMIT = 1000;
-    const allData = [];
-    const totalToFetch = Math.min(actualLimit, total || 0);
+    const SUPABASE_LIMIT = 1000
+    const allData = []
+    const totalToFetch = Math.min(actualLimit, total ?? 0)
 
     for (let i = offset; i < offset + totalToFetch; i += SUPABASE_LIMIT) {
       const batchLimit = Math.min(SUPABASE_LIMIT, offset + totalToFetch - i);
@@ -507,11 +523,11 @@ app.get('/api/files/:fileId/data', authenticateUser, async (req, res) => {
       limit: transformedData.length,
       hasMore: offset + transformedData.length < total
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('File Read Error:', error);
     res.status(500).json({
       error: 'Failed to read file',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
@@ -544,11 +560,11 @@ app.get('/api/files', authenticateUser, async (req, res) => {
     }));
 
     res.json({ success: true, files });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('List Files Error:', error);
     res.status(500).json({
       error: 'Failed to list files',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
@@ -585,11 +601,11 @@ app.delete('/api/files/:fileId', authenticateUser, async (req, res) => {
       success: true,
       message: 'File deleted successfully'
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('File Delete Error:', error);
     res.status(500).json({
       error: 'Failed to delete file',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
@@ -623,11 +639,11 @@ app.post('/api/assistant/message', async (req, res) => {
     );
 
     res.json(response.data);
-  } catch (error) {
-    console.error('Anthropic API Error:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    console.error('Anthropic API Error:', isAxiosError(error) ? (error.response?.data || getErrorMessage(error)) : getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to get AI response',
-      message: error.response?.data?.error?.message || error.message
+      message: (isAxiosError(error) && error.response?.data?.error?.message) || getErrorMessage(error)
     });
   }
 });
@@ -696,11 +712,11 @@ app.post('/api/weather/historical', async (req, res) => {
       source: 'Open-Meteo (Free)',
       message: 'Historical weather data from Open-Meteo - No API key required!'
     });
-  } catch (error) {
-    console.error('Open-Meteo API Error:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    console.error('Open-Meteo API Error:', isAxiosError(error) ? (error.response?.data || getErrorMessage(error)) : getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to fetch weather data',
-      message: error.response?.data?.message || error.message
+      message: (isAxiosError(error) && error.response?.data?.message) || getErrorMessage(error)
     });
   }
 });
@@ -753,11 +769,11 @@ app.get('/api/weather/current', async (req, res) => {
       data: weatherData,
       message: 'Current weather data - perfect for live pricing optimization!'
     });
-  } catch (error) {
-    console.error('OpenWeather Current API Error:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    console.error('OpenWeather Current API Error:', isAxiosError(error) ? (error.response?.data || getErrorMessage(error)) : getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to fetch current weather',
-      message: error.response?.data?.message || error.message
+      message: (isAxiosError(error) && error.response?.data?.message) || getErrorMessage(error)
     });
   }
 });
@@ -832,11 +848,11 @@ app.get('/api/weather/forecast', async (req, res) => {
       source: 'OpenWeather (Free)',
       message: '5-day forecast - use this for dynamic pricing recommendations!'
     });
-  } catch (error) {
-    console.error('OpenWeather Forecast API Error:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    console.error('OpenWeather Forecast API Error:', isAxiosError(error) ? (error.response?.data || getErrorMessage(error)) : getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to fetch weather forecast',
-      message: error.response?.data?.message || error.message
+      message: (isAxiosError(error) && error.response?.data?.message) || getErrorMessage(error)
     });
   }
 });
@@ -862,11 +878,11 @@ app.get('/api/holidays', async (req, res) => {
     });
 
     res.json(response.data);
-  } catch (error) {
-    console.error('Calendarific API Error:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    console.error('Calendarific API Error:', isAxiosError(error) ? (error.response?.data || getErrorMessage(error)) : getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to fetch holidays',
-      message: error.response?.data?.error || error.message
+      message: (isAxiosError(error) && error.response?.data?.error) || getErrorMessage(error)
     });
   }
 });
@@ -924,14 +940,14 @@ app.get('/api/geocoding/forward', async (req, res) => {
 
         return res.json(mapboxFormat);
       }
-    } catch (nominatimError) {
-      console.warn('Nominatim geocoding failed, trying Mapbox fallback:', nominatimError.message);
+    } catch (nominatimError: unknown) {
+      console.warn('Nominatim geocoding failed, trying Mapbox fallback:', getErrorMessage(nominatimError));
     }
 
     // Fallback to Mapbox if Nominatim fails or returns no results
     if (process.env.MAPBOX_TOKEN && process.env.MAPBOX_TOKEN !== 'your_mapbox_token_here') {
       const response = await axios.get(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json`,
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(String(address))}.json`,
         {
           params: {
             access_token: process.env.MAPBOX_TOKEN,
@@ -950,11 +966,11 @@ app.get('/api/geocoding/forward', async (req, res) => {
       message: 'Could not geocode the provided address. Please try a more specific location (e.g., "City, Country")'
     });
 
-  } catch (error) {
-    console.error('Geocoding Error:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    console.error('Geocoding Error:', isAxiosError(error) ? (error.response?.data || getErrorMessage(error)) : getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to geocode address',
-      message: error.response?.data?.message || error.message
+      message: (isAxiosError(error) && error.response?.data?.message) || getErrorMessage(error)
     });
   }
 });
@@ -1010,8 +1026,8 @@ app.get('/api/geocoding/reverse', async (req, res) => {
 
         return res.json(mapboxFormat);
       }
-    } catch (nominatimError) {
-      console.warn('Nominatim reverse geocoding failed, trying Mapbox fallback:', nominatimError.message);
+    } catch (nominatimError: unknown) {
+      console.warn('Nominatim reverse geocoding failed, trying Mapbox fallback:', getErrorMessage(nominatimError));
     }
 
     // Fallback to Mapbox if configured
@@ -1034,11 +1050,11 @@ app.get('/api/geocoding/reverse', async (req, res) => {
       message: 'Could not reverse geocode the coordinates'
     });
 
-  } catch (error) {
-    console.error('Reverse Geocoding Error:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    console.error('Reverse Geocoding Error:', isAxiosError(error) ? (error.response?.data || getErrorMessage(error)) : getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to reverse geocode',
-      message: error.response?.data?.message || error.message
+      message: (isAxiosError(error) && error.response?.data?.message) || getErrorMessage(error)
     });
   }
 });
@@ -1064,11 +1080,11 @@ app.post('/api/competitor/scrape', async (req, res) => {
     });
 
     res.json({ success: true, html: response.data });
-  } catch (error) {
-    console.error('ScraperAPI Error:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    console.error('ScraperAPI Error:', isAxiosError(error) ? (error.response?.data || getErrorMessage(error)) : getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to scrape competitor data',
-      message: error.response?.data?.message || error.message
+      message: (isAxiosError(error) && error.response?.data?.message) || getErrorMessage(error)
     });
   }
 });
@@ -1104,11 +1120,11 @@ app.post('/api/hotels/search', async (req, res) => {
     );
 
     res.json(response.data);
-  } catch (error) {
-    console.error('Makcorps API Error:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    console.error('Makcorps API Error:', isAxiosError(error) ? (error.response?.data || getErrorMessage(error)) : getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to search hotels',
-      message: error.response?.data?.error || error.message
+      message: (isAxiosError(error) && error.response?.data?.error) || getErrorMessage(error)
     });
   }
 });
@@ -1156,11 +1172,11 @@ app.post('/api/analytics/summary', async (req, res) => {
     };
 
     res.json({ success: true, data: summary });
-  } catch (error) {
-    console.error('Analytics Summary Error:', error.message);
+  } catch (error: unknown) {
+    console.error('Analytics Summary Error:', getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to generate analytics summary',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
@@ -1176,11 +1192,11 @@ app.post('/api/analytics/weather-impact', async (req, res) => {
 
     const analysis = analyzeWeatherImpact(data);
     res.json({ success: true, data: analysis });
-  } catch (error) {
-    console.error('Weather Impact Analysis Error:', error.message);
+  } catch (error: unknown) {
+    console.error('Weather Impact Analysis Error:', getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to analyze weather impact',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
@@ -1196,11 +1212,11 @@ app.post('/api/analytics/demand-forecast', async (req, res) => {
 
     const forecast = forecastDemand(data, daysAhead || 14);
     res.json({ success: true, data: forecast });
-  } catch (error) {
-    console.error('Demand Forecast Error:', error.message);
+  } catch (error: unknown) {
+    console.error('Demand Forecast Error:', getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to generate demand forecast',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
@@ -1216,11 +1232,11 @@ app.post('/api/analytics/competitor-analysis', async (req, res) => {
 
     const analysis = analyzeCompetitorPricing(yourData, competitorData);
     res.json({ success: true, data: analysis });
-  } catch (error) {
-    console.error('Competitor Analysis Error:', error.message);
+  } catch (error: unknown) {
+    console.error('Competitor Analysis Error:', getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to analyze competitor pricing',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
@@ -1236,11 +1252,11 @@ app.post('/api/analytics/feature-importance', async (req, res) => {
 
     const importance = calculateFeatureImportance(data);
     res.json({ success: true, data: importance });
-  } catch (error) {
-    console.error('Feature Importance Error:', error.message);
+  } catch (error: unknown) {
+    console.error('Feature Importance Error:', getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to calculate feature importance',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
@@ -1259,11 +1275,11 @@ app.post('/api/analytics/market-sentiment', async (req, res) => {
     });
 
     res.json({ success: true, data: sentiment });
-  } catch (error) {
-    console.error('Market Sentiment Error:', error.message);
+  } catch (error: unknown) {
+    console.error('Market Sentiment Error:', getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to analyze market sentiment',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
@@ -1277,13 +1293,13 @@ app.post('/api/analytics/ai-insights', async (req, res) => {
       return res.status(400).json({ error: 'Missing analyticsData object' });
     }
 
-    const insights = await generateClaudeInsights(analyticsData, process.env.ANTHROPIC_API_KEY);
+    const insights = await generateClaudeInsights(analyticsData, process.env.ANTHROPIC_API_KEY!);
     res.json({ success: true, data: insights });
-  } catch (error) {
-    console.error('AI Insights Error:', error.message);
+  } catch (error: unknown) {
+    console.error('AI Insights Error:', getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to generate AI insights',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
@@ -1299,11 +1315,11 @@ app.post('/api/analytics/pricing-recommendations', async (req, res) => {
 
     const recommendations = generatePricingRecommendations(sentimentAnalysis, currentPrice);
     res.json({ success: true, data: recommendations });
-  } catch (error) {
-    console.error('Pricing Recommendations Error:', error.message);
+  } catch (error: unknown) {
+    console.error('Pricing Recommendations Error:', getErrorMessage(error));
     res.status(500).json({
       error: 'Failed to generate pricing recommendations',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
@@ -1380,11 +1396,11 @@ app.post('/api/files/:fileId/enrich', authenticateUser, async (req, res) => {
         message: enrichmentResult.error
       });
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Manual Enrichment Error:', error);
     res.status(500).json({
       error: 'Failed to enrich data',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
@@ -1413,11 +1429,11 @@ app.get('/api/settings', authenticateUser, async (req, res) => {
       success: true,
       settings: settings || {}
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Get Settings Error:', error);
     res.status(500).json({
       error: 'Failed to get settings',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
@@ -1497,28 +1513,28 @@ app.post('/api/settings', authenticateUser, async (req, res) => {
       message: 'Settings saved successfully',
       settings: result
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Save Settings Error:', error);
     res.status(500).json({
       error: 'Failed to save settings',
-      message: error.message
+      message: getErrorMessage(error)
     });
   }
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Server Error:', err);
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Server Error:', err)
   res.status(500).json({
     error: 'Internal server error',
     message: err.message
-  });
-});
+  })
+})
 
 // 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Endpoint not found' });
-});
+app.use((_req: Request, res: Response) => {
+  res.status(404).json({ error: 'Endpoint not found' })
+})
 
 // Graceful shutdown handler
 process.on('SIGINT', () => {

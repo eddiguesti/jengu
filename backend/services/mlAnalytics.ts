@@ -3,10 +3,22 @@
  * Provides correlation analysis, forecasting, and statistical insights
  */
 
+interface DataRow {
+  date?: string | Date
+  check_in?: string | Date
+  price?: number | string
+  occupancy?: number | string
+  temperature?: number | string
+  weather?: string
+  weather_condition?: string
+  bookings?: number | string
+  [key: string]: unknown
+}
+
 /**
  * Calculate Pearson correlation coefficient between two arrays
  */
-function pearsonCorrelation(x, y) {
+function pearsonCorrelation(x: number[], y: number[]): number {
   if (x.length !== y.length || x.length === 0) {
     return 0
   }
@@ -29,7 +41,7 @@ function pearsonCorrelation(x, y) {
 /**
  * Calculate R² (coefficient of determination)
  */
-function calculateR2(actual, predicted) {
+function calculateR2(actual: number[], predicted: number[]): number {
   if (actual.length !== predicted.length || actual.length === 0) {
     return 0
   }
@@ -46,7 +58,7 @@ function calculateR2(actual, predicted) {
 /**
  * Calculate Mean Absolute Percentage Error (MAPE)
  */
-function calculateMAPE(actual, predicted) {
+function calculateMAPE(actual: number[], predicted: number[]): number {
   if (actual.length !== predicted.length || actual.length === 0) {
     return 0
   }
@@ -61,9 +73,8 @@ function calculateMAPE(actual, predicted) {
 
 /**
  * Simple linear regression
- * Returns { slope, intercept, r2 }
  */
-function linearRegression(x, y) {
+function linearRegression(x: number[], y: number[]): { slope: number; intercept: number; r2: number } {
   if (x.length !== y.length || x.length < 2) {
     return { slope: 0, intercept: 0, r2: 0 }
   }
@@ -86,7 +97,12 @@ function linearRegression(x, y) {
 /**
  * Analyze weather impact on pricing and occupancy
  */
-export function analyzeWeatherImpact(data) {
+export function analyzeWeatherImpact(data: DataRow[]): {
+  correlations: Record<string, number>
+  weatherStats: unknown[]
+  confidence: string
+  sampleSize: number
+} {
   if (!data || data.length === 0) {
     return {
       correlations: {},
@@ -172,7 +188,12 @@ export function analyzeWeatherImpact(data) {
  * Forecast demand using historical patterns
  * Simple time series forecasting with seasonal adjustment
  */
-export function forecastDemand(historicalData, daysAhead = 14) {
+export function forecastDemand(historicalData: DataRow[], daysAhead = 14): {
+  forecast: unknown[]
+  accuracy: { r2: number; mape: number } | null
+  method: string
+  trainingSize?: number
+} {
   if (!historicalData || historicalData.length < 7) {
     return {
       forecast: [],
@@ -265,7 +286,15 @@ export function forecastDemand(historicalData, daysAhead = 14) {
 /**
  * Analyze competitor pricing patterns
  */
-export function analyzeCompetitorPricing(yourData, competitorData) {
+export function analyzeCompetitorPricing(yourData: DataRow[], competitorData: DataRow[]): {
+  yourAveragePrice?: number
+  competitorAveragePrice?: number
+  priceDifference?: number
+  pricePercentage?: number
+  yourOccupancy?: number | null
+  recommendation?: unknown | null
+  sampleSize?: { yours: number; competitors: number }
+} {
   if (!yourData || !competitorData || yourData.length === 0 || competitorData.length === 0) {
     return {
       insights: [],
@@ -327,7 +356,12 @@ export function analyzeCompetitorPricing(yourData, competitorData) {
 /**
  * Calculate feature importance using correlation analysis
  */
-export function calculateFeatureImportance(data) {
+export function calculateFeatureImportance(data: DataRow[]): Array<{
+  feature: string
+  priceCorrelation: number
+  occupancyCorrelation: number
+  importance: number
+}> {
   if (!data || data.length < 10) {
     return []
   }
@@ -369,7 +403,7 @@ export function calculateFeatureImportance(data) {
 /**
  * Generate advanced analytics summary
  */
-export function generateAnalyticsSummary(data) {
+export function generateAnalyticsSummary(data: DataRow[]): unknown {
   const weatherAnalysis = analyzeWeatherImpact(data)
   const demandForecast = forecastDemand(data)
   const featureImportance = calculateFeatureImportance(data)

@@ -3,10 +3,53 @@
  * Handles different CSV formats and normalizes data for analytics
  */
 
+interface RawDataRow {
+  [key: string]: unknown
+}
+
+interface TransformedDataRow {
+  date: string
+  price: number
+  occupancy: number
+  weather?: string
+  temperature?: number | null
+  bookings?: number
+  availability?: number
+  unit_type?: string
+  channel?: string
+}
+
+interface ValidationResult {
+  isValid: boolean
+  errors: string[]
+  warnings: string[]
+  stats: ValidationStats
+}
+
+interface ValidationStats {
+  totalRows: number
+  dateRange: {
+    start?: string
+    end?: string
+  }
+  priceRange: {
+    min: number
+    max: number
+    avg: number
+  }
+  occupancyRange: {
+    min: number
+    max: number
+    avg: number
+  } | null
+  hasWeather: boolean
+  hasTemperature: boolean
+}
+
 /**
  * Smart column mapping - handles various CSV column naming conventions
  */
-const COLUMN_MAPPINGS = {
+const COLUMN_MAPPINGS: Record<string, string[]> = {
   // Date columns
   date: ['date', 'check_in', 'checkin', 'booking_date', 'reservation_date', 'arrival_date'],
 
@@ -36,7 +79,7 @@ const COLUMN_MAPPINGS = {
 /**
  * Find actual column name in data that matches expected column
  */
-function findColumnName(data, expectedColumn) {
+function findColumnName(data: RawDataRow[], expectedColumn: string): string | null {
   if (!data || data.length === 0) return null
 
   const firstRow = data[0]
@@ -62,9 +105,9 @@ function findColumnName(data, expectedColumn) {
 /**
  * Calculate occupancy from bookings and availability
  */
-function calculateOccupancy(bookings, availability) {
-  const b = parseFloat(bookings) || 0
-  const a = parseFloat(availability) || 0
+function calculateOccupancy(bookings: unknown, availability: unknown): number {
+  const b = parseFloat(String(bookings)) || 0
+  const a = parseFloat(String(availability)) || 0
 
   if (a === 0) return 0
 
@@ -78,14 +121,14 @@ function calculateOccupancy(bookings, availability) {
 /**
  * Parse and validate date
  */
-function parseDate(dateStr) {
+function parseDate(dateStr: unknown): string | null {
   if (!dateStr) return null
 
   try {
-    const date = new Date(dateStr)
+    const date = new Date(String(dateStr))
     if (isNaN(date.getTime())) return null
     return date.toISOString().split('T')[0]
-  } catch (e) {
+  } catch {
     return null
   }
 }
@@ -93,7 +136,7 @@ function parseDate(dateStr) {
 /**
  * Transform raw CSV data into analytics-ready format
  */
-export function transformDataForAnalytics(rawData) {
+export function transformDataForAnalytics(rawData: RawDataRow[]): TransformedDataRow[] {
   if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
     console.warn('⚠️ No data to transform')
     return []
@@ -133,7 +176,7 @@ export function transformDataForAnalytics(rawData) {
   }
 
   // Transform data
-  const transformed = []
+  const transformed: TransformedDataRow[] = []
   let validRows = 0
   let skippedRows = 0
 
@@ -147,7 +190,7 @@ export function transformDataForAnalytics(rawData) {
       }
 
       // Parse price
-      const price = parseFloat(row[priceCol]) || 0
+      const price = parseFloat(String(row[priceCol])) || 0
       if (price <= 0) {
         skippedRows++
         return
@@ -156,7 +199,7 @@ export function transformDataForAnalytics(rawData) {
       // Get or calculate occupancy
       let occupancy = 0
       if (occupancyCol && row[occupancyCol]) {
-        occupancy = parseFloat(row[occupancyCol]) || 0
+        occupancy = parseFloat(String(row[occupancyCol])) || 0
         // If occupancy is percentage (>1), convert to decimal
         if (occupancy > 1) {
           occupancy = occupancy / 100
@@ -169,7 +212,7 @@ export function transformDataForAnalytics(rawData) {
       occupancy = Math.max(0, Math.min(1, occupancy))
 
       // Build transformed row
-      const transformedRow = {
+      const transformedRow: TransformedDataRow = {
         date,
         price,
         occupancy,
@@ -177,34 +220,35 @@ export function transformDataForAnalytics(rawData) {
 
       // Add optional fields
       if (weatherCol && row[weatherCol]) {
-        transformedRow.weather = row[weatherCol]
+        transformedRow.weather = String(row[weatherCol])
       }
 
       if (temperatureCol && row[temperatureCol]) {
-        transformedRow.temperature = parseFloat(row[temperatureCol]) || null
+        transformedRow.temperature = parseFloat(String(row[temperatureCol])) || null
       }
 
       if (bookingsCol && row[bookingsCol]) {
-        transformedRow.bookings = parseFloat(row[bookingsCol]) || 0
+        transformedRow.bookings = parseFloat(String(row[bookingsCol])) || 0
       }
 
       if (availabilityCol && row[availabilityCol]) {
-        transformedRow.availability = parseFloat(row[availabilityCol]) || 0
+        transformedRow.availability = parseFloat(String(row[availabilityCol])) || 0
       }
 
       if (unitTypeCol && row[unitTypeCol]) {
-        transformedRow.unit_type = row[unitTypeCol]
+        transformedRow.unit_type = String(row[unitTypeCol])
       }
 
       if (channelCol && row[channelCol]) {
-        transformedRow.channel = row[channelCol]
+        transformedRow.channel = String(row[channelCol])
       }
 
       transformed.push(transformedRow)
       validRows++
 
     } catch (error) {
-      console.warn(`⚠️ Error transforming row ${index + 1}:`, error.message)
+      const err = error as Error
+      console.warn(`⚠️ Error transforming row ${index + 1}:`, err.message)
       skippedRows++
     }
   })
@@ -220,18 +264,18 @@ export function transformDataForAnalytics(rawData) {
 /**
  * Validate transformed data quality
  */
-export function validateDataQuality(data) {
+export function validateDataQuality(data: TransformedDataRow[]): ValidationResult {
   if (!data || data.length === 0) {
     return {
       isValid: false,
       errors: ['No data provided'],
       warnings: [],
-      stats: {}
+      stats: {} as ValidationStats
     }
   }
 
-  const errors = []
-  const warnings = []
+  const errors: string[] = []
+  const warnings: string[] = []
 
   // Check minimum data size
   if (data.length < 30) {
@@ -264,7 +308,7 @@ export function validateDataQuality(data) {
   }
 
   // Calculate stats
-  const stats = {
+  const stats: ValidationStats = {
     totalRows: data.length,
     dateRange: {
       start: data[0]?.date,

@@ -17,4 +17,8 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# TypeScript build output
+dist/
+*.tsbuildinfo
+
 /generated/prisma

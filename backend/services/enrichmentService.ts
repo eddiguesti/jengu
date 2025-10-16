@@ -12,7 +12,7 @@ import { mapWeatherCode } from '../utils/weatherCodes.js';
  * @param {object} location - { latitude, longitude }
  * @param {object} supabaseClient - Supabase client instance
  */
-export async function enrichWithWeather(propertyId, location, supabaseClient) {
+export async function enrichWithWeather(propertyId: string, location: { latitude: number; longitude: number }, supabaseClient: any): Promise<any> {
   const { latitude, longitude } = location;
 
   console.log(`🌤️  Starting weather enrichment for property ${propertyId}...`);
@@ -116,7 +116,7 @@ export async function enrichWithWeather(propertyId, location, supabaseClient) {
  * @param {string} propertyId - Property UUID
  * @param {object} supabaseClient - Supabase client instance
  */
-export async function enrichWithTemporalFeatures(propertyId, supabaseClient) {
+export async function enrichWithTemporalFeatures(propertyId: string, supabaseClient: any): Promise<any> {
   console.log(`📆 Starting temporal enrichment for property ${propertyId}...`);
 
   const { data: pricingData, error } = await supabaseClient
@@ -187,7 +187,7 @@ export async function enrichWithTemporalFeatures(propertyId, supabaseClient) {
  * 3. Handle date conversions properly (Supabase returns ISO strings, not Date objects)
  * 4. Add batch updates for performance (similar to enrichWithWeather)
  */
-export async function enrichWithHolidays(propertyId, countryCode, calendarificApiKey, supabaseClient) {
+export async function enrichWithHolidays(propertyId: string, countryCode: string, calendarificApiKey: string | undefined, supabaseClient: any): Promise<any> {
   console.log(`🎉 Holiday enrichment requested for property ${propertyId} (${countryCode})...`);
   console.warn('⚠️  Holiday enrichment is not yet migrated to Supabase - skipping');
 
@@ -285,7 +285,7 @@ export async function enrichWithHolidays(propertyId, countryCode, calendarificAp
  * Complete enrichment pipeline (Supabase version)
  * Enriches property data with weather, holidays, and temporal features
  */
-export async function enrichPropertyData(propertyId, options, supabaseClient) {
+export async function enrichPropertyData(propertyId: string, options: any, supabaseClient: any): Promise<any> {
   const { location, countryCode, calendarificApiKey } = options;
 
   const results = {

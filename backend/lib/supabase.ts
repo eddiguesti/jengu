@@ -6,17 +6,18 @@
  * - Auth operations (anon key - user context)
  */
 
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+import { createClient } from '@supabase/supabase-js'
+import type { Request, Response, NextFunction } from 'express'
+import dotenv from 'dotenv'
 
-dotenv.config();
+dotenv.config()
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY
 
 if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
-  throw new Error('Missing Supabase environment variables. Please check your .env file.');
+  throw new Error('Missing Supabase environment variables. Please check your .env file.')
 }
 
 /**
@@ -29,38 +30,37 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
     autoRefreshToken: false,
     persistSession: false
   }
-});
+})
 
 /**
  * Supabase client for authenticated user operations
  * Uses anon key - respects Row Level Security (RLS)
  * Use this for user-facing operations
  */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 /**
  * Get user ID from JWT token
- * @param {string} token - JWT token from Authorization header
- * @returns {Promise<string|null>} User ID or null if invalid
  */
-export async function getUserIdFromToken(token) {
+export async function getUserIdFromToken(token: string): Promise<string | null> {
   try {
     if (!token || !token.startsWith('Bearer ')) {
-      return null;
+      return null
     }
 
-    const jwt = token.replace('Bearer ', '');
-    const { data: { user }, error } = await supabase.auth.getUser(jwt);
+    const jwt = token.replace('Bearer ', '')
+    const { data: { user }, error } = await supabase.auth.getUser(jwt)
 
     if (error || !user) {
-      console.error('Token validation error:', error?.message);
-      return null;
+      console.error('Token validation error:', error?.message)
+      return null
     }
 
-    return user.id;
+    return user.id
   } catch (error) {
-    console.error('getUserIdFromToken error:', error.message);
-    return null;
+    const err = error as Error
+    console.error('getUserIdFromToken error:', err.message)
+    return null
   }
 }
 
@@ -68,59 +68,64 @@ export async function getUserIdFromToken(token) {
  * Middleware to authenticate requests
  * Extracts user ID from JWT token and attaches to request
  */
-export function authenticateUser(req, res, next) {
-  const token = req.headers.authorization;
+export function authenticateUser(req: Request, res: Response, next: NextFunction): void {
+  const token = req.headers.authorization
 
   if (!token) {
-    return res.status(401).json({
+    res.status(401).json({
       error: 'Unauthorized',
       message: 'No authorization token provided'
-    });
+    })
+    return
   }
 
   getUserIdFromToken(token)
     .then(userId => {
       if (!userId) {
-        return res.status(401).json({
+        res.status(401).json({
           error: 'Unauthorized',
           message: 'Invalid or expired token'
-        });
+        })
+        return
       }
 
-      req.userId = userId;
-      next();
+      req.userId = userId
+      next()
     })
     .catch(error => {
-      console.error('Authentication middleware error:', error);
+      const err = error as Error
+      console.error('Authentication middleware error:', err)
       res.status(500).json({
         error: 'Authentication failed',
-        message: error.message
-      });
-    });
+        message: err.message
+      })
+    })
 }
 
 /**
  * Optional authentication middleware
  * Attaches user ID if token is present, but doesn't require it
  */
-export function optionalAuth(req, res, next) {
-  const token = req.headers.authorization;
+export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
+  const token = req.headers.authorization
 
   if (!token) {
-    req.userId = null;
-    return next();
+    req.userId = undefined
+    next()
+    return
   }
 
   getUserIdFromToken(token)
     .then(userId => {
-      req.userId = userId;
-      next();
+      req.userId = userId ?? undefined
+      next()
     })
     .catch(error => {
-      console.error('Optional auth error:', error);
-      req.userId = null;
-      next();
-    });
+      const err = error as Error
+      console.error('Optional auth error:', err)
+      req.userId = undefined
+      next()
+    })
 }
 
 export default {
@@ -129,4 +134,4 @@ export default {
   getUserIdFromToken,
   authenticateUser,
   optionalAuth
-};
+}
