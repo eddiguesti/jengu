@@ -2,13 +2,31 @@
   "name": "jengu",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Jengu Dynamic Pricing Platform - Monorepo",
   "scripts": {
     "type-check": "pnpm -r run type-check",
     "type-check:frontend": "pnpm --filter frontend run type-check",
-    "type-check:backend": "pnpm --filter backend run type-check"
+    "type-check:backend": "pnpm --filter backend run type-check",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check-all": "pnpm run type-check && pnpm run lint && pnpm run format:check",
+    "fix-all": "pnpm run lint:fix && pnpm run format"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@eslint/js": "^9.37.0",
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.0",
+    "eslint-plugin-react-refresh": "^0.4.23",
+    "eslint-plugin-tailwindcss": "^3.18.2",
+    "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.7.0",
+    "typescript-eslint": "^8.46.1"
+  },
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=8.0.0"
