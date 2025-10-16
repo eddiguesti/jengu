@@ -21,24 +21,30 @@ This document provides detailed technical architecture for the Jengu dynamic pri
 
 ```
 backend/
-├── server.js                  # Main Express server (entry point)
+├── server.ts                  # Main Express server (entry point)
 ├── lib/
-│   └── supabase.js           # Supabase clients + auth middleware
+│   └── supabase.ts           # Supabase clients + auth middleware
 ├── services/                  # Business logic layer
-│   ├── dataTransform.js      # Data validation & transformation
-│   ├── enrichmentService.js  # Weather/holiday/temporal enrichment
-│   ├── marketSentiment.js    # AI insights (Claude integration)
-│   └── mlAnalytics.js        # Statistical analysis & forecasting
+│   ├── dataTransform.ts      # Data validation & transformation
+│   ├── enrichmentService.ts  # Weather/holiday/temporal enrichment
+│   ├── marketSentiment.ts    # AI insights (Claude integration)
+│   └── mlAnalytics.ts        # Statistical analysis & forecasting
 ├── utils/                     # Utility functions
-│   ├── dateParser.js         # Date parsing helpers
-│   ├── errorHandler.js       # Centralized error handling
-│   ├── validators.js         # Input validation schemas
-│   └── weatherCodes.js       # WMO weather code mapping
+│   ├── dateParser.ts         # Date parsing helpers
+│   ├── errorHandler.ts       # Centralized error handling
+│   ├── validators.ts         # Input validation schemas
+│   └── weatherCodes.ts       # WMO weather code mapping
+├── types/                     # TypeScript type definitions
+│   ├── database.types.ts     # Supabase database types
+│   ├── express.d.ts          # Express type extensions
+│   └── env.d.ts              # Environment variable types
+├── dist/                      # Compiled JavaScript output
 ├── docs/
 │   └── README.md             # Backend-specific docs
 ├── .env.example              # Environment template
-├── setup-database.js         # Database initialization script
-├── test-db.js                # Database connection test
+├── tsconfig.json             # TypeScript configuration
+├── setup-database.js         # Database initialization script (legacy)
+├── test-db.js                # Database connection test (legacy)
 └── package.json              # Backend dependencies
 ```
 
@@ -122,9 +128,11 @@ frontend/
 
 ## Backend Architecture
 
-### Server Entry Point (`server.js`)
+**Language**: TypeScript 5+ with strict mode enabled. All source files use `.ts` extension and are compiled to JavaScript in `dist/` directory.
 
-Single 1500+ line file containing:
+### Server Entry Point (`server.ts`)
+
+Single 1500+ line TypeScript file containing:
 
 - Express app initialization
 - Middleware (CORS, rate limiting, JSON parsing)
@@ -138,38 +146,51 @@ Single 1500+ line file containing:
 - Small API surface (20 endpoints)
 - Easy to find code (no jumping between files)
 - Simple deployment model
+- TypeScript provides type safety without needing multiple files
 - Can refactor later if needed
+
+**TypeScript Benefits**:
+- Full type checking on request/response objects
+- Auto-completion in editors
+- Compile-time error detection
+- Type-safe middleware and route handlers
 
 ### Service Layer
 
-#### `services/dataTransform.js`
+All services are written in TypeScript with full type annotations.
+
+#### `services/dataTransform.ts`
 
 - `transformDataForAnalytics()` - Normalizes CSV data for ML
 - `validateDataQuality()` - Checks for missing values, outliers
 - Data cleaning and type coercion
+- Fully typed data transformation pipeline
 
-#### `services/enrichmentService.js`
+#### `services/enrichmentService.ts`
 
 - `enrichWithWeather()` - Fetches historical weather from Open-Meteo
 - `enrichWithTemporalFeatures()` - Adds day of week, season, is_weekend
 - `enrichWithHolidays()` - Marks holidays (TODO: needs Supabase migration)
 - `enrichPropertyData()` - Orchestrates all enrichment
+- Type-safe enrichment with proper error handling
 
 **Note**: Holiday enrichment currently disabled pending Supabase migration.
 
-#### `services/mlAnalytics.js`
+#### `services/mlAnalytics.ts`
 
 - `generateAnalyticsSummary()` - Computes descriptive statistics
 - `analyzeWeatherImpact()` - Correlations between weather & price
 - `forecastDemand()` - Simple moving average forecasting
 - `calculateFeatureImportance()` - Correlation-based feature ranking
 - `analyzeCompetitorPricing()` - Competitor price comparison
+- All analytics functions fully typed
 
-#### `services/marketSentiment.js`
+#### `services/marketSentiment.ts`
 
 - `analyzeMarketSentiment()` - Weighted scoring algorithm
 - `generateClaudeInsights()` - AI-powered insights via Anthropic API
 - `generatePricingRecommendations()` - Price adjustment suggestions
+- Type-safe AI integration
 
 ### Authentication Architecture
 
@@ -463,14 +484,14 @@ Frontend: Display natural language insights
 
 ### Adding a New API Endpoint
 
-**File**: `backend/server.js`
+**File**: `backend/server.ts`
 
-```javascript
+```typescript
 // Add after existing endpoints, before error handlers
 
 app.post('/api/your-endpoint', authenticateUser, async (req, res) => {
   try {
-    const userId = req.userId // From auth middleware
+    const userId = req.userId // From auth middleware (typed in express.d.ts)
     const { param1, param2 } = req.body
 
     // Validate input
@@ -479,7 +500,10 @@ app.post('/api/your-endpoint', authenticateUser, async (req, res) => {
     }
 
     // Query database (always filter by userId)
-    const { data, error } = await supabaseAdmin.from('your_table').select('*').eq('userId', userId)
+    const { data, error } = await supabaseAdmin
+      .from('your_table')
+      .select('*')
+      .eq('userId', userId)
 
     if (error) throw error
 
@@ -488,34 +512,43 @@ app.post('/api/your-endpoint', authenticateUser, async (req, res) => {
     console.error('Your Endpoint Error:', error)
     res.status(500).json({
       error: 'Failed to process request',
-      message: error.message,
+      message: error instanceof Error ? error.message : 'Unknown error',
     })
   }
 })
 ```
 
+**Note**: TypeScript provides type safety for `req.userId` through custom type definitions in `backend/types/express.d.ts`.
+
 ### Adding a New Service Function
 
-**File**: Create `backend/services/yourService.js` OR add to existing service
+**File**: Create `backend/services/yourService.ts` OR add to existing service
 
-```javascript
+```typescript
 /**
  * Your service function
- * @param {type} param - Description
- * @returns {type} Description
+ * @param param - Description
+ * @returns Description
  */
-export async function yourServiceFunction(param) {
-  // Implementation
+export async function yourServiceFunction(param: YourParamType): Promise<YourReturnType> {
+  // Implementation with full type safety
 
   return result
 }
 ```
 
-**Import in server.js**:
+**Import in server.ts**:
 
-```javascript
+```typescript
 import { yourServiceFunction } from './services/yourService.js'
+// Note: .js extension in import (ESM convention), TypeScript resolves to .ts file
 ```
+
+**Best Practices**:
+- Always provide explicit return types
+- Use TypeScript interfaces for complex data structures
+- Prefer `unknown` over `any` when type is truly unknown
+- Use type guards for runtime type validation
 
 ### Adding a New Frontend Page
 
@@ -694,25 +727,36 @@ node setup-database.js
 
 ### File Naming
 
-- Backend JavaScript: camelCase (e.g., `mlAnalytics.js`)
-- Frontend TypeScript: PascalCase for components (e.g., `Button.tsx`)
-- Frontend TypeScript: camelCase for utilities (e.g., `chartConfig.ts`)
+- Backend TypeScript: camelCase (e.g., `mlAnalytics.ts`, `server.ts`)
+- Frontend Components: PascalCase (e.g., `Button.tsx`, `Dashboard.tsx`)
+- Frontend Utilities: camelCase (e.g., `chartConfig.ts`, `apiClient.ts`)
+- Type Definitions: camelCase with `.d.ts` or `.types.ts` (e.g., `database.types.ts`)
 
 ### Code Style
 
 **Backend**:
 
+- TypeScript strict mode (all files use `.ts` extension)
 - ES modules (`import`/`export`)
 - Async/await (no callbacks)
 - Descriptive console logs with emojis (📊 🌤️ ✅ ❌)
-- JSDoc comments for functions
+- TypeScript JSDoc comments for complex functions
+- Explicit return types on all exported functions
 
 **Frontend**:
 
+- TypeScript strict mode (`.tsx` for components, `.ts` for utilities)
 - Functional components only
-- TypeScript strict mode
 - Hooks for state/effects
 - Tailwind for styling
+- Explicit prop types using TypeScript interfaces
+
+**Code Quality**:
+
+- ESLint 9 enforces TypeScript best practices
+- Prettier handles all formatting
+- Run `pnpm run check-all` from root before commits
+- See `docs/developer/CODE_QUALITY.md` for details
 
 ---
 

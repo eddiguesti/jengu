@@ -13,34 +13,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Jengu is a dynamic pricing intelligence platform for hospitality businesses. Full-stack TypeScript/JavaScript monorepo:
+Jengu is a dynamic pricing intelligence platform for hospitality businesses. Full-stack TypeScript monorepo:
 
-- **Backend**: Node.js + Express API server
+- **Backend**: Node.js + Express + TypeScript
 - **Frontend**: React 18 + TypeScript SPA
 - **Database**: Supabase PostgreSQL
 - **Auth**: Supabase Auth (JWT)
 - **Monorepo**: pnpm workspaces
+- **Code Quality**: ESLint 9 + Prettier + TypeScript strict mode
 
 ## Technology Stack
 
 ### Backend
 
 - **Runtime**: Node.js 20+ with ES modules
+- **Language**: TypeScript 5+ (strict mode)
 - **Framework**: Express.js
 - **Database**: Supabase PostgreSQL (via Supabase JS Client)
 - **Auth**: Supabase Auth with JWT validation
 - **File Processing**: Streaming CSV with multer + csv-parser
 - **Package Manager**: **pnpm** (always use pnpm, not npm)
+- **Dev Server**: tsx watch (auto-restart on changes)
 
 ### Frontend
 
-- **Framework**: React 18 + TypeScript
+- **Framework**: React 18 + TypeScript (strict mode)
 - **Build**: Vite (with HMR)
 - **Styling**: Tailwind CSS
 - **State**: Zustand stores
 - **Routing**: React Router v6
 - **Charts**: Recharts
 - **Animations**: Framer Motion
+
+### Code Quality
+
+- **Linting**: ESLint 9 (flat config) with TypeScript support
+- **Formatting**: Prettier with Tailwind plugin
+- **Type Checking**: TypeScript strict mode (shared config)
+- **Pre-commit**: Manual (run `pnpm run check-all` before commits)
 
 ### External APIs
 
@@ -56,16 +66,18 @@ Jengu is a dynamic pricing intelligence platform for hospitality businesses. Ful
 # Install dependencies (from project root)
 pnpm install
 
-# Backend (auto-restarts with --watch)
+# Backend (TypeScript with auto-restart)
 cd backend
 pnpm run dev
 
-# Frontend (with Vite HMR)
+# Frontend (React + Vite HMR)
 cd frontend
 pnpm run dev
 ```
 
-**Default development ports**: Backend API and frontend dev server use standard ports. See `docs/developer/ARCHITECTURE.md` for details.
+**Default development ports**: Backend API on 3001, Frontend on 5173. See `docs/developer/ARCHITECTURE.md` for details.
+
+**Important**: Most quality checks should be run from the **project root**, not individual workspaces. See [Code Quality](#code-quality-workflow) below.
 
 ## Core Architectural Patterns
 
@@ -130,16 +142,18 @@ jengu/
 
 ### Backend Development
 
-**Server Structure**: Single `backend/server.js` file (~1500 lines) contains all route handlers. This is intentional for simplicity - easy to find code, simple deployment.
+**Language**: TypeScript with strict type checking. All backend files use `.ts` extension.
 
-**Services Layer**: Business logic lives in `backend/services/`:
+**Server Structure**: Single `backend/server.ts` file (~1500 lines) contains all route handlers. This is intentional for simplicity - easy to find code, simple deployment.
 
-- `mlAnalytics.js` - Statistical analysis & forecasting
-- `marketSentiment.js` - AI insights via Claude
-- `dataTransform.js` - Data validation & transformation
-- `enrichmentService.js` - Weather/holiday enrichment pipeline
+**Services Layer**: Business logic lives in `backend/services/` (TypeScript):
 
-**Adding endpoints**: Add to `server.js`, use `authenticateUser` middleware, manually filter by `req.userId`.
+- `mlAnalytics.ts` - Statistical analysis & forecasting
+- `marketSentiment.ts` - AI insights via Claude
+- `dataTransform.ts` - Data validation & transformation
+- `enrichmentService.ts` - Weather/holiday enrichment pipeline
+
+**Adding endpoints**: Add to `server.ts`, use `authenticateUser` middleware, manually filter by `req.userId`. All route handlers are fully typed.
 
 ### Frontend Development
 
@@ -218,6 +232,44 @@ pnpm run build
 pnpm run preview
 ```
 
+### Code Quality Workflow
+
+**Run from project root** - All code quality tools are configured at the monorepo root level:
+
+```bash
+# From project root - check everything at once
+pnpm run check-all        # Type check + lint + format check (CI-friendly)
+
+# Individual checks (from root)
+pnpm run type-check       # TypeScript type checking (both workspaces)
+pnpm run lint             # ESLint check only
+pnpm run format:check     # Prettier check only (for CI)
+
+# Auto-fix issues (from root)
+pnpm run fix-all          # Lint + format entire codebase
+pnpm run lint:fix         # Auto-fix ESLint issues
+pnpm run format           # Format all files with Prettier
+```
+
+**When to use workspace-specific commands**:
+
+```bash
+# Frontend-specific (must be run from frontend/ directory)
+cd frontend
+pnpm run build:check      # Type check + build frontend
+pnpm run build            # Build only (no type check)
+pnpm run preview          # Preview production build
+
+# Backend-specific (must be run from backend/ directory)
+cd backend
+pnpm run build            # Compile TypeScript to dist/
+pnpm run start            # Run compiled JavaScript (production)
+```
+
+**Best practice**: Always run `pnpm run check-all` from root before committing.
+
+**See `docs/developer/CODE_QUALITY.md` for detailed configuration and troubleshooting.**
+
 ## Key Principles & Conventions
 
 ### Package Management
@@ -227,9 +279,11 @@ pnpm run preview
 
 ### Code Style
 
-- **Backend**: ES modules, async/await, descriptive console.logs with emojis
-- **Frontend**: Functional components, TypeScript strict, Tailwind styling
-- **File naming**: camelCase for JS, PascalCase for React components
+- **Backend**: TypeScript strict mode, ES modules, async/await, descriptive console.logs with emojis
+- **Frontend**: TypeScript strict mode, functional components, Tailwind styling
+- **File naming**: camelCase for .ts files, PascalCase for React components (.tsx)
+- **Formatting**: Prettier enforces semicolons, single quotes, 100 char lines
+- **Linting**: ESLint enforces TypeScript best practices, React hooks rules, Tailwind class validation
 
 ### Error Handling
 

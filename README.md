@@ -180,7 +180,7 @@ See [SETUP_GUIDE.md](./SETUP_GUIDE.md) for detailed Supabase setup instructions.
 
 ### **Run Development Servers**
 
-#### **Backend (Express + Node.js) - Port 3001**
+#### **Backend (TypeScript + Express) - Port 3001**
 
 ```bash
 cd backend
@@ -189,12 +189,12 @@ pnpm run dev
 
 **Backend Features**:
 
+- TypeScript with auto-restart (tsx watch)
 - Supabase PostgreSQL with REST API
-- ML Analytics API (8 endpoints)
+- ML Analytics API (~20 endpoints)
 - Claude AI integration
 - Weather & holiday enrichment
-- Competitor intelligence
-- Auto-restart with `--watch`
+- Type-safe service layer
 
 #### **Frontend (React + Vite) - Port 5173**
 
@@ -219,76 +219,114 @@ pnpm run dev
 - Backend API: http://localhost:3001
 - Backend Health: http://localhost:3001/health
 
-### **Build for Production**
+### **Code Quality & Build**
 
 ```bash
-# Type check before building (from root)
-pnpm run type-check
+# From project root - check everything
+pnpm run check-all           # Type check + lint + format check
+pnpm run fix-all             # Auto-fix linting + formatting
+
+# Individual checks (from root)
+pnpm run type-check          # TypeScript type checking
+pnpm run lint                # ESLint check
+pnpm run format:check        # Prettier check
 
 # Build frontend
 cd frontend
-pnpm run build
+pnpm run build:check         # Type check + build
+pnpm run build               # Build only
+pnpm run preview             # Preview production build
 
-# Preview production build
-pnpm run preview
+# Build backend
+cd backend
+pnpm run build               # Compile TypeScript to dist/
+pnpm run start               # Run compiled JavaScript
 ```
+
+**Important**: Always run `pnpm run check-all` from the project root before committing changes.
 
 ---
 
 ## 📂 **Project Structure**
 
 ```
-travel-pricing/
-├── backend/                   # Node.js Express API
+jengu/
+├── backend/                   # Node.js + TypeScript API
 │   ├── lib/
-│   │   └── supabase.js       # Supabase client & auth
+│   │   └── supabase.ts       # Supabase client & auth
 │   ├── services/             # Business logic services
-│   │   ├── mlAnalytics.js    # ML analytics functions
-│   │   ├── marketSentiment.js # AI insights
-│   │   └── dataTransform.js  # Data transformation
+│   │   ├── mlAnalytics.ts    # ML analytics functions
+│   │   ├── marketSentiment.ts # AI insights
+│   │   ├── dataTransform.ts  # Data transformation
+│   │   └── enrichmentService.ts # Weather enrichment
+│   ├── utils/                # Utility functions
+│   │   ├── dateParser.ts
+│   │   ├── errorHandler.ts
+│   │   ├── validators.ts
+│   │   └── weatherCodes.ts
+│   ├── types/                # TypeScript types
+│   │   ├── database.types.ts
+│   │   ├── express.d.ts
+│   │   └── env.d.ts
+│   ├── dist/                 # Compiled JavaScript
 │   ├── uploads/              # Temporary CSV uploads
 │   ├── .env                  # Environment variables
-│   ├── .gitignore
+│   ├── tsconfig.json         # TypeScript config
 │   ├── package.json
-│   ├── pnpm-lock.yaml
-│   └── server.js             # Main API server
+│   └── server.ts             # Main API server
 │
 ├── frontend/                  # React + TypeScript UI
 │   ├── public/
 │   │   └── sample_booking_data.csv
 │   ├── src/
 │   │   ├── components/       # Reusable components
+│   │   │   ├── ui/          # Base design system
+│   │   │   ├── layout/      # Layout components
+│   │   │   └── insights/    # Feature components
 │   │   ├── contexts/
 │   │   │   └── AuthContext.tsx  # Authentication
 │   │   ├── lib/
 │   │   │   ├── api/
 │   │   │   │   ├── client.ts    # Axios with auth
-│   │   │   │   └── services/    # API services
+│   │   │   │   └── services/    # Type-safe API layer
 │   │   │   └── supabase.ts      # Supabase client
 │   │   ├── pages/
-│   │   │   ├── Login.tsx        # Login page
-│   │   │   ├── SignUp.tsx       # Registration
+│   │   │   ├── Dashboard.tsx    # Main dashboard
 │   │   │   ├── Data.tsx         # File upload
 │   │   │   ├── Insights.tsx     # ML insights
-│   │   │   ├── Enrichment.tsx   # Data enrichment
-│   │   │   └── ...
+│   │   │   ├── Settings.tsx     # Business settings
+│   │   │   ├── Login.tsx        # Login page
+│   │   │   └── SignUp.tsx       # Registration
 │   │   ├── store/
-│   │   │   └── useDataStore.ts  # Zustand store
+│   │   │   ├── useDataStore.ts      # Data state
+│   │   │   └── useBusinessStore.ts  # Business state
 │   │   ├── App.tsx              # Protected routing
 │   │   ├── main.tsx
 │   │   └── index.css
 │   ├── .env                     # Frontend environment
+│   ├── tsconfig.json            # TypeScript config
 │   ├── package.json
-│   ├── pnpm-lock.yaml
 │   ├── vite.config.ts
 │   └── tailwind.config.js
 │
-├── .gitignore                 # Comprehensive ignores
-├── pnpm-lock.yaml             # Workspace lock file
-├── pnpm-workspace.yaml        # Monorepo config
-├── README.md                  # This file
-├── SETUP_GUIDE.md             # Setup instructions
-└── SUPABASE_MIGRATION_COMPLETE.md  # Migration docs
+├── docs/
+│   ├── developer/           # Technical documentation
+│   │   ├── ARCHITECTURE.md  # Detailed architecture
+│   │   └── CODE_QUALITY.md  # Linting, formatting, type checking
+│   └── tasks-todo/          # Task tracking
+│
+├── .gitignore               # Comprehensive ignores
+├── .vscode/                 # Shared VS Code settings
+│   ├── settings.json
+│   └── extensions.json
+├── eslint.config.js         # ESLint 9 flat config
+├── prettier.config.js       # Prettier config
+├── tsconfig.base.json       # Shared TypeScript config
+├── pnpm-workspace.yaml      # Monorepo config
+├── pnpm-lock.yaml           # Workspace lock file
+├── package.json             # Root scripts
+├── CLAUDE.md                # Claude Code guidance
+└── README.md                # This file
 ```
 
 ---
@@ -298,44 +336,46 @@ travel-pricing/
 ### **Setup Development Environment**
 
 ```bash
-# Install dev dependencies
-pip install -r requirements-dev.txt
+# Install all dependencies (from project root)
+pnpm install
 
-# Install pre-commit hooks (if configured)
-pre-commit install
+# Set up environment files
+# See backend/.env.example for required variables
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+
+# Initialize database (optional - if using new Supabase project)
+cd backend
+node setup-database.js
 ```
 
 ### **Code Style**
 
-- **Python**: PEP 8, snake_case, type hints everywhere
-- **Docstrings**: Google style
-- **Imports**: Sorted (isort)
-- **Formatting**: Black (88 chars)
-- **Linting**: Flake8, mypy
+- **Backend**: TypeScript strict mode, ES modules, async/await
+- **Frontend**: TypeScript strict mode, functional components, Tailwind
+- **Formatting**: Prettier (single quotes, no semicolons, 100 char lines)
+- **Linting**: ESLint 9 with TypeScript, React, and Tailwind rules
 
-### **Running Tests**
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=core --cov-report=html
-
-# Run specific test
-pytest tests/unit/test_pricing.py -v
-```
-
-### **Type Checking**
+### **Quality Checks**
 
 ```bash
-# Type check both frontend and backend (from root)
-pnpm run type-check
+# From project root - run all checks
+pnpm run check-all        # Type + lint + format (recommended before commits)
 
-# Type check individual workspaces
-pnpm run type-check:frontend
-pnpm run type-check:backend
+# Individual checks
+pnpm run type-check       # TypeScript type checking (both workspaces)
+pnpm run lint             # ESLint all files
+pnpm run format:check     # Prettier check (CI-friendly)
+
+# Auto-fix issues
+pnpm run fix-all          # Lint + format
+pnpm run lint:fix         # ESLint auto-fix
+pnpm run format           # Prettier format
 ```
+
+### **Testing**
+
+**Current state**: No automated tests yet (to be added)
 
 ---
 
