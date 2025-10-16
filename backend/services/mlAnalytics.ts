@@ -26,7 +26,7 @@ function pearsonCorrelation(x: number[], y: number[]): number {
   const n = x.length
   const sumX = x.reduce((a, b) => a + b, 0)
   const sumY = y.reduce((a, b) => a + b, 0)
-  const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0)
+  const sumXY = x.reduce((sum, xi, i) => sum + xi * (y[i] ?? 0), 0)
   const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0)
   const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0)
 
@@ -48,7 +48,7 @@ function calculateR2(actual: number[], predicted: number[]): number {
 
   const mean = actual.reduce((a, b) => a + b, 0) / actual.length
   const totalSS = actual.reduce((sum, yi) => sum + Math.pow(yi - mean, 2), 0)
-  const residualSS = actual.reduce((sum, yi, i) => sum + Math.pow(yi - predicted[i], 2), 0)
+  const residualSS = actual.reduce((sum, yi, i) => sum + Math.pow(yi - (predicted[i] ?? 0), 2), 0)
 
   if (totalSS === 0) return 0
 
@@ -65,7 +65,7 @@ function calculateMAPE(actual: number[], predicted: number[]): number {
 
   const ape = actual.reduce((sum, yi, i) => {
     if (yi === 0) return sum
-    return sum + Math.abs((yi - predicted[i]) / yi)
+    return sum + Math.abs((yi - (predicted[i] ?? 0)) / yi)
   }, 0)
 
   return (ape / actual.length) * 100
@@ -73,7 +73,9 @@ function calculateMAPE(actual: number[], predicted: number[]): number {
 
 /**
  * Simple linear regression
+ * @deprecated Not currently used but kept for potential future use
  */
+// @ts-ignore - Function kept for potential future use
 function linearRegression(x: number[], y: number[]): { slope: number; intercept: number; r2: number } {
   if (x.length !== y.length || x.length < 2) {
     return { slope: 0, intercept: 0, r2: 0 }
@@ -82,7 +84,7 @@ function linearRegression(x: number[], y: number[]): { slope: number; intercept:
   const n = x.length
   const sumX = x.reduce((a, b) => a + b, 0)
   const sumY = y.reduce((a, b) => a + b, 0)
-  const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0)
+  const sumXY = x.reduce((sum, xi, i) => sum + xi * (y[i] ?? 0), 0)
   const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0)
 
   const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
@@ -106,18 +108,19 @@ export function analyzeWeatherImpact(data: DataRow[]): {
   if (!data || data.length === 0) {
     return {
       correlations: {},
-      insights: [],
+      weatherStats: [],
       confidence: 'low',
+      sampleSize: 0,
     }
   }
 
-  const weatherGroups = {}
+  const weatherGroups: Record<string, { prices: number[]; occupancies: number[]; temperatures: number[]; count: number }> = {}
 
   data.forEach(row => {
     const weather = row.weather || row.weather_condition || 'Unknown'
-    const price = parseFloat(row.price || 0)
-    const occupancy = parseFloat(row.occupancy || 0)
-    const temperature = parseFloat(row.temperature || 0)
+    const price = parseFloat(String(row.price || 0))
+    const occupancy = parseFloat(String(row.occupancy || 0))
+    const temperature = parseFloat(String(row.temperature || 0))
 
     if (!weatherGroups[weather]) {
       weatherGroups[weather] = {
@@ -135,24 +138,30 @@ export function analyzeWeatherImpact(data: DataRow[]): {
   })
 
   // Calculate correlations
-  const prices = data.map(r => parseFloat(r.price || 0)).filter(p => p > 0)
-  const temperatures = data.map(r => parseFloat(r.temperature || 0)).filter(t => t > 0)
-  const occupancies = data.map(r => parseFloat(r.occupancy || 0)).filter(o => o > 0)
+  const prices = data.map(r => parseFloat(String(r.price || 0))).filter(p => p > 0)
+  const temperatures = data.map(r => parseFloat(String(r.temperature || 0))).filter(t => t > 0)
+  const occupancies = data.map(r => parseFloat(String(r.occupancy || 0))).filter(o => o > 0)
 
   const tempPriceCorr = pearsonCorrelation(temperatures, prices.slice(0, temperatures.length))
   const tempOccupancyCorr = pearsonCorrelation(temperatures, occupancies.slice(0, temperatures.length))
   const priceOccupancyCorr = pearsonCorrelation(prices, occupancies.slice(0, prices.length))
 
   // Generate insights
-  const insights = []
+  const insights: Array<{
+    weather: string
+    avgPrice: number
+    avgOccupancy: number
+    avgTemperature: number | null
+    sampleSize: number
+  }> = []
 
   Object.entries(weatherGroups).forEach(([weather, stats]) => {
     if (stats.count < 3) return // Skip if not enough data
 
-    const avgPrice = stats.prices.reduce((a, b) => a + b, 0) / stats.prices.length
-    const avgOccupancy = stats.occupancies.reduce((a, b) => a + b, 0) / stats.occupancies.length
+    const avgPrice = stats.prices.reduce((a: number, b: number) => a + b, 0) / stats.prices.length
+    const avgOccupancy = stats.occupancies.reduce((a: number, b: number) => a + b, 0) / stats.occupancies.length
     const avgTemp = stats.temperatures.length > 0
-      ? stats.temperatures.reduce((a, b) => a + b, 0) / stats.temperatures.length
+      ? stats.temperatures.reduce((a: number, b: number) => a + b, 0) / stats.temperatures.length
       : null
 
     insights.push({
@@ -205,11 +214,11 @@ export function forecastDemand(historicalData: DataRow[], daysAhead = 14): {
   // Extract occupancy time series
   const timeSeries = historicalData
     .map(row => ({
-      date: new Date(row.date || row.check_in),
-      occupancy: parseFloat(row.occupancy || 0),
+      date: new Date(row.date || row.check_in || ''),
+      occupancy: parseFloat(String(row.occupancy || 0)),
     }))
     .filter(d => d.occupancy > 0)
-    .sort((a, b) => a.date - b.date)
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
 
   if (timeSeries.length < 7) {
     return {
@@ -224,8 +233,11 @@ export function forecastDemand(historicalData: DataRow[], daysAhead = 14): {
 
   timeSeries.forEach(({ date, occupancy }) => {
     const dayOfWeek = date.getDay()
-    dayAverages[dayOfWeek].sum += occupancy
-    dayAverages[dayOfWeek].count++
+    const dayAvg = dayAverages[dayOfWeek]
+    if (dayAvg) {
+      dayAvg.sum += occupancy
+      dayAvg.count++
+    }
   })
 
   const dayFactors = dayAverages.map(day =>
@@ -238,7 +250,15 @@ export function forecastDemand(historicalData: DataRow[], daysAhead = 14): {
   const recentAvg = recentData.reduce((sum, d) => sum + d.occupancy, 0) / recentData.length
 
   // Generate forecast
-  const lastDate = timeSeries[timeSeries.length - 1].date
+  const lastDate = timeSeries[timeSeries.length - 1]?.date
+  if (!lastDate) {
+    return {
+      forecast: [],
+      accuracy: null,
+      method: 'insufficient_data',
+    }
+  }
+
   const forecast = []
 
   for (let i = 1; i <= daysAhead; i++) {
@@ -247,7 +267,7 @@ export function forecastDemand(historicalData: DataRow[], daysAhead = 14): {
     const dayOfWeek = forecastDate.getDay()
 
     // Combine trend and seasonality
-    const seasonalFactor = dayFactors[dayOfWeek] / (recentAvg || 1)
+    const seasonalFactor = (dayFactors[dayOfWeek] ?? 70) / (recentAvg || 1)
     const predicted = Math.round(Math.max(0, Math.min(100, recentAvg * seasonalFactor)))
 
     forecast.push({
@@ -265,7 +285,7 @@ export function forecastDemand(historicalData: DataRow[], daysAhead = 14): {
 
   const predictions = validationData.map(({ date }) => {
     const dayOfWeek = date.getDay()
-    return recentAvg * (dayFactors[dayOfWeek] / recentAvg)
+    return recentAvg * ((dayFactors[dayOfWeek] ?? 70) / recentAvg)
   })
 
   const actual = validationData.map(d => d.occupancy)
@@ -297,14 +317,13 @@ export function analyzeCompetitorPricing(yourData: DataRow[], competitorData: Da
 } {
   if (!yourData || !competitorData || yourData.length === 0 || competitorData.length === 0) {
     return {
-      insights: [],
       recommendation: null,
     }
   }
 
   // Calculate price statistics
-  const yourPrices = yourData.map(r => parseFloat(r.price || 0)).filter(p => p > 0)
-  const competitorPrices = competitorData.map(r => parseFloat(r.price || 0)).filter(p => p > 0)
+  const yourPrices = yourData.map(r => parseFloat(String(r.price || 0))).filter(p => p > 0)
+  const competitorPrices = competitorData.map(r => parseFloat(String(r.price || 0))).filter(p => p > 0)
 
   const yourAvg = yourPrices.reduce((a, b) => a + b, 0) / yourPrices.length
   const competitorAvg = competitorPrices.reduce((a, b) => a + b, 0) / competitorPrices.length
@@ -312,7 +331,7 @@ export function analyzeCompetitorPricing(yourData: DataRow[], competitorData: Da
   const pricePercentage = (priceDiff / competitorAvg) * 100
 
   // Calculate occupancy if available
-  const yourOccupancies = yourData.map(r => parseFloat(r.occupancy || 0)).filter(o => o > 0)
+  const yourOccupancies = yourData.map(r => parseFloat(String(r.occupancy || 0))).filter(o => o > 0)
   const yourAvgOccupancy = yourOccupancies.length > 0
     ? yourOccupancies.reduce((a, b) => a + b, 0) / yourOccupancies.length
     : null
@@ -368,10 +387,10 @@ export function calculateFeatureImportance(data: DataRow[]): Array<{
 
   // Extract features
   const features = {
-    temperature: data.map(r => parseFloat(r.temperature || 0)).filter(v => v > 0),
-    day_of_week: data.map(r => new Date(r.date || r.check_in).getDay()),
+    temperature: data.map(r => parseFloat(String(r.temperature || 0))).filter(v => v > 0),
+    day_of_week: data.map(r => new Date(r.date || r.check_in || '').getDay()),
     is_weekend: data.map(r => {
-      const day = new Date(r.date || r.check_in).getDay()
+      const day = new Date(r.date || r.check_in || '').getDay()
       return day === 0 || day === 6 ? 1 : 0
     }),
     weather_sunny: data.map(r => {
@@ -381,8 +400,8 @@ export function calculateFeatureImportance(data: DataRow[]): Array<{
   }
 
   // Target variables
-  const prices = data.map(r => parseFloat(r.price || 0)).filter(p => p > 0)
-  const occupancies = data.map(r => parseFloat(r.occupancy || 0)).filter(o => o > 0)
+  const prices = data.map(r => parseFloat(String(r.price || 0))).filter(p => p > 0)
+  const occupancies = data.map(r => parseFloat(String(r.occupancy || 0))).filter(o => o > 0)
 
   // Calculate correlations with price
   const importance = Object.entries(features).map(([feature, values]) => {
@@ -415,14 +434,14 @@ export function generateAnalyticsSummary(data: DataRow[]): unknown {
     dataQuality: {
       totalRecords: data.length,
       dateRange: {
-        start: data.length > 0 ? new Date(Math.min(...data.map(r => new Date(r.date || r.check_in)))).toISOString().split('T')[0] : null,
-        end: data.length > 0 ? new Date(Math.max(...data.map(r => new Date(r.date || r.check_in)))).toISOString().split('T')[0] : null,
+        start: data.length > 0 ? new Date(Math.min(...data.map(r => new Date(r.date || r.check_in || '').getTime()))).toISOString().split('T')[0] : null,
+        end: data.length > 0 ? new Date(Math.max(...data.map(r => new Date(r.date || r.check_in || '').getTime()))).toISOString().split('T')[0] : null,
       },
       completeness: {
-        price: data.filter(r => r.price > 0).length / data.length,
-        occupancy: data.filter(r => r.occupancy > 0).length / data.length,
+        price: data.filter(r => typeof r.price === 'number' ? r.price > 0 : parseFloat(String(r.price || 0)) > 0).length / data.length,
+        occupancy: data.filter(r => typeof r.occupancy === 'number' ? r.occupancy > 0 : parseFloat(String(r.occupancy || 0)) > 0).length / data.length,
         weather: data.filter(r => r.weather).length / data.length,
-        temperature: data.filter(r => r.temperature > 0).length / data.length,
+        temperature: data.filter(r => typeof r.temperature === 'number' ? r.temperature > 0 : parseFloat(String(r.temperature || 0)) > 0).length / data.length,
       },
     },
   }

@@ -40,7 +40,7 @@ export function formatDateISO(date: Date | null | undefined): string | null {
     return null
   }
 
-  return date.toISOString().split('T')[0]
+  return date.toISOString().split('T')[0] || null
 }
 
 /**

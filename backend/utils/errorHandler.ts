@@ -24,7 +24,7 @@ interface ErrorTypeConfig {
 export function formatErrorResponse(
   error: string,
   message: string,
-  statusCode = 500,
+  _statusCode = 500,
   details: unknown = null
 ): ErrorResponse {
   const response: ErrorResponse = {
@@ -93,7 +93,7 @@ export function sendError(
   message: string,
   details: unknown = null
 ): void {
-  const errorConfig = ErrorTypes[errorType] || ErrorTypes.INTERNAL
+  const errorConfig = ErrorTypes[errorType] ?? ErrorTypes.INTERNAL
   const response = formatErrorResponse(
     errorConfig.error,
     message,

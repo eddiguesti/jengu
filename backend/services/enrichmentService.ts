@@ -29,7 +29,7 @@ export async function enrichWithWeather(propertyId: string, location: { latitude
     return { enriched: 0 };
   }
 
-  const dates = pricingData.map(d => new Date(d.date));
+  const dates = pricingData.map((d: any) => new Date(d.date));
   const minDate = dates[0];
   const maxDate = dates[dates.length - 1];
 
@@ -53,8 +53,8 @@ export async function enrichWithWeather(propertyId: string, location: { latitude
     );
 
     // Create a map of date -> weather data
-    const weatherMap = {};
-    response.data.daily.time.forEach((date, index) => {
+    const weatherMap: Record<string, any> = {};
+    response.data.daily.time.forEach((date: string, index: number) => {
       const weathercode = response.data.daily.weathercode[index];
 
       // Use centralized weather code mapping
@@ -78,7 +78,7 @@ export async function enrichWithWeather(propertyId: string, location: { latitude
 
       for (const row of batch) {
         const dateStr = new Date(row.date).toISOString().split('T')[0];
-        const weather = weatherMap[dateStr];
+        const weather = weatherMap[dateStr as string];
 
         if (weather) {
           const { error: updateError } = await supabaseClient
@@ -105,8 +105,9 @@ export async function enrichWithWeather(propertyId: string, location: { latitude
     console.log(`✅ Weather enrichment complete: ${enrichedCount}/${pricingData.length} rows enriched`);
     return { enriched: enrichedCount, total: pricingData.length };
 
-  } catch (error) {
-    console.error('Weather API Error:', error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('Weather API Error:', errorMessage);
     throw error;
   }
 }
@@ -187,7 +188,7 @@ export async function enrichWithTemporalFeatures(propertyId: string, supabaseCli
  * 3. Handle date conversions properly (Supabase returns ISO strings, not Date objects)
  * 4. Add batch updates for performance (similar to enrichWithWeather)
  */
-export async function enrichWithHolidays(propertyId: string, countryCode: string, calendarificApiKey: string | undefined, supabaseClient: any): Promise<any> {
+export async function enrichWithHolidays(propertyId: string, countryCode: string, _calendarificApiKey: string | undefined, _supabaseClient: any): Promise<any> {
   console.log(`🎉 Holiday enrichment requested for property ${propertyId} (${countryCode})...`);
   console.warn('⚠️  Holiday enrichment is not yet migrated to Supabase - skipping');
 
@@ -319,11 +320,12 @@ export async function enrichPropertyData(propertyId: string, options: any, supab
       success: true,
       results
     };
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('❌ Enrichment pipeline error:', error);
     return {
       success: false,
-      error: error.message,
+      error: errorMessage,
       results
     };
   }

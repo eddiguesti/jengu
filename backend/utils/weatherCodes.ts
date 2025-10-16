@@ -51,20 +51,20 @@ export const WEATHER_CATEGORIES = {
  * Check if weather is favorable for tourism
  */
 export function isGoodWeatherCode(weathercode: number): boolean {
-  return WEATHER_CATEGORIES.CLEAR.includes(weathercode) ||
-         WEATHER_CATEGORIES.PARTLY_CLOUDY.includes(weathercode)
+  return (WEATHER_CATEGORIES.CLEAR as readonly number[]).includes(weathercode) ||
+         (WEATHER_CATEGORIES.PARTLY_CLOUDY as readonly number[]).includes(weathercode)
 }
 
 /**
  * Get weather severity (0-4, where 0 is best, 4 is worst)
  */
 export function getWeatherSeverity(weathercode: number): number {
-  if (WEATHER_CATEGORIES.CLEAR.includes(weathercode)) return 0
-  if (WEATHER_CATEGORIES.PARTLY_CLOUDY.includes(weathercode)) return 1
-  if (WEATHER_CATEGORIES.DRIZZLE.includes(weathercode)) return 2
-  if (WEATHER_CATEGORIES.RAINY.includes(weathercode) ||
-      WEATHER_CATEGORIES.FOGGY.includes(weathercode)) return 3
-  if (WEATHER_CATEGORIES.THUNDERSTORM.includes(weathercode) ||
-      WEATHER_CATEGORIES.SNOWY.includes(weathercode)) return 4
+  if ((WEATHER_CATEGORIES.CLEAR as readonly number[]).includes(weathercode)) return 0
+  if ((WEATHER_CATEGORIES.PARTLY_CLOUDY as readonly number[]).includes(weathercode)) return 1
+  if ((WEATHER_CATEGORIES.DRIZZLE as readonly number[]).includes(weathercode)) return 2
+  if ((WEATHER_CATEGORIES.RAINY as readonly number[]).includes(weathercode) ||
+      (WEATHER_CATEGORIES.FOGGY as readonly number[]).includes(weathercode)) return 3
+  if ((WEATHER_CATEGORIES.THUNDERSTORM as readonly number[]).includes(weathercode) ||
+      (WEATHER_CATEGORIES.SNOWY as readonly number[]).includes(weathercode)) return 4
   return 2 // Default medium severity
 }

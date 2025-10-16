@@ -251,7 +251,7 @@ Demand Forecast:
 - Model Error (MAPE): ${demandForecast?.accuracy?.mape || 'N/A'}%
 
 Top Feature Importance:
-${featureImportance?.slice(0, 3).map(f => `- ${f.feature}: ${f.importance}% importance`).join('\n') || 'N/A'}
+${featureImportance?.slice(0, 3).map((f: any) => `- ${f.feature}: ${f.importance}% importance`).join('\n') || 'N/A'}
 `
 
   const prompt = `You are a pricing strategy expert analyzing hotel/accommodation pricing data.
@@ -292,15 +292,17 @@ Format each insight as a bullet point starting with a category emoji (📊 📈 
 
     const insights = response.data.content[0].text
       .split('\n')
-      .filter(line => line.trim().length > 0 && (line.includes('📊') || line.includes('📈') || line.includes('📉') || line.includes('⚡') || line.includes('💡')))
+      .filter((line: string) => line.trim().length > 0 && (line.includes('📊') || line.includes('📈') || line.includes('📉') || line.includes('⚡') || line.includes('💡')))
 
     return {
       summary: response.data.content[0].text,
       insights: insights,
       generatedAt: new Date().toISOString(),
     }
-  } catch (error) {
-    console.error('Claude API Error:', error.response?.data || error.message)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorData = (error as any)?.response?.data;
+    console.error('Claude API Error:', errorData || errorMessage);
     return {
       summary: 'Unable to generate AI insights at this time.',
       insights: [
@@ -308,7 +310,7 @@ Format each insight as a bullet point starting with a category emoji (📊 📈 
         '📈 Review competitor pricing and occupancy trends for opportunities',
         '💡 Consider seasonal factors when adjusting your pricing strategy',
       ],
-      error: error.message,
+      error: errorMessage,
     }
   }
 }

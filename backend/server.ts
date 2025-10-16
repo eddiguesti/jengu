@@ -139,7 +139,7 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
       return res.status(400).json({ error: 'No file uploaded' })
     }
 
-    const userId = req.userId // From authentication middleware
+    const userId = req.userId! // From authentication middleware (guaranteed by authenticateUser)
     const filePath = req.file.path
     console.log(`📥 Processing CSV file: ${req.file.originalname} (${req.file.size} bytes) for user: ${userId}`)
 
@@ -247,21 +247,24 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
         const temperatureField = normalizedRow.temperature || normalizedRow.temp
         const weatherField = normalizedRow.weather || normalizedRow.weather_condition
 
-        // Create pricing data record
-        const pricingData = {
-          id: randomUUID(), // Generate UUID for each row
-          propertyId: property.id,
-          date: parseDate(dateField),
-          price: parseFloatSafe(priceField),
-          occupancy: parseFloatSafe(occupancyField),
-          bookings: parseIntSafe(bookingsField),
-          temperature: parseFloatSafe(temperatureField),
-          weatherCondition: weatherField || null,
-          extraData: normalizedRow // Store all fields as JSON for flexibility
-        };
+        // Parse date to check validity
+        const parsedDate = parseDate(dateField);
 
         // Only insert if we have a valid date
-        if (pricingData.date) {
+        if (parsedDate) {
+          // Create pricing data record with date as ISO string
+          const pricingData = {
+            id: randomUUID(), // Generate UUID for each row
+            propertyId: property.id,
+            date: parsedDate.toISOString().split('T')[0], // Convert Date to YYYY-MM-DD string
+            price: parseFloatSafe(priceField),
+            occupancy: parseFloatSafe(occupancyField),
+            bookings: parseIntSafe(bookingsField),
+            temperature: parseFloatSafe(temperatureField),
+            weatherCondition: weatherField || null,
+            extraData: normalizedRow // Store all fields as JSON for flexibility
+          };
+
           batchData.push(pricingData);
         }
       }
@@ -449,7 +452,7 @@ app.post('/api/files/upload', authenticateUser, upload.single('file'), async (re
 app.get('/api/files/:fileId/data', authenticateUser, async (req: Request, res: Response) => {
   try {
     const { fileId } = req.params
-    const userId = req.userId
+    const userId = req.userId! // Guaranteed by authenticateUser middleware
     const limit = parseInt(String(req.query.limit || '10000'))
     const offset = parseInt(String(req.query.offset || '0'))
 
@@ -535,7 +538,7 @@ app.get('/api/files/:fileId/data', authenticateUser, async (req: Request, res: R
 // List all uploaded files
 app.get('/api/files', authenticateUser, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.userId!; // Guaranteed by authenticateUser middleware
 
     const { data: properties, error } = await supabaseAdmin
       .from('properties')
@@ -573,7 +576,7 @@ app.get('/api/files', authenticateUser, async (req, res) => {
 app.delete('/api/files/:fileId', authenticateUser, async (req, res) => {
   try {
     const { fileId } = req.params;
-    const userId = req.userId;
+    const userId = req.userId!; // Guaranteed by authenticateUser middleware
 
     // Check if property exists and belongs to user using Supabase
     const { data: property, error: findError } = await supabaseAdmin
@@ -1328,7 +1331,7 @@ app.post('/api/analytics/pricing-recommendations', async (req, res) => {
 app.post('/api/files/:fileId/enrich', authenticateUser, async (req, res) => {
   try {
     const { fileId } = req.params;
-    const userId = req.userId;
+    const userId = req.userId!; // Guaranteed by authenticateUser middleware
     const { latitude, longitude, country } = req.body;
 
     // Validate inputs
@@ -1412,7 +1415,7 @@ app.post('/api/files/:fileId/enrich', authenticateUser, async (req, res) => {
 // Get user's business settings
 app.get('/api/settings', authenticateUser, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.userId!; // Guaranteed by authenticateUser middleware
 
     const { data: settings, error } = await supabaseAdmin
       .from('business_settings')
@@ -1441,7 +1444,7 @@ app.get('/api/settings', authenticateUser, async (req, res) => {
 // Save/update user's business settings
 app.post('/api/settings', authenticateUser, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.userId!; // Guaranteed by authenticateUser middleware
     const {
       business_name,
       property_type,
