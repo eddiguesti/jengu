@@ -11,7 +11,6 @@ import {
   signIn as supabaseSignIn,
   signUp as supabaseSignUp,
   signOut as supabaseSignOut,
-  getCurrentUser,
   getSession
 } from '../lib/supabase';
 
@@ -42,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: string, session: Session | null) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user || null);

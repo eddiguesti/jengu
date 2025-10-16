@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { MessageCircle, Send, Sparkles, Loader2, AlertCircle } from 'lucide-react'
-import { Card, Button, Input } from '../components/ui'
+import { Card, Button } from '../components/ui'
 import clsx from 'clsx'
 import { sendMessage, type Message, type AssistantContext } from '../lib/api/services/assistant'
 import { useBusinessStore } from '../store/useBusinessStore'

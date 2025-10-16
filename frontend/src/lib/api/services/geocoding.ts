@@ -251,7 +251,7 @@ export async function getTimezoneFromCoordinates(
   // In production, use a dedicated timezone API or service
   const timezoneOffset = Math.round(longitude / 15)
 
-  const timezones: Record<number, string> = {
+  const timezones: Record<string, string> = {
     '-12': 'Pacific/Midway',
     '-11': 'Pacific/Niue',
     '-10': 'Pacific/Honolulu',

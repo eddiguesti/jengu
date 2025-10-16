@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react'
 import clsx from 'clsx'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'warning'
   size?: 'sm' | 'md' | 'lg'
   loading?: boolean
   children: ReactNode
@@ -25,6 +25,8 @@ export const Button = ({
     secondary: 'bg-elevated text-text hover:bg-elevated/80 border border-border',
     ghost: 'text-text hover:bg-elevated',
     danger: 'bg-error text-white hover:bg-error/90',
+    outline: 'border-2 border-primary text-primary hover:bg-primary hover:text-background',
+    warning: 'bg-warning text-background hover:bg-warning/90 shadow-md hover:shadow-lg',
   }
 
   const sizes = {

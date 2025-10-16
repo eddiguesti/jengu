@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, X, Send, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { Button } from '../ui/Button'
 import clsx from 'clsx'
 
 const QUICK_ANSWERS: Record<string, string> = {

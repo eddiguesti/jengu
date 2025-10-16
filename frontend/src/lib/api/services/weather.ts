@@ -10,8 +10,6 @@
  * NOTE: All weather API calls now go through backend proxy to secure API keys
  */
 
-import { apiClient } from '../client'
-
 // Backend proxy endpoints (no API key needed in frontend)
 const BACKEND_API = 'http://localhost:3001/api'
 

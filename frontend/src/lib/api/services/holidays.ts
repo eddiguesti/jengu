@@ -168,11 +168,11 @@ export function getHolidayPeriods(
 
   // Add fixed periods
   periodDefinitions.forEach(def => {
-    if ('startDay' in def) {
-      const start = new Date(year, def.startMonth, def.startDay)
-      const endMonth = def.endMonth !== undefined ? def.endMonth : def.startMonth
+    if ('startDay' in def && def.startDay !== undefined) {
+      const start = new Date(year, def.startMonth ?? 0, def.startDay)
+      const endMonth = def.endMonth !== undefined ? def.endMonth : (def.startMonth ?? 0)
       const endYear = def.endMonth === 0 ? year + 1 : year
-      const end = new Date(endYear, endMonth, def.endDay)
+      const end = new Date(endYear, endMonth, def.endDay ?? 1)
 
       periods.push({
         name: def.name,
@@ -185,9 +185,9 @@ export function getHolidayPeriods(
 
   // Add variable periods (like Easter)
   periodDefinitions.forEach(def => {
-    if ('keywords' in def) {
+    if ('keywords' in def && def.keywords !== undefined) {
       const holiday = holidays.find(h =>
-        def.keywords.some(keyword => h.name.includes(keyword))
+        def.keywords!.some(keyword => h.name.includes(keyword))
       )
 
       if (holiday) {

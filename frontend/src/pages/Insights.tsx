@@ -180,8 +180,8 @@ export const Insights = () => {
         },
         competitorData: {
           average: insights.competitorPricing.reduce((sum, d) => {
-            const competitors = [d.competitor1, d.competitor2].filter(Boolean)
-            return sum + (competitors.reduce((a, b) => a + (b || 0), 0) / competitors.length)
+            const competitors = [d.competitor1, d.competitor2].filter((x): x is number => x !== null && x !== undefined)
+            return sum + (competitors.length > 0 ? competitors.reduce((a, b) => a + b, 0) / competitors.length : 0)
           }, 0) / insights.competitorPricing.length,
         },
         yourPricing: {

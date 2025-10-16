@@ -250,7 +250,7 @@ export const Settings = () => {
               label="Property Type"
               value={formData.property_type}
               onChange={(e) =>
-                setFormData({ ...formData, property_type: e.target.value })
+                setFormData({ ...formData, property_type: e.target.value as 'hotel' | 'resort' | 'vacation_rental' | 'hostel' | 'other' })
               }
               options={[
                 { value: 'hotel', label: 'Hotel' },
@@ -377,7 +377,7 @@ export const Settings = () => {
             <Select
               label="Currency"
               value={formData.currency}
-              onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, currency: e.target.value as 'EUR' | 'USD' | 'GBP' | 'CHF' | 'JPY' | 'AUD' | 'CAD' | 'AED' })}
               options={[
                 { value: 'EUR', label: 'EUR (€) - Euro' },
                 { value: 'USD', label: 'USD ($) - US Dollar' },
