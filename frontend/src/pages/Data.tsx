@@ -20,8 +20,7 @@ import { Card, Button, Table, Badge, Progress } from '../components/ui'
 import { useNavigate } from 'react-router-dom'
 import { useDataStore, useBusinessStore } from '../store'
 import { getHolidaysForDates, getCountryCode } from '../lib/api/services/holidays'
-import axios from 'axios'
-import { supabase } from '../lib/supabase'
+import { useUploadedFiles, useUploadFile, useEnrichFile } from '../hooks/queries/useFileData'
 import clsx from 'clsx'
 
 interface UploadedFile {
@@ -49,9 +48,14 @@ type Step = 'upload' | 'enrichment'
 
 export const Data = () => {
   const navigate = useNavigate()
-  const { uploadedFiles, addFile } = useDataStore()
+  const { uploadedFiles: zustandFiles, addFile } = useDataStore() // Backwards compatibility
   const { profile } = useBusinessStore()
   const [currentStep, setCurrentStep] = useState<Step>('upload')
+
+  // React Query hooks
+  const { data: uploadedFiles = [] } = useUploadedFiles()
+  const uploadFileMutation = useUploadFile()
+  const enrichFileMutation = useEnrichFile()
 
   // Upload State
   const [files, setFiles] = useState<UploadedFile[]>([])
@@ -154,7 +158,7 @@ export const Data = () => {
 
     setFiles(prev => [...prev, ...newFiles])
 
-    // Upload each file to backend API
+    // Upload each file using React Query mutation
     for (let index = 0; index < fileList.length; index++) {
       const file = fileList[index]
       const uniqueId = `${file.name}-${file.size}-${timestamp}-${index}`
@@ -165,29 +169,12 @@ export const Data = () => {
           prev.map(f => (f.uniqueId === uniqueId ? { ...f, status: 'processing' } : f))
         )
 
-        // Create FormData for file upload
-        const formData = new FormData()
-        formData.append('file', file)
-
-        // Get Supabase session token
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-
-        if (!session?.access_token) {
-          throw new Error('Not authenticated. Please log in.')
-        }
-
-        // Upload to backend
         console.log(`📤 Uploading ${file.name} to backend...`)
-        const response = await axios.post('http://localhost:3001/api/files/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        })
 
-        const uploadedFile = response.data.file
+        // Upload using React Query mutation
+        const response = await uploadFileMutation.mutateAsync(file)
+        const uploadedFile = response.file
+
         console.log(
           `✅ Uploaded ${file.name}: ${uploadedFile.rows} rows, ${uploadedFile.columns} columns`
         )
@@ -207,17 +194,16 @@ export const Data = () => {
           )
         )
 
-        // Add to Zustand store (only metadata, not the CSV content)
+        // Add to Zustand store for backwards compatibility (only metadata)
         addFile({
-          id: uploadedFile.id, // Backend file ID
+          id: uploadedFile.id,
           name: uploadedFile.name,
           size: uploadedFile.size,
           rows: uploadedFile.rows,
           columns: uploadedFile.columns,
           uploaded_at: uploadedFile.uploaded_at,
           status: 'complete',
-          preview: uploadedFile.preview, // Store preview for display
-          // No csvData field - data is on the server now!
+          preview: uploadedFile.preview,
         })
       } catch (error) {
         console.error(`❌ Failed to upload ${file.name}:`, error)
@@ -295,7 +281,7 @@ export const Data = () => {
     setIsEnriching(false)
   }
 
-  // Enrich with REAL weather data via backend API
+  // Enrich with REAL weather data via backend API using React Query
   const enrichWithRealWeather = async (featureId: string) => {
     // Check if we have business location
     if (!profile?.location) {
@@ -304,21 +290,12 @@ export const Data = () => {
 
     const { latitude, longitude, country } = profile.location
 
-    // Get the uploaded file ID from the store
-    if (uploadedFiles.length === 0) {
+    // Get the uploaded file ID from React Query or fallback to Zustand
+    if (uploadedFiles.length === 0 && zustandFiles.length === 0) {
       throw new Error('No uploaded files found')
     }
 
-    const fileId = uploadedFiles[0].id
-
-    // Get Supabase session token
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session?.access_token) {
-      throw new Error('Not authenticated. Please log in.')
-    }
+    const fileId = uploadedFiles[0]?.id || zustandFiles[0]?.id
 
     // Progress simulation
     let progress = 0
@@ -330,27 +307,20 @@ export const Data = () => {
     }, 500)
 
     try {
-      // Call backend enrichment endpoint
+      // Call backend enrichment endpoint using React Query mutation
       console.log(`📤 Requesting weather enrichment for file ${fileId}...`)
-      const response = await axios.post(
-        `http://localhost:3001/api/files/${fileId}/enrich`,
-        {
-          latitude,
-          longitude,
-          country,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        }
-      )
+      const response = await enrichFileMutation.mutateAsync({
+        fileId,
+        latitude,
+        longitude,
+        country,
+      })
 
       clearInterval(progressInterval)
       setFeatures(prev => prev.map(f => (f.id === featureId ? { ...f, progress: 100 } : f)))
 
-      console.log(`✅ Weather enrichment complete:`, response.data.results)
-      return response.data
+      console.log(`✅ Weather enrichment complete:`, response.results)
+      return response
     } catch (error) {
       clearInterval(progressInterval)
       console.error('Weather enrichment failed:', error)

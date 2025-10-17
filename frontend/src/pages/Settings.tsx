@@ -3,17 +3,17 @@ import { motion } from 'framer-motion'
 import { Save, Building2, MapPin, DollarSign, Clock, CheckCircle2, Loader2 } from 'lucide-react'
 import { Card, Button, Input, Select } from '../components/ui'
 import { useBusinessStore } from '../store'
+import { useBusinessProfile, useUpdateBusinessProfile } from '../hooks/queries/useBusinessSettings'
 import axios from 'axios'
-import { getAccessToken } from '../lib/supabase'
 
 export const Settings = () => {
-  const { profile, setProfile } = useBusinessStore()
-  const [isSaving, setIsSaving] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [saveSuccess, setSaveSuccess] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
+  const { profile } = useBusinessStore()
   const [isGeocoding, setIsGeocoding] = useState(false)
   const [geocodeError, setGeocodeError] = useState<string | null>(null)
+
+  // React Query hooks
+  const { data: businessSettings, isLoading } = useBusinessProfile()
+  const updateSettingsMutation = useUpdateBusinessProfile()
 
   const [formData, setFormData] = useState({
     business_name: profile?.business_name || '',
@@ -26,60 +26,21 @@ export const Settings = () => {
     property_type: profile?.property_type || 'hotel',
   })
 
-  // Load settings from database on component mount
+  // Update form when data is loaded from React Query
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const token = await getAccessToken()
-        if (!token) {
-          console.error('No access token available')
-          setIsLoading(false)
-          return
-        }
-
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
-        const response = await axios.get(`${API_URL}/settings`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-
-        if (response.data.success && response.data.settings) {
-          const settings = response.data.settings
-
-          // Populate form with loaded settings
-          setFormData({
-            business_name: settings.business_name || '',
-            city: settings.city || '',
-            country: settings.country || '',
-            latitude: settings.latitude || 0,
-            longitude: settings.longitude || 0,
-            currency: settings.currency || 'EUR',
-            timezone: settings.timezone || 'Europe/Paris',
-            property_type: settings.property_type || 'hotel',
-          })
-
-          // Also update the store
-          setProfile({
-            business_name: settings.business_name,
-            location: {
-              city: settings.city,
-              country: settings.country,
-              latitude: settings.latitude,
-              longitude: settings.longitude,
-            },
-            currency: settings.currency,
-            timezone: settings.timezone,
-            property_type: settings.property_type,
-          })
-        }
-      } catch (error) {
-        console.error('Failed to load settings:', error)
-      } finally {
-        setIsLoading(false)
-      }
+    if (businessSettings) {
+      setFormData({
+        business_name: businessSettings.business_name || '',
+        city: businessSettings.city || '',
+        country: businessSettings.country || '',
+        latitude: businessSettings.latitude || 0,
+        longitude: businessSettings.longitude || 0,
+        currency: businessSettings.currency || 'EUR',
+        timezone: businessSettings.timezone || 'Europe/Paris',
+        property_type: businessSettings.property_type || 'hotel',
+      })
     }
-
-    loadSettings()
-  }, [])
+  }, [businessSettings])
 
   // Auto-geocode when city and country are both filled
   useEffect(() => {
@@ -129,57 +90,9 @@ export const Settings = () => {
     return () => clearTimeout(timer)
   }, [formData.city, formData.country])
 
-  const handleSave = async () => {
-    setIsSaving(true)
-    setSaveSuccess(false)
-    setSaveError(null)
-
-    try {
-      const token = await getAccessToken()
-      if (!token) {
-        throw new Error('Not authenticated. Please sign in again.')
-      }
-
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
-
-      // Save to backend database
-      const response = await axios.post(`${API_URL}/settings`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-
-      if (response.data.success) {
-        // Update local store after successful save
-        setProfile({
-          business_name: formData.business_name,
-          location: {
-            city: formData.city,
-            country: formData.country,
-            latitude: formData.latitude,
-            longitude: formData.longitude,
-          },
-          currency: formData.currency as any,
-          timezone: formData.timezone,
-          property_type: formData.property_type as any,
-        })
-
-        setSaveSuccess(true)
-
-        // Clear success message after 3 seconds
-        setTimeout(() => setSaveSuccess(false), 3000)
-      }
-    } catch (error: any) {
-      console.error('Failed to save settings:', error)
-      setSaveError(
-        error.response?.data?.message ||
-          error.message ||
-          'Failed to save settings. Please try again.'
-      )
-
-      // Clear error message after 5 seconds
-      setTimeout(() => setSaveError(null), 5000)
-    } finally {
-      setIsSaving(false)
-    }
+  const handleSave = () => {
+    // Use React Query mutation to save settings
+    updateSettingsMutation.mutate(formData)
   }
 
   return (
@@ -208,7 +121,7 @@ export const Settings = () => {
       )}
 
       {/* Success Message */}
-      {saveSuccess && (
+      {updateSettingsMutation.isSuccess && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <Card variant="elevated" className="border-success/20 bg-success/5">
             <div className="flex items-center gap-3">
@@ -222,11 +135,15 @@ export const Settings = () => {
       )}
 
       {/* Error Message */}
-      {saveError && (
+      {updateSettingsMutation.isError && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <Card variant="elevated" className="border-error/20 bg-error/5">
             <div className="flex items-center gap-3">
-              <p className="text-error text-sm font-medium">{saveError}</p>
+              <p className="text-error text-sm font-medium">
+                {updateSettingsMutation.error instanceof Error
+                  ? updateSettingsMutation.error.message
+                  : 'Failed to save settings. Please try again.'}
+              </p>
             </div>
           </Card>
         </motion.div>
@@ -505,8 +422,13 @@ export const Settings = () => {
         <Button variant="secondary" size="lg">
           Cancel
         </Button>
-        <Button variant="primary" size="lg" onClick={handleSave} loading={isSaving}>
-          {isSaving ? (
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={handleSave}
+          loading={updateSettingsMutation.isPending}
+        >
+          {updateSettingsMutation.isPending ? (
             'Saving...'
           ) : (
             <>

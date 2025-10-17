@@ -22,380 +22,56 @@ import { getCombinedInsights } from '../lib/services/insightsData'
 import { MarketSentimentCard } from '../components/insights/MarketSentimentCard'
 import { AIInsightsCard } from '../components/insights/AIInsightsCard'
 import { MLAnalyticsCard } from '../components/insights/MLAnalyticsCard'
-import {
-  getAnalyticsSummary,
-  analyzeMarketSentiment,
-  generateAIInsights,
-  type MarketSentiment,
-  type ClaudeInsights,
-  type DemandForecast,
-  type WeatherImpactAnalysis,
-} from '../lib/services/analyticsService'
-import axios from 'axios'
-import { getAccessToken } from '../lib/supabase'
+import { useUploadedFiles, useFileData } from '../hooks/queries/useFileData'
+import { useAnalyticsSummary, useMarketSentiment, useAIInsights } from '../hooks/queries/useAnalytics'
 
 export const Insights = () => {
-  const { uploadedFiles } = useDataStore()
+  const { uploadedFiles: zustandFiles } = useDataStore() // Backwards compatibility
   const [dateRange, setDateRange] = useState('6months')
   const [weatherFilter, setWeatherFilter] = useState('all')
+
+  // Fetch files list using React Query
+  const { data: uploadedFiles = [] } = useUploadedFiles()
+
+  // Get first file ID for data fetching
+  const firstFileId = uploadedFiles[0]?.id || zustandFiles[0]?.id || ''
+
+  // Fetch file data using React Query
+  const { data: fileData = [], isLoading: isLoadingData } = useFileData(firstFileId, 10000)
 
   // Get real insights data (will be empty if no data)
   const [insights, setInsights] = useState(() => getCombinedInsights())
 
-  // ML Analytics State
-  const [marketSentiment, setMarketSentiment] = useState<MarketSentiment | null>(null)
-  const [aiInsights, setAIInsights] = useState<ClaudeInsights | null>(null)
-  const [demandForecast, setDemandForecast] = useState<DemandForecast | null>(null)
-  const [weatherAnalysis, setWeatherAnalysis] = useState<WeatherImpactAnalysis | null>(null)
-  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false)
-  const [isLoadingAI, setIsLoadingAI] = useState(false)
+  // Fetch analytics using React Query hooks
+  const { data: analyticsSummary, isLoading: isLoadingAnalytics, refetch: refetchAnalytics } = useAnalyticsSummary(firstFileId, fileData)
 
-  // Load actual uploaded CSV data from backend API
-  const loadUploadedData = async () => {
-    // Check if we have uploaded files
-    if (uploadedFiles.length === 0) {
-      console.warn('⚠️ No uploaded files found, using fallback sample data')
-      // Return fallback data if no files uploaded
-      return [
-        {
-          date: '2024-01-15',
-          price: '285',
-          occupancy: '0.92',
-          weather: 'Sunny',
-          temperature: '18',
-        },
-        {
-          date: '2024-01-16',
-          price: '235',
-          occupancy: '0.65',
-          weather: 'Rainy',
-          temperature: '15',
-        },
-        {
-          date: '2024-01-17',
-          price: '295',
-          occupancy: '0.95',
-          weather: 'Clear',
-          temperature: '22',
-        },
-        {
-          date: '2024-01-18',
-          price: '258',
-          occupancy: '0.78',
-          weather: 'Cloudy',
-          temperature: '16',
-        },
-        {
-          date: '2024-01-19',
-          price: '320',
-          occupancy: '0.88',
-          weather: 'Sunny',
-          temperature: '24',
-        },
-        {
-          date: '2024-01-20',
-          price: '240',
-          occupancy: '0.60',
-          weather: 'Rainy',
-          temperature: '14',
-        },
-        {
-          date: '2024-01-21',
-          price: '310',
-          occupancy: '0.92',
-          weather: 'Sunny',
-          temperature: '20',
-        },
-        {
-          date: '2024-01-22',
-          price: '275',
-          occupancy: '0.85',
-          weather: 'Cloudy',
-          temperature: '17',
-        },
-        {
-          date: '2024-01-23',
-          price: '290',
-          occupancy: '0.90',
-          weather: 'Clear',
-          temperature: '21',
-        },
-        {
-          date: '2024-01-24',
-          price: '245',
-          occupancy: '0.68',
-          weather: 'Rainy',
-          temperature: '13',
-        },
-        {
-          date: '2024-01-25',
-          price: '315',
-          occupancy: '0.94',
-          weather: 'Sunny',
-          temperature: '23',
-        },
-        {
-          date: '2024-01-26',
-          price: '280',
-          occupancy: '0.82',
-          weather: 'Cloudy',
-          temperature: '18',
-        },
-        {
-          date: '2024-01-27',
-          price: '300',
-          occupancy: '0.89',
-          weather: 'Sunny',
-          temperature: '22',
-        },
-        {
-          date: '2024-01-28',
-          price: '250',
-          occupancy: '0.72',
-          weather: 'Rainy',
-          temperature: '15',
-        },
-        {
-          date: '2024-01-29',
-          price: '325',
-          occupancy: '0.96',
-          weather: 'Sunny',
-          temperature: '25',
-        },
-      ]
-    }
+  // Extract data from analytics summary
+  const demandForecast = analyticsSummary?.demandForecast || null
+  const weatherAnalysis = analyticsSummary?.weatherImpact || null
 
-    // Fetch data from backend API
-    try {
-      const firstFile = uploadedFiles[0]
-      const fileId = firstFile.id
+  // Fetch market sentiment using React Query
+  const { data: marketSentiment, isLoading: isLoadingSentiment, refetch: refetchSentiment } = useMarketSentiment(firstFileId, fileData)
 
-      console.log(`📥 Fetching data from backend for file: ${firstFile.name} (ID: ${fileId})`)
+  // Prepare analytics data for AI insights
+  const analyticsData = analyticsSummary ? { marketSentiment, weatherAnalysis, demandForecast } : null
 
-      // Get auth token
-      const token = await getAccessToken()
-      if (!token) {
-        console.error('❌ No access token available')
-        throw new Error('Not authenticated')
-      }
+  // Fetch AI insights using React Query (only when analytics data is ready)
+  const { data: aiInsights, isLoading: isLoadingAI, refetch: refetchAI } = useAIInsights(firstFileId, analyticsData)
 
-      // Fetch ALL data from backend (no pagination limit)
-      const response = await axios.get(
-        `http://localhost:3001/api/files/${fileId}/data?limit=10000`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-
-      if (response.data.success && response.data.data) {
-        const data = response.data.data
-        console.log(`✅ Loaded ${data.length} rows from backend for file: ${firstFile.name}`)
-
-        // If we got exactly the limit, there might be more data
-        if (data.length === response.data.limit && data.length < response.data.total) {
-          console.warn(
-            `⚠️ Loaded ${data.length} rows but total is ${response.data.total}. Consider increasing limit or implementing pagination.`
-          )
-        }
-
-        return data
-      }
-
-      // If API call succeeded but no data, use fallback
-      console.warn('⚠️ No data returned from backend, using fallback')
-      return [
-        {
-          date: '2024-01-15',
-          price: '285',
-          occupancy: '0.92',
-          weather: 'Sunny',
-          temperature: '18',
-        },
-        {
-          date: '2024-01-16',
-          price: '235',
-          occupancy: '0.65',
-          weather: 'Rainy',
-          temperature: '15',
-        },
-        {
-          date: '2024-01-17',
-          price: '295',
-          occupancy: '0.95',
-          weather: 'Clear',
-          temperature: '22',
-        },
-        {
-          date: '2024-01-18',
-          price: '258',
-          occupancy: '0.78',
-          weather: 'Cloudy',
-          temperature: '16',
-        },
-        {
-          date: '2024-01-19',
-          price: '320',
-          occupancy: '0.88',
-          weather: 'Sunny',
-          temperature: '24',
-        },
-      ]
-    } catch (error) {
-      console.error('❌ Error loading data from backend:', error)
-
-      // Fallback to preview data if backend fails
-      const firstFile = uploadedFiles[0]
-      if (firstFile.preview && firstFile.preview.length > 0) {
-        console.log(`⚠️ Using preview data (${firstFile.preview.length} rows) as fallback`)
-        return firstFile.preview
-      }
-
-      // Last resort: return sample data
-      console.warn('⚠️ Using fallback sample data')
-      return [
-        {
-          date: '2024-01-15',
-          price: '285',
-          occupancy: '0.92',
-          weather: 'Sunny',
-          temperature: '18',
-        },
-        {
-          date: '2024-01-16',
-          price: '235',
-          occupancy: '0.65',
-          weather: 'Rainy',
-          temperature: '15',
-        },
-        {
-          date: '2024-01-17',
-          price: '295',
-          occupancy: '0.95',
-          weather: 'Clear',
-          temperature: '22',
-        },
-        {
-          date: '2024-01-18',
-          price: '258',
-          occupancy: '0.78',
-          weather: 'Cloudy',
-          temperature: '16',
-        },
-        {
-          date: '2024-01-19',
-          price: '320',
-          occupancy: '0.88',
-          weather: 'Sunny',
-          temperature: '24',
-        },
-      ]
-    }
+  // Simple handlers for refetching (React Query handles all the data loading)
+  const generateAnalytics = () => {
+    refetchAnalytics()
+    refetchSentiment()
   }
 
-  // Generate ML analytics
-  const generateAnalytics = async () => {
-    setIsLoadingAnalytics(true)
-    try {
-      // Load REAL uploaded CSV data or fallback to sample
-      const data = await loadUploadedData()
-
-      if (!data || data.length === 0) {
-        setIsLoadingAnalytics(false)
-        return
-      }
-
-      // Run analytics in parallel
-      const [summary] = await Promise.all([getAnalyticsSummary(data)])
-
-      setWeatherAnalysis(summary.weatherImpact)
-      setDemandForecast(summary.demandForecast)
-
-      // Calculate market sentiment
-      const sentiment = await analyzeMarketSentiment({
-        weatherData: summary.weatherImpact.weatherStats[0],
-        occupancyData: {
-          average:
-            insights.occupancyByDay.reduce((sum, d) => sum + d.occupancy, 0) /
-            insights.occupancyByDay.length,
-        },
-        competitorData: {
-          average:
-            insights.competitorPricing.reduce((sum, d) => {
-              const competitors = [d.competitor1, d.competitor2].filter(
-                (x): x is number => x !== null && x !== undefined
-              )
-              return (
-                sum +
-                (competitors.length > 0
-                  ? competitors.reduce((a, b) => a + b, 0) / competitors.length
-                  : 0)
-              )
-            }, 0) / insights.competitorPricing.length,
-        },
-        yourPricing: {
-          average:
-            insights.occupancyByDay.reduce((sum, d) => sum + d.price, 0) /
-            insights.occupancyByDay.length,
-        },
-        historicalTrends: {
-          occupancy: insights.occupancyByDay.map(d => d.occupancy),
-        },
-      })
-
-      setMarketSentiment(sentiment)
-    } catch (error) {
-      console.error('Failed to generate analytics:', error)
-    } finally {
-      setIsLoadingAnalytics(false)
-    }
+  const generateAI = () => {
+    refetchAI()
   }
 
-  // Generate AI insights
-  const generateAI = async () => {
-    if (!marketSentiment || !weatherAnalysis || !demandForecast) {
-      return
-    }
-
-    setIsLoadingAI(true)
-    try {
-      const insights = await generateAIInsights({
-        marketSentiment,
-        weatherAnalysis,
-        demandForecast,
-      })
-
-      setAIInsights(insights)
-    } catch (error) {
-      console.error('Failed to generate AI insights:', error)
-    } finally {
-      setIsLoadingAI(false)
-    }
-  }
-
-  // Refresh insights and analytics when uploaded files change
+  // Refresh insights when uploaded files change
   useEffect(() => {
-    // Regenerate insights with new data
     setInsights(getCombinedInsights())
-
-    // Regenerate ML analytics with new uploaded data
-    if (uploadedFiles.length > 0) {
-      generateAnalytics()
-    }
   }, [uploadedFiles])
-
-  // Initial load - trigger analytics on mount (ONLY ONCE)
-  useEffect(() => {
-    generateAnalytics()
-  }, [])
-
-  // Auto-generate AI insights when analytics are ready
-  useEffect(() => {
-    if (marketSentiment && weatherAnalysis && demandForecast && !aiInsights && !isLoadingAI) {
-      generateAI()
-    }
-  }, [marketSentiment, weatherAnalysis, demandForecast])
 
   const priceByWeather = insights.priceByWeather
   const occupancyByDay = insights.occupancyByDay
@@ -419,7 +95,7 @@ export const Insights = () => {
         <div>
           <h1 className="text-text flex items-center gap-3 text-4xl font-bold">
             Insights
-            {(isLoadingAnalytics || isLoadingAI) && (
+            {(isLoadingData || isLoadingAnalytics || isLoadingSentiment || isLoadingAI) && (
               <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
             )}
           </h1>
@@ -430,10 +106,10 @@ export const Insights = () => {
             variant="primary"
             size="sm"
             onClick={generateAnalytics}
-            disabled={isLoadingAnalytics}
+            disabled={isLoadingAnalytics || isLoadingSentiment}
           >
             <Sparkles className="mr-2 h-4 w-4" />
-            {isLoadingAnalytics ? 'Loading...' : 'Generate Analytics'}
+            {(isLoadingAnalytics || isLoadingSentiment) ? 'Loading...' : 'Generate Analytics'}
           </Button>
           <Select
             value={dateRange}
@@ -458,7 +134,7 @@ export const Insights = () => {
       </div>
 
       {/* Market Sentiment Analysis - NEW (Always show with loading/empty states) */}
-      <MarketSentimentCard sentiment={marketSentiment} isLoading={isLoadingAnalytics} />
+      <MarketSentimentCard sentiment={marketSentiment} isLoading={isLoadingSentiment} />
 
       {/* AI-Powered Insights - NEW (Always show with loading/empty states) */}
       <AIInsightsCard insights={aiInsights} isLoading={isLoadingAI} onRefresh={generateAI} />

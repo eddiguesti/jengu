@@ -4,7 +4,11 @@
       "Bash(powershell:*)",
       "Bash(pnpm add:*)",
       "Bash(pnpm run test)",
-      "Read(//c/Users/eddgu/**)"
+      "Read(//c/Users/eddgu/**)",
+      "Bash(git add:*)",
+      "Bash(git push)",
+      "Bash(pnpm run type-check:frontend:*)",
+      "Bash(pnpm -w run type-check:frontend:*)"
     ],
     "deny": [],
     "ask": []
