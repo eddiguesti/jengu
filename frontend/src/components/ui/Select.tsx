@@ -13,14 +13,14 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, error, helperText, className, options, ...props }, ref) => {
     return (
       <div className="space-y-2">
-        {label && <label className="block text-sm font-medium text-text">{label}</label>}
+        {label && <label className="text-text block text-sm font-medium">{label}</label>}
         <div className="relative">
           <select
             ref={ref}
             className={clsx(
-              'w-full rounded-lg border bg-elevated px-4 py-2.5 pr-10',
+              'bg-elevated w-full rounded-lg border px-4 py-2.5 pr-10',
               'text-text placeholder-muted',
-              'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50',
+              'focus:border-primary focus:ring-primary/50 focus:outline-none focus:ring-2',
               'transition-all duration-200',
               'cursor-pointer appearance-none',
               error
@@ -37,10 +37,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               </option>
             ))}
           </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+          <ChevronDown className="text-muted pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2" />
         </div>
-        {error && <p className="text-sm text-error">{error}</p>}
-        {helperText && !error && <p className="text-sm text-muted">{helperText}</p>}
+        {error && <p className="text-error text-sm">{error}</p>}
+        {helperText && !error && <p className="text-muted text-sm">{helperText}</p>}
       </div>
     )
   }

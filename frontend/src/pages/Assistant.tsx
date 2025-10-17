@@ -130,8 +130,8 @@ export const Assistant = () => {
     >
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-bold text-text">AI Assistant</h1>
-        <p className="mt-2 text-muted">Get help, guidance, and personalized recommendations</p>
+        <h1 className="text-text text-4xl font-bold">AI Assistant</h1>
+        <p className="text-muted mt-2">Get help, guidance, and personalized recommendations</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -140,9 +140,9 @@ export const Assistant = () => {
           <Card variant="default" className="flex h-[600px] flex-col">
             {/* Error Banner */}
             {error && (
-              <div className="flex items-center gap-2 border-b border-error/20 bg-error/10 px-6 py-3">
-                <AlertCircle className="h-4 w-4 text-error" />
-                <span className="text-sm text-error">{error}</span>
+              <div className="border-error/20 bg-error/10 flex items-center gap-2 border-b px-6 py-3">
+                <AlertCircle className="text-error h-4 w-4" />
+                <span className="text-error text-sm">{error}</span>
               </div>
             )}
 
@@ -160,8 +160,8 @@ export const Assistant = () => {
                   )}
                 >
                   {message.role === 'assistant' && (
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <Sparkles className="h-4 w-4 text-primary" />
+                    <div className="bg-primary/10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
+                      <Sparkles className="text-primary h-4 w-4" />
                     </div>
                   )}
                   <div
@@ -186,8 +186,8 @@ export const Assistant = () => {
                     </div>
                   </div>
                   {message.role === 'user' && (
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-elevated">
-                      <MessageCircle className="h-4 w-4 text-text" />
+                    <div className="bg-elevated flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
+                      <MessageCircle className="text-text h-4 w-4" />
                     </div>
                   )}
                 </motion.div>
@@ -200,11 +200,11 @@ export const Assistant = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex gap-3"
                 >
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Sparkles className="h-4 w-4 text-primary" />
+                  <div className="bg-primary/10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
+                    <Sparkles className="text-primary h-4 w-4" />
                   </div>
-                  <div className="max-w-[80%] rounded-lg bg-elevated px-4 py-3">
-                    <div className="whitespace-pre-wrap text-sm text-text">{streamingContent}</div>
+                  <div className="bg-elevated max-w-[80%] rounded-lg px-4 py-3">
+                    <div className="text-text whitespace-pre-wrap text-sm">{streamingContent}</div>
                   </div>
                 </motion.div>
               )}
@@ -216,11 +216,11 @@ export const Assistant = () => {
                   animate={{ opacity: 1 }}
                   className="flex gap-3"
                 >
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Sparkles className="h-4 w-4 text-primary" />
+                  <div className="bg-primary/10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
+                    <Sparkles className="text-primary h-4 w-4" />
                   </div>
-                  <div className="rounded-lg bg-elevated px-4 py-3">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <div className="bg-elevated rounded-lg px-4 py-3">
+                    <Loader2 className="text-primary h-4 w-4 animate-spin" />
                   </div>
                 </motion.div>
               )}
@@ -229,7 +229,7 @@ export const Assistant = () => {
             </div>
 
             {/* Input Area */}
-            <div className="border-t border-border p-4">
+            <div className="border-border border-t p-4">
               <div className="flex gap-3">
                 <input
                   type="text"
@@ -237,7 +237,7 @@ export const Assistant = () => {
                   onChange={e => setInput(e.target.value)}
                   onKeyPress={e => e.key === 'Enter' && handleSend()}
                   placeholder="Ask me anything about Jengu..."
-                  className="flex-1 rounded-lg border border-border bg-elevated px-4 py-2 text-text placeholder-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="border-border bg-elevated text-text placeholder-muted focus:border-primary focus:ring-primary/50 flex-1 rounded-lg border px-4 py-2 focus:outline-none focus:ring-2"
                 />
                 <Button
                   variant="primary"
@@ -257,8 +257,8 @@ export const Assistant = () => {
           {/* Suggested Questions */}
           <Card variant="default">
             <Card.Header>
-              <h3 className="text-lg font-semibold text-text">Suggested Questions</h3>
-              <p className="mt-1 text-sm text-muted">Click to ask</p>
+              <h3 className="text-text text-lg font-semibold">Suggested Questions</h3>
+              <p className="text-muted mt-1 text-sm">Click to ask</p>
             </Card.Header>
             <Card.Body>
               <div className="space-y-2">
@@ -266,7 +266,7 @@ export const Assistant = () => {
                   <button
                     key={index}
                     onClick={() => handleSuggestedQuestion(question)}
-                    className="w-full rounded-lg border border-border bg-elevated px-3 py-2 text-left text-sm text-text transition-colors hover:bg-elevated/80"
+                    className="border-border bg-elevated text-text hover:bg-elevated/80 w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors"
                   >
                     {question}
                   </button>
@@ -278,37 +278,37 @@ export const Assistant = () => {
           {/* Quick Links */}
           <Card variant="default">
             <Card.Header>
-              <h3 className="text-lg font-semibold text-text">Quick Links</h3>
+              <h3 className="text-text text-lg font-semibold">Quick Links</h3>
             </Card.Header>
             <Card.Body>
               <div className="space-y-2">
                 <a
                   href="/dashboard"
-                  className="block rounded-lg border border-border bg-elevated px-3 py-2 text-sm text-primary transition-colors hover:bg-elevated/80"
+                  className="border-border bg-elevated text-primary hover:bg-elevated/80 block rounded-lg border px-3 py-2 text-sm transition-colors"
                 >
                   → Dashboard
                 </a>
                 <a
                   href="/data"
-                  className="block rounded-lg border border-border bg-elevated px-3 py-2 text-sm text-primary transition-colors hover:bg-elevated/80"
+                  className="border-border bg-elevated text-primary hover:bg-elevated/80 block rounded-lg border px-3 py-2 text-sm transition-colors"
                 >
                   → Data Management
                 </a>
                 <a
                   href="/pricing-engine"
-                  className="block rounded-lg border border-border bg-elevated px-3 py-2 text-sm text-primary transition-colors hover:bg-elevated/80"
+                  className="border-border bg-elevated text-primary hover:bg-elevated/80 block rounded-lg border px-3 py-2 text-sm transition-colors"
                 >
                   → Pricing Optimizer
                 </a>
                 <a
                   href="/insights"
-                  className="block rounded-lg border border-border bg-elevated px-3 py-2 text-sm text-primary transition-colors hover:bg-elevated/80"
+                  className="border-border bg-elevated text-primary hover:bg-elevated/80 block rounded-lg border px-3 py-2 text-sm transition-colors"
                 >
                   → View Insights
                 </a>
                 <a
                   href="/settings"
-                  className="block rounded-lg border border-border bg-elevated px-3 py-2 text-sm text-primary transition-colors hover:bg-elevated/80"
+                  className="border-border bg-elevated text-primary hover:bg-elevated/80 block rounded-lg border px-3 py-2 text-sm transition-colors"
                 >
                   → Settings
                 </a>

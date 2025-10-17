@@ -93,7 +93,7 @@ export function sendError(
   message: string,
   details: unknown = null
 ): void {
-  const errorConfig = (ErrorTypes[errorType] ?? ErrorTypes.INTERNAL) as ErrorTypeConfig
+  const errorConfig = (ErrorTypes[errorType] ?? ErrorTypes.INTERNAL)
   const response = formatErrorResponse(errorConfig.error, message, errorConfig.statusCode, details)
 
   res.status(errorConfig.statusCode).json(response)

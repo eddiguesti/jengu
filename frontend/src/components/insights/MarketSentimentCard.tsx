@@ -24,10 +24,10 @@ export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({
   if (isLoading) {
     return (
       <Card variant="elevated" className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
+        <div className="from-primary/5 via-background to-background absolute inset-0 bg-gradient-to-br" />
         <Card.Body className="relative p-8">
           <div className="flex h-64 items-center justify-center">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <div className="border-primary h-12 w-12 animate-spin rounded-full border-4 border-t-transparent" />
           </div>
         </Card.Body>
       </Card>
@@ -74,16 +74,16 @@ export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({
       transition={{ duration: 0.4 }}
     >
       <Card variant="elevated" className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
+        <div className="from-primary/10 via-background to-background absolute inset-0 bg-gradient-to-br" />
 
         <Card.Header className="relative">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-3">
-              <Sparkles className="h-6 w-6 text-primary" />
+            <div className="bg-primary/10 rounded-xl p-3">
+              <Sparkles className="text-primary h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-text">Market Sentiment Analysis</h2>
-              <p className="mt-1 text-sm text-muted">
+              <h2 className="text-text text-xl font-semibold">Market Sentiment Analysis</h2>
+              <p className="text-muted mt-1 text-sm">
                 AI-powered demand strength indicator combining multiple factors
               </p>
             </div>
@@ -115,8 +115,8 @@ export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({
               {/* Score display */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <SentimentIcon className="mb-2 h-8 w-8" style={{ color: scoreColor }} />
-                <p className="text-5xl font-bold text-text">{overallScore}</p>
-                <p className="mt-1 text-sm text-muted">out of 100</p>
+                <p className="text-text text-5xl font-bold">{overallScore}</p>
+                <p className="text-muted mt-1 text-sm">out of 100</p>
                 <Badge
                   variant={
                     overallScore >= 75 ? 'success' : overallScore >= 40 ? 'default' : 'error'
@@ -131,8 +131,8 @@ export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({
           </div>
 
           {/* AI Summary */}
-          <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4">
-            <p className="text-sm leading-relaxed text-text">
+          <div className="border-primary/20 bg-primary/5 mb-6 rounded-xl border p-4">
+            <p className="text-text text-sm leading-relaxed">
               {overallScore >= 75 &&
                 'Market conditions are very strong. High demand across multiple indicators suggests excellent pricing power and revenue opportunities.'}
               {overallScore >= 60 &&
@@ -148,7 +148,7 @@ export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({
 
           {/* Component Breakdown */}
           <div className="space-y-3">
-            <h3 className="mb-4 text-sm font-semibold text-text">Contributing Factors</h3>
+            <h3 className="text-text mb-4 text-sm font-semibold">Contributing Factors</h3>
 
             {Object.entries(components).map(([key, data]) => {
               const Icon = componentIcons[key as keyof typeof componentIcons]
@@ -159,17 +159,17 @@ export const MarketSentimentCard: React.FC<MarketSentimentCardProps> = ({
                 <div key={key} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4 text-muted" />
-                      <span className="text-sm font-medium capitalize text-text">
+                      <Icon className="text-muted h-4 w-4" />
+                      <span className="text-text text-sm font-medium capitalize">
                         {key === 'demand' ? 'Demand Trend' : key}
                       </span>
-                      <span className="text-xs text-muted">({weight})</span>
+                      <span className="text-muted text-xs">({weight})</span>
                     </div>
-                    <span className="text-sm font-bold text-text">{score}/100</span>
+                    <span className="text-text text-sm font-bold">{score}/100</span>
                   </div>
 
                   {/* Progress bar */}
-                  <div className="h-2 overflow-hidden rounded-full bg-border">
+                  <div className="bg-border h-2 overflow-hidden rounded-full">
                     <motion.div
                       className="h-full rounded-full"
                       style={{ backgroundColor: getScoreColor(score) }}

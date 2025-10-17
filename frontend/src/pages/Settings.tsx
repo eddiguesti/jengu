@@ -191,8 +191,8 @@ export const Settings = () => {
     >
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-bold text-text">Settings</h1>
-        <p className="mt-2 text-muted">Manage your business profile and preferences</p>
+        <h1 className="text-text text-4xl font-bold">Settings</h1>
+        <p className="text-muted mt-2">Manage your business profile and preferences</p>
       </div>
 
       {/* Loading State */}
@@ -200,8 +200,8 @@ export const Settings = () => {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <Card variant="elevated" className="border-primary/20 bg-primary/5">
             <div className="flex items-center gap-3">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <p className="text-sm font-medium text-primary">Loading your settings...</p>
+              <Loader2 className="text-primary h-5 w-5 animate-spin" />
+              <p className="text-primary text-sm font-medium">Loading your settings...</p>
             </div>
           </Card>
         </motion.div>
@@ -212,8 +212,8 @@ export const Settings = () => {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <Card variant="elevated" className="border-success/20 bg-success/5">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5 text-success" />
-              <p className="text-sm font-medium text-success">
+              <CheckCircle2 className="text-success h-5 w-5" />
+              <p className="text-success text-sm font-medium">
                 Settings saved successfully to database!
               </p>
             </div>
@@ -226,7 +226,7 @@ export const Settings = () => {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <Card variant="elevated" className="border-error/20 bg-error/5">
             <div className="flex items-center gap-3">
-              <p className="text-sm font-medium text-error">{saveError}</p>
+              <p className="text-error text-sm font-medium">{saveError}</p>
             </div>
           </Card>
         </motion.div>
@@ -236,12 +236,12 @@ export const Settings = () => {
       <Card variant="default">
         <Card.Header>
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Building2 className="h-5 w-5 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-2">
+              <Building2 className="text-primary h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-text">Business Information</h2>
-              <p className="mt-1 text-sm text-muted">Basic details about your property</p>
+              <h2 className="text-text text-xl font-semibold">Business Information</h2>
+              <p className="text-muted mt-1 text-sm">Basic details about your property</p>
             </div>
           </div>
         </Card.Header>
@@ -286,18 +286,18 @@ export const Settings = () => {
         <Card.Header>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-success/10 p-2">
-                <MapPin className="h-5 w-5 text-success" />
+              <div className="bg-success/10 rounded-lg p-2">
+                <MapPin className="text-success h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-text">Location</h2>
-                <p className="mt-1 text-sm text-muted">
+                <h2 className="text-text text-xl font-semibold">Location</h2>
+                <p className="text-muted mt-1 text-sm">
                   Used for weather data and competitor analysis
                 </p>
               </div>
             </div>
             {isGeocoding && (
-              <div className="flex items-center gap-2 text-sm text-primary">
+              <div className="text-primary flex items-center gap-2 text-sm">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Auto-filling coordinates...</span>
               </div>
@@ -307,8 +307,8 @@ export const Settings = () => {
         <Card.Body>
           <div className="space-y-4">
             {/* Info Banner */}
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-              <p className="text-sm text-muted">
+            <div className="border-primary/20 bg-primary/5 rounded-lg border p-3">
+              <p className="text-muted text-sm">
                 💡 Enter your city and country, and we'll automatically find the coordinates for
                 you!
               </p>
@@ -359,8 +359,8 @@ export const Settings = () => {
 
             {/* Geocode Error */}
             {geocodeError && (
-              <div className="rounded-lg border border-warning/20 bg-warning/5 p-3">
-                <p className="text-sm text-warning">{geocodeError}</p>
+              <div className="border-warning/20 bg-warning/5 rounded-lg border p-3">
+                <p className="text-warning text-sm">{geocodeError}</p>
               </div>
             )}
 
@@ -369,9 +369,9 @@ export const Settings = () => {
               formData.latitude !== 0 &&
               formData.longitude !== 0 &&
               !geocodeError && (
-                <div className="flex items-center gap-2 rounded-lg border border-success/20 bg-success/5 p-3">
-                  <CheckCircle2 className="h-4 w-4 text-success" />
-                  <p className="text-sm text-success">
+                <div className="border-success/20 bg-success/5 flex items-center gap-2 rounded-lg border p-3">
+                  <CheckCircle2 className="text-success h-4 w-4" />
+                  <p className="text-success text-sm">
                     Location coordinates auto-filled: {formData.latitude.toFixed(6)},{' '}
                     {formData.longitude.toFixed(6)}
                   </p>
@@ -385,12 +385,12 @@ export const Settings = () => {
       <Card variant="default">
         <Card.Header>
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-warning/10 p-2">
-              <DollarSign className="h-5 w-5 text-warning" />
+            <div className="bg-warning/10 rounded-lg p-2">
+              <DollarSign className="text-warning h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-text">Regional Settings</h2>
-              <p className="mt-1 text-sm text-muted">Currency and timezone preferences</p>
+              <h2 className="text-text text-xl font-semibold">Regional Settings</h2>
+              <p className="text-muted mt-1 text-sm">Currency and timezone preferences</p>
             </div>
           </div>
         </Card.Header>
@@ -448,33 +448,33 @@ export const Settings = () => {
       <Card variant="default">
         <Card.Header>
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-elevated p-2">
-              <Clock className="h-5 w-5 text-muted" />
+            <div className="bg-elevated rounded-lg p-2">
+              <Clock className="text-muted h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-text">API Integrations</h2>
-              <p className="mt-1 text-sm text-muted">Connect external services (coming soon)</p>
+              <h2 className="text-text text-xl font-semibold">API Integrations</h2>
+              <p className="text-muted mt-1 text-sm">Connect external services (coming soon)</p>
             </div>
           </div>
         </Card.Header>
         <Card.Body>
           <div className="space-y-4">
-            <div className="rounded-lg border border-border bg-elevated p-4">
+            <div className="border-border bg-elevated rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold text-text">Weather API</h3>
-                  <p className="mt-1 text-xs text-muted">Connect weather data provider</p>
+                  <h3 className="text-text text-sm font-semibold">Weather API</h3>
+                  <p className="text-muted mt-1 text-xs">Connect weather data provider</p>
                 </div>
                 <Button variant="secondary" size="sm" disabled>
                   Configure
                 </Button>
               </div>
             </div>
-            <div className="rounded-lg border border-border bg-elevated p-4">
+            <div className="border-border bg-elevated rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold text-text">PMS Integration</h3>
-                  <p className="mt-1 text-xs text-muted">
+                  <h3 className="text-text text-sm font-semibold">PMS Integration</h3>
+                  <p className="text-muted mt-1 text-xs">
                     Sync with your Property Management System
                   </p>
                 </div>
@@ -483,11 +483,11 @@ export const Settings = () => {
                 </Button>
               </div>
             </div>
-            <div className="rounded-lg border border-border bg-elevated p-4">
+            <div className="border-border bg-elevated rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold text-text">Channel Manager</h3>
-                  <p className="mt-1 text-xs text-muted">
+                  <h3 className="text-text text-sm font-semibold">Channel Manager</h3>
+                  <p className="text-muted mt-1 text-xs">
                     Connect to booking channels (Booking.com, Expedia, etc.)
                   </p>
                 </div>

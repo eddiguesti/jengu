@@ -15,7 +15,7 @@ export const Table = ({ children, className }: TableProps) => {
 }
 
 Table.Header = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <thead className={clsx('border-b border-border bg-elevated', className)}>{children}</thead>
+  <thead className={clsx('border-border bg-elevated border-b', className)}>{children}</thead>
 )
 
 Table.Body = ({ children, className }: { children: ReactNode; className?: string }) => (
@@ -33,8 +33,8 @@ Table.Row = ({
 }) => (
   <tr
     className={clsx(
-      'border-b border-border transition-colors',
-      onClick && 'cursor-pointer hover:bg-elevated',
+      'border-border border-b transition-colors',
+      onClick && 'hover:bg-elevated cursor-pointer',
       className
     )}
     onClick={onClick}
@@ -44,11 +44,11 @@ Table.Row = ({
 )
 
 Table.HeaderCell = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <th className={clsx('px-4 py-3 text-left text-sm font-semibold text-text', className)}>
+  <th className={clsx('text-text px-4 py-3 text-left text-sm font-semibold', className)}>
     {children}
   </th>
 )
 
 Table.Cell = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <td className={clsx('px-4 py-3 text-sm text-muted', className)}>{children}</td>
+  <td className={clsx('text-muted px-4 py-3 text-sm', className)}>{children}</td>
 )

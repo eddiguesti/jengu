@@ -7,7 +7,12 @@
  * - Filter by holiday type (public, observance, etc.)
  * - Check if date is holiday
  * - Calculate holiday impact on pricing
+ *
+ * NOTE: All Calendarific API calls now go through backend proxy to secure API keys
  */
+
+// Backend proxy endpoint (no API key needed in frontend)
+const BACKEND_API = 'http://localhost:3001/api'
 
 export interface Holiday {
   name: string
@@ -27,39 +32,39 @@ export interface HolidayImpact {
 
 /**
  * Get holidays for a specific country and year
+ * Now uses backend proxy - no API key needed in frontend
  *
  * @param countryCode - ISO 3166-1 alpha-2 country code (e.g., 'US', 'GB', 'FR')
  * @param year - Year to fetch holidays for
  */
 export async function getHolidays(countryCode: string, year: number): Promise<Holiday[]> {
-  const apiKey = import.meta.env.VITE_CALENDARIFIC_API_KEY
-
-  if (!apiKey) {
-    console.warn('Calendarific API key not configured. Returning mock data.')
-    return getMockHolidays(countryCode, year)
-  }
-
   try {
-    const url = `https://calendarific.com/api/v2/holidays?api_key=${apiKey}&country=${countryCode}&year=${year}`
-
-    const response = await fetch(url)
+    const response = await fetch(
+      `${BACKEND_API}/holidays?country=${countryCode}&year=${year}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    )
 
     if (!response.ok) {
-      const errorText = response.statusText || `HTTP ${response.status}`
-      throw new Error(`Calendarific API error: ${errorText}. Using mock holiday data instead.`)
+      console.warn('Failed to fetch holidays from backend, using mock data')
+      return getMockHolidays(countryCode, year)
     }
 
     const data = await response.json()
 
     // Check for API error responses
     if (data.meta?.error_detail) {
-      throw new Error(
-        `Calendarific API error: ${data.meta.error_detail}. Using mock holiday data instead.`
-      )
+      console.warn(`Calendarific API error: ${data.meta.error_detail}, using mock data`)
+      return getMockHolidays(countryCode, year)
     }
 
     if (!data.response?.holidays) {
-      throw new Error('Invalid response from Calendarific API. Using mock holiday data instead.')
+      console.warn('Invalid response from backend, using mock data')
+      return getMockHolidays(countryCode, year)
     }
 
     // Transform API response to our format
@@ -417,19 +422,14 @@ export function getCountryCode(countryName: string): string {
 
 /**
  * Test Calendarific API connection
+ * Now tests backend connectivity instead of direct API connection
  */
 export async function testCalendarificConnection(): Promise<boolean> {
-  const apiKey = import.meta.env.VITE_CALENDARIFIC_API_KEY
-
-  if (!apiKey) {
-    return false
-  }
-
   try {
     const year = new Date().getFullYear()
-    const url = `https://calendarific.com/api/v2/holidays?api_key=${apiKey}&country=US&year=${year}`
-
-    const response = await fetch(url)
+    const response = await fetch(`${BACKEND_API}/holidays?country=US&year=${year}`, {
+      method: 'GET',
+    })
     return response.ok
   } catch (error) {
     console.error('Calendarific connection test failed:', error)

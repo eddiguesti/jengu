@@ -83,7 +83,7 @@ export async function enrichWithWeather(
 
       for (const row of batch) {
         const dateStr = new Date(row.date).toISOString().split('T')[0]
-        const weather = weatherMap[dateStr as string]
+        const weather = weatherMap[dateStr]
 
         if (weather) {
           const { error: updateError } = await supabaseClient

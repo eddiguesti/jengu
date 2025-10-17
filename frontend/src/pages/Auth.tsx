@@ -90,7 +90,7 @@ export default function Auth() {
   // Success overlay animation
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="bg-background flex min-h-screen items-center justify-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -100,15 +100,15 @@ export default function Auth() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-            className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-primary/20"
+            className="bg-primary/20 mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full"
           >
-            <CheckCircle2 className="h-10 w-10 text-primary" />
+            <CheckCircle2 className="text-primary h-10 w-10" />
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-2xl font-bold text-text"
+            className="text-text text-2xl font-bold"
           >
             Welcome to Jengu!
           </motion.h2>
@@ -118,7 +118,7 @@ export default function Auth() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8">
+    <div className="bg-background relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8">
       {/* Animated background gradient */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
@@ -131,7 +131,7 @@ export default function Auth() {
             repeat: Infinity,
             ease: 'easeInOut',
           }}
-          className="absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-primary blur-[100px]"
+          className="bg-primary absolute left-1/4 top-1/4 h-96 w-96 rounded-full blur-[100px]"
         />
         <motion.div
           animate={{
@@ -144,7 +144,7 @@ export default function Auth() {
             ease: 'easeInOut',
             delay: 2,
           }}
-          className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-primary blur-[120px]"
+          className="bg-primary absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full blur-[120px]"
         />
       </div>
 
@@ -154,16 +154,16 @@ export default function Auth() {
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-md"
       >
-        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+        <div className="border-border bg-card shadow-elevated overflow-hidden rounded-2xl border">
           {/* Header with logo and title */}
-          <div className="border-b border-border bg-elevated/50 p-8 pb-6 text-center">
+          <div className="border-border bg-elevated/50 border-b p-8 pb-6 text-center">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-              className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10"
+              className="border-primary/20 bg-primary/10 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl border"
             >
-              <Sparkles className="h-8 w-8 text-primary" />
+              <Sparkles className="text-primary h-8 w-8" />
             </motion.div>
 
             <AnimatePresence mode="wait">
@@ -174,10 +174,10 @@ export default function Auth() {
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.3 }}
               >
-                <h1 className="mb-2 text-3xl font-bold text-text">
+                <h1 className="text-text mb-2 text-3xl font-bold">
                   {mode === 'login' ? 'Welcome Back' : 'Create Account'}
                 </h1>
-                <p className="text-sm text-muted">
+                <p className="text-muted text-sm">
                   {mode === 'login'
                     ? 'Sign in to continue to Jengu'
                     : 'Join Jengu to start optimizing your pricing'}
@@ -195,8 +195,8 @@ export default function Auth() {
                 exit={{ opacity: 0, height: 0 }}
                 className="mx-8 mt-6"
               >
-                <div className="rounded-xl border border-error/30 bg-error/10 p-4">
-                  <p className="text-sm text-error">{error}</p>
+                <div className="border-error/30 bg-error/10 rounded-xl border p-4">
+                  <p className="text-error text-sm">{error}</p>
                 </div>
               </motion.div>
             )}
@@ -210,7 +210,7 @@ export default function Auth() {
               disabled={loading}
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
-              className="group flex w-full items-center justify-center gap-3 rounded-xl border-2 border-border bg-white px-4 py-3.5 font-semibold text-gray-700 transition-all duration-200 hover:border-primary/30 hover:bg-elevated disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-border hover:border-primary/30 hover:bg-elevated group flex w-full items-center justify-center gap-3 rounded-xl border-2 bg-white px-4 py-3.5 font-semibold text-gray-700 transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path
@@ -236,10 +236,10 @@ export default function Auth() {
             {/* Divider */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border"></div>
+                <div className="border-border w-full border-t"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-card px-4 text-muted">Or continue with email</span>
+                <span className="bg-card text-muted px-4">Or continue with email</span>
               </div>
             </div>
           </div>
@@ -254,18 +254,18 @@ export default function Auth() {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <label htmlFor="name" className="mb-2 block text-sm font-medium text-text">
+                  <label htmlFor="name" className="text-text mb-2 block text-sm font-medium">
                     Full Name
                   </label>
                   <div className="relative">
-                    <User className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+                    <User className="text-muted pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2" />
                     <input
                       id="name"
                       type="text"
                       value={name}
                       onChange={e => setName(e.target.value)}
                       required={mode === 'signup'}
-                      className="w-full rounded-xl border border-border bg-elevated py-3.5 pl-12 pr-4 text-text placeholder-muted transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      className="border-border bg-elevated text-text placeholder-muted focus:border-primary focus:ring-primary/50 w-full rounded-xl border py-3.5 pl-12 pr-4 transition-all focus:outline-none focus:ring-2"
                       placeholder="Enter your name"
                     />
                   </div>
@@ -274,11 +274,11 @@ export default function Auth() {
             </AnimatePresence>
 
             <div>
-              <label htmlFor="email" className="mb-2 block text-sm font-medium text-text">
+              <label htmlFor="email" className="text-text mb-2 block text-sm font-medium">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+                <Mail className="text-muted pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2" />
                 <input
                   id="email"
                   type="email"
@@ -286,18 +286,18 @@ export default function Auth() {
                   onChange={e => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  className="w-full rounded-xl border border-border bg-elevated py-3.5 pl-12 pr-4 text-text placeholder-muted transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="border-border bg-elevated text-text placeholder-muted focus:border-primary focus:ring-primary/50 w-full rounded-xl border py-3.5 pl-12 pr-4 transition-all focus:outline-none focus:ring-2"
                   placeholder="you@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="mb-2 block text-sm font-medium text-text">
+              <label htmlFor="password" className="text-text mb-2 block text-sm font-medium">
                 Password
               </label>
               <div className="relative">
-                <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+                <Lock className="text-muted pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2" />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -305,13 +305,13 @@ export default function Auth() {
                   onChange={e => setPassword(e.target.value)}
                   required
                   autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                  className="w-full rounded-xl border border-border bg-elevated py-3.5 pl-12 pr-12 text-text placeholder-muted transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="border-border bg-elevated text-text placeholder-muted focus:border-primary focus:ring-primary/50 w-full rounded-xl border py-3.5 pl-12 pr-12 transition-all focus:outline-none focus:ring-2"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted transition-colors hover:text-text"
+                  className="text-muted hover:text-text absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -324,7 +324,7 @@ export default function Auth() {
               disabled={loading}
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
-              className="group relative w-full overflow-hidden rounded-xl bg-primary px-4 py-3.5 font-semibold text-background shadow-lg transition-all duration-200 hover:shadow-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+              className="bg-primary text-background hover:shadow-primary/20 group relative w-full overflow-hidden rounded-xl px-4 py-3.5 font-semibold shadow-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -351,7 +351,7 @@ export default function Auth() {
                     {mode === 'login' ? 'Sign In' : 'Create Account'}
                   </span>
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-primary/80 to-primary"
+                    className="from-primary/80 to-primary absolute inset-0 bg-gradient-to-r"
                     initial={{ x: '-100%' }}
                     whileHover={{ x: 0 }}
                     transition={{ duration: 0.3 }}
@@ -363,11 +363,11 @@ export default function Auth() {
 
           {/* Toggle mode */}
           <div className="px-8 pb-8 text-center">
-            <p className="text-sm text-muted">
+            <p className="text-muted text-sm">
               {mode === 'login' ? "Don&apos;t have an account?" : 'Already have an account?'}{' '}
               <button
                 onClick={toggleMode}
-                className="group inline-flex items-center gap-1 font-medium text-primary transition-colors hover:text-primary/80"
+                className="text-primary hover:text-primary/80 group inline-flex items-center gap-1 font-medium transition-colors"
               >
                 {mode === 'login' ? 'Sign up' : 'Sign in'}
                 <motion.span
@@ -386,7 +386,7 @@ export default function Auth() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 text-center text-xs text-muted"
+          className="text-muted mt-8 text-center text-xs"
         >
           <p>Jengu Dynamic Pricing Platform</p>
           <p className="mt-1">© 2025 All rights reserved</p>

@@ -7,7 +7,12 @@
  * - Track competitor pricing trends
  * - Calculate price positioning metrics
  * - Historical price tracking
+ *
+ * NOTE: All ScraperAPI calls now go through backend proxy to secure API keys
  */
+
+// Backend proxy endpoint (no API key needed in frontend)
+const BACKEND_API = 'http://localhost:3001/api'
 
 export interface CompetitorPrice {
   competitor_name: string
@@ -46,13 +51,6 @@ export interface ScraperConfig {
  * 4. Platform-specific selectors
  */
 export async function scrapeCompetitorPrices(config: ScraperConfig): Promise<CompetitorPrice[]> {
-  const apiKey = import.meta.env.VITE_SCRAPER_API_KEY
-
-  if (!apiKey) {
-    console.warn('ScraperAPI key not configured. Returning mock data.')
-    return getMockCompetitorPrices(config)
-  }
-
   try {
     // Build target URLs based on property type
     const targetUrls = buildTargetUrls(config)
@@ -60,13 +58,13 @@ export async function scrapeCompetitorPrices(config: ScraperConfig): Promise<Com
 
     for (const { platform, url } of targetUrls) {
       try {
-        const scraperUrl = `http://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}`
-
-        const response = await fetch(scraperUrl, {
-          method: 'GET',
+        // Use backend proxy instead of direct API call
+        const response = await fetch(`${BACKEND_API}/competitor/scrape`, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ url }),
         })
 
         if (!response.ok) {
@@ -74,8 +72,8 @@ export async function scrapeCompetitorPrices(config: ScraperConfig): Promise<Com
           continue
         }
 
-        const html = await response.text()
-        const extractedPrices = extractPricesFromHTML(html, platform)
+        const data = await response.json()
+        const extractedPrices = extractPricesFromHTML(data.html, platform)
         prices.push(...extractedPrices)
 
         // Respect rate limits
@@ -368,19 +366,18 @@ export function getPriceRecommendation(
 
 /**
  * Test ScraperAPI connection
+ * Now tests backend connectivity instead of direct API connection
  */
 export async function testScraperConnection(): Promise<boolean> {
-  const apiKey = import.meta.env.VITE_SCRAPER_API_KEY
-
-  if (!apiKey) {
-    return false
-  }
-
   try {
     const testUrl = 'https://httpbin.org/ip'
-    const scraperUrl = `http://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(testUrl)}`
-
-    const response = await fetch(scraperUrl)
+    const response = await fetch(`${BACKEND_API}/competitor/scrape`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url: testUrl }),
+    })
     return response.ok
   } catch (error) {
     console.error('ScraperAPI connection test failed:', error)
