@@ -5,7 +5,8 @@
       "Bash(pnpm run build:*)",
       "Bash(pnpm run build:check:*)",
       "Bash(pnpm exec eslint:*)",
-      "Bash(pnpm run lint:*)"
+      "Bash(pnpm run lint:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
