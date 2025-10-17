@@ -43,7 +43,10 @@ export const getFiles = async (): Promise<FilesListResponse> => {
 /**
  * Get file data (pricing rows)
  */
-export const getFileData = async (fileId: string, limit: number = 10000): Promise<FileDataResponse> => {
+export const getFileData = async (
+  fileId: string,
+  limit: number = 10000
+): Promise<FileDataResponse> => {
   const response = await apiClient.get<FileDataResponse>(`/files/${fileId}/data`, {
     params: { limit },
   })
@@ -72,7 +75,10 @@ export const deleteFile = async (fileId: string): Promise<void> => {
 /**
  * Enrich file data
  */
-export const enrichFile = async (fileId: string, location: { latitude: number; longitude: number; country?: string }) => {
+export const enrichFile = async (
+  fileId: string,
+  location: { latitude: number; longitude: number; country?: string }
+) => {
   const response = await apiClient.post(`/files/${fileId}/enrich`, location)
   return response.data
 }

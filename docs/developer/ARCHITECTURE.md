@@ -150,6 +150,7 @@ Single 1500+ line TypeScript file containing:
 - Can refactor later if needed
 
 **TypeScript Benefits**:
+
 - Full type checking on request/response objects
 - Auto-completion in editors
 - Compile-time error detection
@@ -500,10 +501,7 @@ app.post('/api/your-endpoint', authenticateUser, async (req, res) => {
     }
 
     // Query database (always filter by userId)
-    const { data, error } = await supabaseAdmin
-      .from('your_table')
-      .select('*')
-      .eq('userId', userId)
+    const { data, error } = await supabaseAdmin.from('your_table').select('*').eq('userId', userId)
 
     if (error) throw error
 
@@ -545,6 +543,7 @@ import { yourServiceFunction } from './services/yourService.js'
 ```
 
 **Best Practices**:
+
 - Always provide explicit return types
 - Use TypeScript interfaces for complex data structures
 - Prefer `unknown` over `any` when type is truly unknown

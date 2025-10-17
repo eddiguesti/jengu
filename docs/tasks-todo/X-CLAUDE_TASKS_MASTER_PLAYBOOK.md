@@ -1,8 +1,10 @@
 # CLAUDE_TASKS_MASTER_PLAYBOOK.md
+
 **Purpose:** Single source of truth for integrating and operating the **Hybrid Pricing Engine** (Option E++, occupancy-aware) in this repo.  
 This document gives **Claude** everything needed to execute safely, reason about gaps, and ship a working system without touching unrelated code.
 
 > **Read me first (Claude):**
+>
 > - Follow the **Safety Rules** and **Scope Boundaries** exactly.
 > - If a decision is required, see **💡 Claude Decide** boxes. If verification is required, see **⚠️ Claude Verify** boxes.
 > - Use the **🧩 Claude Implement** tasks as your actionable todo list.
@@ -13,6 +15,7 @@ This document gives **Claude** everything needed to execute safely, reason about
 ## 0) Context (what we’re building and why)
 
 We are building a **pricing service** that sets daily prices for rooms/pitches. It must:
+
 - **Cold-start well** with thin/messy historicals.
 - **Adapt daily** using bookings, compset (optional), weather and holidays (we already have these), and inventory.
 - **Respect occupancy targets** (sell-through) while maximizing revenue.
@@ -39,22 +42,26 @@ We will keep the app’s **frontend and backend stable** and attach a **separate
 ## 2) Current Stack & Schema (ground truth)
 
 ### 2.1 Backend
+
 - **Express.js** (Node 20+, TypeScript)
 - `authenticateUser` middleware (JWT via Supabase Auth)
 - `supabaseAdmin` client (service role key)
 - Manual `userId` filtering
 
 ### 2.2 Frontend
+
 - Axios to `/api/*`
 - Session JWT auto-injected
 
 ### 2.3 Supabase Tables (existing)
+
 - `pricing_data` (main time series: **bookings**, price, occupancy, weather/holiday enrichments)
 - `properties` (links to user)
 - `business_settings` (profile, location, **add** `capacity_config` JSONB)
 - `users`
 
 ### 2.4 Missing (to add)
+
 - `pricing_quotes` (each shown price)
 - `pricing_outcomes` (outcome for a quote)
 - `inventory_snapshots` (optional, preferred): capacity & remaining by stay_date/product_type
@@ -71,6 +78,7 @@ We support both patterns without code churn:
 > 💡 **Claude Decide:** For current environment, pick **Mode A** by default. Keep all code parameterized by `PRICING_SERVICE_URL` so switching to Mode B is trivial.
 
 Env in `backend/.env`:
+
 ```
 PRICING_SERVICE_URL=http://localhost:8000
 ENABLE_CRON=false
@@ -169,19 +177,19 @@ CREATE POLICY "insert_own_inventory" ON inventory_snapshots FOR INSERT WITH CHEC
 
 ```ts
 // Imports at top
-import crypto from 'node:crypto';
-import fetch from 'node-fetch';
+import crypto from 'node:crypto'
+import fetch from 'node-fetch'
 
-const PRICING_SERVICE_URL = process.env.PRICING_SERVICE_URL || 'http://localhost:8000';
+const PRICING_SERVICE_URL = process.env.PRICING_SERVICE_URL || 'http://localhost:8000'
 
 async function callPricingScore(body: unknown) {
   const res = await fetch(`${PRICING_SERVICE_URL}/score`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`pricing /score ${res.status}: ${await res.text()}`);
-  return res.json();
+  })
+  if (!res.ok) throw new Error(`pricing /score ${res.status}: ${await res.text()}`)
+  return res.json()
 }
 
 async function callPricingLearn(batch: unknown[]) {
@@ -189,18 +197,18 @@ async function callPricingLearn(batch: unknown[]) {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(batch),
-  });
-  if (!res.ok) throw new Error(`pricing /learn ${res.status}: ${await res.text()}`);
-  return res.json();
+  })
+  if (!res.ok) throw new Error(`pricing /learn ${res.status}: ${await res.text()}`)
+  return res.json()
 }
 
 // POST /api/pricing/quote — proxy + log
 app.post('/api/pricing/quote', authenticateUser, async (req, res) => {
   try {
-    const userId = req.userId!;
-    const { propertyId, stayDate, product, toggles, allowed_price_grid } = req.body;
+    const userId = req.userId!
+    const { propertyId, stayDate, product, toggles, allowed_price_grid } = req.body
     if (!propertyId || !stayDate || !product?.type) {
-      return res.status(400).json({ error: 'missing_fields' });
+      return res.status(400).json({ error: 'missing_fields' })
     }
 
     // Business settings (for capacity fallback)
@@ -208,8 +216,8 @@ app.post('/api/pricing/quote', authenticateUser, async (req, res) => {
       .from('business_settings')
       .select('userid, timezone, capacity_config')
       .eq('userid', userId)
-      .single();
-    if (sErr) throw sErr;
+      .single()
+    if (sErr) throw sErr
 
     // Inventory snapshot preferred
     const { data: inv } = await supabaseAdmin
@@ -221,19 +229,21 @@ app.post('/api/pricing/quote', authenticateUser, async (req, res) => {
       .eq('product_type', product.type)
       .order('captured_at', { ascending: false })
       .limit(1)
-      .maybeSingle();
+      .maybeSingle()
 
-    const capacity = inv?.capacity ?? (settings?.capacity_config?.[product.type] ?? null);
-    const remaining = inv?.remaining ?? null;
+    const capacity = inv?.capacity ?? settings?.capacity_config?.[product.type] ?? null
+    const remaining = inv?.remaining ?? null
 
     // Context (derived)
-    const d = new Date(stayDate + 'T00:00:00Z');
-    const dow = d.getUTCDay();
-    const m = d.getUTCMonth() + 1;
-    const season = m <= 2 || m === 12 ? 'winter' : m <= 5 ? 'spring' : m <= 8 ? 'summer' : 'autumn';
+    const d = new Date(stayDate + 'T00:00:00Z')
+    const dow = d.getUTCDay()
+    const m = d.getUTCMonth() + 1
+    const season = m <= 2 || m === 12 ? 'winter' : m <= 5 ? 'spring' : m <= 8 ? 'summer' : 'autumn'
 
     // Optional: compset (if exists)
-    let comp_p10 = null, comp_p50 = null, comp_p90 = null;
+    let comp_p10 = null,
+      comp_p50 = null,
+      comp_p90 = null
     try {
       const { data: comp } = await supabaseAdmin
         .from('compset_snapshots')
@@ -244,12 +254,16 @@ app.post('/api/pricing/quote', authenticateUser, async (req, res) => {
         .lte('date', stayDate)
         .order('date', { ascending: false })
         .limit(1)
-        .maybeSingle();
-      if (comp) { comp_p10 = comp.p10; comp_p50 = comp.p50; comp_p90 = comp.p90; }
+        .maybeSingle()
+      if (comp) {
+        comp_p10 = comp.p10
+        comp_p50 = comp.p50
+        comp_p90 = comp.p90
+      }
     } catch {}
 
     // Optional weather: available historically in pricing_data; for stayDate leave {} or connect your cache
-    const weather: any = {};
+    const weather: any = {}
 
     // Build payload for pricing service
     const payload = {
@@ -262,37 +276,51 @@ app.post('/api/pricing/quote', authenticateUser, async (req, res) => {
       costs: {},
       context: { season, day_of_week: dow, weather },
       toggles,
-      allowed_price_grid
-    };
+      allowed_price_grid,
+    }
 
-    const data = await callPricingScore(payload);
+    const data = await callPricingScore(payload)
 
     // Log quote
-    const quote_id = crypto.randomUUID();
-    const toggles_hash = crypto.createHash('sha1').update(JSON.stringify(toggles)).digest('hex');
-    const lead_days = Math.max(0, Math.ceil((Date.parse(stayDate) - Date.now()) / 86400000));
+    const quote_id = crypto.randomUUID()
+    const toggles_hash = crypto.createHash('sha1').update(JSON.stringify(toggles)).digest('hex')
+    const lead_days = Math.max(0, Math.ceil((Date.parse(stayDate) - Date.now()) / 86400000))
 
     await supabaseAdmin.from('pricing_quotes').insert({
-      quote_id, userId, propertyId, stay_date: stayDate, lead_days,
-      product_type: product.type, refundable: !!product.refundable, los: product.los ?? 1,
-      price_offered: data.price, inventory_remaining: remaining, inventory_capacity: capacity,
-      season, dow, comp_p10, comp_p50, comp_p90,
-      weather_tmax: weather.tmax ?? null, weather_rain_mm: weather.rain_mm ?? null,
-      toggles_hash, shown_to_user_bool: true
-    });
+      quote_id,
+      userId,
+      propertyId,
+      stay_date: stayDate,
+      lead_days,
+      product_type: product.type,
+      refundable: !!product.refundable,
+      los: product.los ?? 1,
+      price_offered: data.price,
+      inventory_remaining: remaining,
+      inventory_capacity: capacity,
+      season,
+      dow,
+      comp_p10,
+      comp_p50,
+      comp_p90,
+      weather_tmax: weather.tmax ?? null,
+      weather_rain_mm: weather.rain_mm ?? null,
+      toggles_hash,
+      shown_to_user_bool: true,
+    })
 
-    return res.json({ success: true, quote_id, data });
+    return res.json({ success: true, quote_id, data })
   } catch (e) {
-    console.error('pricing/quote error', e);
-    return res.status(500).json({ error: 'pricing_quote_failed', message: String(e) });
+    console.error('pricing/quote error', e)
+    return res.status(500).json({ error: 'pricing_quote_failed', message: String(e) })
   }
-});
+})
 
 // POST /api/pricing/learn — batch outcomes + model update
 app.post('/api/pricing/learn', authenticateUser, async (req, res) => {
   try {
-    const userId = req.userId!;
-    const batch = Array.isArray(req.body) ? req.body : [];
+    const userId = req.userId!
+    const batch = Array.isArray(req.body) ? req.body : []
 
     if (batch.length > 0) {
       const upserts = batch.map((r: any) => ({
@@ -302,18 +330,18 @@ app.post('/api/pricing/learn', authenticateUser, async (req, res) => {
         booking_time: r.booking_time ?? (r.booked ? new Date().toISOString() : null),
         cancelled_bool: r.cancelled ?? null,
         revenue_realized: r.revenue_realized ?? null,
-        no_show_bool: r.no_show_bool ?? null
-      }));
-      await supabaseAdmin.from('pricing_outcomes').upsert(upserts, { onConflict: 'quote_id' });
+        no_show_bool: r.no_show_bool ?? null,
+      }))
+      await supabaseAdmin.from('pricing_outcomes').upsert(upserts, { onConflict: 'quote_id' })
     }
 
-    const learn = await callPricingLearn(batch);
-    return res.json({ success: true, learn });
+    const learn = await callPricingLearn(batch)
+    return res.json({ success: true, learn })
   } catch (e) {
-    console.error('pricing/learn error', e);
-    return res.status(500).json({ error: 'pricing_learn_failed', message: String(e) });
+    console.error('pricing/learn error', e)
+    return res.status(500).json({ error: 'pricing_learn_failed', message: String(e) })
   }
-});
+})
 ```
 
 ⚠️ **Claude Verify:** Ensure imports resolve and there are no TS type errors. Ensure `PRICING_SERVICE_URL` is present in `.env`.
@@ -323,6 +351,7 @@ app.post('/api/pricing/learn', authenticateUser, async (req, res) => {
 ## 6) Python Pricing Service (services/pricing)
 
 We already have a working skeleton including:
+
 - `/score` — returns `{ price, price_grid, conf_band, expected, reasons, safety }`
 - `/learn` — ingests logs and updates priors
 
@@ -337,7 +366,7 @@ We already have a working skeleton including:
 
 Key requirements at pricing time:
 
-- Input must include `inventory.capacity` and `inventory.remaining`.  
+- Input must include `inventory.capacity` and `inventory.remaining`.
 - Response must include `expected.occ_now` and `expected.occ_end_bucket`.
 - Grid filtering and objective must respect **director targets** and **risk mode** (conformal lower-bound on revenue/occupancy).
 
@@ -380,6 +409,7 @@ Recommended schedule (implement as cron later):
 ## 11) Director Toggles (storage options)
 
 Two safe choices:
+
 - Extend `business_settings` with minimal toggle fields, **or**
 - Create `director_preferences` keyed by `(userId, propertyId)`.
 
@@ -390,24 +420,30 @@ Two safe choices:
 ## 12) What to do **right now** (ordered checklist)
 
 ### Phase 1 — DB & indexes
+
 - 🧩 Create migrations for `pricing_quotes`, `pricing_outcomes`, `inventory_snapshots`, `capacity_config` column.
 - ⚠️ Verify tables + indexes exist.
 
 ### Phase 2 — Backend endpoints (Express)
+
 - 🧩 Add `POST /api/pricing/quote` and `POST /api/pricing/learn` (code above).
 - ⚠️ Verify env `PRICING_SERVICE_URL` is set.
 
 ### Phase 3 — Pricing service health
+
 - 🧩 Ensure `/score`, `/learn` work; add `/ready`, `/live`, `/version`.
 - 🧩 Return `expected.occ_now` and `expected.occ_end_bucket` from `/score`.
 
 ### Phase 4 — Readiness check route
+
 - 🧩 Implement `/api/pricing/check-readiness` in backend to validate DB state (tables, indexes, capacity source).
 
 ### Phase 5 — (Optional) Cron
+
 - 🧩 Add nightly `node-cron` guarded by `ENABLE_CRON` to assemble batch and call `/api/pricing/learn`.
 
 ### Phase 6 — (Optional) Compset & Weather cache
+
 - 🧩 If you introduce `compset_snapshots`, wire the optional join in `/api/pricing/quote` (already coded to fail gracefully).
 
 ---

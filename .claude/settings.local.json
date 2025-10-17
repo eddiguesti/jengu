@@ -9,7 +9,15 @@
       "Bash(git push)",
       "Bash(pnpm run type-check:frontend:*)",
       "Bash(pnpm -w run type-check:frontend:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(pnpm run check-all:*)",
+      "Bash(pnpm run build:check:*)",
+      "Bash(pnpm run lint:*)",
+      "Bash(awk:*)",
+      "Bash(pnpm run lint:fix:*)",
+      "Bash(find frontend/src -name \"*.tsx\" -exec sh -c 'sed -n \"\"70,76p\"\" \"\"$1\"\" | grep -l \"\"setState\\|setLoading\\|setError\\|set[A-Z]\"\" && echo \"\"$1\"\"' _ {} ;)",
+      "Bash(pnpm run type-check:*)",
+      "Bash(pnpm run format:*)"
     ],
     "deny": [],
     "ask": []

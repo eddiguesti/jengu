@@ -106,6 +106,7 @@ Extends the base config with Node.js-specific settings:
 ```
 
 **Key Features**:
+
 - `module: "NodeNext"` - Native Node.js ESM support
 - `target: "ES2022"` - Modern JavaScript features
 - Compiles to `dist/` directory
@@ -140,6 +141,7 @@ Extends the base config with React/browser-specific settings:
 ```
 
 **Key Features**:
+
 - `jsx: "react-jsx"` - Modern JSX transform (no React import needed)
 - `moduleResolution: "bundler"` - Vite-optimized resolution
 - `noEmit: true` - Vite handles compilation
@@ -195,21 +197,25 @@ export default tseslint.config(
 ### Key Features
 
 **TypeScript Integration**:
+
 - Uses `projectService: true` (auto-discovers tsconfig files)
 - Type-aware linting (catches type errors ESLint can detect)
 - Works across monorepo workspaces
 
 **Frontend-Specific Rules** (`frontend/**/*.{ts,tsx}`):
+
 - React hooks validation
 - React JSX best practices
 - Tailwind CSS class validation
 - Custom Tailwind theme colors whitelisted
 
 **Backend-Specific Rules** (`backend/**/*.ts`):
+
 - Unused variable warnings (except prefixed with `_`)
 - Node.js-specific patterns
 
 **Prettier Integration**:
+
 - `eslint-config-prettier` disables ESLint formatting rules
 - Prevents conflicts between ESLint and Prettier
 
@@ -227,16 +233,19 @@ pnpm run lint:fix                # Auto-fix issues
 ### Common ESLint Rules
 
 **TypeScript**:
+
 - `@typescript-eslint/no-explicit-any` - Warn against `any` types
 - `@typescript-eslint/no-unused-vars` - Warn on unused variables
 - `@typescript-eslint/no-misused-promises` - Catch async mistakes
 
 **React** (frontend only):
+
 - `react-hooks/rules-of-hooks` - Enforce hooks rules
 - `react-hooks/exhaustive-deps` - Validate useEffect dependencies
 - `react/prop-types` - Disabled (using TypeScript)
 
 **Tailwind** (frontend only):
+
 - `tailwindcss/classnames-order` - Enforce class order (warn)
 - `tailwindcss/no-custom-classname` - Validate Tailwind classes (with whitelist)
 - `tailwindcss/no-contradicting-classname` - Catch conflicting classes (error)
@@ -251,13 +260,13 @@ pnpm run lint:fix                # Auto-fix issues
 
 ```javascript
 export default {
-  semi: false,                     // No semicolons
-  singleQuote: true,               // Single quotes
-  tabWidth: 2,                     // 2 space indentation
-  trailingComma: 'es5',            // Trailing commas where valid in ES5
-  printWidth: 100,                 // 100 character line length
-  arrowParens: 'avoid',            // Omit parens when possible
-  plugins: ['prettier-plugin-tailwindcss'],  // Auto-sort Tailwind classes
+  semi: false, // No semicolons
+  singleQuote: true, // Single quotes
+  tabWidth: 2, // 2 space indentation
+  trailingComma: 'es5', // Trailing commas where valid in ES5
+  printWidth: 100, // 100 character line length
+  arrowParens: 'avoid', // Omit parens when possible
+  plugins: ['prettier-plugin-tailwindcss'], // Auto-sort Tailwind classes
 }
 ```
 
@@ -301,11 +310,13 @@ pnpm run format:check            # Check formatting (CI-friendly)
 The `prettier-plugin-tailwindcss` plugin automatically sorts Tailwind classes in the recommended order:
 
 **Before**:
+
 ```tsx
 <div className="mt-4 text-primary flex p-2">
 ```
 
 **After**:
+
 ```tsx
 <div className="flex p-2 mt-4 text-primary">
 ```
@@ -366,18 +377,18 @@ pnpm run start                   # Run compiled JavaScript
 
 ### Command Reference Table
 
-| Command | Location | Purpose |
-|---------|----------|---------|
-| `pnpm run check-all` | **Root** | Type + lint + format check (CI-friendly) |
-| `pnpm run fix-all` | **Root** | Auto-fix lint + format |
-| `pnpm run type-check` | **Root** | TypeScript check (both workspaces) |
-| `pnpm run lint` | **Root** | ESLint check (all files) |
-| `pnpm run lint:fix` | **Root** | ESLint auto-fix |
-| `pnpm run format` | **Root** | Format all files |
-| `pnpm run format:check` | **Root** | Check formatting (no changes) |
-| `pnpm run build:check` | **frontend/** | Type check + build |
-| `pnpm run build` | **frontend/** | Build only |
-| `pnpm run build` | **backend/** | Compile TypeScript |
+| Command                 | Location      | Purpose                                  |
+| ----------------------- | ------------- | ---------------------------------------- |
+| `pnpm run check-all`    | **Root**      | Type + lint + format check (CI-friendly) |
+| `pnpm run fix-all`      | **Root**      | Auto-fix lint + format                   |
+| `pnpm run type-check`   | **Root**      | TypeScript check (both workspaces)       |
+| `pnpm run lint`         | **Root**      | ESLint check (all files)                 |
+| `pnpm run lint:fix`     | **Root**      | ESLint auto-fix                          |
+| `pnpm run format`       | **Root**      | Format all files                         |
+| `pnpm run format:check` | **Root**      | Check formatting (no changes)            |
+| `pnpm run build:check`  | **frontend/** | Type check + build                       |
+| `pnpm run build`        | **frontend/** | Build only                               |
+| `pnpm run build`        | **backend/**  | Compile TypeScript                       |
 
 ---
 
@@ -400,6 +411,7 @@ pnpm run start                   # Run compiled JavaScript
 ```
 
 **Features**:
+
 - Auto-format on save (Prettier)
 - Auto-fix ESLint issues on save
 - ESLint flat config support
@@ -411,10 +423,7 @@ pnpm run start                   # Run compiled JavaScript
 
 ```json
 {
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode"
-  ]
+  "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
 }
 ```
 
@@ -440,6 +449,7 @@ Only `settings.json` and `extensions.json` are tracked in git. Personal VS Code 
 **Error: "Cannot find module" or "Module not found"**
 
 Solution:
+
 ```bash
 # Clean and reinstall dependencies
 pnpm install
@@ -488,6 +498,7 @@ Custom theme colors are whitelisted in `eslint.config.js`. If you add new custom
 **Error: React hooks warnings**
 
 Follow the React hooks rules:
+
 - Only call hooks at top level
 - Only call hooks from React functions
 - List all dependencies in useEffect

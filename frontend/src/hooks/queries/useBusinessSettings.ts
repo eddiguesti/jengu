@@ -69,7 +69,7 @@ export function useUpdateBusinessProfile() {
       return response.settings
     },
     // Optimistic update
-    onMutate: async (newProfile) => {
+    onMutate: async newProfile => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: settingsKeys.profile() })
 

@@ -27,7 +27,9 @@ export const getBusinessSettings = async (): Promise<SettingsResponse> => {
 /**
  * Update business profile settings
  */
-export const updateBusinessSettings = async (settings: Partial<BusinessSettings>): Promise<SettingsResponse> => {
+export const updateBusinessSettings = async (
+  settings: Partial<BusinessSettings>
+): Promise<SettingsResponse> => {
   const response = await apiClient.post<SettingsResponse>('/settings', settings)
   return response.data
 }

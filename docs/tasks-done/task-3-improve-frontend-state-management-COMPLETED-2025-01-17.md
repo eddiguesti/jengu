@@ -1,6 +1,7 @@
 # Task: Improve Frontend State Management
 
 ## Status
+
 - **Priority**: High
 - **Status**: ✅ COMPLETED
 - **Completed**: January 17, 2025
@@ -14,11 +15,13 @@ Successfully migrated frontend from mixed state management (useState + Zustand +
 ### What Was Accomplished
 
 **Phase 1: Setup ✅**
+
 - Installed @tanstack/react-query v5 and devtools
 - Created queryClient configuration with optimized cache settings
 - Wrapped App with QueryClientProvider and DevTools
 
 **Phase 2: React Query Hooks ✅**
+
 - Created `useFileData.ts` - File operations (list, fetch, upload, delete, enrich)
 - Created `useAnalytics.ts` - Analytics endpoints (summary, sentiment, AI insights)
 - Created `useBusinessSettings.ts` - Business profile (fetch, update with optimistic updates)
@@ -26,29 +29,34 @@ Successfully migrated frontend from mixed state management (useState + Zustand +
 - Fixed React Query v5 compatibility (replaced deprecated onSuccess callbacks with useEffect)
 
 **Phase 3: Component Refactoring ✅**
+
 - **Insights.tsx**: Removed ~200 lines of manual data fetching, reduced bundle by 28%
 - **Data.tsx**: Migrated file upload and enrichment to React Query mutations
 - **Settings.tsx**: Migrated settings save to React Query with optimistic updates
 
 **Phase 4 & 5: Skipped (Not Needed)**
+
 - Kept Zustand stores for backwards compatibility during migration
 - React Query DevTools provides sufficient loading indicators
 
 ### Key Metrics
 
 **Bundle Size Improvements:**
+
 - Created shared `client` chunk (49.68 kB) - React Query code loaded once, used everywhere
 - Insights.tsx: 41.26 kB → 29.75 kB (-28%)
 - Settings.tsx: Minor reduction, cleaner code
 - Data.tsx: Cleaner code, better UX
 
 **Code Quality:**
+
 - Eliminated ~300+ lines of manual data fetching logic
 - Removed try-catch boilerplate across 3 major components
 - Type-safe data fetching with full TypeScript support
 - All builds and type checks passing ✅
 
 **User Experience:**
+
 - Automatic caching - instant navigation when returning to pages
 - Background refetching when data becomes stale
 - Request deduplication - multiple components can request same data without duplicate calls
@@ -66,6 +74,7 @@ Successfully migrated frontend from mixed state management (useState + Zustand +
 ### Migration Path Forward (Optional)
 
 If desired, could further optimize by:
+
 - Removing Zustand stores entirely (currently kept for backwards compatibility)
 - Adding global loading indicator using `useIsFetching` hook
 - Persisting React Query cache to localStorage (not recommended initially)
@@ -78,12 +87,14 @@ If desired, could further optimize by:
 ## Context
 
 Currently, the frontend uses a mix of state management approaches without clear patterns:
+
 - **Zustand** for some persistent client state (files metadata, business settings)
 - **Context API** for auth (works well)
 - **useState** for everything else
 - **No server state caching** - all API data is fetched fresh on every component mount
 
 This leads to:
+
 - Redundant API calls (10,000 rows fetched multiple times)
 - Duplicate state management (files stored in both local state and Zustand)
 - No cache invalidation strategy
@@ -95,7 +106,9 @@ This leads to:
 ### Three-Layer State Management Pattern
 
 #### 1. **TanStack Query (React Query)** - Server State
+
 Use for ALL data from external sources (backend API, external APIs):
+
 - CSV file data (rows)
 - Analytics results
 - Insights data
@@ -105,6 +118,7 @@ Use for ALL data from external sources (backend API, external APIs):
 - Any other backend-fetched data
 
 **Benefits:**
+
 - Automatic caching, deduplication, background refetching
 - Built-in loading/error states
 - Optimistic updates
@@ -113,23 +127,29 @@ Use for ALL data from external sources (backend API, external APIs):
 - Automatic retry with exponential backoff
 
 #### 2. **Zustand** - Global Client State
+
 Use for client-side state that needs to be shared across components but doesn't come from server:
+
 - UI preferences (theme, sidebar collapsed state)
 - Multi-step form state (if needs to persist across navigation)
 - Feature flags or client-side configuration
 - Global modals/toast notifications state
 
 **Keep current Zustand stores if they remain relevant:**
+
 - `useDataStore` - Consider replacing with React Query (files metadata is server state)
 - `useBusinessStore` - Consider replacing with React Query (business profile is server state)
 
 #### 3. **useState** - Component-Local State
+
 Use for state that is:
+
 - Wholly owned by a single component
 - Doesn't need to persist
 - Pure UI state (toggle, input value, modal open/closed)
 
 **Examples:**
+
 - Form input values (controlled inputs)
 - Dropdown open/closed state
 - "Is dragging" state in file upload
@@ -137,6 +157,7 @@ Use for state that is:
 - Tab selection (if not in URL)
 
 ### Keep Context API for Auth
+
 `AuthContext` works well - no changes needed.
 
 ---
@@ -146,15 +167,18 @@ Use for state that is:
 ### Phase 1: Setup React Query (1 day)
 
 #### 1.1 Install Dependencies
+
 ```bash
 cd frontend
 pnpm add @tanstack/react-query @tanstack/react-query-devtools
 ```
 
 #### 1.2 Configure Query Client
+
 Create `frontend/src/lib/queryClient.ts`:
+
 ```typescript
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query'
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -171,11 +195,13 @@ export const queryClient = new QueryClient({
       refetchOnMount: false,
     },
   },
-});
+})
 ```
 
 #### 1.3 Wrap App with QueryClientProvider
+
 Update `frontend/src/main.tsx`:
+
 ```typescript
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -200,11 +226,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 ### Phase 2: Create React Query Hooks (1-2 days)
 
 #### 2.1 File Data Hooks
+
 Create `frontend/src/hooks/queries/useFileData.ts`:
+
 ```typescript
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { dataService } from '@/lib/api/services/data';
-import type { UploadedFile, PricingDataRow } from '@/types';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { dataService } from '@/lib/api/services/data'
+import type { UploadedFile, PricingDataRow } from '@/types'
 
 // Query keys
 export const fileKeys = {
@@ -214,17 +242,17 @@ export const fileKeys = {
   details: () => [...fileKeys.all, 'detail'] as const,
   detail: (id: string) => [...fileKeys.details(), id] as const,
   data: (id: string, limit?: number) => [...fileKeys.detail(id), 'data', limit] as const,
-};
+}
 
 // Fetch all uploaded files metadata
 export function useUploadedFiles() {
   return useQuery({
     queryKey: fileKeys.lists(),
     queryFn: async () => {
-      const response = await dataService.getFiles();
-      return response.data;
+      const response = await dataService.getFiles()
+      return response.data
     },
-  });
+  })
 }
 
 // Fetch file data (rows)
@@ -232,52 +260,54 @@ export function useFileData(fileId: string, limit: number = 10000) {
   return useQuery({
     queryKey: fileKeys.data(fileId, limit),
     queryFn: async () => {
-      const response = await dataService.getFileData(fileId, limit);
-      return response.data as PricingDataRow[];
+      const response = await dataService.getFileData(fileId, limit)
+      return response.data as PricingDataRow[]
     },
     enabled: !!fileId, // Only fetch if fileId exists
     staleTime: 10 * 60 * 1000, // CSV data rarely changes, cache for 10 min
-  });
+  })
 }
 
 // Upload file mutation
 export function useUploadFile() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append('file', file);
-      return dataService.uploadFile(formData);
+      const formData = new FormData()
+      formData.append('file', file)
+      return dataService.uploadFile(formData)
     },
     onSuccess: () => {
       // Invalidate and refetch file list
-      queryClient.invalidateQueries({ queryKey: fileKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: fileKeys.lists() })
     },
-  });
+  })
 }
 
 // Delete file mutation
 export function useDeleteFile() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (fileId: string) => dataService.deleteFile(fileId),
     onSuccess: (_, fileId) => {
       // Remove file from cache
-      queryClient.invalidateQueries({ queryKey: fileKeys.lists() });
-      queryClient.removeQueries({ queryKey: fileKeys.detail(fileId) });
+      queryClient.invalidateQueries({ queryKey: fileKeys.lists() })
+      queryClient.removeQueries({ queryKey: fileKeys.detail(fileId) })
     },
-  });
+  })
 }
 ```
 
 #### 2.2 Analytics Hooks
+
 Create `frontend/src/hooks/queries/useAnalytics.ts`:
+
 ```typescript
-import { useQuery } from '@tanstack/react-query';
-import { analyticsService } from '@/lib/api/services/analyticsService';
-import type { MarketSentiment, DemandForecast, WeatherImpactAnalysis } from '@/types';
+import { useQuery } from '@tanstack/react-query'
+import { analyticsService } from '@/lib/api/services/analyticsService'
+import type { MarketSentiment, DemandForecast, WeatherImpactAnalysis } from '@/types'
 
 export const analyticsKeys = {
   all: ['analytics'] as const,
@@ -285,125 +315,127 @@ export const analyticsKeys = {
   demand: (fileId: string) => [...analyticsKeys.all, 'demand', fileId] as const,
   weather: (fileId: string) => [...analyticsKeys.all, 'weather', fileId] as const,
   ai: (fileId: string) => [...analyticsKeys.all, 'ai', fileId] as const,
-};
+}
 
 export function useMarketSentiment(fileId: string, data: any[]) {
   return useQuery({
     queryKey: analyticsKeys.sentiment(fileId),
     queryFn: async () => {
-      const response = await analyticsService.analyzeMarketSentiment(fileId, data);
-      return response.data as MarketSentiment;
+      const response = await analyticsService.analyzeMarketSentiment(fileId, data)
+      return response.data as MarketSentiment
     },
     enabled: !!fileId && data.length > 0,
     staleTime: 15 * 60 * 1000, // Analytics results stable, cache 15 min
-  });
+  })
 }
 
 export function useDemandForecast(fileId: string, data: any[]) {
   return useQuery({
     queryKey: analyticsKeys.demand(fileId),
     queryFn: async () => {
-      const response = await analyticsService.analyzeDemandPatterns(fileId, data);
-      return response.data as DemandForecast;
+      const response = await analyticsService.analyzeDemandPatterns(fileId, data)
+      return response.data as DemandForecast
     },
     enabled: !!fileId && data.length > 0,
     staleTime: 15 * 60 * 1000,
-  });
+  })
 }
 
 export function useWeatherAnalysis(fileId: string, data: any[]) {
   return useQuery({
     queryKey: analyticsKeys.weather(fileId),
     queryFn: async () => {
-      const response = await analyticsService.analyzeWeatherImpact(fileId, data);
-      return response.data as WeatherImpactAnalysis;
+      const response = await analyticsService.analyzeWeatherImpact(fileId, data)
+      return response.data as WeatherImpactAnalysis
     },
     enabled: !!fileId && data.length > 0,
     staleTime: 15 * 60 * 1000,
-  });
+  })
 }
 
 export function useAIInsights(fileId: string, data: any[]) {
   return useQuery({
     queryKey: analyticsKeys.ai(fileId),
     queryFn: async () => {
-      const response = await analyticsService.generateAIInsights(fileId, data);
-      return response.data;
+      const response = await analyticsService.generateAIInsights(fileId, data)
+      return response.data
     },
     enabled: !!fileId && data.length > 0,
     staleTime: 30 * 60 * 1000, // AI insights expensive, cache 30 min
     retry: 1, // AI calls can fail, don't retry too much
-  });
+  })
 }
 ```
 
 #### 2.3 Business Settings Hooks
+
 Create `frontend/src/hooks/queries/useBusinessSettings.ts`:
+
 ```typescript
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { useBusinessStore } from '@/store/useBusinessStore';
-import type { BusinessProfile } from '@/types';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { apiClient } from '@/lib/api/client'
+import { useBusinessStore } from '@/store/useBusinessStore'
+import type { BusinessProfile } from '@/types'
 
 export const settingsKeys = {
   all: ['settings'] as const,
   profile: () => [...settingsKeys.all, 'profile'] as const,
-};
+}
 
 export function useBusinessProfile() {
-  const { setProfile } = useBusinessStore();
+  const { setProfile } = useBusinessStore()
 
   return useQuery({
     queryKey: settingsKeys.profile(),
     queryFn: async () => {
-      const response = await apiClient.get('/settings');
-      return response.data.settings as BusinessProfile;
+      const response = await apiClient.get('/settings')
+      return response.data.settings as BusinessProfile
     },
     // Sync with Zustand store for backwards compatibility
-    onSuccess: (data) => {
-      setProfile(data);
+    onSuccess: data => {
+      setProfile(data)
     },
-  });
+  })
 }
 
 export function useUpdateBusinessProfile() {
-  const queryClient = useQueryClient();
-  const { setProfile } = useBusinessStore();
+  const queryClient = useQueryClient()
+  const { setProfile } = useBusinessStore()
 
   return useMutation({
     mutationFn: async (profile: Partial<BusinessProfile>) => {
-      const response = await apiClient.post('/settings', profile);
-      return response.data.settings as BusinessProfile;
+      const response = await apiClient.post('/settings', profile)
+      return response.data.settings as BusinessProfile
     },
     // Optimistic update
-    onMutate: async (newProfile) => {
+    onMutate: async newProfile => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: settingsKeys.profile() });
+      await queryClient.cancelQueries({ queryKey: settingsKeys.profile() })
 
       // Snapshot previous value
-      const previous = queryClient.getQueryData(settingsKeys.profile());
+      const previous = queryClient.getQueryData(settingsKeys.profile())
 
       // Optimistically update cache
       queryClient.setQueryData(settingsKeys.profile(), (old: BusinessProfile) => ({
         ...old,
         ...newProfile,
-      }));
+      }))
 
-      return { previous };
+      return { previous }
     },
     // Rollback on error
     onError: (err, newProfile, context) => {
-      queryClient.setQueryData(settingsKeys.profile(), context.previous);
+      queryClient.setQueryData(settingsKeys.profile(), context.previous)
     },
     // Refetch on success or error
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: settingsKeys.profile() });
+      queryClient.invalidateQueries({ queryKey: settingsKeys.profile() })
     },
     // Sync with Zustand
-    onSuccess: (data) => {
-      setProfile(data);
+    onSuccess: data => {
+      setProfile(data)
     },
-  });
+  })
 }
 ```
 
@@ -412,30 +444,33 @@ export function useUpdateBusinessProfile() {
 ### Phase 3: Refactor Components (1-2 days)
 
 #### 3.1 Refactor Insights.tsx
+
 **Before:**
+
 ```typescript
-const [insights, setInsights] = useState<CombinedInsights | null>(null);
-const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
-const [marketSentiment, setMarketSentiment] = useState<MarketSentiment | null>(null);
+const [insights, setInsights] = useState<CombinedInsights | null>(null)
+const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false)
+const [marketSentiment, setMarketSentiment] = useState<MarketSentiment | null>(null)
 // ... etc
 
 useEffect(() => {
   const fetchData = async () => {
-    setIsLoadingAnalytics(true);
+    setIsLoadingAnalytics(true)
     try {
-      const response = await axios.get(`${API_URL}/files/${fileId}/data?limit=10000`);
+      const response = await axios.get(`${API_URL}/files/${fileId}/data?limit=10000`)
       // ... fetch and set state
     } catch (error) {
       // ...
     } finally {
-      setIsLoadingAnalytics(false);
+      setIsLoadingAnalytics(false)
     }
-  };
-  fetchData();
-}, [currentFileId]);
+  }
+  fetchData()
+}, [currentFileId])
 ```
 
 **After:**
+
 ```typescript
 import { useFileData } from '@/hooks/queries/useFileData';
 import { useMarketSentiment, useDemandForecast, useWeatherAnalysis, useAIInsights } from '@/hooks/queries/useAnalytics';
@@ -467,6 +502,7 @@ function Insights() {
 ```
 
 **Benefits:**
+
 - No manual loading state management
 - Automatic caching (won't refetch if navigating away and back)
 - Background refetching when data becomes stale
@@ -474,6 +510,7 @@ function Insights() {
 - Can use `isFetching` to show background refetch indicator
 
 #### 3.2 Refactor Data.tsx
+
 **Current issue:** Maintains duplicate `files` state
 
 **Solution:** Remove local `files` state, use `useUploadedFiles()` query directly:
@@ -514,6 +551,7 @@ function Data() {
 ```
 
 #### 3.3 Refactor Settings.tsx
+
 **Replace:** Manual form state + API calls
 **With:** React Query mutation with optimistic updates
 
@@ -561,11 +599,11 @@ function Settings() {
 
 #### Decision Matrix
 
-| Store | Current Use | Recommendation |
-|-------|-------------|----------------|
-| `useDataStore` | Files metadata + upload status | **Replace with React Query** - This is server state |
-| `useBusinessStore` | Business profile settings | **Replace with React Query** - This is server state |
-| Auth Context | Auth state + methods | **Keep** - Works well |
+| Store              | Current Use                    | Recommendation                                      |
+| ------------------ | ------------------------------ | --------------------------------------------------- |
+| `useDataStore`     | Files metadata + upload status | **Replace with React Query** - This is server state |
+| `useBusinessStore` | Business profile settings      | **Replace with React Query** - This is server state |
+| Auth Context       | Auth state + methods           | **Keep** - Works well                               |
 
 #### Migration Steps
 
@@ -575,18 +613,19 @@ function Settings() {
 4. **Delete Zustand stores** once all components migrated
 
 **Example: Dual sync during migration**
+
 ```typescript
 export function useUploadedFiles() {
-  const { addFile } = useDataStore(); // Keep during migration
+  const { addFile } = useDataStore() // Keep during migration
 
   return useQuery({
     queryKey: fileKeys.lists(),
     queryFn: fetchFiles,
-    onSuccess: (data) => {
+    onSuccess: data => {
       // Sync with Zustand during migration phase
-      data.forEach(file => addFile(file));
+      data.forEach(file => addFile(file))
     },
-  });
+  })
 }
 ```
 
@@ -633,11 +672,13 @@ function GlobalLoadingIndicator() {
 ## Performance Benefits Expected
 
 ### Before
+
 - **Insights page load**: 4 API calls (file data + 3 analytics endpoints) = ~2-3 seconds
 - **Navigate away and back**: 4 API calls again = ~2-3 seconds
 - **Multiple tabs open**: Each tab makes separate requests
 
 ### After
+
 - **First load**: 4 API calls = ~2-3 seconds (same)
 - **Navigate away and back**: 0 API calls (instant load from cache)
 - **Multiple tabs**: Shared cache, 1 set of requests total

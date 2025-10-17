@@ -43,11 +43,7 @@ export class PropertiesRepository {
     return await this.supabase.from('properties').delete().eq('id', id)
   }
 
-  async updateEnrichmentStatus(
-    id: string,
-    status: 'completed' | 'failed',
-    error?: string
-  ) {
+  async updateEnrichmentStatus(id: string, status: 'completed' | 'failed', error?: string) {
     const updates: Record<string, unknown> = {
       enrichmentstatus: status,
     }

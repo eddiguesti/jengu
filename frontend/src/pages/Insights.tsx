@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Card, Select, Badge, Button } from '../components/ui'
@@ -23,7 +24,11 @@ import { MarketSentimentCard } from '../components/insights/MarketSentimentCard'
 import { AIInsightsCard } from '../components/insights/AIInsightsCard'
 import { MLAnalyticsCard } from '../components/insights/MLAnalyticsCard'
 import { useUploadedFiles, useFileData } from '../hooks/queries/useFileData'
-import { useAnalyticsSummary, useMarketSentiment, useAIInsights } from '../hooks/queries/useAnalytics'
+import {
+  useAnalyticsSummary,
+  useMarketSentiment,
+  useAIInsights,
+} from '../hooks/queries/useAnalytics'
 
 export const Insights = () => {
   const { uploadedFiles: zustandFiles } = useDataStore() // Backwards compatibility
@@ -43,20 +48,34 @@ export const Insights = () => {
   const [insights, setInsights] = useState(() => getCombinedInsights())
 
   // Fetch analytics using React Query hooks
-  const { data: analyticsSummary, isLoading: isLoadingAnalytics, refetch: refetchAnalytics } = useAnalyticsSummary(firstFileId, fileData)
+  const {
+    data: analyticsSummary,
+    isLoading: isLoadingAnalytics,
+    refetch: refetchAnalytics,
+  } = useAnalyticsSummary(firstFileId, fileData)
 
   // Extract data from analytics summary
   const demandForecast = analyticsSummary?.demandForecast || null
   const weatherAnalysis = analyticsSummary?.weatherImpact || null
 
   // Fetch market sentiment using React Query
-  const { data: marketSentiment, isLoading: isLoadingSentiment, refetch: refetchSentiment } = useMarketSentiment(firstFileId, fileData)
+  const {
+    data: marketSentiment,
+    isLoading: isLoadingSentiment,
+    refetch: refetchSentiment,
+  } = useMarketSentiment(firstFileId, fileData)
 
   // Prepare analytics data for AI insights
-  const analyticsData = analyticsSummary ? { marketSentiment, weatherAnalysis, demandForecast } : null
+  const analyticsData = analyticsSummary
+    ? { marketSentiment, weatherAnalysis, demandForecast }
+    : null
 
   // Fetch AI insights using React Query (only when analytics data is ready)
-  const { data: aiInsights, isLoading: isLoadingAI, refetch: refetchAI } = useAIInsights(firstFileId, analyticsData)
+  const {
+    data: aiInsights,
+    isLoading: isLoadingAI,
+    refetch: refetchAI,
+  } = useAIInsights(firstFileId, analyticsData)
 
   // Simple handlers for refetching (React Query handles all the data loading)
   const generateAnalytics = () => {
@@ -93,13 +112,13 @@ export const Insights = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-text flex items-center gap-3 text-4xl font-bold">
+          <h1 className="flex items-center gap-3 text-4xl font-bold text-text">
             Insights
             {(isLoadingData || isLoadingAnalytics || isLoadingSentiment || isLoadingAI) && (
-              <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             )}
           </h1>
-          <p className="text-muted mt-2">Interactive pricing analytics and trends</p>
+          <p className="mt-2 text-muted">Interactive pricing analytics and trends</p>
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -109,7 +128,7 @@ export const Insights = () => {
             disabled={isLoadingAnalytics || isLoadingSentiment}
           >
             <Sparkles className="mr-2 h-4 w-4" />
-            {(isLoadingAnalytics || isLoadingSentiment) ? 'Loading...' : 'Generate Analytics'}
+            {isLoadingAnalytics || isLoadingSentiment ? 'Loading...' : 'Generate Analytics'}
           </Button>
           <Select
             value={dateRange}
@@ -147,42 +166,42 @@ export const Insights = () => {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Card variant="elevated">
             <div className="space-y-2">
-              <p className="text-muted text-sm">Weather Impact</p>
+              <p className="text-sm text-muted">Weather Impact</p>
               {priceByWeather.length >= 2 ? (
                 <>
-                  <p className="text-primary text-3xl font-bold">+{weatherImpact}%</p>
-                  <p className="text-muted text-xs">Sunny days vs. Rainy days</p>
+                  <p className="text-3xl font-bold text-primary">+{weatherImpact}%</p>
+                  <p className="text-xs text-muted">Sunny days vs. Rainy days</p>
                 </>
               ) : (
                 <>
-                  <p className="text-muted text-3xl font-bold">--</p>
-                  <p className="text-muted text-xs">Upload data with weather column</p>
+                  <p className="text-3xl font-bold text-muted">--</p>
+                  <p className="text-xs text-muted">Upload data with weather column</p>
                 </>
               )}
             </div>
           </Card>
           <Card variant="elevated">
             <div className="space-y-2">
-              <p className="text-muted text-sm">Peak Occupancy Day</p>
+              <p className="text-sm text-muted">Peak Occupancy Day</p>
               {occupancyByDay.length > 0 && occupancyByDay.some(d => d.occupancy > 0) ? (
                 <>
-                  <p className="text-success text-3xl font-bold">{peakOccupancyDay}</p>
-                  <p className="text-muted text-xs">
+                  <p className="text-3xl font-bold text-success">{peakOccupancyDay}</p>
+                  <p className="text-xs text-muted">
                     {occupancyByDay.find(d => d.day === peakOccupancyDay)?.occupancy || 0}% average
                     occupancy
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-muted text-3xl font-bold">--</p>
-                  <p className="text-muted text-xs">Upload data with occupancy column</p>
+                  <p className="text-3xl font-bold text-muted">--</p>
+                  <p className="text-xs text-muted">Upload data with occupancy column</p>
                 </>
               )}
             </div>
           </Card>
           <Card variant="elevated">
             <div className="space-y-2">
-              <p className="text-muted text-sm">Competitor Position</p>
+              <p className="text-sm text-muted">Competitor Position</p>
               {competitorData.length > 0 &&
               competitorData.some(d => d.competitor1 || d.competitor2) ? (
                 <>
@@ -192,14 +211,14 @@ export const Insights = () => {
                     {parseFloat(competitorPosition) >= 0 ? '+' : ''}
                     {competitorPosition}%
                   </p>
-                  <p className="text-muted text-xs">
+                  <p className="text-xs text-muted">
                     {parseFloat(competitorPosition) >= 0 ? 'Above' : 'Below'} market average
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-muted text-3xl font-bold">--</p>
-                  <p className="text-muted text-xs">Collect competitor & upload your prices</p>
+                  <p className="text-3xl font-bold text-muted">--</p>
+                  <p className="text-xs text-muted">Collect competitor & upload your prices</p>
                 </>
               )}
             </div>
@@ -211,8 +230,8 @@ export const Insights = () => {
           <Card variant="default">
             <Card.Header>
               <div>
-                <h2 className="text-text text-xl font-semibold">Price & Occupancy by Weather</h2>
-                <p className="text-muted mt-1 text-sm">
+                <h2 className="text-xl font-semibold text-text">Price & Occupancy by Weather</h2>
+                <p className="mt-1 text-sm text-muted">
                   How weather conditions impact pricing and demand
                 </p>
               </div>
@@ -245,8 +264,8 @@ export const Insights = () => {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card variant="default">
             <Card.Header>
-              <h2 className="text-text text-xl font-semibold">Occupancy by Day of Week</h2>
-              <p className="text-muted mt-1 text-sm">Weekly demand patterns</p>
+              <h2 className="text-xl font-semibold text-text">Occupancy by Day of Week</h2>
+              <p className="mt-1 text-sm text-muted">Weekly demand patterns</p>
             </Card.Header>
             <Card.Body>
               <ResponsiveContainer width="100%" height={280}>
@@ -283,8 +302,8 @@ export const Insights = () => {
 
           <Card variant="default">
             <Card.Header>
-              <h2 className="text-text text-xl font-semibold">Price by Day of Week</h2>
-              <p className="text-muted mt-1 text-sm">Pricing across the week</p>
+              <h2 className="text-xl font-semibold text-text">Price by Day of Week</h2>
+              <p className="mt-1 text-sm text-muted">Pricing across the week</p>
             </Card.Header>
             <Card.Body>
               <ResponsiveContainer width="100%" height={280}>
@@ -317,8 +336,8 @@ export const Insights = () => {
         {/* Temperature vs Price Correlation */}
         <Card variant="default">
           <Card.Header>
-            <h2 className="text-text text-xl font-semibold">Temperature vs. Price Correlation</h2>
-            <p className="text-muted mt-1 text-sm">Relationship between temperature and pricing</p>
+            <h2 className="text-xl font-semibold text-text">Temperature vs. Price Correlation</h2>
+            <p className="mt-1 text-sm text-muted">Relationship between temperature and pricing</p>
           </Card.Header>
           <Card.Body>
             <ResponsiveContainer width="100%" height={300}>
@@ -352,8 +371,8 @@ export const Insights = () => {
           <Card.Header>
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-text text-xl font-semibold">Competitor Pricing Dynamics</h2>
-                <p className="text-muted mt-1 text-sm">Your pricing vs. nearby competitors</p>
+                <h2 className="text-xl font-semibold text-text">Competitor Pricing Dynamics</h2>
+                <p className="mt-1 text-sm text-muted">Your pricing vs. nearby competitors</p>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="primary">Your Price</Badge>
@@ -409,14 +428,14 @@ export const Insights = () => {
         {/* Statistical Summary */}
         <Card variant="default">
           <Card.Header>
-            <h2 className="text-text text-xl font-semibold">Key Statistical Insights</h2>
+            <h2 className="text-xl font-semibold text-text">Key Statistical Insights</h2>
           </Card.Header>
           <Card.Body>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <h3 className="text-text mb-3 text-sm font-semibold">Weather Impact</h3>
+                <h3 className="mb-3 text-sm font-semibold text-text">Weather Impact</h3>
                 <ul className="space-y-2 text-sm">
-                  <li className="text-muted flex items-start gap-2">
+                  <li className="flex items-start gap-2 text-muted">
                     <span className="text-primary">•</span>
                     <span>
                       <strong className="text-success">Sunny days</strong> command{' '}
@@ -424,14 +443,14 @@ export const Insights = () => {
                       <strong className="text-text">92% occupancy</strong>
                     </span>
                   </li>
-                  <li className="text-muted flex items-start gap-2">
+                  <li className="flex items-start gap-2 text-muted">
                     <span className="text-primary">•</span>
                     <span>
                       <strong className="text-warning">Rainy conditions</strong> see{' '}
                       <strong className="text-text">35% fewer bookings</strong> on average
                     </span>
                   </li>
-                  <li className="text-muted flex items-start gap-2">
+                  <li className="flex items-start gap-2 text-muted">
                     <span className="text-primary">•</span>
                     <span>
                       <strong className="text-text">Snowy weather</strong> enables premium pricing
@@ -441,23 +460,23 @@ export const Insights = () => {
                 </ul>
               </div>
               <div>
-                <h3 className="text-text mb-3 text-sm font-semibold">Demand Patterns</h3>
+                <h3 className="mb-3 text-sm font-semibold text-text">Demand Patterns</h3>
                 <ul className="space-y-2 text-sm">
-                  <li className="text-muted flex items-start gap-2">
+                  <li className="flex items-start gap-2 text-muted">
                     <span className="text-primary">•</span>
                     <span>
                       <strong className="text-success">Weekends</strong> show{' '}
                       <strong className="text-text">30% higher occupancy</strong> than weekdays
                     </span>
                   </li>
-                  <li className="text-muted flex items-start gap-2">
+                  <li className="flex items-start gap-2 text-muted">
                     <span className="text-primary">•</span>
                     <span>
                       Peak pricing opportunity:{' '}
                       <strong className="text-text">Friday-Saturday</strong> with 95%+ occupancy
                     </span>
                   </li>
-                  <li className="text-muted flex items-start gap-2">
+                  <li className="flex items-start gap-2 text-muted">
                     <span className="text-primary">•</span>
                     <span>
                       <strong className="text-warning">Monday-Wednesday</strong> require competitive

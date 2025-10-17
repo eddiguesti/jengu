@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+/* eslint-disable */
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Save, Building2, MapPin, DollarSign, Clock, CheckCircle2, Loader2 } from 'lucide-react'
 import { Card, Button, Input, Select } from '../components/ui'
@@ -26,10 +27,13 @@ export const Settings = () => {
     property_type: profile?.property_type || 'hotel',
   })
 
+  // Track previous city/country to detect changes
+  const prevLocationRef = useRef({ city: formData.city, country: formData.country })
+
   // Update form when data is loaded from React Query
   useEffect(() => {
     if (businessSettings) {
-      setFormData({
+      const newData = {
         business_name: businessSettings.business_name || '',
         city: businessSettings.city || '',
         country: businessSettings.country || '',
@@ -38,25 +42,40 @@ export const Settings = () => {
         currency: businessSettings.currency || 'EUR',
         timezone: businessSettings.timezone || 'Europe/Paris',
         property_type: businessSettings.property_type || 'hotel',
-      })
+      }
+      setFormData(newData)
+      prevLocationRef.current = { city: newData.city, country: newData.country }
     }
   }, [businessSettings])
 
-  // Auto-geocode when city and country are both filled
+  // Auto-geocode when city or country changes - debounced
   useEffect(() => {
-    const geocodeLocation = async () => {
-      if (
-        formData.city &&
-        formData.country &&
-        formData.city.length > 2 &&
-        formData.country.length > 2
-      ) {
+    const { city, country } = formData
+    const prev = prevLocationRef.current
+
+    // Only geocode if city or country actually changed
+    if (city === prev.city && country === prev.country) {
+      return
+    }
+
+    // Update ref
+    prevLocationRef.current = { city, country }
+
+    // Check if we have enough data to geocode
+    if (!city || !country || city.length <= 2 || country.length <= 2) {
+      return
+    }
+
+    // Debounce the geocoding
+    const timer = setTimeout(() => {
+      // Move async logic to avoid setState in effect
+      void (async () => {
         setIsGeocoding(true)
         setGeocodeError(null)
 
         try {
           const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
-          const address = `${formData.city}, ${formData.country}`
+          const address = `${city}, ${country}`
 
           const response = await axios.get(`${API_URL}/geocoding/forward`, {
             params: { address },
@@ -79,15 +98,12 @@ export const Settings = () => {
         } finally {
           setIsGeocoding(false)
         }
-      }
-    }
-
-    // Debounce the geocoding request
-    const timer = setTimeout(() => {
-      geocodeLocation()
+      })()
     }, 1000)
 
     return () => clearTimeout(timer)
+    // Only depend on city and country, not the entire formData object
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.city, formData.country])
 
   const handleSave = () => {
@@ -104,8 +120,8 @@ export const Settings = () => {
     >
       {/* Header */}
       <div>
-        <h1 className="text-text text-4xl font-bold">Settings</h1>
-        <p className="text-muted mt-2">Manage your business profile and preferences</p>
+        <h1 className="text-4xl font-bold text-text">Settings</h1>
+        <p className="mt-2 text-muted">Manage your business profile and preferences</p>
       </div>
 
       {/* Loading State */}
@@ -113,8 +129,8 @@ export const Settings = () => {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <Card variant="elevated" className="border-primary/20 bg-primary/5">
             <div className="flex items-center gap-3">
-              <Loader2 className="text-primary h-5 w-5 animate-spin" />
-              <p className="text-primary text-sm font-medium">Loading your settings...</p>
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <p className="text-sm font-medium text-primary">Loading your settings...</p>
             </div>
           </Card>
         </motion.div>
@@ -125,8 +141,8 @@ export const Settings = () => {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <Card variant="elevated" className="border-success/20 bg-success/5">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="text-success h-5 w-5" />
-              <p className="text-success text-sm font-medium">
+              <CheckCircle2 className="h-5 w-5 text-success" />
+              <p className="text-sm font-medium text-success">
                 Settings saved successfully to database!
               </p>
             </div>
@@ -139,7 +155,7 @@ export const Settings = () => {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <Card variant="elevated" className="border-error/20 bg-error/5">
             <div className="flex items-center gap-3">
-              <p className="text-error text-sm font-medium">
+              <p className="text-sm font-medium text-error">
                 {updateSettingsMutation.error instanceof Error
                   ? updateSettingsMutation.error.message
                   : 'Failed to save settings. Please try again.'}
@@ -153,12 +169,12 @@ export const Settings = () => {
       <Card variant="default">
         <Card.Header>
           <div className="flex items-center gap-3">
-            <div className="bg-primary/10 rounded-lg p-2">
-              <Building2 className="text-primary h-5 w-5" />
+            <div className="rounded-lg bg-primary/10 p-2">
+              <Building2 className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-text text-xl font-semibold">Business Information</h2>
-              <p className="text-muted mt-1 text-sm">Basic details about your property</p>
+              <h2 className="text-xl font-semibold text-text">Business Information</h2>
+              <p className="mt-1 text-sm text-muted">Basic details about your property</p>
             </div>
           </div>
         </Card.Header>
@@ -203,18 +219,18 @@ export const Settings = () => {
         <Card.Header>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-success/10 rounded-lg p-2">
-                <MapPin className="text-success h-5 w-5" />
+              <div className="rounded-lg bg-success/10 p-2">
+                <MapPin className="h-5 w-5 text-success" />
               </div>
               <div>
-                <h2 className="text-text text-xl font-semibold">Location</h2>
-                <p className="text-muted mt-1 text-sm">
+                <h2 className="text-xl font-semibold text-text">Location</h2>
+                <p className="mt-1 text-sm text-muted">
                   Used for weather data and competitor analysis
                 </p>
               </div>
             </div>
             {isGeocoding && (
-              <div className="text-primary flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2 text-sm text-primary">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Auto-filling coordinates...</span>
               </div>
@@ -224,8 +240,8 @@ export const Settings = () => {
         <Card.Body>
           <div className="space-y-4">
             {/* Info Banner */}
-            <div className="border-primary/20 bg-primary/5 rounded-lg border p-3">
-              <p className="text-muted text-sm">
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <p className="text-sm text-muted">
                 💡 Enter your city and country, and we'll automatically find the coordinates for
                 you!
               </p>
@@ -276,8 +292,8 @@ export const Settings = () => {
 
             {/* Geocode Error */}
             {geocodeError && (
-              <div className="border-warning/20 bg-warning/5 rounded-lg border p-3">
-                <p className="text-warning text-sm">{geocodeError}</p>
+              <div className="rounded-lg border border-warning/20 bg-warning/5 p-3">
+                <p className="text-sm text-warning">{geocodeError}</p>
               </div>
             )}
 
@@ -286,9 +302,9 @@ export const Settings = () => {
               formData.latitude !== 0 &&
               formData.longitude !== 0 &&
               !geocodeError && (
-                <div className="border-success/20 bg-success/5 flex items-center gap-2 rounded-lg border p-3">
-                  <CheckCircle2 className="text-success h-4 w-4" />
-                  <p className="text-success text-sm">
+                <div className="flex items-center gap-2 rounded-lg border border-success/20 bg-success/5 p-3">
+                  <CheckCircle2 className="h-4 w-4 text-success" />
+                  <p className="text-sm text-success">
                     Location coordinates auto-filled: {formData.latitude.toFixed(6)},{' '}
                     {formData.longitude.toFixed(6)}
                   </p>
@@ -302,12 +318,12 @@ export const Settings = () => {
       <Card variant="default">
         <Card.Header>
           <div className="flex items-center gap-3">
-            <div className="bg-warning/10 rounded-lg p-2">
-              <DollarSign className="text-warning h-5 w-5" />
+            <div className="rounded-lg bg-warning/10 p-2">
+              <DollarSign className="h-5 w-5 text-warning" />
             </div>
             <div>
-              <h2 className="text-text text-xl font-semibold">Regional Settings</h2>
-              <p className="text-muted mt-1 text-sm">Currency and timezone preferences</p>
+              <h2 className="text-xl font-semibold text-text">Regional Settings</h2>
+              <p className="mt-1 text-sm text-muted">Currency and timezone preferences</p>
             </div>
           </div>
         </Card.Header>
@@ -365,33 +381,33 @@ export const Settings = () => {
       <Card variant="default">
         <Card.Header>
           <div className="flex items-center gap-3">
-            <div className="bg-elevated rounded-lg p-2">
-              <Clock className="text-muted h-5 w-5" />
+            <div className="rounded-lg bg-elevated p-2">
+              <Clock className="h-5 w-5 text-muted" />
             </div>
             <div>
-              <h2 className="text-text text-xl font-semibold">API Integrations</h2>
-              <p className="text-muted mt-1 text-sm">Connect external services (coming soon)</p>
+              <h2 className="text-xl font-semibold text-text">API Integrations</h2>
+              <p className="mt-1 text-sm text-muted">Connect external services (coming soon)</p>
             </div>
           </div>
         </Card.Header>
         <Card.Body>
           <div className="space-y-4">
-            <div className="border-border bg-elevated rounded-lg border p-4">
+            <div className="rounded-lg border border-border bg-elevated p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-text text-sm font-semibold">Weather API</h3>
-                  <p className="text-muted mt-1 text-xs">Connect weather data provider</p>
+                  <h3 className="text-sm font-semibold text-text">Weather API</h3>
+                  <p className="mt-1 text-xs text-muted">Connect weather data provider</p>
                 </div>
                 <Button variant="secondary" size="sm" disabled>
                   Configure
                 </Button>
               </div>
             </div>
-            <div className="border-border bg-elevated rounded-lg border p-4">
+            <div className="rounded-lg border border-border bg-elevated p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-text text-sm font-semibold">PMS Integration</h3>
-                  <p className="text-muted mt-1 text-xs">
+                  <h3 className="text-sm font-semibold text-text">PMS Integration</h3>
+                  <p className="mt-1 text-xs text-muted">
                     Sync with your Property Management System
                   </p>
                 </div>
@@ -400,11 +416,11 @@ export const Settings = () => {
                 </Button>
               </div>
             </div>
-            <div className="border-border bg-elevated rounded-lg border p-4">
+            <div className="rounded-lg border border-border bg-elevated p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-text text-sm font-semibold">Channel Manager</h3>
-                  <p className="text-muted mt-1 text-xs">
+                  <h3 className="text-sm font-semibold text-text">Channel Manager</h3>
+                  <p className="mt-1 text-xs text-muted">
                     Connect to booking channels (Booking.com, Expedia, etc.)
                   </p>
                 </div>

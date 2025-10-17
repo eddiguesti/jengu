@@ -258,7 +258,10 @@ router.get(
         })
       }
     } catch (nominatimError: unknown) {
-      console.warn('Nominatim search failed, trying Mapbox fallback:', getErrorMessage(nominatimError))
+      console.warn(
+        'Nominatim search failed, trying Mapbox fallback:',
+        getErrorMessage(nominatimError)
+      )
     }
 
     // Fallback to Mapbox if configured

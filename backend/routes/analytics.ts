@@ -20,9 +20,21 @@ import type {
   CompetitorAnalysisRequest,
   FeatureImportanceRequest,
   MarketSentimentRequest,
-  AIInsightsRequest,
   PricingRecommendationsAnalyticsRequest,
 } from '../types/requests.types.js'
+
+// DataRow type to match mlAnalytics service expectations
+interface DataRow {
+  date?: string | Date
+  check_in?: string | Date
+  price?: number | string
+  occupancy?: number | string
+  temperature?: number | string | null
+  weather?: string
+  weather_condition?: string
+  bookings?: number | string
+  [key: string]: unknown
+}
 
 const router = Router()
 
@@ -76,13 +88,13 @@ router.post(
 router.post(
   '/weather-impact',
   asyncHandler(async (req, res) => {
-    const { data } = req.body
+    const { data } = req.body as WeatherImpactRequest
 
     if (!data || !Array.isArray(data)) {
       return sendError(res, 'VALIDATION', 'Missing or invalid data array')
     }
 
-    const analysis = analyzeWeatherImpact(data)
+    const analysis = analyzeWeatherImpact(data as DataRow[])
     res.json({ success: true, data: analysis })
   })
 )
@@ -94,13 +106,13 @@ router.post(
 router.post(
   '/demand-forecast',
   asyncHandler(async (req, res) => {
-    const { data, daysAhead } = req.body
+    const { data, daysAhead } = req.body as DemandForecastRequest
 
     if (!data || !Array.isArray(data)) {
       return sendError(res, 'VALIDATION', 'Missing or invalid data array')
     }
 
-    const forecast = forecastDemand(data, daysAhead || 14)
+    const forecast = forecastDemand(data as DataRow[], daysAhead ?? 14)
     res.json({ success: true, data: forecast })
   })
 )
@@ -112,13 +124,13 @@ router.post(
 router.post(
   '/competitor-analysis',
   asyncHandler(async (req, res) => {
-    const { yourData, competitorData } = req.body
+    const { yourData, competitorData } = req.body as CompetitorAnalysisRequest
 
     if (!yourData || !competitorData) {
       return sendError(res, 'VALIDATION', 'Missing yourData or competitorData')
     }
 
-    const analysis = analyzeCompetitorPricing(yourData, competitorData)
+    const analysis = analyzeCompetitorPricing(yourData as DataRow[], competitorData as DataRow[])
     res.json({ success: true, data: analysis })
   })
 )
@@ -130,13 +142,13 @@ router.post(
 router.post(
   '/feature-importance',
   asyncHandler(async (req, res) => {
-    const { data } = req.body
+    const { data } = req.body as FeatureImportanceRequest
 
     if (!data || !Array.isArray(data)) {
       return sendError(res, 'VALIDATION', 'Missing or invalid data array')
     }
 
-    const importance = calculateFeatureImportance(data)
+    const importance = calculateFeatureImportance(data as DataRow[])
     res.json({ success: true, data: importance })
   })
 )
@@ -148,7 +160,8 @@ router.post(
 router.post(
   '/market-sentiment',
   asyncHandler(async (req, res) => {
-    const { weatherData, occupancyData, competitorData, yourPricing, historicalTrends } = req.body
+    const { weatherData, occupancyData, competitorData, yourPricing, historicalTrends } =
+      req.body as MarketSentimentRequest
 
     const sentiment = analyzeMarketSentiment({
       weatherData,
@@ -187,7 +200,7 @@ router.post(
 router.post(
   '/pricing-recommendations',
   asyncHandler(async (req, res) => {
-    const { sentimentAnalysis, currentPrice } = req.body
+    const { sentimentAnalysis, currentPrice } = req.body as PricingRecommendationsAnalyticsRequest
 
     if (!sentimentAnalysis || !currentPrice) {
       return sendError(res, 'VALIDATION', 'Missing sentimentAnalysis or currentPrice')

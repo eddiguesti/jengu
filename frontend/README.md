@@ -99,7 +99,6 @@ muted: '#9CA3AF' // Secondary text
 
 ```tsx
 import { Button } from './components/ui/Button'
-
 ;<Button variant="primary" size="md">
   Click Me
 </Button>
@@ -113,7 +112,6 @@ import { Button } from './components/ui/Button'
 
 ```tsx
 import { Card } from './components/ui/Card'
-
 ;<Card variant="elevated">
   <Card.Header>
     <h3>Title</h3>
@@ -127,7 +125,6 @@ import { Card } from './components/ui/Card'
 
 ```tsx
 import { Input } from './components/ui/Input'
-
 ;<Input
   label="Email"
   type="email"

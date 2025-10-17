@@ -13,6 +13,7 @@ The backend codebase has a **solid foundation** with proper TypeScript adoption,
 This document provides **phased refactoring recommendations** organized into incremental improvements and moderate architectural changes. All recommendations focus on **practical value** without introducing unnecessary complexity.
 
 ### Key Strengths (Preserve These)
+
 - ✅ Strong TypeScript typing with strict mode
 - ✅ Clean service layer architecture (single responsibility)
 - ✅ Good security practices (JWT auth, manual RLS filtering)
@@ -20,6 +21,7 @@ This document provides **phased refactoring recommendations** organized into inc
 - ✅ Consistent error response patterns
 
 ### Key Weaknesses (Address These)
+
 - ❌ Monolithic `server.ts` (1,686 lines - all routes inline)
 - ❌ No middleware organization (scattered inline definitions)
 - ❌ Unused error handling utilities (defined but never used)
@@ -38,12 +40,14 @@ These changes are **low-risk, high-impact** improvements that can be done increm
 **Problem**: Two legacy JavaScript files reference Prisma, which was completely removed during Supabase migration.
 
 **Files to Remove**:
+
 - `backend/test-db.js` - References `@prisma/client` (no longer exists)
 - `backend/setup-database.js` - References `backend/prisma/` directory (doesn't exist)
 
 **Why**: Both files are **broken** and non-functional. The Prisma-to-Supabase migration removed all dependencies they rely on.
 
 **Evidence**:
+
 ```bash
 # test-db.js imports non-existent package
 import { PrismaClient } from '@prisma/client'  # ❌ Not in package.json
@@ -63,6 +67,7 @@ path.join(__dirname, 'prisma', 'create-tables.sql')  # ❌ Directory doesn't exi
 **Problem**: 30+ lines of inline type definitions in `server.ts` (lines 42-72) clutter the main server file.
 
 **Current State** (in `server.ts`):
+
 ```typescript
 // Lines 42-72
 interface CSVRow {
@@ -94,6 +99,7 @@ interface AxiosErrorResponse {
 **Recommendation**: Create `backend/types/api.types.ts` and move all API-related types there.
 
 **New Structure**:
+
 ```
 backend/types/
 ├── database.types.ts    # ✅ Already exists (Supabase generated)
@@ -104,6 +110,7 @@ backend/types/
 ```
 
 **Benefits**:
+
 - Reduces `server.ts` by ~30 lines
 - Makes types reusable across routes
 - Improves type discoverability
@@ -119,6 +126,7 @@ backend/types/
 **Problem**: Well-designed error handling utilities in `utils/errorHandler.ts` are **completely unused**. Every route handler manually implements try-catch blocks with repetitive error handling.
 
 **Current Pattern** (repeated 24 times in `server.ts`):
+
 ```typescript
 app.post('/api/files/upload', authenticateUser, async (req, res) => {
   try {
@@ -134,6 +142,7 @@ app.post('/api/files/upload', authenticateUser, async (req, res) => {
 ```
 
 **Available (but unused) utilities**:
+
 ```typescript
 // utils/errorHandler.ts
 export function asyncHandler(fn)  // ❌ NOT USED
@@ -145,9 +154,11 @@ export const ErrorTypes = { VALIDATION, AUTHENTICATION, ... }  // ❌ NOT USED
 **Recommendation**: Adopt existing utilities to eliminate boilerplate.
 
 **After Refactoring**:
+
 ```typescript
 // Use asyncHandler wrapper (eliminates try-catch)
-app.post('/api/files/upload',
+app.post(
+  '/api/files/upload',
   authenticateUser,
   asyncHandler(async (req, res) => {
     // ... logic (no try-catch needed)
@@ -170,6 +181,7 @@ app.use((err, req, res, next) => {
 ```
 
 **Benefits**:
+
 - Eliminates 500+ lines of repetitive try-catch blocks
 - Consistent error logging across all endpoints
 - Standardized error response format
@@ -185,6 +197,7 @@ app.use((err, req, res, next) => {
 **Problem**: Middleware logic is scattered inline in `server.ts` (~150 lines).
 
 **Current State**:
+
 ```typescript
 // server.ts lines 89-118 - Rate limiting middleware (inline)
 const requestCounts = new Map()
@@ -201,6 +214,7 @@ export function authenticateUser(req, res, next) { /* ... */ }
 **Recommendation**: Extract to dedicated middleware directory.
 
 **New Structure**:
+
 ```
 backend/middleware/
 ├── auth.ts         # Move from lib/supabase.ts
@@ -210,6 +224,7 @@ backend/middleware/
 ```
 
 **Example - `middleware/auth.ts`**:
+
 ```typescript
 import { Request, Response, NextFunction } from 'express'
 import { supabaseAdmin } from '../lib/supabase.js'
@@ -222,16 +237,13 @@ export async function authenticateUser(
   // ... existing logic from lib/supabase.ts
 }
 
-export async function optionalAuth(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
+export async function optionalAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   // ... existing logic
 }
 ```
 
 **Benefits**:
+
 - Reduces `server.ts` by ~150 lines
 - Middleware can be tested in isolation
 - Easier to add new middleware (logging, compression, etc.)
@@ -249,11 +261,13 @@ export async function optionalAuth(
 **Recommendation**: Set up testing infrastructure with initial coverage for critical paths.
 
 **Install Test Dependencies**:
+
 ```bash
 pnpm add -D vitest @vitest/ui supertest @types/supertest
 ```
 
 **Test Structure**:
+
 ```
 backend/
 ├── __tests__/
@@ -272,6 +286,7 @@ backend/
 ```
 
 **Update `package.json`**:
+
 ```json
 {
   "scripts": {
@@ -283,6 +298,7 @@ backend/
 ```
 
 **Priority Test Coverage**:
+
 1. **Service Layer** (easiest to test - pure functions):
    - `mlAnalytics.ts` - Statistical calculations
    - `marketSentiment.ts` - Sentiment scoring
@@ -298,6 +314,7 @@ backend/
    - File upload flow (mocked Supabase)
 
 **Example Test** (`__tests__/services/mlAnalytics.test.ts`):
+
 ```typescript
 import { describe, it, expect } from 'vitest'
 import { pearsonCorrelation, calculateR2 } from '../../services/mlAnalytics.js'
@@ -320,6 +337,7 @@ describe('mlAnalytics', () => {
 ```
 
 **Benefits**:
+
 - Safe refactoring (tests catch regressions)
 - Documents expected behavior
 - Faster debugging (isolated tests)
@@ -339,17 +357,25 @@ These changes involve **restructuring code organization** for better maintainabi
 **Problem**: All 24 endpoints are defined inline in a single 1,686-line file. This is the **biggest pain point** in the codebase.
 
 **Current State**:
+
 ```typescript
 // server.ts - 1,686 lines
-app.post('/api/files/upload', authenticateUser, upload.single('file'), async (req, res) => { /* 300 lines */ })
-app.get('/api/files/:fileId/data', authenticateUser, async (req, res) => { /* 150 lines */ })
-app.post('/api/analytics/summary', authenticateUser, async (req, res) => { /* 100 lines */ })
+app.post('/api/files/upload', authenticateUser, upload.single('file'), async (req, res) => {
+  /* 300 lines */
+})
+app.get('/api/files/:fileId/data', authenticateUser, async (req, res) => {
+  /* 150 lines */
+})
+app.post('/api/analytics/summary', authenticateUser, async (req, res) => {
+  /* 100 lines */
+})
 // ... 21 more endpoints
 ```
 
 **Recommendation**: Extract routes into logical domain modules using Express Router.
 
 **New Structure**:
+
 ```
 backend/
 ├── routes/
@@ -364,6 +390,7 @@ backend/
 ```
 
 **Example - `routes/files.ts`**:
+
 ```typescript
 import { Router } from 'express'
 import { authenticateUser } from '../middleware/auth.js'
@@ -432,6 +459,7 @@ export default router
 ```
 
 **Simplified `server.ts`** (after extraction):
+
 ```typescript
 import express from 'express'
 import cors from 'cors'
@@ -454,7 +482,11 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 // Global middleware
-app.use(cors({ /* ... */ }))
+app.use(
+  cors({
+    /* ... */
+  })
+)
 app.use(express.json({ limit: '10mb' }))
 app.use(rateLimit)
 
@@ -479,6 +511,7 @@ app.listen(PORT, () => {
 ```
 
 **Benefits**:
+
 - **Reduces `server.ts` from 1,686 lines to ~200 lines** (88% reduction!)
 - Each route file ~200-300 lines (manageable size)
 - Routes can be tested in isolation
@@ -487,6 +520,7 @@ app.listen(PORT, () => {
 - Route-specific middleware can be applied easily
 
 **Migration Strategy**:
+
 1. Create route files one at a time
 2. Copy endpoint logic from `server.ts`
 3. Update imports and dependencies
@@ -495,6 +529,7 @@ app.listen(PORT, () => {
 6. Repeat for next route group
 
 **Testing During Migration**:
+
 - Run backend server after each route extraction
 - Test endpoint manually (Postman/curl)
 - Verify response format unchanged
@@ -510,12 +545,10 @@ app.listen(PORT, () => {
 **Problem**: Supabase database calls are **scattered throughout** `server.ts` and services. Every query must remember to filter by `userId` manually (security risk).
 
 **Current Pattern** (repeated 50+ times):
+
 ```typescript
 // In server.ts
-const { data, error } = await supabaseAdmin
-  .from('properties')
-  .select('*')
-  .eq('userId', userId)  // ⚠️ Manual security filter (easy to forget!)
+const { data, error } = await supabaseAdmin.from('properties').select('*').eq('userId', userId) // ⚠️ Manual security filter (easy to forget!)
 
 if (error) {
   console.error('Database error:', error)
@@ -524,6 +557,7 @@ if (error) {
 ```
 
 **Issues**:
+
 - **Security risk**: Forgetting `.eq('userId', userId)` exposes other users' data
 - **Code duplication**: Same query patterns repeated everywhere
 - **Hard to test**: Supabase calls can't be easily mocked
@@ -532,6 +566,7 @@ if (error) {
 **Recommendation**: Create repository layer to abstract database access.
 
 **New Structure**:
+
 ```
 backend/
 ├── repositories/
@@ -544,6 +579,7 @@ backend/
 ```
 
 **Example - `repositories/PropertyRepository.ts`**:
+
 ```typescript
 import { supabaseAdmin } from '../lib/supabase.js'
 import type { Database } from '../types/database.types.js'
@@ -579,11 +615,11 @@ export class PropertyRepository {
       .from('properties')
       .select('*')
       .eq('id', propertyId)
-      .eq('userId', userId)  // Security filter
+      .eq('userId', userId) // Security filter
       .single()
 
     if (error) {
-      if (error.code === 'PGRST116') return null  // Not found
+      if (error.code === 'PGRST116') return null // Not found
       throw new DatabaseError(`Failed to fetch property: ${error.message}`)
     }
 
@@ -615,7 +651,7 @@ export class PropertyRepository {
       .from('properties')
       .delete()
       .eq('id', propertyId)
-      .eq('userId', userId)  // Security filter
+      .eq('userId', userId) // Security filter
 
     if (error) {
       throw new DatabaseError(`Failed to delete property: ${error.message}`)
@@ -633,6 +669,7 @@ export class DatabaseError extends Error {
 ```
 
 **Usage in Routes** (after refactoring):
+
 ```typescript
 // routes/files.ts
 import { PropertyRepository } from '../repositories/PropertyRepository.js'
@@ -654,6 +691,7 @@ router.get(
 ```
 
 **Benefits**:
+
 - ✅ **Security**: `userId` filtering centralized (can't be forgotten)
 - ✅ **DRY**: Common queries written once
 - ✅ **Testability**: Repositories can be mocked easily
@@ -663,6 +701,7 @@ router.get(
 - ✅ **Flexibility**: Easy to swap databases in future
 
 **Migration Strategy**:
+
 1. Create `PropertyRepository` first
 2. Update file-related routes to use repository
 3. Create `PricingDataRepository`
@@ -671,6 +710,7 @@ router.get(
 6. Update settings routes
 
 **Testing**:
+
 ```typescript
 // __tests__/repositories/PropertyRepository.test.ts
 import { describe, it, expect, vi } from 'vitest'
@@ -711,6 +751,7 @@ describe('PropertyRepository', () => {
 **Problem**: Error responses are mostly consistent, but success responses vary slightly across endpoints.
 
 **Current Variations**:
+
 ```typescript
 // Variation 1: Basic success
 res.json({ success: true, data: { ... } })
@@ -728,6 +769,7 @@ res.status(500).json({ error: 'ERROR_TYPE', message: 'Details' })
 **Recommendation**: Create standardized response helpers.
 
 **Create `utils/responses.ts`**:
+
 ```typescript
 import { Response } from 'express'
 
@@ -752,11 +794,7 @@ export interface ErrorResponse {
 /**
  * Send standardized success response
  */
-export function sendSuccess<T>(
-  res: Response,
-  data: T,
-  meta?: SuccessResponse<T>['meta']
-): void {
+export function sendSuccess<T>(res: Response, data: T, meta?: SuccessResponse<T>['meta']): void {
   const response: SuccessResponse<T> = { success: true, data }
   if (meta) response.meta = meta
   res.json(response)
@@ -779,6 +817,7 @@ export function sendError(
 ```
 
 **Usage**:
+
 ```typescript
 // Success
 sendSuccess(res, properties, { count: properties.length })
@@ -788,6 +827,7 @@ sendError(res, 404, 'NOT_FOUND', 'Property not found')
 ```
 
 **Benefits**:
+
 - Consistent API responses across all endpoints
 - TypeScript autocomplete for responses
 - Easier to document API (OpenAPI/Swagger)
@@ -807,24 +847,28 @@ sendError(res, 404, 'NOT_FOUND', 'Property not found')
 **Recommendation**: Add structured logging with request IDs.
 
 **Install Dependencies**:
+
 ```bash
 pnpm add pino pino-http
 pnpm add -D pino-pretty  # For development
 ```
 
 **Create `lib/logger.ts`**:
+
 ```typescript
 import pino from 'pino'
 
 export const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
-  transport: process.env.NODE_ENV === 'development'
-    ? { target: 'pino-pretty', options: { colorize: true } }
-    : undefined
+  transport:
+    process.env.NODE_ENV === 'development'
+      ? { target: 'pino-pretty', options: { colorize: true } }
+      : undefined,
 })
 ```
 
 **Create `middleware/requestLogger.ts`**:
+
 ```typescript
 import { v4 as uuidv4 } from 'uuid'
 import pinoHttp from 'pino-http'
@@ -832,20 +876,20 @@ import { logger } from '../lib/logger.js'
 
 export const requestLogger = pinoHttp({
   logger,
-  genReqId: (req) => req.headers['x-request-id'] || uuidv4(),
+  genReqId: req => req.headers['x-request-id'] || uuidv4(),
   customLogLevel: (req, res, err) => {
     if (res.statusCode >= 500 || err) return 'error'
     if (res.statusCode >= 400) return 'warn'
     return 'info'
   },
   serializers: {
-    req: (req) => ({
+    req: req => ({
       id: req.id,
       method: req.method,
       url: req.url,
-      userId: req.userId,  // From auth middleware
+      userId: req.userId, // From auth middleware
     }),
-    res: (res) => ({
+    res: res => ({
       statusCode: res.statusCode,
     }),
   },
@@ -853,13 +897,15 @@ export const requestLogger = pinoHttp({
 ```
 
 **Usage in `server.ts`**:
+
 ```typescript
 import { requestLogger } from './middleware/requestLogger.js'
 
-app.use(requestLogger)  // Add before routes
+app.use(requestLogger) // Add before routes
 ```
 
 **Benefits**:
+
 - Structured JSON logs (easy to parse)
 - Request ID tracing across services
 - Automatic request/response logging
@@ -875,19 +921,22 @@ app.use(requestLogger)  // Add before routes
 **Problem**: Holiday enrichment is **disabled** in `enrichmentService.ts` (lines 190-297). Code exists but is commented out with TODO markers.
 
 **Current State**:
+
 ```typescript
 // enrichmentService.ts
 async function enrichWithHolidays(records, location) {
   // TODO: Re-enable once holiday data is properly migrated to Supabase
   console.log('⚠️  Holiday enrichment is currently disabled (pending Supabase migration)')
-  return records  // No-op for now
+  return records // No-op for now
 }
 ```
 
 **Recommendation**: Complete Supabase migration for holiday data.
 
 **Steps**:
+
 1. Create `holidays` table in Supabase:
+
 ```sql
 CREATE TABLE holidays (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -909,6 +958,7 @@ CREATE INDEX idx_holidays_country_date ON holidays(country, date);
 4. Re-enable holiday enrichment in pipeline
 
 **Benefits**:
+
 - Completes data enrichment features
 - Reduces external API dependencies
 - Faster enrichment (local database vs API calls)
@@ -971,6 +1021,7 @@ Optimize Supabase connection management for high traffic.
 ## Migration Checklist
 
 ### Phase 1: Incremental Improvements
+
 - [ ] 1.1 Remove legacy files (`test-db.js`, `setup-database.js`)
 - [ ] 1.2 Extract type definitions to `types/api.types.ts`
 - [ ] 1.3 Use existing error handling utilities (`asyncHandler`, `sendError`)
@@ -978,6 +1029,7 @@ Optimize Supabase connection management for high traffic.
 - [ ] 1.5 Add testing infrastructure (Vitest + initial test coverage)
 
 ### Phase 2: Moderate Refactoring
+
 - [ ] 2.1 Extract routes from `server.ts` to `routes/` directory
 - [ ] 2.2 Implement repository pattern for database access
 - [ ] 2.3 Standardize API response format
@@ -985,6 +1037,7 @@ Optimize Supabase connection management for high traffic.
 - [ ] 2.5 Complete holiday enrichment Supabase migration
 
 ### Phase 3: Optional Enhancements
+
 - [ ] 3.1 Add OpenAPI/Swagger documentation
 - [ ] 3.2 Add compression middleware
 - [ ] 3.3 Upgrade rate limiting to Redis
@@ -995,6 +1048,7 @@ Optimize Supabase connection management for high traffic.
 ## Expected Outcomes
 
 ### After Phase 1 (Incremental)
+
 - ✅ Cleaner codebase (removed legacy files)
 - ✅ Better type organization
 - ✅ Eliminated 500+ lines of boilerplate (error handling)
@@ -1007,6 +1061,7 @@ Optimize Supabase connection management for high traffic.
 ---
 
 ### After Phase 2 (Moderate)
+
 - ✅ `server.ts` reduced from 1,686 to ~200 lines (88% reduction!)
 - ✅ Routes organized by domain (~200-300 lines each)
 - ✅ Centralized database access (repository pattern)
@@ -1023,16 +1078,19 @@ Optimize Supabase connection management for high traffic.
 ## Testing Strategy
 
 ### Before Refactoring
+
 1. Document current API behavior (manual testing)
 2. Create integration tests for critical paths
 3. Set up test database/mocks
 
 ### During Refactoring
+
 1. Run tests after each change
 2. Manual smoke testing (Postman/curl)
 3. Verify error responses unchanged
 
 ### After Refactoring
+
 1. Full regression test suite
 2. Load testing (ensure performance unchanged)
 3. Security audit (ensure userId filtering works)
@@ -1042,19 +1100,25 @@ Optimize Supabase connection management for high traffic.
 ## Risks & Mitigations
 
 ### Risk: Breaking API Contracts
+
 **Mitigation**:
+
 - Add tests before refactoring
 - Use TypeScript to catch breaking changes
 - Version API if necessary (`/api/v1`, `/api/v2`)
 
 ### Risk: Performance Regression
+
 **Mitigation**:
+
 - Benchmark before/after refactoring
 - Monitor production metrics
 - Keep abstractions minimal (repository pattern is thin wrapper)
 
 ### Risk: Frontend Incompatibility
+
 **Mitigation**:
+
 - Document API changes clearly
 - Update frontend in parallel
 - Use feature flags for gradual rollout
@@ -1064,7 +1128,9 @@ Optimize Supabase connection management for high traffic.
 ## Recommended Approach
 
 ### Week 1-2: Phase 1 (Incremental)
+
 Focus on **quick wins** with minimal risk:
+
 1. Remove legacy files
 2. Extract types
 3. Adopt error handling utilities
@@ -1072,19 +1138,25 @@ Focus on **quick wins** with minimal risk:
 5. Set up testing
 
 ### Week 3-5: Phase 2 (Moderate - Routes)
+
 Extract routes incrementally:
+
 1. Start with simple routes (`health.ts`, `settings.ts`)
 2. Move to complex routes (`files.ts`, `analytics.ts`)
 3. Test thoroughly after each extraction
 
 ### Week 6-7: Phase 2 (Moderate - Repository)
+
 Implement repository pattern:
+
 1. Create repositories one table at a time
 2. Update routes to use repositories
 3. Remove direct Supabase calls
 
 ### Week 8: Phase 2 (Moderate - Polish)
+
 Final improvements:
+
 1. Standardize responses
 2. Add logging
 3. Complete holiday migration
@@ -1114,6 +1186,7 @@ Before proceeding, please clarify:
 The backend architecture is **fundamentally sound** but suffers from **organizational debt** due to the monolithic `server.ts` file. The recommended phased approach balances **practical improvements** (Phase 1) with **architectural restructuring** (Phase 2) without introducing unnecessary complexity.
 
 **Highest Impact Changes**:
+
 1. ⭐ Extract routes from `server.ts` (88% size reduction)
 2. ⭐ Implement repository pattern (security + testability)
 3. ⭐ Add testing infrastructure (safe refactoring)

@@ -13,6 +13,7 @@ Use Context7 to fetch Supabase docs before web search:
 ```
 
 Key topics to query:
+
 - "Row Level Security" (RLS policies)
 - "Service role key security"
 - "JWT authentication"
@@ -36,7 +37,7 @@ Jengu uses a **hybrid RLS approach**:
 
 // 1. Service role (admin) - BYPASSES RLS
 export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false }
+  auth: { autoRefreshToken: false, persistSession: false },
 })
 
 // 2. Anon key - RESPECTS RLS (used only for JWT validation)
@@ -47,26 +48,22 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 ```typescript
 // Single client - ONLY for auth, never for database queries
-export const supabase = createClient(
-  VITE_SUPABASE_URL,
-  VITE_SUPABASE_ANON_KEY,
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true
-    }
-  }
-)
+export const supabase = createClient(VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  },
+})
 ```
 
 ### Environment Variables
 
-| Variable | Location | Purpose | Exposure Risk |
-|----------|----------|---------|---------------|
-| `SUPABASE_SERVICE_KEY` | Backend only | Admin operations, bypasses RLS | **NEVER expose to frontend** |
-| `SUPABASE_ANON_KEY` | Backend + Frontend | Auth validation, respects RLS | Safe to expose |
-| `SUPABASE_URL` | Backend + Frontend | Database endpoint | Safe to expose |
+| Variable               | Location           | Purpose                        | Exposure Risk                |
+| ---------------------- | ------------------ | ------------------------------ | ---------------------------- |
+| `SUPABASE_SERVICE_KEY` | Backend only       | Admin operations, bypasses RLS | **NEVER expose to frontend** |
+| `SUPABASE_ANON_KEY`    | Backend + Frontend | Auth validation, respects RLS  | Safe to expose               |
+| `SUPABASE_URL`         | Backend + Frontend | Database endpoint              | Safe to expose               |
 
 ## Critical Security Pattern: Manual userId Filtering
 
@@ -74,20 +71,16 @@ export const supabase = createClient(
 
 ```typescript
 // ✅ CORRECT - Filtered by userId
-const { data } = await supabaseAdmin
-  .from('properties')
-  .select('*')
-  .eq('userId', req.userId)  // REQUIRED!
+const { data } = await supabaseAdmin.from('properties').select('*').eq('userId', req.userId) // REQUIRED!
 
 // ❌ WRONG - Missing userId filter (security vulnerability!)
-const { data } = await supabaseAdmin
-  .from('properties')
-  .select('*')
+const { data } = await supabaseAdmin.from('properties').select('*')
 ```
 
 ### Why Manual Filtering?
 
 Backend uses `supabaseAdmin` (service role) which **bypasses RLS**. This allows:
+
 - Batch inserts (1000 rows at a time)
 - Background jobs (enrichment, analytics)
 - Admin operations
@@ -106,14 +99,12 @@ app.post('/api/protected-route', authenticateUser, async (req, res) => {
   const userId = req.userId // Available after middleware
 
   // ALWAYS filter by userId in queries
-  const { data } = await supabaseAdmin
-    .from('table')
-    .select('*')
-    .eq('userId', userId)
+  const { data } = await supabaseAdmin.from('table').select('*').eq('userId', userId)
 })
 ```
 
 **What the middleware does**:
+
 1. Extracts JWT from `Authorization: Bearer <token>` header
 2. Validates token using `supabase.auth.getUser(jwt)` (anon key client)
 3. Sets `req.userId` from validated token
@@ -138,17 +129,14 @@ const response = await apiClient.get('/api/protected-route')
 
 ```typescript
 // Single user's data
-const { data: properties } = await supabaseAdmin
-  .from('properties')
-  .select('*')
-  .eq('userId', userId)
+const { data: properties } = await supabaseAdmin.from('properties').select('*').eq('userId', userId)
 
 // Data with ownership verification
 const { data: property } = await supabaseAdmin
   .from('properties')
   .select('id, name')
   .eq('id', propertyId)
-  .eq('userId', userId)  // Verify ownership
+  .eq('userId', userId) // Verify ownership
   .single()
 
 if (!property) {
@@ -163,7 +151,7 @@ if (!property) {
 const { data, error } = await supabaseAdmin
   .from('properties')
   .insert({
-    userId: req.userId,  // REQUIRED
+    userId: req.userId, // REQUIRED
     name: 'Property Name',
     // ... other fields
   })
@@ -190,7 +178,7 @@ const { data, error } = await supabaseAdmin
   .from('properties')
   .update({ name: newName })
   .eq('id', propertyId)
-  .eq('userId', userId)  // Belt and suspenders
+  .eq('userId', userId) // Belt and suspenders
 ```
 
 ### Deleting User Data
@@ -213,9 +201,7 @@ const batchSize = 1000
 for (let i = 0; i < records.length; i += batchSize) {
   const batch = records.slice(i, i + batchSize)
 
-  const { error } = await supabaseAdmin
-    .from('pricing_data')
-    .insert(batch)
+  const { error } = await supabaseAdmin.from('pricing_data').insert(batch)
 
   if (error) throw error
 }
@@ -233,7 +219,7 @@ for (let i = 0; i < updates.length; i += updateBatchSize) {
       .from('pricing_data')
       .update(record)
       .eq('id', record.id)
-      .eq('propertyId', propertyId)  // Ownership implicit via propertyId
+      .eq('propertyId', propertyId) // Ownership implicit via propertyId
   }
 }
 ```
@@ -283,10 +269,8 @@ CREATE POLICY "Users can view own pricing data" ON pricing_data
 ```typescript
 // ❌ VULNERABILITY - Returns all users' data
 app.get('/api/files', authenticateUser, async (req, res) => {
-  const { data } = await supabaseAdmin
-    .from('properties')
-    .select('*')
-    // Missing .eq('userId', req.userId)
+  const { data } = await supabaseAdmin.from('properties').select('*')
+  // Missing .eq('userId', req.userId)
 })
 ```
 
@@ -297,11 +281,8 @@ app.get('/api/files', authenticateUser, async (req, res) => {
 app.get('/api/files/:fileId', authenticateUser, async (req, res) => {
   const { fileId } = req.params
 
-  const { data } = await supabaseAdmin
-    .from('properties')
-    .select('*')
-    .eq('id', fileId)
-    // Missing .eq('userId', req.userId)
+  const { data } = await supabaseAdmin.from('properties').select('*').eq('id', fileId)
+  // Missing .eq('userId', req.userId)
 })
 ```
 
@@ -310,11 +291,8 @@ app.get('/api/files/:fileId', authenticateUser, async (req, res) => {
 ```typescript
 // ❌ RISKY - Deletes pricing data without verifying property ownership
 app.delete('/api/pricing/:id', authenticateUser, async (req, res) => {
-  await supabaseAdmin
-    .from('pricing_data')
-    .delete()
-    .eq('id', req.params.id)
-    // Should verify pricing_data.propertyId belongs to req.userId
+  await supabaseAdmin.from('pricing_data').delete().eq('id', req.params.id)
+  // Should verify pricing_data.propertyId belongs to req.userId
 })
 ```
 
@@ -324,10 +302,7 @@ app.delete('/api/pricing/:id', authenticateUser, async (req, res) => {
 // ❌ NEVER DO THIS in frontend
 import { supabase } from '@/lib/supabase'
 
-const { data } = await supabase
-  .from('properties')
-  .select('*')
-  .eq('userId', user.id)  // Even with filter, don't query from frontend!
+const { data } = await supabase.from('properties').select('*').eq('userId', user.id) // Even with filter, don't query from frontend!
 ```
 
 **Always** go through authenticated backend API.
@@ -397,14 +372,14 @@ grep -r "supabaseAdmin.from" backend/
 
 ## Quick Reference
 
-| Action | Required Pattern |
-|--------|------------------|
-| **Read user data** | `.eq('userId', userId)` |
-| **Create user data** | Include `userId: req.userId` in insert |
+| Action               | Required Pattern                                       |
+| -------------------- | ------------------------------------------------------ |
+| **Read user data**   | `.eq('userId', userId)`                                |
+| **Create user data** | Include `userId: req.userId` in insert                 |
 | **Update user data** | Verify ownership first, then update with userId filter |
 | **Delete user data** | Verify ownership first, then delete with userId filter |
-| **Frontend auth** | Use `useAuth()` hook, never query database directly |
-| **Backend auth** | Use `authenticateUser` middleware, access `req.userId` |
+| **Frontend auth**    | Use `useAuth()` hook, never query database directly    |
+| **Backend auth**     | Use `authenticateUser` middleware, access `req.userId` |
 
 ## Additional Resources
 

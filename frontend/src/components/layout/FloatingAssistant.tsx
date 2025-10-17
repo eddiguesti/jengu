@@ -104,36 +104,36 @@ export const FloatingAssistant = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="border-border bg-card shadow-elevated fixed bottom-24 right-6 z-50 w-96 overflow-hidden rounded-2xl border"
+            className="fixed bottom-24 right-6 z-50 w-96 overflow-hidden rounded-2xl border border-border bg-card shadow-elevated"
           >
             {/* Header */}
-            <div className="border-border bg-elevated border-b p-4">
+            <div className="border-b border-border bg-elevated p-4">
               <div className="flex items-center gap-3">
-                <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                  <Sparkles className="text-primary h-5 w-5" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Sparkles className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-text text-sm font-semibold">Jengu AI Assistant</h3>
-                  <p className="text-muted text-xs">Always here to help</p>
+                  <h3 className="text-sm font-semibold text-text">Jengu AI Assistant</h3>
+                  <p className="text-xs text-muted">Always here to help</p>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="hover:bg-card rounded p-1 transition-colors"
+                  className="rounded p-1 transition-colors hover:bg-card"
                 >
-                  <X className="text-muted h-4 w-4" />
+                  <X className="h-4 w-4 text-muted" />
                 </button>
               </div>
             </div>
 
             {/* Messages */}
-            <div className="bg-background h-80 space-y-3 overflow-y-auto p-4">
+            <div className="h-80 space-y-3 overflow-y-auto bg-background p-4">
               {messages.length === 0 ? (
                 <div className="py-8 text-center">
-                  <div className="bg-primary/10 mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full">
-                    <Sparkles className="text-primary h-8 w-8" />
+                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                    <Sparkles className="h-8 w-8 text-primary" />
                   </div>
-                  <p className="text-text mb-1 text-sm font-medium">Hi! How can I help?</p>
-                  <p className="text-muted text-xs">Click a suggestion below or ask me anything</p>
+                  <p className="mb-1 text-sm font-medium text-text">Hi! How can I help?</p>
+                  <p className="text-xs text-muted">Click a suggestion below or ask me anything</p>
                 </div>
               ) : (
                 messages.map((msg, idx) => (
@@ -159,14 +159,14 @@ export const FloatingAssistant = () => {
 
             {/* Suggested Questions */}
             {messages.length === 0 && (
-              <div className="border-border bg-card space-y-2 border-t p-4">
-                <p className="text-muted mb-2 text-xs font-medium">Quick help:</p>
+              <div className="space-y-2 border-t border-border bg-card p-4">
+                <p className="mb-2 text-xs font-medium text-muted">Quick help:</p>
                 <div className="grid grid-cols-2 gap-2">
                   {SUGGESTED_QUESTIONS.map(q => (
                     <button
                       key={q.key}
                       onClick={() => handleQuestionClick(q.key, q.action)}
-                      className="border-border bg-elevated text-text hover:bg-elevated/80 rounded border px-2 py-1.5 text-left text-xs transition-colors"
+                      className="rounded border border-border bg-elevated px-2 py-1.5 text-left text-xs text-text transition-colors hover:bg-elevated/80"
                     >
                       {q.text}
                     </button>
@@ -176,7 +176,7 @@ export const FloatingAssistant = () => {
             )}
 
             {/* Input */}
-            <div className="border-border bg-card border-t p-3">
+            <div className="border-t border-border bg-card p-3">
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -184,19 +184,19 @@ export const FloatingAssistant = () => {
                   onChange={e => setInput(e.target.value)}
                   onKeyPress={e => e.key === 'Enter' && handleSend()}
                   placeholder="Ask me anything..."
-                  className="border-border bg-elevated text-text placeholder-muted focus:border-primary focus:ring-primary/50 flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                  className="flex-1 rounded-lg border border-border bg-elevated px-3 py-2 text-sm text-text placeholder-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
                 <button
                   onClick={handleSend}
                   disabled={!input.trim()}
-                  className="bg-primary text-background hover:bg-primary/90 rounded-lg p-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg bg-primary p-2 text-background transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />
                 </button>
               </div>
               <button
                 onClick={openFullAssistant}
-                className="text-primary hover:text-primary/80 mt-2 w-full text-xs transition-colors"
+                className="mt-2 w-full text-xs text-primary transition-colors hover:text-primary/80"
               >
                 Open full AI Assistant →
               </button>

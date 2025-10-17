@@ -228,15 +228,15 @@ export const Data = () => {
   const getStatusIcon = (status: UploadedFile['status']) => {
     switch (status) {
       case 'success':
-        return <CheckCircle2 className="text-success h-5 w-5" />
+        return <CheckCircle2 className="h-5 w-5 text-success" />
       case 'error':
-        return <AlertCircle className="text-error h-5 w-5" />
+        return <AlertCircle className="h-5 w-5 text-error" />
       case 'processing':
         return (
-          <div className="border-primary h-5 w-5 animate-spin rounded-full border-2 border-t-transparent" />
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         )
       default:
-        return <FileText className="text-muted h-5 w-5" />
+        return <FileText className="h-5 w-5 text-muted" />
     }
   }
 
@@ -427,8 +427,8 @@ export const Data = () => {
     >
       {/* Header with Step Indicator */}
       <div>
-        <h1 className="text-text text-4xl font-bold">Data Management</h1>
-        <p className="text-muted mt-2">Upload and enrich your historical booking data</p>
+        <h1 className="text-4xl font-bold text-text">Data Management</h1>
+        <p className="mt-2 text-muted">Upload and enrich your historical booking data</p>
 
         {/* Step Indicator */}
         <div className="mt-6 flex items-center gap-4">
@@ -437,16 +437,16 @@ export const Data = () => {
             className={clsx(
               'flex items-center gap-2 rounded-lg px-4 py-2 transition-all',
               currentStep === 'upload'
-                ? 'border-primary bg-primary/10 text-primary border-2'
+                ? 'border-2 border-primary bg-primary/10 text-primary'
                 : 'bg-elevated text-muted hover:bg-card'
             )}
           >
             <Database className="h-4 w-4" />
             <span className="font-medium">1. Upload</span>
-            {hasSuccessfulUpload && <CheckCircle2 className="text-success h-4 w-4" />}
+            {hasSuccessfulUpload && <CheckCircle2 className="h-4 w-4 text-success" />}
           </button>
 
-          <ArrowRight className="text-muted h-5 w-5" />
+          <ArrowRight className="h-5 w-5 text-muted" />
 
           <button
             onClick={() => hasSuccessfulUpload && setCurrentStep('enrichment')}
@@ -454,15 +454,15 @@ export const Data = () => {
             className={clsx(
               'flex items-center gap-2 rounded-lg px-4 py-2 transition-all',
               currentStep === 'enrichment'
-                ? 'border-primary bg-primary/10 text-primary border-2'
+                ? 'border-2 border-primary bg-primary/10 text-primary'
                 : hasSuccessfulUpload
                   ? 'bg-elevated text-muted hover:bg-card'
-                  : 'bg-elevated text-muted/50 cursor-not-allowed'
+                  : 'cursor-not-allowed bg-elevated text-muted/50'
             )}
           >
             <Sparkles className="h-4 w-4" />
             <span className="font-medium">2. Enrich</span>
-            {allEnrichmentComplete && <CheckCircle2 className="text-success h-4 w-4" />}
+            {allEnrichmentComplete && <CheckCircle2 className="h-4 w-4 text-success" />}
           </button>
         </div>
       </div>
@@ -487,7 +487,7 @@ export const Data = () => {
                 className={clsx(
                   'cursor-pointer rounded-xl border-2 border-dashed p-12 transition-all duration-200',
                   isDragging
-                    ? 'border-primary bg-primary/5 scale-[1.02]'
+                    ? 'scale-[1.02] border-primary bg-primary/5'
                     : 'border-border hover:border-primary/50 hover:bg-elevated/50'
                 )}
                 onClick={() => fileInputRef.current?.click()}
@@ -502,14 +502,14 @@ export const Data = () => {
                 />
 
                 <div className="flex flex-col items-center gap-4">
-                  <div className="bg-primary/10 rounded-full p-4">
-                    <Upload className="text-primary h-8 w-8" />
+                  <div className="rounded-full bg-primary/10 p-4">
+                    <Upload className="h-8 w-8 text-primary" />
                   </div>
                   <div className="text-center">
-                    <h3 className="text-text mb-1 text-lg font-semibold">
+                    <h3 className="mb-1 text-lg font-semibold text-text">
                       Drop your files here, or click to browse
                     </h3>
-                    <p className="text-muted text-sm">
+                    <p className="text-sm text-muted">
                       Supported formats: CSV, Excel (.xlsx, .xls)
                     </p>
                   </div>
@@ -525,7 +525,7 @@ export const Data = () => {
               <Card variant="default">
                 <Card.Header>
                   <div className="flex items-center justify-between">
-                    <h2 className="text-text text-xl font-semibold">Uploaded Files</h2>
+                    <h2 className="text-xl font-semibold text-text">Uploaded Files</h2>
                     <Badge variant="info">{files.length} file(s)</Badge>
                   </div>
                 </Card.Header>
@@ -534,12 +534,12 @@ export const Data = () => {
                     {files.map(file => (
                       <div
                         key={file.uniqueId || file.name}
-                        className="border-border bg-elevated flex items-center gap-4 rounded-lg border p-4"
+                        className="flex items-center gap-4 rounded-lg border border-border bg-elevated p-4"
                       >
                         {getStatusIcon(file.status)}
                         <div className="min-w-0 flex-1">
-                          <p className="text-text truncate text-sm font-medium">{file.name}</p>
-                          <p className="text-muted mt-1 text-xs">
+                          <p className="truncate text-sm font-medium text-text">{file.name}</p>
+                          <p className="mt-1 text-xs text-muted">
                             {formatFileSize(file.size)}
                             {file.rows && ` • ${file.rows.toLocaleString()} rows`}
                             {file.columns && ` • ${file.columns} columns`}
@@ -568,9 +568,9 @@ export const Data = () => {
                         </div>
                         <button
                           onClick={() => removeFile(file.uniqueId || file.name)}
-                          className="hover:bg-card rounded-lg p-2 transition-colors"
+                          className="rounded-lg p-2 transition-colors hover:bg-card"
                         >
-                          <X className="text-muted hover:text-text h-4 w-4" />
+                          <X className="h-4 w-4 text-muted hover:text-text" />
                         </button>
                       </div>
                     ))}
@@ -583,8 +583,8 @@ export const Data = () => {
             {hasSuccessfulUpload && (
               <Card variant="default">
                 <Card.Header>
-                  <h2 className="text-text text-xl font-semibold">Data Preview</h2>
-                  <p className="text-muted mt-1 text-sm">First 5 rows</p>
+                  <h2 className="text-xl font-semibold text-text">Data Preview</h2>
+                  <p className="mt-1 text-sm text-muted">First 5 rows</p>
                 </Card.Header>
                 <Card.Body>
                   <Table>
@@ -616,7 +616,7 @@ export const Data = () => {
                 </Card.Body>
                 <Card.Footer>
                   <div className="flex w-full items-center justify-between">
-                    <p className="text-success text-sm">
+                    <p className="text-sm text-success">
                       <CheckCircle2 className="mr-1 inline h-4 w-4" />
                       Data looks good!
                     </p>
@@ -632,30 +632,30 @@ export const Data = () => {
             {/* Help Section */}
             <Card variant="default">
               <Card.Header>
-                <h3 className="text-text text-lg font-semibold">Data Requirements</h3>
+                <h3 className="text-lg font-semibold text-text">Data Requirements</h3>
               </Card.Header>
               <Card.Body>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div>
-                    <h4 className="text-text mb-2 text-sm font-semibold">Required Columns</h4>
-                    <ul className="text-muted space-y-2 text-sm">
+                    <h4 className="mb-2 text-sm font-semibold text-text">Required Columns</h4>
+                    <ul className="space-y-2 text-sm text-muted">
                       <li className="flex items-start gap-2">
-                        <CheckCircle2 className="text-success mt-0.5 h-4 w-4 flex-shrink-0" />
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
                         <span>Date column (booking_date, check_in, etc.)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <CheckCircle2 className="text-success mt-0.5 h-4 w-4 flex-shrink-0" />
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
                         <span>Price column (price, rate, amount, etc.)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <CheckCircle2 className="text-success mt-0.5 h-4 w-4 flex-shrink-0" />
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
                         <span>Demand indicator (bookings, occupancy, etc.)</span>
                       </li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="text-text mb-2 text-sm font-semibold">Best Practices</h4>
-                    <ul className="text-muted space-y-2 text-sm">
+                    <h4 className="mb-2 text-sm font-semibold text-text">Best Practices</h4>
+                    <ul className="space-y-2 text-sm text-muted">
                       <li className="flex items-start gap-2">
                         <span className="text-primary">•</span>
                         <span>Include at least 6-12 months of data</span>
@@ -695,21 +695,21 @@ export const Data = () => {
               >
                 <Card variant="elevated" className="border-warning/20 bg-warning/5">
                   <div className="flex items-start gap-4">
-                    <div className="bg-warning/10 flex-shrink-0 rounded-lg p-3">
-                      <MapPin className="text-warning h-6 w-6" />
+                    <div className="flex-shrink-0 rounded-lg bg-warning/10 p-3">
+                      <MapPin className="h-6 w-6 text-warning" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-text mb-1 text-lg font-semibold">
+                      <h3 className="mb-1 text-lg font-semibold text-text">
                         Business Location Required
                       </h3>
-                      <p className="text-muted mb-3 text-sm">
+                      <p className="mb-3 text-sm text-muted">
                         Weather and Holiday enrichment require your business location to be
                         configured. Please set your city, country, latitude, and longitude in
                         Settings to enable these features.
                       </p>
                       <div className="flex items-center gap-2">
-                        <AlertCircle className="text-warning h-4 w-4" />
-                        <span className="text-muted text-xs">
+                        <AlertCircle className="h-4 w-4 text-warning" />
+                        <span className="text-xs text-muted">
                           Without location data, Weather Data and Holidays & Events enrichment will
                           fail
                         </span>
@@ -733,8 +733,8 @@ export const Data = () => {
             <Card variant="elevated">
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h2 className="text-text text-xl font-semibold">Enrichment Progress</h2>
-                  <p className="text-muted mt-1 text-sm">
+                  <h2 className="text-xl font-semibold text-text">Enrichment Progress</h2>
+                  <p className="mt-1 text-sm text-muted">
                     {completedEnrichmentCount} of {features.length} features completed
                   </p>
                 </div>
@@ -775,8 +775,8 @@ export const Data = () => {
                     variant="default"
                     className={clsx(
                       'transition-all duration-300',
-                      feature.status === 'running' && 'ring-primary/50 ring-2',
-                      feature.status === 'complete' && 'ring-success/30 ring-2'
+                      feature.status === 'running' && 'ring-2 ring-primary/50',
+                      feature.status === 'complete' && 'ring-2 ring-success/30'
                     )}
                   >
                     <div className="flex items-start gap-4">
@@ -804,10 +804,10 @@ export const Data = () => {
 
                       <div className="flex-1">
                         <div className="mb-2 flex items-center justify-between">
-                          <h3 className="text-text text-lg font-semibold">{feature.name}</h3>
+                          <h3 className="text-lg font-semibold text-text">{feature.name}</h3>
                           {getStatusBadge(feature.status)}
                         </div>
-                        <p className="text-muted mb-3 text-sm">{feature.description}</p>
+                        <p className="mb-3 text-sm text-muted">{feature.description}</p>
 
                         {/* Fields */}
                         <div className="mb-3">
@@ -815,7 +815,7 @@ export const Data = () => {
                             {feature.fields.map(field => (
                               <span
                                 key={field}
-                                className="border-border bg-elevated text-text rounded border px-2 py-1 font-mono text-xs"
+                                className="rounded border border-border bg-elevated px-2 py-1 font-mono text-xs text-text"
                               >
                                 {field}
                               </span>
@@ -836,7 +836,7 @@ export const Data = () => {
                       {/* Action Button */}
                       <div>
                         {feature.status === 'complete' ? (
-                          <CheckCircle2 className="text-success h-6 w-6" />
+                          <CheckCircle2 className="h-6 w-6 text-success" />
                         ) : (
                           <Button
                             variant="secondary"
@@ -863,12 +863,12 @@ export const Data = () => {
               >
                 <Card variant="elevated" className="border-success/20 bg-success/5">
                   <div className="flex items-center gap-4">
-                    <div className="bg-success/10 rounded-lg p-3">
-                      <Sparkles className="text-success h-8 w-8" />
+                    <div className="rounded-lg bg-success/10 p-3">
+                      <Sparkles className="h-8 w-8 text-success" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-text mb-1 text-lg font-semibold">Enrichment Complete!</h3>
-                      <p className="text-muted text-sm">
+                      <h3 className="mb-1 text-lg font-semibold text-text">Enrichment Complete!</h3>
+                      <p className="text-sm text-muted">
                         Your data is ready for pricing optimization and insights analysis
                       </p>
                     </div>

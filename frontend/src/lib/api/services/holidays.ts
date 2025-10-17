@@ -39,15 +39,12 @@ export interface HolidayImpact {
  */
 export async function getHolidays(countryCode: string, year: number): Promise<Holiday[]> {
   try {
-    const response = await fetch(
-      `${BACKEND_API}/holidays?country=${countryCode}&year=${year}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+    const response = await fetch(`${BACKEND_API}/holidays?country=${countryCode}&year=${year}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
 
     if (!response.ok) {
       console.warn('Failed to fetch holidays from backend, using mock data')

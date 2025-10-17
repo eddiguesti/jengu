@@ -51,7 +51,10 @@ export const getFeatureImportance = async (payload: { data: unknown[] }) => {
 /**
  * Generate pricing recommendations
  */
-export const getPricingRecommendations = async (payload: { sentimentAnalysis: unknown; currentPrice: number }) => {
+export const getPricingRecommendations = async (payload: {
+  sentimentAnalysis: unknown
+  currentPrice: number
+}) => {
   const response = await apiClient.post('/analytics/pricing-recommendations', payload)
   return response.data
 }

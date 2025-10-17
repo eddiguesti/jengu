@@ -18,11 +18,7 @@ export class BusinessSettingsRepository {
   constructor(private supabase: SupabaseClient) {}
 
   async findByUserId(userId: string) {
-    return await this.supabase
-      .from('business_settings')
-      .select('*')
-      .eq('userid', userId)
-      .single()
+    return await this.supabase.from('business_settings').select('*').eq('userid', userId).single()
   }
 
   async create(settings: BusinessSettings) {
