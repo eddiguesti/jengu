@@ -17,7 +17,10 @@
       "Bash(pnpm run lint:fix:*)",
       "Bash(find frontend/src -name \"*.tsx\" -exec sh -c 'sed -n \"\"70,76p\"\" \"\"$1\"\" | grep -l \"\"setState\\|setLoading\\|setError\\|set[A-Z]\"\" && echo \"\"$1\"\"' _ {} ;)",
       "Bash(pnpm run type-check:*)",
-      "Bash(pnpm run format:*)"
+      "Bash(pnpm run format:*)",
+      "Bash(cat:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm run format:check:*)"
     ],
     "deny": [],
     "ask": []

@@ -11,6 +11,7 @@ export type Database = {
       business_settings: {
         Row: {
           business_name: string | null
+          capacity_config: Json | null
           city: string | null
           country: string | null
           createdat: string | null
@@ -25,6 +26,7 @@ export type Database = {
         }
         Insert: {
           business_name?: string | null
+          capacity_config?: Json | null
           city?: string | null
           country?: string | null
           createdat?: string | null
@@ -39,6 +41,7 @@ export type Database = {
         }
         Update: {
           business_name?: string | null
+          capacity_config?: Json | null
           city?: string | null
           country?: string | null
           createdat?: string | null
@@ -132,6 +135,165 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'pricing_data_propertyId_fkey'
+            columns: ['propertyId']
+            isOneToOne: false
+            referencedRelation: 'properties'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      pricing_outcomes: {
+        Row: {
+          booked_bool: boolean
+          booking_time: string | null
+          cancelled_bool: boolean | null
+          no_show_bool: boolean | null
+          quote_id: string
+          revenue_realized: number | null
+          userId: string
+        }
+        Insert: {
+          booked_bool: boolean
+          booking_time?: string | null
+          cancelled_bool?: boolean | null
+          no_show_bool?: boolean | null
+          quote_id: string
+          revenue_realized?: number | null
+          userId: string
+        }
+        Update: {
+          booked_bool?: boolean
+          booking_time?: string | null
+          cancelled_bool?: boolean | null
+          no_show_bool?: boolean | null
+          quote_id?: string
+          revenue_realized?: number | null
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'pricing_outcomes_quote_id_fkey'
+            columns: ['quote_id']
+            isOneToOne: true
+            referencedRelation: 'pricing_quotes'
+            referencedColumns: ['quote_id']
+          },
+        ]
+      }
+      pricing_quotes: {
+        Row: {
+          comp_p10: number | null
+          comp_p50: number | null
+          comp_p90: number | null
+          created_at: string
+          dow: number | null
+          inventory_capacity: number | null
+          inventory_remaining: number | null
+          lead_days: number
+          los: number
+          price_offered: number
+          product_type: string
+          propertyId: string
+          quote_id: string
+          refundable: boolean
+          season: string | null
+          shown_to_user_bool: boolean | null
+          stay_date: string
+          toggles_hash: string | null
+          userId: string
+          weather_rain_mm: number | null
+          weather_tmax: number | null
+        }
+        Insert: {
+          comp_p10?: number | null
+          comp_p50?: number | null
+          comp_p90?: number | null
+          created_at?: string
+          dow?: number | null
+          inventory_capacity?: number | null
+          inventory_remaining?: number | null
+          lead_days: number
+          los: number
+          price_offered: number
+          product_type: string
+          propertyId: string
+          quote_id: string
+          refundable: boolean
+          season?: string | null
+          shown_to_user_bool?: boolean | null
+          stay_date: string
+          toggles_hash?: string | null
+          userId: string
+          weather_rain_mm?: number | null
+          weather_tmax?: number | null
+        }
+        Update: {
+          comp_p10?: number | null
+          comp_p50?: number | null
+          comp_p90?: number | null
+          created_at?: string
+          dow?: number | null
+          inventory_capacity?: number | null
+          inventory_remaining?: number | null
+          lead_days?: number
+          los?: number
+          price_offered?: number
+          product_type?: string
+          propertyId?: string
+          quote_id?: string
+          refundable?: boolean
+          season?: string | null
+          shown_to_user_bool?: boolean | null
+          stay_date?: string
+          toggles_hash?: string | null
+          userId?: string
+          weather_rain_mm?: number | null
+          weather_tmax?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'pricing_quotes_propertyId_fkey'
+            columns: ['propertyId']
+            isOneToOne: false
+            referencedRelation: 'properties'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      inventory_snapshots: {
+        Row: {
+          capacity: number
+          captured_at: string
+          id: string
+          product_type: string
+          propertyId: string
+          remaining: number
+          stay_date: string
+          userId: string
+        }
+        Insert: {
+          capacity: number
+          captured_at?: string
+          id?: string
+          product_type: string
+          propertyId: string
+          remaining: number
+          stay_date: string
+          userId: string
+        }
+        Update: {
+          capacity?: number
+          captured_at?: string
+          id?: string
+          product_type?: string
+          propertyId?: string
+          remaining?: number
+          stay_date?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'inventory_snapshots_propertyId_fkey'
             columns: ['propertyId']
             isOneToOne: false
             referencedRelation: 'properties'

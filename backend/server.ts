@@ -17,6 +17,7 @@ import geocodingRouter from './routes/geocoding.js'
 import holidaysRouter from './routes/holidays.js'
 import competitorRouter from './routes/competitor.js'
 import analyticsRouter from './routes/analytics.js'
+import pricingRouter from './routes/pricing.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -45,6 +46,7 @@ app.use('/api/holidays', holidaysRouter)
 app.use('/api/competitor', competitorRouter)
 app.use('/api/hotels', competitorRouter) // hotels/search is in competitor router
 app.use('/api/analytics', analyticsRouter)
+app.use('/api/pricing', pricingRouter)
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
@@ -120,6 +122,11 @@ app.listen(PORT, () => {
    - POST /api/analytics/market-sentiment
    - POST /api/analytics/ai-insights (Claude-powered)
    - POST /api/analytics/pricing-recommendations
+
+   💰 Dynamic Pricing Engine:
+   - POST /api/pricing/quote (get price quote)
+   - POST /api/pricing/learn (submit outcomes for ML)
+   - GET  /api/pricing/check-readiness
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   `)
 })

@@ -1,0 +1,26 @@
+# ========================================
+# Python Pricing Service Dependencies
+# ========================================
+# FastAPI microservice for dynamic pricing
+
+# Core FastAPI framework
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+pydantic==2.9.0
+
+# Numeric and ML dependencies (for future ML implementation)
+numpy==2.1.0
+pandas==2.2.0
+scipy==1.14.0
+
+# For future ML models (Phase 2)
+# scikit-learn==1.5.0
+# statsmodels==0.14.0
+
+# Utilities
+python-dateutil==2.9.0
+pytz==2024.1
+
+# Testing (optional)
+pytest==8.3.0
+httpx==0.27.0
