@@ -7,6 +7,11 @@ import { asyncHandler, sendError, logError } from '../utils/errorHandler.js'
 import { upload } from '../middleware/upload.js'
 import { enrichPropertyData } from '../services/enrichmentService.js'
 import { CSVRow, ParsedPricingData } from '../types/api.types.js'
+import {
+  validateCSVContent,
+  validateCSVStructure,
+  validateFileSize,
+} from '../utils/csvValidator.js'
 
 const router = Router()
 
@@ -32,9 +37,36 @@ router.post(
 
       const userId = req.userId!
       const filePath = req.file.path
+
+      // Step 1: Validate file size
+      const sizeValidation = validateFileSize(req.file.size)
+      if (!sizeValidation.valid) {
+        fs.unlinkSync(filePath)
+        return res.status(400).json({
+          error: 'INVALID_FILE_SIZE',
+          message: sizeValidation.error,
+        })
+      }
+
       console.log(
         `📥 Processing CSV file: ${req.file.originalname} (${req.file.size} bytes) for user: ${userId}`
       )
+
+      // Step 2: Validate file content for malicious code
+      console.log('🔍 Scanning file for malicious content...')
+      const fileContent = fs.readFileSync(filePath, 'utf-8')
+      const contentValidation = validateCSVContent(fileContent)
+
+      if (!contentValidation.valid) {
+        fs.unlinkSync(filePath)
+        console.warn(`⚠️  Security: Malicious content detected in ${req.file.originalname}`)
+        return res.status(400).json({
+          error: 'INVALID_CONTENT',
+          message: contentValidation.error,
+        })
+      }
+
+      console.log('✅ Content security check passed')
 
       console.log('⏳ Creating property record...')
       const propertyId = randomUUID()
@@ -88,12 +120,15 @@ router.post(
       }
 
       const allRows: CSVRow[] = []
+      let headers: string[] = []
+
       await new Promise<void>((resolve, reject) => {
         fs.createReadStream(filePath)
           .pipe(csv())
-          .on('headers', headers => {
-            columnCount = headers.length
-            console.log(`📊 CSV Columns (${columnCount}):`, headers)
+          .on('headers', headersArray => {
+            headers = headersArray
+            columnCount = headersArray.length
+            console.log(`📊 CSV Columns (${columnCount}):`, headersArray)
           })
           .on('data', (row: CSVRow) => {
             totalRows++
@@ -107,6 +142,24 @@ router.post(
           .on('error', reject)
       })
 
+      // Step 3: Validate CSV structure
+      console.log('🔍 Validating CSV structure...')
+      const structureValidation = validateCSVStructure(headers, allRows)
+
+      if (!structureValidation.valid) {
+        console.warn(`⚠️  Invalid CSV structure: ${structureValidation.error}`)
+        fs.unlinkSync(filePath)
+
+        // Clean up database records if already created
+        await supabaseAdmin.from('properties').delete().eq('id', property.id)
+
+        return res.status(400).json({
+          error: 'INVALID_STRUCTURE',
+          message: structureValidation.error,
+        })
+      }
+
+      console.log('✅ CSV structure validation passed')
       console.log(`📥 Parsed ${totalRows} rows, now inserting to database...`)
 
       let totalInserted = 0
