@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Card, Select, Badge, Button } from '../components/ui'
 import {
@@ -19,7 +19,6 @@ import {
 } from 'recharts'
 import { Sparkles } from 'lucide-react'
 import { useDataStore } from '../store'
-import { getCombinedInsights } from '../lib/services/insightsData'
 import { MarketSentimentCard } from '../components/insights/MarketSentimentCard'
 import { AIInsightsCard } from '../components/insights/AIInsightsCard'
 import { MLAnalyticsCard } from '../components/insights/MLAnalyticsCard'
@@ -44,8 +43,170 @@ export const Insights = () => {
   // Fetch file data using React Query
   const { data: fileData = [], isLoading: isLoadingData } = useFileData(firstFileId, 10000)
 
-  // Get real insights data (will be empty if no data)
-  const [insights, setInsights] = useState(() => getCombinedInsights())
+  // Process real data from Supabase for charts
+  const processedData = useMemo(() => {
+    if (!fileData || fileData.length === 0) {
+      return {
+        priceByWeather: [],
+        occupancyByDay: [],
+        correlationData: [],
+        competitorData: [],
+        weatherImpact: 0,
+        peakOccupancyDay: '--',
+        competitorPosition: 0,
+      }
+    }
+
+    // Group data by weather condition
+    const weatherGroups: Record<string, { prices: number[]; occupancies: number[] }> = {}
+
+    fileData.forEach((row: any) => {
+      const weather = row.weather || row.weather_condition || ''
+      const price = parseFloat(row.price || row.rate || 0)
+      let occupancy = parseFloat(row.occupancy || row.occupancy_rate || 0)
+
+      if (occupancy > 1 && occupancy <= 100) {
+        // Already percentage
+      } else if (occupancy > 0 && occupancy <= 1) {
+        occupancy = occupancy * 100
+      }
+
+      // Categorize weather
+      let category = ''
+      if (weather.toLowerCase().includes('sun') || weather.toLowerCase().includes('clear')) {
+        category = 'Sunny'
+      } else if (
+        weather.toLowerCase().includes('cloud') ||
+        weather.toLowerCase().includes('overcast')
+      ) {
+        category = 'Cloudy'
+      } else if (
+        weather.toLowerCase().includes('rain') ||
+        weather.toLowerCase().includes('drizzle')
+      ) {
+        category = 'Rainy'
+      } else if (weather.toLowerCase().includes('snow') || weather.toLowerCase().includes('ice')) {
+        category = 'Snowy'
+      }
+
+      if (category && price > 0) {
+        if (!weatherGroups[category]) {
+          weatherGroups[category] = { prices: [], occupancies: [] }
+        }
+        weatherGroups[category].prices.push(price)
+        if (occupancy > 0) {
+          weatherGroups[category].occupancies.push(occupancy)
+        }
+      }
+    })
+
+    // Calculate weather averages
+    const priceByWeather = Object.entries(weatherGroups)
+      .filter(([_, data]) => data.prices.length > 0)
+      .map(([weather, data]) => ({
+        weather,
+        avgPrice: Math.round(data.prices.reduce((a, b) => a + b, 0) / data.prices.length),
+        occupancy:
+          data.occupancies.length > 0
+            ? Math.round(data.occupancies.reduce((a, b) => a + b, 0) / data.occupancies.length)
+            : 0,
+        bookings: data.prices.length,
+      }))
+
+    // Calculate weather impact (sunny vs rainy)
+    let weatherImpact = 0
+    const sunny = priceByWeather.find(w => w.weather === 'Sunny')
+    const rainy = priceByWeather.find(w => w.weather === 'Rainy')
+    if (sunny && rainy && rainy.avgPrice > 0) {
+      weatherImpact = ((sunny.avgPrice - rainy.avgPrice) / rainy.avgPrice) * 100
+    }
+
+    // Group by day of week
+    const dayGroups: Record<string, { prices: number[]; occupancies: number[] }> = {
+      Mon: { prices: [], occupancies: [] },
+      Tue: { prices: [], occupancies: [] },
+      Wed: { prices: [], occupancies: [] },
+      Thu: { prices: [], occupancies: [] },
+      Fri: { prices: [], occupancies: [] },
+      Sat: { prices: [], occupancies: [] },
+      Sun: { prices: [], occupancies: [] },
+    }
+
+    fileData.forEach((row: any) => {
+      const date = new Date(row.date || row.check_in || row.booking_date)
+      if (isNaN(date.getTime())) return
+
+      const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
+      const price = parseFloat(row.price || row.rate || 0)
+      let occupancy = parseFloat(row.occupancy || row.occupancy_rate || 0)
+
+      if (occupancy > 1 && occupancy <= 100) {
+        // Already percentage
+      } else if (occupancy > 0 && occupancy <= 1) {
+        occupancy = occupancy * 100
+      }
+
+      if (price > 0 && dayOfWeek in dayGroups) {
+        dayGroups[dayOfWeek].prices.push(price)
+        if (occupancy > 0) {
+          dayGroups[dayOfWeek].occupancies.push(occupancy)
+        }
+      }
+    })
+
+    // Calculate day averages
+    const occupancyByDay = Object.entries(dayGroups).map(([day, data]) => ({
+      day,
+      price:
+        data.prices.length > 0
+          ? Math.round(data.prices.reduce((a, b) => a + b, 0) / data.prices.length)
+          : 0,
+      occupancy:
+        data.occupancies.length > 0
+          ? Math.round(data.occupancies.reduce((a, b) => a + b, 0) / data.occupancies.length)
+          : 0,
+    }))
+
+    // Find peak occupancy day
+    const peakDay = occupancyByDay.reduce((max, day) =>
+      day.occupancy > max.occupancy ? day : max
+    )
+    const peakOccupancyDay = peakDay.occupancy > 0 ? peakDay.day : '--'
+
+    // Temperature vs Price correlation data
+    const correlationData = fileData
+      .map((row: any) => {
+        const temperature = parseFloat(row.temperature || row.temp || 0)
+        const price = parseFloat(row.price || row.rate || 0)
+        let occupancy = parseFloat(row.occupancy || row.occupancy_rate || 0)
+
+        if (occupancy > 1 && occupancy <= 100) {
+          // Already percentage
+        } else if (occupancy > 0 && occupancy <= 1) {
+          occupancy = occupancy * 100
+        }
+
+        if (temperature > 0 && price > 0 && occupancy > 0) {
+          return { temperature, price, occupancy }
+        }
+        return null
+      })
+      .filter(Boolean)
+
+    // Competitor data placeholder (TODO: integrate with Makcorps API if available)
+    const competitorData: any[] = []
+    const competitorPosition = 0
+
+    return {
+      priceByWeather,
+      occupancyByDay,
+      correlationData,
+      competitorData,
+      weatherImpact,
+      peakOccupancyDay,
+      competitorPosition,
+    }
+  }, [fileData])
 
   // Fetch analytics using React Query hooks
   const {
@@ -87,20 +248,8 @@ export const Insights = () => {
     refetchAI()
   }
 
-  // Refresh insights when uploaded files change
-  useEffect(() => {
-    setInsights(getCombinedInsights())
-  }, [uploadedFiles])
-
-  const priceByWeather = insights.priceByWeather
-  const occupancyByDay = insights.occupancyByDay
-  const correlationData = insights.priceCorrelation
-  const competitorData = insights.competitorPricing
-
-  // Weather impact calculation
-  const weatherImpact = insights.metrics.weatherImpact.toFixed(1)
-  const peakOccupancyDay = insights.metrics.peakOccupancyDay
-  const competitorPosition = insights.metrics.competitorPosition.toFixed(1)
+  // Extract processed data
+  const { priceByWeather, occupancyByDay, correlationData, competitorData, weatherImpact, peakOccupancyDay, competitorPosition } = processedData
 
   return (
     <motion.div
@@ -125,7 +274,7 @@ export const Insights = () => {
             variant="primary"
             size="sm"
             onClick={generateAnalytics}
-            disabled={isLoadingAnalytics || isLoadingSentiment}
+            disabled={isLoadingAnalytics || isLoadingSentiment || !firstFileId}
           >
             <Sparkles className="mr-2 h-4 w-4" />
             {isLoadingAnalytics || isLoadingSentiment ? 'Loading...' : 'Generate Analytics'}
@@ -169,7 +318,7 @@ export const Insights = () => {
               <p className="text-sm text-muted">Weather Impact</p>
               {priceByWeather.length >= 2 ? (
                 <>
-                  <p className="text-3xl font-bold text-primary">+{weatherImpact}%</p>
+                  <p className="text-3xl font-bold text-primary">+{weatherImpact.toFixed(1)}%</p>
                   <p className="text-xs text-muted">Sunny days vs. Rainy days</p>
                 </>
               ) : (
@@ -206,13 +355,13 @@ export const Insights = () => {
               competitorData.some(d => d.competitor1 || d.competitor2) ? (
                 <>
                   <p
-                    className={`text-3xl font-bold ${parseFloat(competitorPosition) >= 0 ? 'text-warning' : 'text-success'}`}
+                    className={`text-3xl font-bold ${competitorPosition >= 0 ? 'text-warning' : 'text-success'}`}
                   >
-                    {parseFloat(competitorPosition) >= 0 ? '+' : ''}
-                    {competitorPosition}%
+                    {competitorPosition >= 0 ? '+' : ''}
+                    {competitorPosition.toFixed(1)}%
                   </p>
                   <p className="text-xs text-muted">
-                    {parseFloat(competitorPosition) >= 0 ? 'Above' : 'Below'} market average
+                    {competitorPosition >= 0 ? 'Above' : 'Below'} market average
                   </p>
                 </>
               ) : (
@@ -334,160 +483,100 @@ export const Insights = () => {
         </div>
 
         {/* Temperature vs Price Correlation */}
-        <Card variant="default">
-          <Card.Header>
-            <h2 className="text-xl font-semibold text-text">Temperature vs. Price Correlation</h2>
-            <p className="mt-1 text-sm text-muted">Relationship between temperature and pricing</p>
-          </Card.Header>
-          <Card.Body>
-            <ResponsiveContainer width="100%" height={300}>
-              <ScatterChart>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
-                <XAxis
-                  type="number"
-                  dataKey="temperature"
-                  name="Temperature"
-                  unit="°C"
-                  stroke="#9CA3AF"
-                />
-                <YAxis type="number" dataKey="price" name="Price" unit="€" stroke="#9CA3AF" />
-                <Tooltip
-                  cursor={{ strokeDasharray: '3 3' }}
-                  contentStyle={{
-                    backgroundColor: '#1A1A1A',
-                    border: '1px solid #2A2A2A',
-                    borderRadius: '8px',
-                    color: '#FAFAFA',
-                  }}
-                />
-                <Scatter name="Price vs Temperature" data={correlationData} fill="#EBFF57" />
-              </ScatterChart>
-            </ResponsiveContainer>
-          </Card.Body>
-        </Card>
+        {correlationData.length > 0 && (
+          <Card variant="default">
+            <Card.Header>
+              <h2 className="text-xl font-semibold text-text">Temperature vs. Price Correlation</h2>
+              <p className="mt-1 text-sm text-muted">Relationship between temperature and pricing</p>
+            </Card.Header>
+            <Card.Body>
+              <ResponsiveContainer width="100%" height={300}>
+                <ScatterChart>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
+                  <XAxis
+                    type="number"
+                    dataKey="temperature"
+                    name="Temperature"
+                    unit="°C"
+                    stroke="#9CA3AF"
+                  />
+                  <YAxis type="number" dataKey="price" name="Price" unit="€" stroke="#9CA3AF" />
+                  <Tooltip
+                    cursor={{ strokeDasharray: '3 3' }}
+                    contentStyle={{
+                      backgroundColor: '#1A1A1A',
+                      border: '1px solid #2A2A2A',
+                      borderRadius: '8px',
+                      color: '#FAFAFA',
+                    }}
+                  />
+                  <Scatter name="Price vs Temperature" data={correlationData} fill="#EBFF57" />
+                </ScatterChart>
+              </ResponsiveContainer>
+            </Card.Body>
+          </Card>
+        )}
 
-        {/* Competitor Pricing Comparison */}
-        <Card variant="default">
-          <Card.Header>
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-text">Competitor Pricing Dynamics</h2>
-                <p className="mt-1 text-sm text-muted">Your pricing vs. nearby competitors</p>
+        {/* Competitor Pricing Comparison - Only show if we have competitor data */}
+        {competitorData.length > 0 && (
+          <Card variant="default">
+            <Card.Header>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-text">Competitor Pricing Dynamics</h2>
+                  <p className="mt-1 text-sm text-muted">Your pricing vs. nearby competitors</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="primary">Your Price</Badge>
+                  <Badge variant="default">Competitor 1</Badge>
+                  <Badge variant="default">Competitor 2</Badge>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="primary">Your Price</Badge>
-                <Badge variant="default">Competitor 1</Badge>
-                <Badge variant="default">Competitor 2</Badge>
-              </div>
-            </div>
-          </Card.Header>
-          <Card.Body>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={competitorData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
-                <XAxis dataKey="date" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#1A1A1A',
-                    border: '1px solid #2A2A2A',
-                    borderRadius: '8px',
-                    color: '#FAFAFA',
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="yourPrice"
-                  stroke="#EBFF57"
-                  strokeWidth={3}
-                  name="Your Price"
-                  dot={{ fill: '#EBFF57', r: 5 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="competitor1"
-                  stroke="#9CA3AF"
-                  strokeWidth={2}
-                  name="Competitor 1"
-                  strokeDasharray="5 5"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="competitor2"
-                  stroke="#6B7280"
-                  strokeWidth={2}
-                  name="Competitor 2"
-                  strokeDasharray="5 5"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </Card.Body>
-        </Card>
-
-        {/* Statistical Summary */}
-        <Card variant="default">
-          <Card.Header>
-            <h2 className="text-xl font-semibold text-text">Key Statistical Insights</h2>
-          </Card.Header>
-          <Card.Body>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-text">Weather Impact</h3>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-start gap-2 text-muted">
-                    <span className="text-primary">•</span>
-                    <span>
-                      <strong className="text-success">Sunny days</strong> command{' '}
-                      <strong className="text-text">+{weatherImpact}%</strong> higher prices with{' '}
-                      <strong className="text-text">92% occupancy</strong>
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2 text-muted">
-                    <span className="text-primary">•</span>
-                    <span>
-                      <strong className="text-warning">Rainy conditions</strong> see{' '}
-                      <strong className="text-text">35% fewer bookings</strong> on average
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2 text-muted">
-                    <span className="text-primary">•</span>
-                    <span>
-                      <strong className="text-text">Snowy weather</strong> enables premium pricing
-                      (+36%) for winter destinations
-                    </span>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-text">Demand Patterns</h3>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-start gap-2 text-muted">
-                    <span className="text-primary">•</span>
-                    <span>
-                      <strong className="text-success">Weekends</strong> show{' '}
-                      <strong className="text-text">30% higher occupancy</strong> than weekdays
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2 text-muted">
-                    <span className="text-primary">•</span>
-                    <span>
-                      Peak pricing opportunity:{' '}
-                      <strong className="text-text">Friday-Saturday</strong> with 95%+ occupancy
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2 text-muted">
-                    <span className="text-primary">•</span>
-                    <span>
-                      <strong className="text-warning">Monday-Wednesday</strong> require competitive
-                      pricing to maintain 70%+ occupancy
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </Card.Body>
-        </Card>
+            </Card.Header>
+            <Card.Body>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={competitorData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
+                  <XAxis dataKey="date" stroke="#9CA3AF" />
+                  <YAxis stroke="#9CA3AF" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1A1A1A',
+                      border: '1px solid #2A2A2A',
+                      borderRadius: '8px',
+                      color: '#FAFAFA',
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="yourPrice"
+                    stroke="#EBFF57"
+                    strokeWidth={3}
+                    name="Your Price"
+                    dot={{ fill: '#EBFF57', r: 5 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="competitor1"
+                    stroke="#9CA3AF"
+                    strokeWidth={2}
+                    name="Competitor 1"
+                    strokeDasharray="5 5"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="competitor2"
+                    stroke="#6B7280"
+                    strokeWidth={2}
+                    name="Competitor 2"
+                    strokeDasharray="5 5"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </Card.Body>
+          </Card>
+        )}
       </>
     </motion.div>
   )
