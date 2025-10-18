@@ -13,7 +13,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "tsx test/api-integration.test.ts",
+    "test:generate-data": "tsx test/e2e-test-data.ts"
   },
   "keywords": [
     "api",

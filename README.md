@@ -434,29 +434,44 @@ POST /api/pricing/recommend
 
 ## 🧪 **Testing**
 
-### **Test Structure**
+### **E2E Testing**
 
-- **Unit Tests**: Test individual functions in isolation
-- **Integration Tests**: Test API endpoints end-to-end
-- **Smoke Tests**: Quick sanity checks (`test_simple.py`)
-
-### **Test Coverage**
+Comprehensive end-to-end testing guide with real data validation:
 
 ```bash
-# Generate coverage report
-pytest --cov=core --cov-report=html
+# Generate test data files (CSV)
+cd backend
+pnpm run test:generate-data
 
-# View report
-open htmlcov/index.html
+# Run automated API integration tests
+pnpm run test:e2e
 ```
 
-### **CI/CD**
+**Manual Testing**: See [E2E Testing Guide](docs/E2E-TESTING-GUIDE.md) for complete manual testing scenarios:
 
-Tests run automatically on:
+- Fresh user journey (upload → analytics → pricing)
+- Insufficient data handling
+- Missing columns (weather) graceful degradation
+- Large dataset performance (10k+ rows)
 
-- Pull requests
-- Commits to main
-- Pre-deployment
+### **Test Structure**
+
+- **API Integration Tests**: `backend/test/api-integration.test.ts` - Automated backend endpoint testing
+- **Test Data Generator**: `backend/test/e2e-test-data.ts` - Generates realistic CSV test files
+- **Manual E2E Tests**: `docs/E2E-TESTING-GUIDE.md` - Step-by-step validation guide
+
+### **Quick Testing Commands**
+
+```bash
+# From backend/ directory
+pnpm run test:generate-data   # Generate 5 test CSV files
+pnpm run test:e2e              # Run API integration tests
+
+# Manual testing (see E2E-TESTING-GUIDE.md)
+# 1. Start servers (backend + frontend)
+# 2. Upload generated test CSVs
+# 3. Follow testing checklist
+```
 
 ---
 

@@ -217,7 +217,7 @@ router.post(
  */
 router.post(
   '/revenue-series',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     // Return mock data for now - implement real data later
     res.json({
       dates: [],
@@ -233,7 +233,7 @@ router.post(
  */
 router.post(
   '/occupancy-pace',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     res.json({
       lead: [],
       actual: [],
@@ -249,7 +249,7 @@ router.post(
  */
 router.post(
   '/adr-index',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     res.json({
       dates: [],
       propertyIndex: [],
@@ -264,7 +264,7 @@ router.post(
  */
 router.post(
   '/rev-lead-heatmap',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     res.json({
       leadBuckets: [],
       seasons: [],
@@ -279,7 +279,7 @@ router.post(
  */
 router.post(
   '/forecast-actual',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     res.json({
       dates: [],
       forecast: [],
@@ -296,7 +296,7 @@ router.post(
  */
 router.post(
   '/elasticity',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     res.json({
       priceGrid: [],
       probMean: [],
@@ -314,7 +314,7 @@ router.post(
  */
 router.post(
   '/price-explain',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     res.json({
       steps: [],
       final: 0,

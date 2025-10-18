@@ -197,9 +197,7 @@ console.log(
 console.log(
   `     - Temperature ↔ Occupancy: ${weatherImpact.correlations.temperatureOccupancy.toFixed(2)}`
 )
-console.log(
-  `     - Price ↔ Occupancy: ${weatherImpact.correlations.priceOccupancy.toFixed(2)}`
-)
+console.log(`     - Price ↔ Occupancy: ${weatherImpact.correlations.priceOccupancy.toFixed(2)}`)
 console.log(`   Weather Stats:`)
 weatherImpact.weatherStats.forEach((stat: any) => {
   console.log(
@@ -242,9 +240,9 @@ if (competitorAnalysis.yourOccupancy) {
 }
 if (competitorAnalysis.recommendation) {
   console.log(`   Recommendation:`)
-  console.log(`     - Action: ${competitorAnalysis.recommendation.action}`)
-  console.log(`     - Amount: €${competitorAnalysis.recommendation.amount}`)
-  console.log(`     - Reason: ${competitorAnalysis.recommendation.reason}`)
+  console.log(`     - Action: ${(competitorAnalysis.recommendation as any).action}`)
+  console.log(`     - Amount: €${(competitorAnalysis.recommendation as any).amount}`)
+  console.log(`     - Reason: ${(competitorAnalysis.recommendation as any).reason}`)
 }
 console.log()
 
@@ -271,9 +269,7 @@ console.log(
   `   Date Range: ${(summary as any).dataQuality.dateRange.start} to ${(summary as any).dataQuality.dateRange.end}`
 )
 console.log(`   Data Completeness:`)
-console.log(
-  `     - Price: ${((summary as any).dataQuality.completeness.price * 100).toFixed(0)}%`
-)
+console.log(`     - Price: ${((summary as any).dataQuality.completeness.price * 100).toFixed(0)}%`)
 console.log(
   `     - Occupancy: ${((summary as any).dataQuality.completeness.occupancy * 100).toFixed(0)}%`
 )

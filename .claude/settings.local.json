@@ -23,7 +23,9 @@
       "Bash(pnpm run format:check:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(npx husky init)",
+      "Bash(pnpm run build:*)"
     ],
     "deny": [],
     "ask": []
