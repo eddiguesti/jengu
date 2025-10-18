@@ -8,8 +8,8 @@ initSentry() // Initialize Sentry error tracking
 
 import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
-import { rateLimit, RATE_LIMIT } from './middleware/rateLimit.js'
 import { requestLogger, logger } from './middleware/logger.js'
+import { generalLimiter } from './middleware/rateLimiters.js'
 
 // Import route modules
 import healthRouter from './routes/health.js'
@@ -37,7 +37,7 @@ app.use(
   })
 )
 app.use(express.json({ limit: '10mb' }))
-app.use(rateLimit)
+app.use(generalLimiter) // General rate limiting for all endpoints
 
 // Mount route modules
 app.use('/health', healthRouter)
@@ -102,7 +102,7 @@ app.listen(PORT, () => {
 ✅ Environment: ${process.env.NODE_ENV || 'development'}
 ✅ Database: Supabase PostgreSQL (REST API)
 ✅ Frontend URL: ${process.env.FRONTEND_URL}
-✅ Rate limit: ${RATE_LIMIT} requests/minute
+✅ Rate limiting: Enhanced (endpoint-specific limits)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📡 Available endpoints:
    - GET  /health

@@ -12,6 +12,7 @@ import {
   validateCSVStructure,
   validateFileSize,
 } from '../utils/csvValidator.js'
+import { uploadLimiter } from '../middleware/rateLimiters.js'
 
 const router = Router()
 
@@ -27,6 +28,7 @@ function getErrorMessage(error: unknown): string {
  */
 router.post(
   '/upload',
+  uploadLimiter, // Apply upload rate limiter
   authenticateUser,
   upload.single('file'),
   async (req: Request, res: Response) => {
