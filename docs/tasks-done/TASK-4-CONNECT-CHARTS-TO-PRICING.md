@@ -21,13 +21,14 @@ Wire the premium ECharts/AntV charts to the real Python pricing service endpoint
 **File**: `frontend/src/features/pricingDashboard/api/analyticsClient.ts`
 
 Add new functions:
+
 ```typescript
 export async function getPriceElasticityCurve(propertyId: string, params: any) {
   // Call Python pricing service /score endpoint multiple times
   // with different price points to generate elasticity curve
   const { data } = await apiClient.post('/pricing/elasticity-grid', {
     propertyId,
-    ...params
+    ...params,
   })
   return data // { priceGrid, probMean, probLow, probHigh, compMedian, chosenPrice }
 }
@@ -36,7 +37,7 @@ export async function getPriceExplanation(propertyId: string, params: any) {
   // Extract 'reasons' from /pricing/quote response
   const { data } = await apiClient.post('/pricing/explain', {
     propertyId,
-    ...params
+    ...params,
   })
   return data // { steps: [{name, value}], final }
 }
@@ -47,6 +48,7 @@ export async function getPriceExplanation(propertyId: string, params: any) {
 **File**: `backend/routes/pricing.ts`
 
 Add routes:
+
 ```typescript
 // Generate elasticity curve by calling Python service with price grid
 router.post('/elasticity-grid', authenticateUser, async (req, res) => {
@@ -65,8 +67,8 @@ router.post('/elasticity-grid', authenticateUser, async (req, res) => {
         property_id: propertyId,
         check_in_date,
         override_price: price,
-        strategy
-      })
+        strategy,
+      }),
     })
     const result = await response.json()
 
@@ -82,7 +84,7 @@ router.post('/elasticity-grid', authenticateUser, async (req, res) => {
     probLow,
     probHigh,
     compMedian: null, // TODO: Get from compset API
-    chosenPrice: null // TODO: Get recommended price
+    chosenPrice: null, // TODO: Get recommended price
   })
 })
 
@@ -107,6 +109,7 @@ router.post('/explain', authenticateUser, async (req, res) => {
 **File**: `frontend/src/features/pricingDashboard/DashboardShell.tsx`
 
 Update queries:
+
 ```typescript
 const el = useQuery({
   queryKey: ['elasticity', propertyId, qParams],

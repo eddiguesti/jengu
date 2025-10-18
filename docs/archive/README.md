@@ -5,6 +5,7 @@ This folder contains historical documentation that has been completed or superse
 **Files here are kept for reference only and may be outdated.**
 
 For current documentation, see:
+
 - **Active Tasks**: `../tasks-todo/` - Current work items
 - **Completed Tasks**: `../tasks-done/` - Finished work with completion notes
 - **Developer Docs**: `../developer/` - Current technical documentation
@@ -23,7 +24,7 @@ For current documentation, see:
 ## What Does NOT Go Here
 
 - Active task specifications
-- Current technical documentation  
+- Current technical documentation
 - Completion summaries (those go in tasks-done/)
 - Developer guides still in use
 

@@ -93,11 +93,13 @@ packages:
 ```
 
 **Import in backend**:
+
 ```typescript
 import { PricingQuoteRequest } from '@jengu/shared'
 ```
 
 **Import in frontend**:
+
 ```typescript
 import { PricingQuoteRequest } from '@jengu/shared'
 ```

@@ -168,9 +168,7 @@ export const Insights = () => {
     }))
 
     // Find peak occupancy day
-    const peakDay = occupancyByDay.reduce((max, day) =>
-      day.occupancy > max.occupancy ? day : max
-    )
+    const peakDay = occupancyByDay.reduce((max, day) => (day.occupancy > max.occupancy ? day : max))
     const peakOccupancyDay = peakDay.occupancy > 0 ? peakDay.day : '--'
 
     // Temperature vs Price correlation data
@@ -249,7 +247,15 @@ export const Insights = () => {
   }
 
   // Extract processed data
-  const { priceByWeather, occupancyByDay, correlationData, competitorData, weatherImpact, peakOccupancyDay, competitorPosition } = processedData
+  const {
+    priceByWeather,
+    occupancyByDay,
+    correlationData,
+    competitorData,
+    weatherImpact,
+    peakOccupancyDay,
+    competitorPosition,
+  } = processedData
 
   return (
     <motion.div
@@ -487,7 +493,9 @@ export const Insights = () => {
           <Card variant="default">
             <Card.Header>
               <h2 className="text-xl font-semibold text-text">Temperature vs. Price Correlation</h2>
-              <p className="mt-1 text-sm text-muted">Relationship between temperature and pricing</p>
+              <p className="mt-1 text-sm text-muted">
+                Relationship between temperature and pricing
+              </p>
             </Card.Header>
             <Card.Body>
               <ResponsiveContainer width="100%" height={300}>

@@ -9,14 +9,7 @@ export type LineWithBandProps = {
   height?: number
 }
 
-export default function LineWithBand({
-  x,
-  y,
-  yLow,
-  yHigh,
-  name,
-  height = 320,
-}: LineWithBandProps) {
+export default function LineWithBand({ x, y, yLow, yHigh, name, height = 320 }: LineWithBandProps) {
   const option = {
     tooltip: { trigger: 'axis' },
     grid: { left: 36, right: 12, top: 24, bottom: 40 },

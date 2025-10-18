@@ -64,7 +64,7 @@ export const Dashboard = () => {
     // Calculate average occupancy
     const occupancies = fileData
       .map((row: any) => {
-        let occ = parseFloat(row.occupancy || row.occupancy_rate || 0)
+        const occ = parseFloat(row.occupancy || row.occupancy_rate || 0)
         if (occ > 1 && occ <= 100) return occ // Already percentage
         if (occ > 0 && occ <= 1) return occ * 100 // Convert decimal to percentage
         return 0

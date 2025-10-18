@@ -525,6 +525,7 @@ Claude: execute tasks in order, confirm each ✅ criterion, and report back with
 **Status**: All phases and acceptance criteria met.
 
 **Implementation Notes**:
+
 - Section 5 (Backend): Implemented as modular route file `backend/routes/pricing.ts` instead of inline in server.ts (follows existing codebase patterns, better code organization)
 - Section 6 (Python Service): Fully implemented with all health endpoints in `services/pricing/main.py`
 - Phase 1-4: Complete
@@ -532,6 +533,7 @@ Claude: execute tasks in order, confirm each ✅ criterion, and report back with
 - Phase 6 (Compset): Gracefully handled (optional table, code fails gracefully if missing)
 
 **Files Created**:
+
 - `backend/migrations/add_pricing_engine_tables.sql` - Database schema
 - `backend/routes/pricing.ts` - Backend endpoints (438 lines)
 - `services/pricing/main.py` - Python FastAPI service (505 lines)

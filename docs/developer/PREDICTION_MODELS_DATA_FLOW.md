@@ -11,6 +11,7 @@
 This document provides a complete technical walkthrough of how prediction models receive data from Supabase, process it through ML analytics, and display results in the frontend.
 
 **Prediction Models Available**:
+
 1. **Weather Impact Analysis** - Correlation between weather, temperature, price, and occupancy
 2. **Demand Forecasting** - 14-day occupancy predictions using time series analysis
 3. **Competitor Pricing Analysis** - Market positioning recommendations
@@ -75,6 +76,7 @@ This document provides a complete technical walkthrough of how prediction models
 **Table**: `pricing_data`
 
 **Key Columns Used by ML Models**:
+
 - `date` or `check_in` - Time series data
 - `price` - Target variable for pricing analysis
 - `occupancy` - Target variable for demand forecasting
@@ -107,6 +109,7 @@ export function useFileData(fileId: string, limit = 5000) {
 ```
 
 **Behavior**:
+
 - Uses TanStack Query for caching and automatic refetching
 - Fetches up to 10,000 rows for analytics (configurable)
 - Returns raw data array from Supabase
@@ -140,6 +143,7 @@ export function useAnalyticsSummary(fileId: string, data: unknown[]) {
 ```
 
 **Behavior**:
+
 - Only runs when `fileId` exists AND `data` has rows
 - Caches results for 15 minutes (analytics are compute-intensive)
 - Sends entire dataset to backend for analysis
@@ -174,6 +178,7 @@ export const getAnalyticsSummary = async (payload: { data: unknown[] }) => {
 ```
 
 **HTTP Request**:
+
 ```http
 POST /api/analytics/summary
 Authorization: Bearer <JWT>
@@ -189,6 +194,7 @@ Content-Type: application/json
 ```
 
 **Other Available Endpoints**:
+
 - `POST /api/analytics/weather-impact` - Standalone weather analysis
 - `POST /api/analytics/demand-forecast` - Standalone demand forecasting
 - `POST /api/analytics/market-sentiment` - Market sentiment analysis
@@ -203,37 +209,41 @@ Content-Type: application/json
 **Route**: `POST /api/analytics/summary` (Lines 45-82)
 
 ```typescript
-router.post('/summary', asyncHandler(async (req, res) => {
-  const { data } = req.body as AnalyticsSummaryRequest
+router.post(
+  '/summary',
+  asyncHandler(async (req, res) => {
+    const { data } = req.body as AnalyticsSummaryRequest
 
-  if (!data || !Array.isArray(data) || data.length === 0) {
-    return sendError(res, 'VALIDATION', 'Missing or invalid data array')
-  }
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return sendError(res, 'VALIDATION', 'Missing or invalid data array')
+    }
 
-  console.log(`📊 Analytics Summary Request: Received ${data.length} rows`)
+    console.log(`📊 Analytics Summary Request: Received ${data.length} rows`)
 
-  // Transform and validate data
-  const transformedData = transformDataForAnalytics(data)
-  const validation = validateDataQuality(transformedData)
+    // Transform and validate data
+    const transformedData = transformDataForAnalytics(data)
+    const validation = validateDataQuality(transformedData)
 
-  // Generate ML analytics
-  const summary = generateAnalyticsSummary(transformedData)
+    // Generate ML analytics
+    const summary = generateAnalyticsSummary(transformedData)
 
-  // Add validation info
-  summary.dataQuality = {
-    ...summary.dataQuality,
-    validation: {
-      isValid: validation.isValid,
-      warnings: validation.warnings,
-      errors: validation.errors,
-    },
-  }
+    // Add validation info
+    summary.dataQuality = {
+      ...summary.dataQuality,
+      validation: {
+        isValid: validation.isValid,
+        warnings: validation.warnings,
+        errors: validation.errors,
+      },
+    }
 
-  res.json({ success: true, data: summary })
-}))
+    res.json({ success: true, data: summary })
+  })
+)
 ```
 
 **Other Routes**:
+
 - `POST /weather-impact` (Lines 88-100) → `analyzeWeatherImpact()`
 - `POST /demand-forecast` (Lines 106-118) → `forecastDemand()`
 - `POST /competitor-analysis` (Lines 124-136) → `analyzeCompetitorPricing()`
@@ -254,6 +264,7 @@ This service contains all the prediction algorithms.
 **Function**: `analyzeWeatherImpact(data)` (Lines 105-205)
 
 **Algorithm**:
+
 1. Groups data by weather condition
 2. Calculates average price, occupancy, temperature per weather type
 3. Computes Pearson correlations:
@@ -263,6 +274,7 @@ This service contains all the prediction algorithms.
 4. Determines confidence level based on sample size and correlation strength
 
 **Input Example**:
+
 ```typescript
 [
   { date: "2025-01-15", price: 120, occupancy: 85, temperature: 22, weather: "Sunny" },
@@ -272,6 +284,7 @@ This service contains all the prediction algorithms.
 ```
 
 **Output Structure**:
+
 ```typescript
 {
   correlations: {
@@ -301,6 +314,7 @@ This service contains all the prediction algorithms.
 ```
 
 **Confidence Calculation**:
+
 - **High**: > 100 samples AND |correlation| > 0.5
 - **Medium**: > 30 samples AND |correlation| > 0.3
 - **Low**: Otherwise
@@ -312,6 +326,7 @@ This service contains all the prediction algorithms.
 **Function**: `forecastDemand(historicalData, daysAhead = 14)` (Lines 211-320)
 
 **Algorithm**:
+
 1. Extracts time series of occupancy values
 2. Calculates day-of-week seasonal factors (Mon-Sun averages)
 3. Computes recent trend using moving average
@@ -319,6 +334,7 @@ This service contains all the prediction algorithms.
 5. Validates accuracy using last 7 days as test set (R², MAPE)
 
 **Input Example**:
+
 ```typescript
 [
   { date: "2025-01-01", occupancy: 75 },
@@ -329,6 +345,7 @@ This service contains all the prediction algorithms.
 ```
 
 **Output Structure**:
+
 ```typescript
 {
   forecast: [
@@ -356,10 +373,12 @@ This service contains all the prediction algorithms.
 ```
 
 **Accuracy Metrics**:
+
 - **R² (Coefficient of Determination)**: Measures how well predictions fit actual data (0-1 scale)
 - **MAPE (Mean Absolute Percentage Error)**: Average prediction error as percentage
 
 **Confidence Levels**:
+
 - **High**: > 30 days of historical data
 - **Medium**: 14-30 days of historical data
 - **Low**: < 14 days of historical data
@@ -371,12 +390,14 @@ This service contains all the prediction algorithms.
 **Function**: `analyzeCompetitorPricing(yourData, competitorData)` (Lines 325-395)
 
 **Algorithm**:
+
 1. Calculates average price for your property and competitors
 2. Computes price difference (absolute and percentage)
 3. Factors in your occupancy levels
 4. Generates actionable recommendation
 
 **Input Example**:
+
 ```typescript
 // Your data
 [
@@ -394,6 +415,7 @@ This service contains all the prediction algorithms.
 ```
 
 **Output Structure**:
+
 ```typescript
 {
   yourAveragePrice: 122,
@@ -414,6 +436,7 @@ This service contains all the prediction algorithms.
 ```
 
 **Recommendation Logic**:
+
 - **Decrease Price**: Your price > +10% market AND occupancy < 70%
 - **Increase Price**: Your price < -10% market AND occupancy > 85%
 - **Maintain Price**: Within ±5% of market average
@@ -425,41 +448,44 @@ This service contains all the prediction algorithms.
 **Function**: `calculateFeatureImportance(data)` (Lines 400-442)
 
 **Algorithm**:
+
 1. Extracts features: temperature, day_of_week, is_weekend, weather_sunny
 2. Calculates Pearson correlation of each feature with price and occupancy
 3. Ranks features by combined importance
 
 **Output Structure**:
+
 ```typescript
-[
+;[
   {
-    feature: "is_weekend",
+    feature: 'is_weekend',
     priceCorrelation: 0.68,
     occupancyCorrelation: 0.72,
-    importance: 70              // (0.68 + 0.72) * 50 = 70
+    importance: 70, // (0.68 + 0.72) * 50 = 70
   },
   {
-    feature: "temperature",
+    feature: 'temperature',
     priceCorrelation: 0.55,
     occupancyCorrelation: 0.48,
-    importance: 52
+    importance: 52,
   },
   {
-    feature: "weather_sunny",
+    feature: 'weather_sunny',
     priceCorrelation: 0.42,
     occupancyCorrelation: 0.51,
-    importance: 47
+    importance: 47,
   },
   {
-    feature: "day_of_week",
+    feature: 'day_of_week',
     priceCorrelation: 0.31,
     occupancyCorrelation: 0.39,
-    importance: 35
-  }
+    importance: 35,
+  },
 ]
 ```
 
 **Interpretation**:
+
 - **Importance > 50**: Strong predictor, should heavily influence pricing
 - **Importance 30-50**: Moderate predictor, consider in pricing decisions
 - **Importance < 30**: Weak predictor, minor factor
@@ -473,11 +499,13 @@ This service contains all the prediction algorithms.
 **Purpose**: Combines all ML functions into a single comprehensive response
 
 **Calls**:
+
 1. `analyzeWeatherImpact(data)` → Weather correlations and stats
 2. `forecastDemand(data)` → 14-day occupancy predictions
 3. `calculateFeatureImportance(data)` → Feature ranking
 
 **Output Structure**:
+
 ```typescript
 {
   weatherImpact: { ... },        // From analyzeWeatherImpact()
@@ -506,6 +534,7 @@ This service contains all the prediction algorithms.
 **File**: [frontend/src/pages/Insights.tsx](../../frontend/src/pages/Insights.tsx)
 
 **Data Extraction** (Lines 58-59):
+
 ```typescript
 const demandForecast = analyticsSummary?.demandForecast || null
 const weatherAnalysis = analyticsSummary?.weatherImpact || null
@@ -526,6 +555,7 @@ const weatherAnalysis = analyticsSummary?.weatherImpact || null
    - Displays demand forecast chart and weather correlations
 
 **Visualization Libraries**:
+
 - **Recharts**: Line charts, bar charts, scatter plots for predictions
 - **Framer Motion**: Smooth animations and loading states
 - **Tailwind CSS**: Responsive styling
@@ -578,6 +608,7 @@ curl -X POST http://localhost:3001/api/analytics/summary \
 ```
 
 **Expected Response**:
+
 ```json
 {
   "success": true,
@@ -596,15 +627,16 @@ curl -X POST http://localhost:3001/api/analytics/summary \
 
 ### Computational Complexity
 
-| Function | Time Complexity | Notes |
-|----------|----------------|-------|
-| `analyzeWeatherImpact()` | O(n) | Single pass to group and calculate averages |
-| `forecastDemand()` | O(n log n) | Sorting time series |
-| `analyzeCompetitorPricing()` | O(n + m) | n = your data, m = competitor data |
-| `calculateFeatureImportance()` | O(n * f) | f = number of features (4) |
-| **Total** | **O(n log n)** | Dominated by sorting in forecast |
+| Function                       | Time Complexity | Notes                                       |
+| ------------------------------ | --------------- | ------------------------------------------- |
+| `analyzeWeatherImpact()`       | O(n)            | Single pass to group and calculate averages |
+| `forecastDemand()`             | O(n log n)      | Sorting time series                         |
+| `analyzeCompetitorPricing()`   | O(n + m)        | n = your data, m = competitor data          |
+| `calculateFeatureImportance()` | O(n \* f)       | f = number of features (4)                  |
+| **Total**                      | **O(n log n)**  | Dominated by sorting in forecast            |
 
 **Typical Performance**:
+
 - 100 rows: < 10ms
 - 1,000 rows: < 50ms
 - 10,000 rows: < 200ms
@@ -612,6 +644,7 @@ curl -X POST http://localhost:3001/api/analytics/summary \
 ### Caching Strategy
 
 **Frontend (TanStack Query)**:
+
 - `useFileData()`: 5 minutes stale time
 - `useAnalyticsSummary()`: 15 minutes stale time
 - `useAIInsights()`: 30 minutes stale time (AI calls are expensive)
@@ -625,6 +658,7 @@ curl -X POST http://localhost:3001/api/analytics/summary \
 ### Frontend Error States
 
 **No Data**:
+
 ```typescript
 if (!fileData || fileData.length === 0) {
   // Show empty state UI
@@ -633,6 +667,7 @@ if (!fileData || fileData.length === 0) {
 ```
 
 **API Errors**:
+
 ```typescript
 const { data, error, isError } = useAnalyticsSummary(fileId, fileData)
 
@@ -645,6 +680,7 @@ if (isError) {
 ### Backend Validation
 
 **Missing Data**:
+
 ```typescript
 if (!data || !Array.isArray(data) || data.length === 0) {
   return sendError(res, 'VALIDATION', 'Missing or invalid data array')
@@ -652,17 +688,19 @@ if (!data || !Array.isArray(data) || data.length === 0) {
 ```
 
 **Insufficient Data for Prediction**:
+
 ```typescript
 if (historicalData.length < 7) {
   return {
     forecast: [],
     accuracy: null,
-    method: 'insufficient_data'
+    method: 'insufficient_data',
   }
 }
 ```
 
 **Data Quality Warnings**:
+
 ```typescript
 const validation = validateDataQuality(transformedData)
 // Returns: { isValid: true, warnings: [...], errors: [...] }
@@ -677,11 +715,13 @@ const validation = validateDataQuality(transformedData)
 **Purpose**: Measures linear relationship between two variables (-1 to +1)
 
 **Formula**:
+
 ```
 r = (n·Σxy - Σx·Σy) / sqrt((n·Σx² - (Σx)²) · (n·Σy² - (Σy)²))
 ```
 
 **Interpretation**:
+
 - **r > 0.7**: Strong positive correlation
 - **r > 0.4**: Moderate positive correlation
 - **r > 0**: Weak positive correlation
@@ -695,6 +735,7 @@ r = (n·Σxy - Σx·Σy) / sqrt((n·Σx² - (Σx)²) · (n·Σy² - (Σy)²))
 ### Time Series Forecasting (Seasonal Moving Average)
 
 **Steps**:
+
 1. **Calculate Day-of-Week Seasonality**:
    - Group historical data by day of week (Mon, Tue, ..., Sun)
    - Calculate average occupancy for each day
@@ -720,11 +761,13 @@ r = (n·Σxy - Σx·Σy) / sqrt((n·Σx² - (Σx)²) · (n·Σy² - (Σy)²))
 **Purpose**: Measures how well predictions fit actual data (0 to 1)
 
 **Formula**:
+
 ```
 R² = 1 - (Σ(actual - predicted)²) / (Σ(actual - mean)²)
 ```
 
 **Interpretation**:
+
 - **R² = 1.0**: Perfect predictions
 - **R² > 0.9**: Excellent fit
 - **R² > 0.7**: Good fit
@@ -740,11 +783,13 @@ R² = 1 - (Σ(actual - predicted)²) / (Σ(actual - mean)²)
 **Purpose**: Average prediction error as percentage
 
 **Formula**:
+
 ```
 MAPE = (1/n) · Σ(|actual - predicted| / actual) · 100
 ```
 
 **Interpretation**:
+
 - **MAPE < 5%**: Excellent predictions
 - **MAPE < 10%**: Good predictions
 - **MAPE < 20%**: Reasonable predictions
@@ -758,26 +803,29 @@ MAPE = (1/n) · Σ(|actual - predicted| / actual) · 100
 
 ### Minimum Requirements
 
-| Prediction Type | Minimum Rows | Recommended Rows | Required Columns |
-|----------------|--------------|------------------|------------------|
-| Weather Impact | 10 | 100+ | `date`, `price`, `weather` or `temperature` |
-| Demand Forecast | 7 | 30+ | `date`, `occupancy` |
-| Competitor Analysis | 5 | 50+ | `date`, `price` (yours + competitors) |
-| Feature Importance | 10 | 100+ | `date`, `price`, `occupancy`, `temperature`, `weather` |
+| Prediction Type     | Minimum Rows | Recommended Rows | Required Columns                                       |
+| ------------------- | ------------ | ---------------- | ------------------------------------------------------ |
+| Weather Impact      | 10           | 100+             | `date`, `price`, `weather` or `temperature`            |
+| Demand Forecast     | 7            | 30+              | `date`, `occupancy`                                    |
+| Competitor Analysis | 5            | 50+              | `date`, `price` (yours + competitors)                  |
+| Feature Importance  | 10           | 100+             | `date`, `price`, `occupancy`, `temperature`, `weather` |
 
 ### Data Quality Impact
 
 **High Quality Data** (100+ rows, 90%+ completeness):
+
 - Confidence: "high"
 - R²: 0.7-0.9
 - MAPE: 5-10%
 
 **Medium Quality Data** (30-100 rows, 70-90% completeness):
+
 - Confidence: "medium"
 - R²: 0.5-0.7
 - MAPE: 10-20%
 
 **Low Quality Data** (< 30 rows, < 70% completeness):
+
 - Confidence: "low"
 - R²: < 0.5
 - MAPE: > 20%
@@ -789,12 +837,14 @@ MAPE = (1/n) · Σ(|actual - predicted| / actual) · 100
 ### Problem: Predictions Not Showing in UI
 
 **Diagnosis**:
+
 1. Open DevTools → Network tab
 2. Click "Generate Analytics" button
 3. Check for `/api/analytics/summary` request
 4. Verify response has `success: true` and `data` object
 
 **Common Causes**:
+
 - **No data uploaded**: Upload CSV file first
 - **Empty data array**: Check file has valid rows
 - **API error**: Check backend logs for errors
@@ -808,6 +858,7 @@ MAPE = (1/n) · Σ(|actual - predicted| / actual) · 100
 Check `dataQuality.completeness` in API response
 
 **Solutions**:
+
 - **Upload more data**: Predictions improve with > 30 days of history
 - **Complete missing columns**: Add weather and temperature data
 - **Remove outliers**: Clean data before upload
@@ -820,11 +871,13 @@ Check `dataQuality.completeness` in API response
 Check `demandForecast.accuracy.r2` and `demandForecast.accuracy.mape`
 
 **Causes**:
+
 - **Insufficient historical data**: Need 14+ days minimum
 - **High seasonality variation**: Business has unpredictable demand
 - **External factors**: Events, holidays not captured in data
 
 **Solutions**:
+
 - Collect more historical data
 - Add holiday enrichment (currently disabled, needs Supabase migration)
 - Use shorter forecast window (7 days instead of 14)
@@ -873,6 +926,7 @@ Check `demandForecast.accuracy.r2` and `demandForecast.accuracy.mape`
 **Data Flow**: Supabase → Frontend (React Query) → Backend API → ML Analytics → Frontend UI
 
 **Predictions Available**:
+
 - ✅ Weather Impact Analysis (Pearson correlations)
 - ✅ 14-Day Demand Forecasting (Seasonal moving average)
 - ✅ Competitor Pricing Recommendations

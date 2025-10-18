@@ -25,7 +25,8 @@
       "Bash(findstr:*)",
       "Bash(npx tsx:*)",
       "Bash(npx husky init)",
-      "Bash(pnpm run build:*)"
+      "Bash(pnpm run build:*)",
+      "Bash(pnpm run fix-all:*)"
     ],
     "deny": [],
     "ask": []

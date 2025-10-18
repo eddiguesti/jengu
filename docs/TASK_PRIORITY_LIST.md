@@ -35,6 +35,7 @@ Based on `docs/tasks-done/` analysis:
 **Why First**: User explicitly said "make sure you get rid of all fake data as i want to make sure it works correctly"
 
 **Files Fixed**:
+
 1. ✅ `frontend/src/pages/Dashboard.tsx` - DONE (replaced with real Supabase data)
 2. ✅ `frontend/src/pages/Insights.tsx` - Replaced `getCombinedInsights()` with real data processing
 3. ✅ `frontend/src/lib/services/insightsData.ts` - DELETED (350 lines of mock data)
@@ -42,6 +43,7 @@ Based on `docs/tasks-done/` analysis:
 5. ✅ All charts show graceful empty states when no data
 
 **Acceptance Criteria**: ✅ ALL MET
+
 - ✅ All charts use real data from Supabase via React Query hooks
 - ✅ No hardcoded/fake data anywhere in UI
 - ✅ Empty states show when no data uploaded
@@ -62,6 +64,7 @@ Based on `docs/tasks-done/` analysis:
 **Why Second**: Pricing Engine backend is ready but frontend still uses mock data
 
 **What Was Done**:
+
 1. ✅ Replaced `generatePricingData()` mock function (70 lines) with `fetchPricingData()` async function
 2. ✅ Integrated `getPricingQuotesForRange()` from pricing API service
 3. ✅ Added property selector dropdown to choose which file to price
@@ -74,14 +77,17 @@ Based on `docs/tasks-done/` analysis:
 10. ✅ Transform API response to match existing UI data structure
 
 **Testing**:
+
 - ✅ Type check: PASSED
 - ✅ Build check: PASSED (5.67s)
 - ✅ Bundle: PricingEngine-BtIETbQe.js (28.43 kB, gzipped: 6.82 kB)
 
 **Files Modified**:
+
 - ✅ `frontend/src/pages/PricingEngine.tsx` (167 insertions, 77 deletions)
 
 **Reference**:
+
 - `docs/tasks-done/TASK-2-WIRE-PRICING-ENGINE-TO-BACKEND-COMPLETED.md`
 - `docs/tasks-done/PRICING-ENGINE-PHASE-1-COMPLETED-2025-01-18.md`
 
@@ -101,11 +107,13 @@ Based on `docs/tasks-done/` analysis:
 **What to Build**:
 
 #### Phase 3A: Setup (1 hour)
+
 ```bash
 pnpm add echarts echarts-for-react @ant-design/plots
 ```
 
 Create structure:
+
 ```
 frontend/src/features/pricingDashboard/
 ├─ state/useDashboardStore.ts
@@ -122,6 +130,7 @@ frontend/src/features/pricingDashboard/
 ```
 
 #### Phase 3B: Charts to Implement (6-8 hours)
+
 1. **Revenue vs Optimized (Gain)** - ECharts line with shaded area
 2. **Occupancy Pace vs Target** - Lead bucket visualization
 3. **ADR vs Competitor Index** - Indexed lines with bands
@@ -131,7 +140,9 @@ frontend/src/features/pricingDashboard/
 7. **Price Adjustment Waterfall** - AntV waterfall ("Why this price")
 
 #### Phase 3C: Backend Analytics Endpoints (3-4 hours)
+
 Add to `backend/routes/analytics.ts`:
+
 - `POST /api/analytics/revenue-series`
 - `POST /api/analytics/occupancy-pace`
 - `POST /api/analytics/adr-index`
@@ -156,6 +167,7 @@ Add to `backend/routes/analytics.ts`:
 **Why Fourth**: Brings premium charts online with actual pricing data
 
 **What to Do**:
+
 1. Modify `DashboardShell.tsx` to call pricing service `/score` endpoint
 2. Extract price grid, expected revenue, and reasoning from response
 3. Populate **Elasticity Curve** and **Waterfall** charts
@@ -163,6 +175,7 @@ Add to `backend/routes/analytics.ts`:
 5. Test with different pricing strategies
 
 **Files to Modify**:
+
 - `frontend/src/features/pricingDashboard/DashboardShell.tsx`
 - `frontend/src/features/pricingDashboard/api/analyticsClient.ts`
 - `frontend/src/pages/PricingEngine.tsx` (add feature flag toggle)
@@ -179,6 +192,7 @@ Add to `backend/routes/analytics.ts`:
 **Why Fifth**: Prevents future code quality issues
 
 **What to Do**:
+
 ```bash
 pnpm add -D husky lint-staged
 
@@ -190,9 +204,11 @@ pnpm add -D husky lint-staged
 ```
 
 **Files to Create**:
+
 - `.husky/pre-commit`
 
 **Files to Modify**:
+
 - `package.json` (add lint-staged config)
 
 **Reference**: `docs/COMPREHENSIVE-AUDIT-2025-01-18.md` (High Priority Improvement #1)
@@ -209,6 +225,7 @@ pnpm add -D husky lint-staged
 **Why Sixth**: Runtime type safety for API endpoints
 
 **What to Do**:
+
 ```bash
 pnpm add zod
 ```
@@ -219,11 +236,13 @@ pnpm add zod
 4. Test with invalid inputs
 
 **Files to Create**:
+
 - `backend/schemas/analytics.schema.ts`
 - `backend/schemas/pricing.schema.ts`
 - `backend/schemas/data.schema.ts`
 
 **Files to Modify**:
+
 - All route files in `backend/routes/`
 
 **Reference**: `docs/COMPREHENSIVE-AUDIT-2025-01-18.md` (High Priority Improvement #2)
@@ -240,6 +259,7 @@ pnpm add zod
 **Why Seventh**: Prevents frontend/backend type drift
 
 **What to Do**:
+
 ```bash
 mkdir shared
 cd shared
@@ -252,12 +272,14 @@ pnpm init
 4. Update imports across codebase
 
 **Files to Create**:
+
 - `shared/package.json`
 - `shared/tsconfig.json`
 - `shared/src/types/pricing.ts`
 - `shared/src/types/analytics.ts`
 
 **Files to Modify**:
+
 - `pnpm-workspace.yaml` (add shared package)
 - Multiple files (update imports)
 
@@ -275,6 +297,7 @@ pnpm init
 **Why Last**: Validates all previous work
 
 **What to Test**:
+
 1. Upload real CSV with historical booking data
 2. Verify Dashboard shows correct statistics
 3. Generate analytics predictions
@@ -289,16 +312,16 @@ pnpm init
 
 ## 📊 Summary Matrix
 
-| Task | Priority | Effort | Blocker | Status |
-|------|----------|--------|---------|--------|
-| 1. Remove Fake Data | HIGHEST ⚡ | 2h | None | ✅ COMPLETE |
-| 2. Wire PricingEngine | HIGH | 2h | ~~Task 1~~ | ✅ COMPLETE |
-| 3. Premium Charts | MEDIUM-HIGH | 8-12h | ~~Task 1~~ | READY TO START |
-| 4. Connect Charts to Pricing | MEDIUM | 2-3h | Task 3 | NOT STARTED |
-| 5. Pre-commit Hooks | LOW-MEDIUM | 30m | None | NOT STARTED |
-| 6. Zod Validation | LOW-MEDIUM | 2-4h | None | NOT STARTED |
-| 7. Shared Types | LOW | 3-5h | None | NOT STARTED |
-| 8. E2E Testing | LOW | 1-2h | Tasks 1-4 | NOT STARTED |
+| Task                         | Priority    | Effort | Blocker    | Status         |
+| ---------------------------- | ----------- | ------ | ---------- | -------------- |
+| 1. Remove Fake Data          | HIGHEST ⚡  | 2h     | None       | ✅ COMPLETE    |
+| 2. Wire PricingEngine        | HIGH        | 2h     | ~~Task 1~~ | ✅ COMPLETE    |
+| 3. Premium Charts            | MEDIUM-HIGH | 8-12h  | ~~Task 1~~ | READY TO START |
+| 4. Connect Charts to Pricing | MEDIUM      | 2-3h   | Task 3     | NOT STARTED    |
+| 5. Pre-commit Hooks          | LOW-MEDIUM  | 30m    | None       | NOT STARTED    |
+| 6. Zod Validation            | LOW-MEDIUM  | 2-4h   | None       | NOT STARTED    |
+| 7. Shared Types              | LOW         | 3-5h   | None       | NOT STARTED    |
+| 8. E2E Testing               | LOW         | 1-2h   | Tasks 1-4  | NOT STARTED    |
 
 **Total Estimated Effort**: 15-28 hours remaining (4h completed)
 
@@ -307,17 +330,20 @@ pnpm init
 ## 🚀 Recommended Execution Plan
 
 ### Week 1 (Critical Path)
+
 - **Day 1**: ✅ Complete Task 1 (Remove Fake Data) - DONE
 - **Day 1-2**: ✅ Complete Task 2 (Wire PricingEngine) - DONE
 - **Day 3-4**: Complete Task 3 (Premium Charts) - NEXT
 - **Day 5**: Complete Task 4 (Connect Charts)
 
 ### Week 2 (Quality Improvements)
+
 - **Day 1**: Complete Task 5 (Pre-commit Hooks)
 - **Day 2-3**: Complete Task 6 (Zod Validation)
 - **Day 4**: Complete Task 8 (E2E Testing)
 
 ### Optional (Future)
+
 - Task 7 (Shared Types) - Nice to have, not critical
 
 ---
@@ -325,18 +351,21 @@ pnpm init
 ## 💡 Notes
 
 ### What NOT to Do
+
 - ❌ Do NOT reimplement Pricing Engine (already done)
 - ❌ Do NOT redo database migrations (already applied)
 - ❌ Do NOT recreate Python service (exists in `services/pricing/`)
 - ❌ Do NOT touch prediction models (verified working today)
 
 ### Safe to Modify
+
 - ✅ Frontend UI components (Dashboard, Insights, PricingEngine)
 - ✅ Backend route handlers (add new endpoints)
 - ✅ Frontend API clients (wire to backend)
 - ✅ Chart components (create new ones)
 
 ### Current Working State
+
 - Backend server: Running on port 3001
 - Python pricing service: Available at `http://localhost:8000`
 - Frontend: Running on port 5173

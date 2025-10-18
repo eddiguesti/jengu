@@ -17,6 +17,7 @@ Remove ALL fake/mock/hardcoded data from the frontend to ensure the application 
 ## ✅ Progress
 
 ### Completed ✅
+
 - ✅ **Dashboard.tsx** - Replaced all mock data with real Supabase data (100% done)
   - Removed `revenueData`, `occupancyData`, `priceData` mock arrays
   - Added `useMemo` hook to process real data
@@ -55,6 +56,7 @@ Remove ALL fake/mock/hardcoded data from the frontend to ensure the application 
 ### Step 1: Fix Insights.tsx (Main Work) ⏳
 
 **Current Issues**:
+
 ```typescript
 // Line 48 - Uses mock data generator
 const [insights, setInsights] = useState(() => getCombinedInsights())
@@ -72,6 +74,7 @@ const competitorData = insights.competitorPricing
 ```
 
 **What to Do**:
+
 1. Remove `getCombinedInsights()` import and usage
 2. Calculate `priceByWeather` from `fileData` using `useMemo`
 3. Calculate `occupancyByDay` from `fileData` using `useMemo`
@@ -80,6 +83,7 @@ const competitorData = insights.competitorPricing
 6. Remove the `useEffect` that refreshes mock insights
 
 **Implementation Pattern** (follow Dashboard.tsx):
+
 ```typescript
 const processedData = useMemo(() => {
   if (!fileData || fileData.length === 0) {
@@ -105,6 +109,7 @@ const processedData = useMemo(() => {
 **Current Issue**: Hardcoded text blocks that don't match actual data
 
 **Lines to Remove/Replace**:
+
 ```typescript
 // Lines 428-490: "Statistical Summary" section
 // Contains fake statistics like:
@@ -114,7 +119,9 @@ const processedData = useMemo(() => {
 ```
 
 **What to Do**:
+
 1. **Option A (Recommended)**: Calculate these from real data
+
    ```typescript
    const weatherStats = useMemo(() => {
      if (!processedData.priceByWeather.length) return null
@@ -125,7 +132,7 @@ const processedData = useMemo(() => {
      if (!sunny || !rainy) return null
 
      return {
-       sunnyPremium: ((sunny.avgPrice - rainy.avgPrice) / rainy.avgPrice * 100).toFixed(1),
+       sunnyPremium: (((sunny.avgPrice - rainy.avgPrice) / rainy.avgPrice) * 100).toFixed(1),
        sunnyOccupancy: sunny.occupancy,
        rainyBookingDrop: ((rainy.bookings / sunny.bookings - 1) * 100).toFixed(0),
      }
@@ -139,11 +146,13 @@ const processedData = useMemo(() => {
 **File**: `frontend/src/lib/services/insightsData.ts` (350 lines)
 
 **Options**:
+
 1. **Delete entirely** (recommended if not used elsewhere)
 2. **Mark as deprecated** with comments
 3. **Repurpose** for real data processing utilities
 
 **What to Check**:
+
 ```bash
 # Search for all imports of this file
 grep -r "from.*insightsData" frontend/src/
@@ -155,6 +164,7 @@ grep -r "from.*insightsData" frontend/src/
 ### Step 4: Verify Empty States Work ⏳
 
 **Test Scenarios**:
+
 1. Fresh user (no files uploaded)
    - Dashboard should show "Upload Data Now" card
    - Insights should show empty state
@@ -169,6 +179,7 @@ grep -r "from.*insightsData" frontend/src/
    - Show warnings about insufficient data
 
 **Files to Test**:
+
 - `frontend/src/pages/Dashboard.tsx`
 - `frontend/src/pages/Insights.tsx`
 - `frontend/src/components/insights/*.tsx`
@@ -211,6 +222,7 @@ grep -r "from.*insightsData" frontend/src/
 ## 📁 Files to Modify
 
 ### Primary Files
+
 1. **frontend/src/pages/Insights.tsx** (495 lines)
    - Remove `getCombinedInsights()` usage
    - Add `useMemo` data processing
@@ -222,6 +234,7 @@ grep -r "from.*insightsData" frontend/src/
    - Estimated changes: Delete entire file
 
 ### Supporting Files (Verify Only)
+
 3. **frontend/src/pages/Dashboard.tsx** - Already done ✅
 4. **frontend/src/components/insights/MLAnalyticsCard.tsx** - Check for mock data
 5. **frontend/src/components/insights/MarketSentimentCard.tsx** - Check for mock data
@@ -232,12 +245,14 @@ grep -r "from.*insightsData" frontend/src/
 ## 🚨 Critical Notes
 
 ### Do NOT Break
+
 - ✅ Keep all ML analytics hooks (`useAnalyticsSummary`, `useMarketSentiment`, etc.)
 - ✅ Keep prediction model integration (verified working today)
 - ✅ Keep TanStack Query caching
 - ✅ Keep existing API endpoints
 
 ### Safe to Remove
+
 - ❌ `getCombinedInsights()` function
 - ❌ `processUploadedData()` if not used
 - ❌ `processCompetitorData()` if Makcorps not being used
@@ -245,7 +260,9 @@ grep -r "from.*insightsData" frontend/src/
 - ❌ Hardcoded statistics text blocks
 
 ### Pattern to Follow
+
 **Use the Dashboard.tsx approach**:
+
 1. Fetch data with React Query (`useFileData`)
 2. Process with `useMemo` hook
 3. Pass to chart components
@@ -289,13 +306,13 @@ This task is complete when:
 
 ## 📊 Estimated Timeline
 
-| Step | Effort | Status |
-|------|--------|--------|
-| 1. Fix Insights.tsx data processing | 1.5h | ✅ DONE |
-| 2. Remove hardcoded statistics | 30m | ✅ DONE |
-| 3. Handle insightsData.ts | 15m | ✅ DONE |
-| 4. Type & build verification | 15m | ✅ DONE |
-| **TOTAL** | **2-3h** | **✅ 100% COMPLETE** |
+| Step                                | Effort   | Status               |
+| ----------------------------------- | -------- | -------------------- |
+| 1. Fix Insights.tsx data processing | 1.5h     | ✅ DONE              |
+| 2. Remove hardcoded statistics      | 30m      | ✅ DONE              |
+| 3. Handle insightsData.ts           | 15m      | ✅ DONE              |
+| 4. Type & build verification        | 15m      | ✅ DONE              |
+| **TOTAL**                           | **2-3h** | **✅ 100% COMPLETE** |
 
 ---
 

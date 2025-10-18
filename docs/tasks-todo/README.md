@@ -7,16 +7,16 @@
 
 ## 📋 Task Order (Priority: First → Last)
 
-| # | Task | Priority | Status | Effort | Blocker | File |
-|---|------|----------|--------|--------|---------|------|
-| 1 | Remove All Fake Data | ⚡ HIGHEST | ✅ COMPLETE | 2h | None | [../tasks-done/TASK-1-REMOVE-FAKE-DATA-COMPLETED.md](../tasks-done/TASK-1-REMOVE-FAKE-DATA-COMPLETED.md) |
-| 2 | Wire PricingEngine to Backend | HIGH | ✅ COMPLETE | 2h | None | [../tasks-done/TASK-2-WIRE-PRICING-ENGINE-TO-BACKEND-COMPLETED.md](../tasks-done/TASK-2-WIRE-PRICING-ENGINE-TO-BACKEND-COMPLETED.md) |
-| 3 | Premium Charts (ECharts + AntV) | MEDIUM-HIGH | 🚀 READY | 8-12h | ~~Task 1~~ | [TASK-3-PREMIUM-CHARTS-ECHARTS-ANTV.md](TASK-3-PREMIUM-CHARTS-ECHARTS-ANTV.md) |
-| 4 | Connect Charts to Pricing | MEDIUM | ⏳ NOT STARTED | 2-3h | Task 3 | [TASK-4-CONNECT-CHARTS-TO-PRICING.md](TASK-4-CONNECT-CHARTS-TO-PRICING.md) |
-| 5 | Pre-commit Hooks | LOW-MEDIUM | ⏳ NOT STARTED | 30m | None | [TASK-5-PRE-COMMIT-HOOKS.md](TASK-5-PRE-COMMIT-HOOKS.md) |
-| 6 | Zod Input Validation | LOW-MEDIUM | ⏳ NOT STARTED | 2-4h | None | [TASK-6-ZOD-INPUT-VALIDATION.md](TASK-6-ZOD-INPUT-VALIDATION.md) |
-| 7 | Shared Types Package | LOW | ⏳ NOT STARTED | 3-5h | None | [TASK-7-SHARED-TYPES-PACKAGE.md](TASK-7-SHARED-TYPES-PACKAGE.md) |
-| 8 | E2E Testing | LOW | ⏳ NOT STARTED | 1-2h | Tasks 1-4 | [TASK-8-END-TO-END-TESTING.md](TASK-8-END-TO-END-TESTING.md) |
+| #   | Task                            | Priority    | Status         | Effort | Blocker    | File                                                                                                                                 |
+| --- | ------------------------------- | ----------- | -------------- | ------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Remove All Fake Data            | ⚡ HIGHEST  | ✅ COMPLETE    | 2h     | None       | [../tasks-done/TASK-1-REMOVE-FAKE-DATA-COMPLETED.md](../tasks-done/TASK-1-REMOVE-FAKE-DATA-COMPLETED.md)                             |
+| 2   | Wire PricingEngine to Backend   | HIGH        | ✅ COMPLETE    | 2h     | None       | [../tasks-done/TASK-2-WIRE-PRICING-ENGINE-TO-BACKEND-COMPLETED.md](../tasks-done/TASK-2-WIRE-PRICING-ENGINE-TO-BACKEND-COMPLETED.md) |
+| 3   | Premium Charts (ECharts + AntV) | MEDIUM-HIGH | 🚀 READY       | 8-12h  | ~~Task 1~~ | [TASK-3-PREMIUM-CHARTS-ECHARTS-ANTV.md](TASK-3-PREMIUM-CHARTS-ECHARTS-ANTV.md)                                                       |
+| 4   | Connect Charts to Pricing       | MEDIUM      | ⏳ NOT STARTED | 2-3h   | Task 3     | [TASK-4-CONNECT-CHARTS-TO-PRICING.md](TASK-4-CONNECT-CHARTS-TO-PRICING.md)                                                           |
+| 5   | Pre-commit Hooks                | LOW-MEDIUM  | ⏳ NOT STARTED | 30m    | None       | [TASK-5-PRE-COMMIT-HOOKS.md](TASK-5-PRE-COMMIT-HOOKS.md)                                                                             |
+| 6   | Zod Input Validation            | LOW-MEDIUM  | ⏳ NOT STARTED | 2-4h   | None       | [TASK-6-ZOD-INPUT-VALIDATION.md](TASK-6-ZOD-INPUT-VALIDATION.md)                                                                     |
+| 7   | Shared Types Package            | LOW         | ⏳ NOT STARTED | 3-5h   | None       | [TASK-7-SHARED-TYPES-PACKAGE.md](TASK-7-SHARED-TYPES-PACKAGE.md)                                                                     |
+| 8   | E2E Testing                     | LOW         | ⏳ NOT STARTED | 1-2h   | Tasks 1-4  | [TASK-8-END-TO-END-TESTING.md](TASK-8-END-TO-END-TESTING.md)                                                                         |
 
 **Total Estimated Effort**: 15-28 hours remaining (4h completed)
 
@@ -25,6 +25,7 @@
 ## 🚀 Execution Plan
 
 ### Week 1 - Critical Path (14-20 hours)
+
 **Goal**: Get all core features working with real data
 
 - **Day 1**: Task 1 - Remove Fake Data ✅ COMPLETE
@@ -33,6 +34,7 @@
 - **Day 5**: Task 4 - Connect Charts to Pricing Service
 
 ### Week 2 - Quality Improvements (3-6 hours)
+
 **Goal**: Add code quality and validation
 
 - **Day 1**: Task 5 - Pre-commit Hooks (30 min)
@@ -40,6 +42,7 @@
 - **Day 4**: Task 8 - E2E Testing
 
 ### Optional - Future Enhancement
+
 - Task 7 - Shared Types Package (nice to have)
 
 ---
@@ -62,6 +65,7 @@ See [../tasks-done/](../tasks-done/) for completed task documentation.
 ### Task 2: Wire PricingEngine to Backend APIs ✅ COMPLETE
 
 **Completed**:
+
 - ✅ Replaced `generatePricingData()` mock function with `fetchPricingData()` async function
 - ✅ Integrated `getPricingQuotesForRange()` from pricing API service
 - ✅ Added property selector dropdown
@@ -84,12 +88,12 @@ See [../tasks-done/](../tasks-done/) for completed task documentation.
 
 - Task 1: 100% ████████████████████ ✅ COMPLETE
 - Task 2: 100% ████████████████████ ✅ COMPLETE
-- Task 3: 0%   ░░░░░░░░░░░░░░░░░░░░ 🚀 READY
-- Task 4: 0%   ░░░░░░░░░░░░░░░░░░░░
-- Task 5: 0%   ░░░░░░░░░░░░░░░░░░░░
-- Task 6: 0%   ░░░░░░░░░░░░░░░░░░░░
-- Task 7: 0%   ░░░░░░░░░░░░░░░░░░░░
-- Task 8: 0%   ░░░░░░░░░░░░░░░░░░░░
+- Task 3: 0% ░░░░░░░░░░░░░░░░░░░░ 🚀 READY
+- Task 4: 0% ░░░░░░░░░░░░░░░░░░░░
+- Task 5: 0% ░░░░░░░░░░░░░░░░░░░░
+- Task 6: 0% ░░░░░░░░░░░░░░░░░░░░
+- Task 7: 0% ░░░░░░░░░░░░░░░░░░░░
+- Task 8: 0% ░░░░░░░░░░░░░░░░░░░░
 
 ---
 
@@ -105,11 +109,13 @@ See [../tasks-done/](../tasks-done/) for completed task documentation.
 ## 📝 Notes
 
 ### What NOT to Do
+
 - ❌ Do NOT reimplement Pricing Engine (already complete)
 - ❌ Do NOT redo database migrations (already applied)
 - ❌ Do NOT touch prediction models (verified working)
 
 ### Current Working State
+
 - ✅ Backend server operational (port 3001)
 - ✅ Python pricing service ready (port 8000)
 - ✅ Frontend running (port 5173)

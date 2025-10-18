@@ -1,7 +1,9 @@
 # CLAUDE_UI_CHARTS_IMPLEMENTATION.md
+
 **Purpose:** Replace legacy charts in the Pricing Dashboard with premium, interactive visuals and wire them to the **Hybrid Pricing Service** outputs and existing backend APIs. This is a fully-scoped task list for Claude to execute safely.
 
 > **Safety rules (do not break):**
+>
 > - Do **NOT** refactor or delete existing modules outside the paths listed here.
 > - Do **NOT** touch authentication or existing endpoints beyond what’s specified.
 > - Keep the **frontend + backend contracts** stable; only **add** new components and swap chart mounts in the dashboard page(s).
@@ -16,31 +18,31 @@
 
 **Charts to implement & data wiring:**
 
-1) **Revenue vs Optimized (Gain)**  
+1. **Revenue vs Optimized (Gain)**
    - Data: `actual_revenue_by_date`, `optimized_revenue_by_date` (from pricing service simulation or backend analytics).
    - Interactions: zoom/brush, tooltip sync, shaded “gain” area, KPI tiles.
 
-2) **Occupancy Pace vs Target (by lead bucket)**  
+2. **Occupancy Pace vs Target (by lead bucket)**
    - Data: `occ_actual_by_lead`, `occ_target_by_lead`, `occ_model_by_lead` (from pricing service `/score` aggregates and daily assimilation job).
    - Interactions: click a lead bucket → filter all charts.
 
-3) **ADR vs Competitor Index**  
+3. **ADR vs Competitor Index**
    - Data: `adr_property_index`, `adr_market_index` (backend: compset snapshot; optional if table exists).
    - Interactions: hover sync; red/green bands for over/under market.
 
-4) **Lead × Season Revenue Heatmap**  
+4. **Lead × Season Revenue Heatmap**
    - Data: `rev_by_lead_season` (backend analytics route over `pricing_data` + quotes/outcomes).
    - Interactions: click cell → filter date range + product.
 
-5) **Forecast vs Actual Bookings**  
+5. **Forecast vs Actual Bookings**
    - Data: `forecast_bookings`, `actual_bookings` (pricing service forecast + `pricing_data.bookings`).
    - Interactions: zoom; error metrics tile (MAPE/CRPS).
 
-6) **Interactive Elasticity Curve**  
+6. **Interactive Elasticity Curve**
    - Data: `price_grid`, `booking_prob_mean`, `booking_prob_low/high` (from `/score` response; or batch endpoint `/api/pricing/simulate-grid`).
    - Interactions: draggable price marker; show comp_median marker.
 
-7) **Price Adjustment Waterfall (“Why this price”) — AntV**  
+7. **Price Adjustment Waterfall (“Why this price”) — AntV**
    - Data: `{baseline, market_shift, occupancy_gap, risk_clamp, event_uplift, final}` (from pricing service reasons or a new lightweight explain endpoint).
    - Interactions: step hover, delta labels.
 
@@ -95,18 +97,18 @@ type DashboardState = {
   propertyId: string | null
   dateRange: { start: string; end: string } | null
   leadBucket: string | null // "0-1" | "2-7" | "8-21" | "22-90"
-  strategy: 'conservative'|'balanced'|'aggressive'
+  strategy: 'conservative' | 'balanced' | 'aggressive'
   productType: string | null
   set: (s: Partial<DashboardState>) => void
 }
 
-export const useDashboardStore = create<DashboardState>((set) => ({
+export const useDashboardStore = create<DashboardState>(set => ({
   propertyId: null,
   dateRange: null,
   leadBucket: null,
   strategy: 'balanced',
   productType: null,
-  set: (s) => set(s),
+  set: s => set(s),
 }))
 ```
 
@@ -161,6 +163,7 @@ export async function getPriceExplainWaterfall(propertyId: string, params: any) 
 ## 5) Core components (ECharts)
 
 ### 5.1 Line with confidence band
+
 ```tsx
 // frontend/src/features/pricingDashboard/components/charts/LineWithBand.tsx
 import React from 'react'
@@ -175,7 +178,7 @@ export type LineWithBandProps = {
   height?: number
 }
 
-export default function LineWithBand({ x, y, yLow, yHigh, name, height=320 }: LineWithBandProps) {
+export default function LineWithBand({ x, y, yLow, yHigh, name, height = 320 }: LineWithBandProps) {
   const option = {
     tooltip: { trigger: 'axis' },
     grid: { left: 36, right: 12, top: 24, bottom: 40 },
@@ -183,88 +186,160 @@ export default function LineWithBand({ x, y, yLow, yHigh, name, height=320 }: Li
     yAxis: { type: 'value', scale: true },
     dataZoom: [{ type: 'inside' }, { type: 'slider' }],
     series: [
-      ...(yHigh && yLow ? [{
-        type: 'line', name: `${name} band`, data: yHigh, lineStyle: { width: 0 },
-        stack: 'band', areaStyle: {}, symbol: 'none'
-      }, {
-        type: 'line', data: yLow, lineStyle: { width: 0 }, stack: 'band', areaStyle: {}, symbol: 'none'
-      }] : []),
-      { type: 'line', name, data: y, smooth: true, symbolSize: 3 }
-    ]
+      ...(yHigh && yLow
+        ? [
+            {
+              type: 'line',
+              name: `${name} band`,
+              data: yHigh,
+              lineStyle: { width: 0 },
+              stack: 'band',
+              areaStyle: {},
+              symbol: 'none',
+            },
+            {
+              type: 'line',
+              data: yLow,
+              lineStyle: { width: 0 },
+              stack: 'band',
+              areaStyle: {},
+              symbol: 'none',
+            },
+          ]
+        : []),
+      { type: 'line', name, data: y, smooth: true, symbolSize: 3 },
+    ],
   }
   return <ReactECharts option={option} style={{ height }} />
 }
 ```
 
 ### 5.2 Indexed lines (ADR vs Market)
+
 ```tsx
 // frontend/src/features/pricingDashboard/components/charts/IndexedLines.tsx
 import React from 'react'
 import ReactECharts from 'echarts-for-react'
 
-export default function IndexedLines({ x, series }: { x: string[]; series: {name:string; data:number[]}[] }) {
+export default function IndexedLines({
+  x,
+  series,
+}: {
+  x: string[]
+  series: { name: string; data: number[] }[]
+}) {
   const option = {
     tooltip: { trigger: 'axis' },
     legend: { bottom: 0 },
     xAxis: { type: 'category', data: x },
     yAxis: { type: 'value', min: 70, max: 130 },
     series: series.map(s => ({ type: 'line', ...s })),
-    visualMap: [{ // optional green/red zones
-      show: false, seriesIndex: 0, dimension: 1
-    }]
+    visualMap: [
+      {
+        // optional green/red zones
+        show: false,
+        seriesIndex: 0,
+        dimension: 1,
+      },
+    ],
   }
   return <ReactECharts option={option} style={{ height: 320 }} />
 }
 ```
 
 ### 5.3 Heatmap (Lead × Season)
+
 ```tsx
 // frontend/src/features/pricingDashboard/components/charts/HeatmapRevLead.tsx
 import React from 'react'
 import ReactECharts from 'echarts-for-react'
 
-export default function HeatmapRevLead({ leads, seasons, matrix }: {
-  leads: string[]; seasons: string[]; matrix: number[][];
+export default function HeatmapRevLead({
+  leads,
+  seasons,
+  matrix,
+}: {
+  leads: string[]
+  seasons: string[]
+  matrix: number[][]
 }) {
   const data = []
-  for (let i=0;i<seasons.length;i++) {
-    for (let j=0;j<leads.length;j++) data.push([j, i, matrix[i][j] ?? 0])
+  for (let i = 0; i < seasons.length; i++) {
+    for (let j = 0; j < leads.length; j++) data.push([j, i, matrix[i][j] ?? 0])
   }
   const option = {
     tooltip: { position: 'top' },
     grid: { left: 70, right: 20, top: 20, bottom: 50 },
     xAxis: { type: 'category', data: leads, splitArea: { show: true } },
     yAxis: { type: 'category', data: seasons, splitArea: { show: true } },
-    visualMap: { min: 0, max: Math.max(...data.map(d=>d[2]||0))||1, orient: 'horizontal', left: 'center', bottom: 0 },
-    series: [{ name: 'RevPAU', type: 'heatmap', data, emphasis: { itemStyle: { shadowBlur: 10 } } }]
+    visualMap: {
+      min: 0,
+      max: Math.max(...data.map(d => d[2] || 0)) || 1,
+      orient: 'horizontal',
+      left: 'center',
+      bottom: 0,
+    },
+    series: [
+      { name: 'RevPAU', type: 'heatmap', data, emphasis: { itemStyle: { shadowBlur: 10 } } },
+    ],
   }
   return <ReactECharts option={option} style={{ height: 360 }} />
 }
 ```
 
 ### 5.4 Elasticity curve with band
+
 ```tsx
 // frontend/src/features/pricingDashboard/components/charts/ElasticityCurve.tsx
 import React from 'react'
 import ReactECharts from 'echarts-for-react'
 
-export default function ElasticityCurve({ prices, mean, low, high, compMedian, chosen }: {
-  prices: number[]; mean: number[]; low?: number[]; high?: number[]; compMedian?: number|null; chosen?: number|null
+export default function ElasticityCurve({
+  prices,
+  mean,
+  low,
+  high,
+  compMedian,
+  chosen,
+}: {
+  prices: number[]
+  mean: number[]
+  low?: number[]
+  high?: number[]
+  compMedian?: number | null
+  chosen?: number | null
 }) {
   const marks = []
-  if (compMedian != null) marks.push({ xAxis: compMedian, label: { formatter: 'Comp' }})
-  if (chosen != null) marks.push({ xAxis: chosen, label: { formatter: 'Chosen' }})
+  if (compMedian != null) marks.push({ xAxis: compMedian, label: { formatter: 'Comp' } })
+  if (chosen != null) marks.push({ xAxis: chosen, label: { formatter: 'Chosen' } })
   const option = {
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'value', data: prices },
     yAxis: { type: 'value', min: 0, max: 1 },
     series: [
-      ...(high && low ? [{
-        type: 'line', data: high, lineStyle: { width: 0 }, stack: 'b', areaStyle: {}, symbol: 'none'
-      }, { type: 'line', data: low, lineStyle: { width: 0 }, stack: 'b', areaStyle: {}, symbol: 'none' }] : []),
-      { type: 'line', data: mean, smooth: true, name: 'Booking prob' }
+      ...(high && low
+        ? [
+            {
+              type: 'line',
+              data: high,
+              lineStyle: { width: 0 },
+              stack: 'b',
+              areaStyle: {},
+              symbol: 'none',
+            },
+            {
+              type: 'line',
+              data: low,
+              lineStyle: { width: 0 },
+              stack: 'b',
+              areaStyle: {},
+              symbol: 'none',
+            },
+          ]
+        : []),
+      { type: 'line', data: mean, smooth: true, name: 'Booking prob' },
     ],
-    markLine: { data: marks }
+    markLine: { data: marks },
   }
   return <ReactECharts option={option} style={{ height: 300 }} />
 }
@@ -282,11 +357,13 @@ import { Waterfall } from '@ant-design/plots'
 export default function WaterfallPrice({ steps }: { steps: { name: string; value: number }[] }) {
   const total = steps.reduce((a, b) => a + b.value, 0)
   const config = {
-    data: steps, xField: 'name', yField: 'value',
+    data: steps,
+    xField: 'name',
+    yField: 'value',
     total: { label: 'Final', value: total },
     interactions: [{ type: 'element-active' }],
     label: { position: 'middle' },
-    tooltip: { shared: true }
+    tooltip: { shared: true },
   }
   // @ts-expect-error lib types
   return <Waterfall {...config} />
@@ -294,6 +371,7 @@ export default function WaterfallPrice({ steps }: { steps: { name: string; value
 ```
 
 **Expected data** from backend `/api/analytics/price-explain`:
+
 ```json
 {
   "steps": [
@@ -316,7 +394,15 @@ export default function WaterfallPrice({ steps }: { steps: { name: string; value
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDashboardStore } from './state/useDashboardStore'
-import { getRevenueSeries, getOccupancyPace, getAdrIndex, getHeatmapRevLead, getForecastVsActual, getElasticityCurve, getPriceExplainWaterfall } from './api/analyticsClient'
+import {
+  getRevenueSeries,
+  getOccupancyPace,
+  getAdrIndex,
+  getHeatmapRevLead,
+  getForecastVsActual,
+  getElasticityCurve,
+  getPriceExplainWaterfall,
+} from './api/analyticsClient'
 import LineWithBand from './components/charts/LineWithBand'
 import IndexedLines from './components/charts/IndexedLines'
 import HeatmapRevLead from './components/charts/HeatmapRevLead'
@@ -328,13 +414,41 @@ export default function DashboardShell() {
 
   const qParams = { dateRange, leadBucket, strategy, productType }
 
-  const rev = useQuery({ queryKey: ['rev', propertyId, qParams], queryFn: () => getRevenueSeries(propertyId!, qParams), enabled: !!propertyId })
-  const pace = useQuery({ queryKey: ['pace', propertyId, qParams], queryFn: () => getOccupancyPace(propertyId!, qParams), enabled: !!propertyId })
-  const adr = useQuery({ queryKey: ['adr', propertyId, qParams], queryFn: () => getAdrIndex(propertyId!, qParams), enabled: !!propertyId })
-  const hm = useQuery({ queryKey: ['hm', propertyId, qParams], queryFn: () => getHeatmapRevLead(propertyId!, qParams), enabled: !!propertyId })
-  const fa = useQuery({ queryKey: ['fa', propertyId, qParams], queryFn: () => getForecastVsActual(propertyId!, qParams), enabled: !!propertyId })
-  const el = useQuery({ queryKey: ['el', propertyId, qParams], queryFn: () => getElasticityCurve(propertyId!, qParams), enabled: !!propertyId })
-  const wf = useQuery({ queryKey: ['wf', propertyId, qParams], queryFn: () => getPriceExplainWaterfall(propertyId!, qParams), enabled: !!propertyId })
+  const rev = useQuery({
+    queryKey: ['rev', propertyId, qParams],
+    queryFn: () => getRevenueSeries(propertyId!, qParams),
+    enabled: !!propertyId,
+  })
+  const pace = useQuery({
+    queryKey: ['pace', propertyId, qParams],
+    queryFn: () => getOccupancyPace(propertyId!, qParams),
+    enabled: !!propertyId,
+  })
+  const adr = useQuery({
+    queryKey: ['adr', propertyId, qParams],
+    queryFn: () => getAdrIndex(propertyId!, qParams),
+    enabled: !!propertyId,
+  })
+  const hm = useQuery({
+    queryKey: ['hm', propertyId, qParams],
+    queryFn: () => getHeatmapRevLead(propertyId!, qParams),
+    enabled: !!propertyId,
+  })
+  const fa = useQuery({
+    queryKey: ['fa', propertyId, qParams],
+    queryFn: () => getForecastVsActual(propertyId!, qParams),
+    enabled: !!propertyId,
+  })
+  const el = useQuery({
+    queryKey: ['el', propertyId, qParams],
+    queryFn: () => getElasticityCurve(propertyId!, qParams),
+    enabled: !!propertyId,
+  })
+  const wf = useQuery({
+    queryKey: ['wf', propertyId, qParams],
+    queryFn: () => getPriceExplainWaterfall(propertyId!, qParams),
+    enabled: !!propertyId,
+  })
 
   return (
     <div className="grid grid-cols-12 gap-4">
@@ -342,26 +456,48 @@ export default function DashboardShell() {
         {rev.data && <LineWithBand x={rev.data.dates} y={rev.data.actual} name="Actual revenue" />}
       </div>
       <div className="col-span-7">
-        {pace.data && <LineWithBand x={pace.data.lead} y={pace.data.actual} name="Occupancy pace" />}
+        {pace.data && (
+          <LineWithBand x={pace.data.lead} y={pace.data.actual} name="Occupancy pace" />
+        )}
       </div>
       <div className="col-span-5">
-        {adr.data && <IndexedLines x={adr.data.dates} series={[
-          { name: 'Property ADR idx', data: adr.data.propertyIndex },
-          { name: 'Market ADR idx', data: adr.data.marketIndex },
-        ]} />}
+        {adr.data && (
+          <IndexedLines
+            x={adr.data.dates}
+            series={[
+              { name: 'Property ADR idx', data: adr.data.propertyIndex },
+              { name: 'Market ADR idx', data: adr.data.marketIndex },
+            ]}
+          />
+        )}
       </div>
       <div className="col-span-6">
-        {hm.data && <HeatmapRevLead leads={hm.data.leadBuckets} seasons={hm.data.seasons} matrix={hm.data.matrix} />}
+        {hm.data && (
+          <HeatmapRevLead
+            leads={hm.data.leadBuckets}
+            seasons={hm.data.seasons}
+            matrix={hm.data.matrix}
+          />
+        )}
       </div>
       <div className="col-span-6">
-        {fa.data && <LineWithBand x={fa.data.dates} y={fa.data.forecast} name="Forecast bookings" />}
+        {fa.data && (
+          <LineWithBand x={fa.data.dates} y={fa.data.forecast} name="Forecast bookings" />
+        )}
       </div>
       <div className="col-span-7">
-        {el.data && <ElasticityCurve prices={el.data.priceGrid} mean={el.data.probMean} low={el.data.probLow} high={el.data.probHigh} compMedian={el.data.compMedian} chosen={el.data.chosenPrice} />}
+        {el.data && (
+          <ElasticityCurve
+            prices={el.data.priceGrid}
+            mean={el.data.probMean}
+            low={el.data.probLow}
+            high={el.data.probHigh}
+            compMedian={el.data.compMedian}
+            chosen={el.data.chosenPrice}
+          />
+        )}
       </div>
-      <div className="col-span-5">
-        {wf.data && <WaterfallPrice steps={wf.data.steps} />}
-      </div>
+      <div className="col-span-5">{wf.data && <WaterfallPrice steps={wf.data.steps} />}</div>
     </div>
   )
 }
@@ -408,7 +544,14 @@ pricingAnalyticsRouter.post('/forecast-actual', authenticateUser, async (req, re
 })
 
 pricingAnalyticsRouter.post('/elasticity', authenticateUser, async (req, res) => {
-  res.json({ priceGrid: [], probMean: [], probLow: [], probHigh: [], compMedian: null, chosenPrice: null })
+  res.json({
+    priceGrid: [],
+    probMean: [],
+    probLow: [],
+    probHigh: [],
+    compMedian: null,
+    chosenPrice: null,
+  })
 })
 
 pricingAnalyticsRouter.post('/price-explain', authenticateUser, async (req, res) => {
@@ -417,6 +560,7 @@ pricingAnalyticsRouter.post('/price-explain', authenticateUser, async (req, res)
 ```
 
 Mount it in `backend/server.ts`:
+
 ```ts
 import { pricingAnalyticsRouter } from './routes/analytics.pricing.js'
 app.use('/api/analytics', pricingAnalyticsRouter)

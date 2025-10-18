@@ -103,7 +103,6 @@ export const Settings = () => {
 
     return () => clearTimeout(timer)
     // Only depend on city and country, not the entire formData object
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.city, formData.country])
 
   const handleSave = () => {

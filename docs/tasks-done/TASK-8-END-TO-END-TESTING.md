@@ -19,6 +19,7 @@ Validate the entire application works correctly with real data from upload throu
 ### Scenario 1: Fresh User Journey
 
 **Steps**:
+
 1. Clear browser localStorage
 2. Login to application
 3. Upload CSV with 30+ days historical data
@@ -33,6 +34,7 @@ Validate the entire application works correctly with real data from upload throu
 12. Export results to CSV
 
 **Expected Results**:
+
 - [ ] All data displays correctly
 - [ ] No fake/mock data shown
 - [ ] Analytics predictions reasonable
@@ -42,10 +44,12 @@ Validate the entire application works correctly with real data from upload throu
 ### Scenario 2: No Historical Data
 
 **Steps**:
+
 1. Upload CSV with only 5 rows
 2. Try to generate pricing
 
 **Expected Results**:
+
 - [ ] Warning shown about insufficient data
 - [ ] Fallback pricing used
 - [ ] Application doesn't crash
@@ -53,10 +57,12 @@ Validate the entire application works correctly with real data from upload throu
 ### Scenario 3: Missing Columns
 
 **Steps**:
+
 1. Upload CSV without weather column
 2. Check Insights page
 
 **Expected Results**:
+
 - [ ] Weather charts show "No weather data" state
 - [ ] Other charts still work
 - [ ] No errors
@@ -64,10 +70,12 @@ Validate the entire application works correctly with real data from upload throu
 ### Scenario 4: Large Dataset
 
 **Steps**:
+
 1. Upload CSV with 10,000+ rows
 2. Generate analytics
 
 **Expected Results**:
+
 - [ ] Processing completes in < 30 seconds
 - [ ] Charts render without lag
 - [ ] Memory usage reasonable
@@ -77,12 +85,14 @@ Validate the entire application works correctly with real data from upload throu
 ## 🧪 Manual Test Checklist
 
 ### Data Upload
+
 - [ ] CSV file validation works
 - [ ] Upload progress shown
 - [ ] Success message appears
 - [ ] Data visible in Data page
 
 ### Dashboard
+
 - [ ] Total records correct
 - [ ] Average price matches CSV
 - [ ] Occupancy rate calculated correctly
@@ -92,6 +102,7 @@ Validate the entire application works correctly with real data from upload throu
 - [ ] All charts responsive
 
 ### Insights
+
 - [ ] Weather impact calculated from real data
 - [ ] Occupancy by day from real data
 - [ ] Price correlations from real data
@@ -100,6 +111,7 @@ Validate the entire application works correctly with real data from upload throu
 - [ ] AI insights generated (if API key present)
 
 ### Pricing Engine
+
 - [ ] Property selection works
 - [ ] Strategy selection works
 - [ ] Fine-tuning sliders functional
@@ -110,6 +122,7 @@ Validate the entire application works correctly with real data from upload throu
 - [ ] Export to CSV works
 
 ### Database Verification
+
 - [ ] Check `pricing_quotes` table in Supabase
 - [ ] Verify quote was saved
 - [ ] Check `user_id` is correct

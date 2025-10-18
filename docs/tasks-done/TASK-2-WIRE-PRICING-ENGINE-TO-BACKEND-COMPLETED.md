@@ -17,6 +17,7 @@ Connect the existing frontend PricingEngine page to the real backend pricing API
 ## 📊 Current State
 
 ### ✅ What's Already Done
+
 - ✅ Backend `/api/pricing/quote` endpoint (438 lines in `backend/routes/pricing.ts`)
 - ✅ Python FastAPI pricing service (`services/pricing/main.py`)
 - ✅ Database tables (`pricing_quotes`, `pricing_outcomes`, `inventory_snapshots`)
@@ -24,6 +25,7 @@ Connect the existing frontend PricingEngine page to the real backend pricing API
 - ✅ Frontend UI components (PricingEngine.tsx - 1,090 lines)
 
 ### ❌ What's Missing
+
 - ❌ Frontend PricingEngine.tsx still uses `generateSimulatedRecommendations()`
 - ❌ No API calls to backend (all simulation is client-side)
 - ❌ Results not saved to database
@@ -40,6 +42,7 @@ Connect the existing frontend PricingEngine page to the real backend pricing API
 **File**: `frontend/src/pages/PricingEngine.tsx`
 
 **Current behavior** (client-side simulation):
+
 ```typescript
 // Line ~500-600 (approximate)
 function generateSimulatedRecommendations(params) {
@@ -71,6 +74,7 @@ const handleGenerate = () => {
 **Use existing API client**: `frontend/src/lib/api/services/pricing.ts`
 
 **Already defined functions**:
+
 ```typescript
 export const getPricingQuote = async (payload: PricingQuoteRequest) => {
   const response = await apiClient.post('/pricing/quote', payload)
@@ -89,6 +93,7 @@ export const checkPricingReadiness = async () => {
 ```
 
 **New implementation**:
+
 ```typescript
 import { getPricingQuote } from '@/lib/api/services/pricing'
 
@@ -130,7 +135,6 @@ const handleGenerate = async () => {
     // 5. Optional: Generate 14-day forecast
     const forecast = await generate14DayForecast(payload)
     setRecommendations(forecast)
-
   } catch (err) {
     setError(err.message)
     console.error('Pricing quote failed:', err)
@@ -143,21 +147,22 @@ const handleGenerate = async () => {
 ### Step 3: Map Backend Response to UI Components
 
 **Backend response structure** (from Python service):
+
 ```json
 {
-  "price": 125.50,
-  "confidence_interval": [110.00, 140.00],
+  "price": 125.5,
+  "confidence_interval": [110.0, 140.0],
   "expected": {
-    "revenue": 125.50,
+    "revenue": 125.5,
     "occupancy_now": 0.75,
     "occupancy_end_bucket": 0.82
   },
   "reasons": {
-    "baseline": 100.00,
-    "market_shift": 5.00,
-    "occupancy_gap": -3.00,
-    "risk_clamp": -2.00,
-    "event_uplift": 4.50
+    "baseline": 100.0,
+    "market_shift": 5.0,
+    "occupancy_gap": -3.0,
+    "risk_clamp": -2.0,
+    "event_uplift": 4.5
   },
   "metadata": {
     "model_version": "1.0.0-rule-based",
@@ -169,17 +174,19 @@ const handleGenerate = async () => {
 **UI components to update**:
 
 1. **Price Display Card**
+
    ```tsx
    <Card>
      <h3>Recommended Price</h3>
      <p className="text-4xl font-bold">€{price.toFixed(2)}</p>
-     <p className="text-sm text-muted">
+     <p className="text-muted text-sm">
        Range: €{confidence_interval[0]} - €{confidence_interval[1]}
      </p>
    </Card>
    ```
 
 2. **Revenue Impact Card**
+
    ```tsx
    <Card>
      <h3>Expected Revenue</h3>
@@ -190,13 +197,15 @@ const handleGenerate = async () => {
 
 3. **Pricing Breakdown (Waterfall Chart)**
    ```tsx
-   <WaterfallChart data={[
-     { name: 'Baseline', value: reasons.baseline },
-     { name: 'Market Shift', value: reasons.market_shift },
-     { name: 'Occupancy Gap', value: reasons.occupancy_gap },
-     { name: 'Risk Clamp', value: reasons.risk_clamp },
-     { name: 'Event Uplift', value: reasons.event_uplift },
-   ]} />
+   <WaterfallChart
+     data={[
+       { name: 'Baseline', value: reasons.baseline },
+       { name: 'Market Shift', value: reasons.market_shift },
+       { name: 'Occupancy Gap', value: reasons.occupancy_gap },
+       { name: 'Risk Clamp', value: reasons.risk_clamp },
+       { name: 'Event Uplift', value: reasons.event_uplift },
+     ]}
+   />
    ```
 
 ### Step 4: Generate 14-Day Forecast
@@ -204,6 +213,7 @@ const handleGenerate = async () => {
 **Current UI**: Shows a table of daily recommendations
 
 **Implementation**:
+
 ```typescript
 async function generate14DayForecast(basePayload) {
   const forecast = []
@@ -240,32 +250,36 @@ async function generate14DayForecast(basePayload) {
 ### Step 5: Add Loading & Error States
 
 **Loading state**:
+
 ```tsx
-{isLoading && (
-  <div className="flex items-center gap-2">
-    <Spinner />
-    <p>Calculating optimal pricing...</p>
-  </div>
-)}
+{
+  isLoading && (
+    <div className="flex items-center gap-2">
+      <Spinner />
+      <p>Calculating optimal pricing...</p>
+    </div>
+  )
+}
 ```
 
 **Error state**:
+
 ```tsx
-{error && (
-  <Alert variant="error">
-    <AlertTitle>Failed to generate pricing</AlertTitle>
-    <AlertDescription>{error}</AlertDescription>
-    <Button onClick={() => setError(null)}>Dismiss</Button>
-  </Alert>
-)}
+{
+  error && (
+    <Alert variant="error">
+      <AlertTitle>Failed to generate pricing</AlertTitle>
+      <AlertDescription>{error}</AlertDescription>
+      <Button onClick={() => setError(null)}>Dismiss</Button>
+    </Alert>
+  )
+}
 ```
 
 **Disabled state during loading**:
+
 ```tsx
-<Button
-  onClick={handleGenerate}
-  disabled={isLoading || !selectedPropertyId}
->
+<Button onClick={handleGenerate} disabled={isLoading || !selectedPropertyId}>
   {isLoading ? 'Calculating...' : 'Generate Recommendations'}
 </Button>
 ```
@@ -319,7 +333,9 @@ async function generate14DayForecast(basePayload) {
 ## 📁 Files to Modify
 
 ### Primary File
+
 **frontend/src/pages/PricingEngine.tsx** (1,090 lines)
+
 - Remove `generateSimulatedRecommendations()` function
 - Add async API calls with `getPricingQuote()`
 - Add loading/error state management
@@ -328,6 +344,7 @@ async function generate14DayForecast(basePayload) {
 - Estimated changes: ~150 lines
 
 ### Supporting Files (May Need Updates)
+
 1. **frontend/src/lib/api/services/pricing.ts** - Already created ✅
 2. **frontend/src/types/pricing.ts** - May need type definitions
 3. **frontend/src/components/pricing/PriceCard.tsx** - Update props if needed
@@ -337,12 +354,14 @@ async function generate14DayForecast(basePayload) {
 ## 🧪 Testing Checklist
 
 ### Unit Testing (Optional)
+
 - [ ] Mock API responses
 - [ ] Test loading states
 - [ ] Test error handling
 - [ ] Test data transformation
 
 ### Integration Testing
+
 - [ ] Backend server running on port 3001
 - [ ] Python service running on port 8000
 - [ ] Frontend running on port 5173
@@ -350,6 +369,7 @@ async function generate14DayForecast(basePayload) {
 - [ ] Verify database logging in Supabase
 
 ### Manual Testing
+
 - [ ] Select property from dropdown
 - [ ] Choose pricing strategy
 - [ ] Adjust fine-tuning sliders
@@ -362,6 +382,7 @@ async function generate14DayForecast(basePayload) {
 - [ ] Check Supabase `pricing_quotes` table has new rows
 
 ### Edge Cases
+
 - [ ] No properties uploaded
 - [ ] Property with 0 historical records
 - [ ] Future date > 365 days
@@ -374,6 +395,7 @@ async function generate14DayForecast(basePayload) {
 ## 🚨 Critical Notes
 
 ### Do NOT Break
+
 - ✅ Keep existing UI components and layout
 - ✅ Keep fine-tuning sliders functional
 - ✅ Keep export to CSV feature
@@ -381,12 +403,14 @@ async function generate14DayForecast(basePayload) {
 - ✅ Keep revenue impact visualizations
 
 ### Safe to Remove
+
 - ❌ `generateSimulatedRecommendations()` function
 - ❌ Client-side pricing calculation logic
 - ❌ Hardcoded baseline prices
 - ❌ Mock competitor data generation
 
 ### Important
+
 - ⚠️ Backend expects ISO date format: `YYYY-MM-DD`
 - ⚠️ Strategy must be lowercase: `'conservative'`, not `'Conservative'`
 - ⚠️ Lead days calculation: `Math.floor((checkInDate - today) / 86400000)`
@@ -440,22 +464,23 @@ This task is complete when:
 
 ## 📊 Estimated Timeline
 
-| Step | Effort | Status |
-|------|--------|--------|
-| 1. Understand current mock flow | 15m | ✅ DONE |
-| 2. Replace with API calls | 45m | ✅ DONE |
-| 3. Map response to UI | 30m | ✅ DONE |
-| 4. Generate 14-day forecast | 30m | ✅ DONE |
-| 5. Add loading/error states | 15m | ✅ DONE |
-| 6. Add property selector | 15m | ✅ DONE |
-| 7. Type check + build verification | 10m | ✅ DONE |
-| **TOTAL** | **2-3h** | **✅ 100% COMPLETE** |
+| Step                               | Effort   | Status               |
+| ---------------------------------- | -------- | -------------------- |
+| 1. Understand current mock flow    | 15m      | ✅ DONE              |
+| 2. Replace with API calls          | 45m      | ✅ DONE              |
+| 3. Map response to UI              | 30m      | ✅ DONE              |
+| 4. Generate 14-day forecast        | 30m      | ✅ DONE              |
+| 5. Add loading/error states        | 15m      | ✅ DONE              |
+| 6. Add property selector           | 15m      | ✅ DONE              |
+| 7. Type check + build verification | 10m      | ✅ DONE              |
+| **TOTAL**                          | **2-3h** | **✅ 100% COMPLETE** |
 
 ---
 
 ## ✅ Implementation Summary
 
 **What Was Done**:
+
 1. ✅ Removed `generatePricingData()` mock function (70 lines)
 2. ✅ Created `fetchPricingData()` async function using `getPricingQuotesForRange()`
 3. ✅ Added property selector with dropdown

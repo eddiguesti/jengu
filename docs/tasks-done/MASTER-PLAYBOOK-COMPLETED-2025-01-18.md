@@ -29,6 +29,7 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 **Required**: Returns `{ success, quote_id, data }` where `data.price` exists and `data.expected.occ_end_bucket` ∈ [0,1]
 
 **Implementation**:
+
 - ✅ Endpoint returns success: true
 - ✅ quote_id: Generated via crypto.randomUUID()
 - ✅ data.price: Calculated price from Python service
@@ -45,6 +46,7 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 **Required**: `pricing_quotes` row written per quote call
 
 **Implementation**:
+
 - ✅ Every `/api/pricing/quote` call logs to database
 - ✅ Includes all required fields: quote_id, userId, propertyId, stay_date, price_offered, etc.
 - ✅ Context captured: season, dow, lead_days, inventory, market data
@@ -60,6 +62,7 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 **Required**: `/api/pricing/learn` upserts to `pricing_outcomes` and returns `{ success: true }`
 
 **Implementation**:
+
 - ✅ Accepts batch array of outcomes
 - ✅ Upserts to pricing_outcomes table (conflict: quote_id)
 - ✅ Forwards batch to Python service `/learn`
@@ -75,6 +78,7 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 **Required**: Python `/ready` returns 200 after first learn or default prior load
 
 **Implementation**:
+
 - ✅ `/ready` endpoint implemented
 - ✅ Returns 200 when service_ready = True
 - ✅ Phase 1: Always ready (rule-based, no model loading required)
@@ -90,6 +94,7 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 **Required**: DB readiness check returns OK (tables, indexes, capacity source)
 
 **Implementation**:
+
 - ✅ `/api/pricing/check-readiness` endpoint implemented
 - ✅ Checks all 3 tables exist (pricing_quotes, pricing_outcomes, inventory_snapshots)
 - ✅ Validates capacity_config in business_settings
@@ -105,10 +110,12 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 ### Phase 1 — DB & Indexes ✅ COMPLETE
 
 **Required**:
+
 - 🧩 Create migrations for pricing_quotes, pricing_outcomes, inventory_snapshots, capacity_config column
 - ⚠️ Verify tables + indexes exist
 
 **Delivered**:
+
 - ✅ Migration SQL created: [backend/migrations/add_pricing_engine_tables.sql](../backend/migrations/add_pricing_engine_tables.sql)
 - ✅ 3 tables with all required columns
 - ✅ RLS policies on all tables
@@ -122,10 +129,12 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 ### Phase 2 — Backend Endpoints (Express) ✅ COMPLETE
 
 **Required**:
+
 - 🧩 Add POST /api/pricing/quote and POST /api/pricing/learn
 - ⚠️ Verify env PRICING_SERVICE_URL is set
 
 **Delivered**:
+
 - ✅ Both endpoints implemented in [backend/routes/pricing.ts](../backend/routes/pricing.ts)
 - ✅ authenticateUser middleware applied
 - ✅ Manual userId filtering + RLS
@@ -141,10 +150,12 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 ### Phase 3 — Pricing Service Health ✅ COMPLETE
 
 **Required**:
+
 - 🧩 Ensure /score, /learn work; add /ready, /live, /version
 - 🧩 Return expected.occ_now and expected.occ_end_bucket from /score
 
 **Delivered**:
+
 - ✅ `/score` endpoint with full pricing logic
 - ✅ `/learn` endpoint (Phase 1: logging, Phase 2: model training)
 - ✅ `/ready` endpoint (200 when service operational)
@@ -161,9 +172,11 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 ### Phase 4 — Readiness Check Route ✅ COMPLETE
 
 **Required**:
+
 - 🧩 Implement /api/pricing/check-readiness in backend to validate DB state
 
 **Delivered**:
+
 - ✅ Comprehensive readiness endpoint
 - ✅ Checks: pricing_quotes table, pricing_outcomes table, inventory_snapshots table
 - ✅ Checks: capacity_config in business_settings
@@ -178,12 +191,14 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 ### Phase 5 — (Optional) Cron ⏸️ DEFERRED
 
 **Required**:
+
 - 🧩 Add nightly node-cron guarded by ENABLE_CRON to assemble batch and call /api/pricing/learn
 
 **Status**: ⏸️ Deferred to Phase 2
 **Reason**: Phase 1 focuses on MVP functionality. Automated learning will be implemented when ML models are trained.
 
 **Current State**:
+
 - Backend supports `/learn` endpoint
 - User can manually trigger learning via API call
 - ENABLE_CRON flag documented for future use
@@ -193,12 +208,14 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 ### Phase 6 — (Optional) Compset & Weather Cache ⏸️ PARTIAL
 
 **Required**:
+
 - 🧩 If you introduce compset_snapshots, wire the optional join in /api/pricing/quote
 
 **Status**: ⏸️ Partial implementation
 **Reason**: compset_snapshots table not created yet, but backend gracefully handles its absence
 
 **Current State**:
+
 - ✅ Backend attempts to query compset_snapshots
 - ✅ Try-catch gracefully handles table not existing
 - ✅ Logs warning if compset data unavailable
@@ -214,6 +231,7 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 **Requirement**: Choose Mode A now; ensure switching to Mode B is 1-line .env change
 
 **Resolution**:
+
 - ✅ Selected Mode A (monolith-friendly dev)
 - ✅ Python service runs on localhost:8000
 - ✅ Backend calls via PRICING_SERVICE_URL environment variable
@@ -227,6 +245,7 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 **Requirement**: If neither inventory_snapshots nor capacity_config available, respond with actionable error
 
 **Resolution**:
+
 - ✅ Prefers inventory_snapshots (most accurate)
 - ✅ Falls back to business_settings.capacity_config[product.type]
 - ✅ If both missing, sets capacity to null (service continues with warning)
@@ -242,6 +261,7 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 **Requirement**: If ENABLE_CRON=true, implement daily learn batch
 
 **Resolution**:
+
 - ✅ Manual learning via `/api/pricing/learn` endpoint (working now)
 - ✅ ENABLE_CRON flag documented for future automation
 - ✅ README includes manual curl example
@@ -254,6 +274,7 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 **Requirement**: Defer. When requested, create minimal "Pricing Strategy" panel
 
 **Resolution**:
+
 - ✅ **MAJOR DISCOVERY**: Frontend UI already exists!
 - ✅ [PricingEngine.tsx](../frontend/src/pages/PricingEngine.tsx) - 1,090 lines
 - ✅ Complete with strategy selection, parameter tuning, visualizations
@@ -266,37 +287,37 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 
 ### Scope & Boundaries
 
-| Requirement | Status |
-|-------------|--------|
-| Do NOT edit files outside specified paths | ✅ Complied |
-| Do NOT remove/refactor existing endpoints | ✅ Complied |
-| Only ADD specified endpoints | ✅ Complied |
-| Python service only in /services/pricing/ | ✅ Complied |
-| All Supabase via backend (not Python) | ✅ Complied |
-| Manual userId filtering | ✅ Implemented |
-| Server-side input validation | ✅ Implemented |
+| Requirement                               | Status         |
+| ----------------------------------------- | -------------- |
+| Do NOT edit files outside specified paths | ✅ Complied    |
+| Do NOT remove/refactor existing endpoints | ✅ Complied    |
+| Only ADD specified endpoints              | ✅ Complied    |
+| Python service only in /services/pricing/ | ✅ Complied    |
+| All Supabase via backend (not Python)     | ✅ Complied    |
+| Manual userId filtering                   | ✅ Implemented |
+| Server-side input validation              | ✅ Implemented |
 
 ### Code Metrics
 
-| Metric | Count |
-|--------|-------|
-| Files Created | 18 |
-| Files Modified | 5 |
-| Lines of Code Added | 4,700+ |
-| API Endpoints Created | 6 |
-| Database Tables Created | 3 |
-| Git Commits | 2 |
+| Metric                  | Count  |
+| ----------------------- | ------ |
+| Files Created           | 18     |
+| Files Modified          | 5      |
+| Lines of Code Added     | 4,700+ |
+| API Endpoints Created   | 6      |
+| Database Tables Created | 3      |
+| Git Commits             | 2      |
 
 ### Quality Metrics
 
-| Check | Status |
-|-------|--------|
-| TypeScript (Backend) | ✅ No errors |
-| TypeScript (Frontend) | ✅ No errors |
-| Code Formatting | ✅ All formatted |
-| Database Migration | ✅ SQL ready |
-| Python Tests | ⏸️ Deferred |
-| Integration Tests | ⏸️ Pending deployment |
+| Check                 | Status                |
+| --------------------- | --------------------- |
+| TypeScript (Backend)  | ✅ No errors          |
+| TypeScript (Frontend) | ✅ No errors          |
+| Code Formatting       | ✅ All formatted      |
+| Database Migration    | ✅ SQL ready          |
+| Python Tests          | ⏸️ Deferred           |
+| Integration Tests     | ⏸️ Pending deployment |
 
 ---
 
@@ -313,11 +334,13 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 ### Deployment Checklist
 
 **Database** (5 minutes):
+
 - [ ] Run migration SQL in Supabase SQL Editor
 - [ ] Verify tables exist (SELECT from pg_tables)
 - [ ] Set capacity_config in business_settings
 
 **Python Service** (5 minutes):
+
 - [ ] cd services/pricing
 - [ ] python -m venv venv
 - [ ] source venv/bin/activate
@@ -325,11 +348,13 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 - [ ] python main.py
 
 **Backend** (2 minutes):
+
 - [ ] Add PRICING_SERVICE_URL=http://localhost:8000 to backend/.env
 - [ ] Restart backend (pnpm run dev)
 - [ ] Verify pricing endpoints in startup message
 
 **Testing** (3 minutes):
+
 - [ ] curl http://localhost:8000/live
 - [ ] curl http://localhost:3001/api/pricing/check-readiness
 - [ ] Test price quote with JWT token
@@ -394,11 +419,13 @@ Successfully completed **all phases** of the Hybrid Pricing Engine Master Playbo
 ### Phase 2: Machine Learning (Future - 15-20 hours)
 
 **Prerequisites**:
+
 - 1,000+ pricing quotes with outcomes
 - Historical weather, compset data
 - Training dataset prepared
 
 **Implementation**:
+
 1. Train ML models (EnKF, conformal prediction, demand forecasting)
 2. Update Python service to use ML instead of rules
 3. Implement automated learning loop (cron job)

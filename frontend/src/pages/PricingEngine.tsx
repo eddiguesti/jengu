@@ -175,12 +175,12 @@ export const PricingEngine: React.FC = () => {
       )
 
       // Calculate average current price from historical data
-      const prices = fileData
-        ?.map((row: any) => parseFloat(row.price || row.rate || 0))
-        .filter((p: number) => p > 0) || []
-      const avgCurrentPrice = prices.length > 0
-        ? prices.reduce((a: number, b: number) => a + b, 0) / prices.length
-        : 280
+      const prices =
+        fileData
+          ?.map((row: any) => parseFloat(row.price || row.rate || 0))
+          .filter((p: number) => p > 0) || []
+      const avgCurrentPrice =
+        prices.length > 0 ? prices.reduce((a: number, b: number) => a + b, 0) / prices.length : 280
 
       // Transform API response to PricingData format
       const data: PricingData[] = quotes.map((quote, i) => {
@@ -283,7 +283,14 @@ export const PricingEngine: React.FC = () => {
     }, 500) // Debounce API calls
 
     return () => clearTimeout(timer)
-  }, [selectedPropertyId, selectedStrategy, demandSensitivity, priceAggression, occupancyTarget, forecastHorizon])
+  }, [
+    selectedPropertyId,
+    selectedStrategy,
+    demandSensitivity,
+    priceAggression,
+    occupancyTarget,
+    forecastHorizon,
+  ])
 
   // Select first property by default
   useEffect(() => {
@@ -427,11 +434,11 @@ export const PricingEngine: React.FC = () => {
               <label className="mb-2 block text-sm font-medium text-text">Select Property</label>
               <select
                 value={selectedPropertyId}
-                onChange={(e) => setSelectedPropertyId(e.target.value)}
+                onChange={e => setSelectedPropertyId(e.target.value)}
                 className="w-full rounded-lg border border-border bg-background px-4 py-2 text-text focus:border-primary focus:outline-none"
               >
                 <option value="">-- Select a property --</option>
-                {uploadedFiles.map((file) => (
+                {uploadedFiles.map(file => (
                   <option key={file.id} value={file.id}>
                     {file.name} ({file.rows} records)
                   </option>

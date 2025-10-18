@@ -21,6 +21,7 @@ The complete data flow from Supabase → Backend ML Analytics → Frontend UI ha
 
 **Status**: Fully operational
 **Test Results**:
+
 ```
 Sample Size: 18 days
 Confidence: Low (due to small sample, will improve with more data)
@@ -38,6 +39,7 @@ Weather Statistics:
 **Interpretation**: Strong correlation between weather and pricing/occupancy. Sunny days command 18% higher prices than rainy days.
 
 **Data Flow Verified**:
+
 1. ✅ Frontend sends data via `POST /api/analytics/weather-impact`
 2. ✅ Backend route calls `analyzeWeatherImpact()` in mlAnalytics service
 3. ✅ Function calculates Pearson correlations and weather group statistics
@@ -49,6 +51,7 @@ Weather Statistics:
 
 **Status**: Fully operational
 **Test Results**:
+
 ```
 Method: Seasonal Moving Average
 Training Size: 15 days
@@ -69,6 +72,7 @@ Sample Forecast:
 **Interpretation**: Algorithm successfully identifies weekend/weekday patterns. Forecasts show realistic occupancy variations with only 3% average error.
 
 **Data Flow Verified**:
+
 1. ✅ Frontend sends data via `POST /api/analytics/demand-forecast`
 2. ✅ Backend route calls `forecastDemand()` in mlAnalytics service
 3. ✅ Function calculates day-of-week seasonality and generates 14-day predictions
@@ -80,6 +84,7 @@ Sample Forecast:
 
 **Status**: Fully operational
 **Test Results**:
+
 ```
 Your Average Price: €122
 Competitor Average Price: €117
@@ -95,6 +100,7 @@ Recommendation:
 **Interpretation**: System correctly identifies that at 4.3% above market with 78% occupancy, current pricing is optimal (within ±5% market alignment).
 
 **Data Flow Verified**:
+
 1. ✅ Frontend sends your data + competitor data via `POST /api/analytics/competitor-analysis`
 2. ✅ Backend route calls `analyzeCompetitorPricing()` in mlAnalytics service
 3. ✅ Function calculates price differences and generates actionable recommendations
@@ -106,6 +112,7 @@ Recommendation:
 
 **Status**: Fully operational
 **Test Results**:
+
 ```
 Feature Rankings (by importance to price & occupancy):
 
@@ -129,6 +136,7 @@ Feature Rankings (by importance to price & occupancy):
 **Interpretation**: Temperature is the strongest predictor (99/100), followed by weather condition (85/100). Weekend factor also significant (72/100).
 
 **Data Flow Verified**:
+
 1. ✅ Frontend sends data via `POST /api/analytics/feature-importance`
 2. ✅ Backend route calls `calculateFeatureImportance()` in mlAnalytics service
 3. ✅ Function calculates correlations for 4 key features
@@ -140,6 +148,7 @@ Feature Rankings (by importance to price & occupancy):
 
 **Status**: Fully operational
 **Test Results**:
+
 ```
 Total Records: 18
 Date Range: 2025-01-01 to 2025-01-18
@@ -160,6 +169,7 @@ Includes:
 **Interpretation**: Comprehensive analytics endpoint working correctly, combining all ML functions into a single API call for efficiency.
 
 **Data Flow Verified**:
+
 1. ✅ Frontend sends data via `POST /api/analytics/summary`
 2. ✅ Backend route calls `generateAnalyticsSummary()` in mlAnalytics service
 3. ✅ Function orchestrates all ML analytics functions
@@ -232,11 +242,13 @@ Includes:
 ## Files Verified
 
 ### Backend Files
+
 - ✅ [backend/services/mlAnalytics.ts](../backend/services/mlAnalytics.ts) - Core prediction algorithms
 - ✅ [backend/routes/analytics.ts](../backend/routes/analytics.ts) - API route handlers
 - ✅ [backend/server.ts](../backend/server.ts) - Express app with analytics routes mounted
 
 ### Frontend Files
+
 - ✅ [frontend/src/hooks/queries/useFileData.ts](../frontend/src/hooks/queries/useFileData.ts) - Data fetching from Supabase
 - ✅ [frontend/src/hooks/queries/useAnalytics.ts](../frontend/src/hooks/queries/useAnalytics.ts) - Analytics hooks
 - ✅ [frontend/src/lib/api/services/analytics.ts](../frontend/src/lib/api/services/analytics.ts) - API client functions
@@ -247,15 +259,16 @@ Includes:
 
 ## Performance Benchmarks
 
-| Function | Sample Size | Execution Time | Status |
-|----------|-------------|----------------|--------|
-| analyzeWeatherImpact() | 18 rows | < 5ms | ✅ Excellent |
-| forecastDemand() | 18 rows | < 10ms | ✅ Excellent |
-| analyzeCompetitorPricing() | 18 + 18 rows | < 5ms | ✅ Excellent |
-| calculateFeatureImportance() | 18 rows | < 5ms | ✅ Excellent |
-| generateAnalyticsSummary() | 18 rows | < 20ms | ✅ Excellent |
+| Function                     | Sample Size  | Execution Time | Status       |
+| ---------------------------- | ------------ | -------------- | ------------ |
+| analyzeWeatherImpact()       | 18 rows      | < 5ms          | ✅ Excellent |
+| forecastDemand()             | 18 rows      | < 10ms         | ✅ Excellent |
+| analyzeCompetitorPricing()   | 18 + 18 rows | < 5ms          | ✅ Excellent |
+| calculateFeatureImportance() | 18 rows      | < 5ms          | ✅ Excellent |
+| generateAnalyticsSummary()   | 18 rows      | < 20ms         | ✅ Excellent |
 
 **Expected Performance at Scale**:
+
 - 100 rows: < 50ms
 - 1,000 rows: < 100ms
 - 10,000 rows: < 200ms
@@ -267,10 +280,12 @@ All functions use O(n) or O(n log n) algorithms - scale well to large datasets.
 ## Accuracy Metrics
 
 ### Demand Forecasting
+
 - **R² Score**: 0.50 (moderate fit with limited data)
 - **MAPE**: 3.0% (excellent - predictions within 3% of actual values)
 
 ### Weather Correlations
+
 - **Temperature ↔ Price**: 0.99 (extremely strong linear relationship)
 - **Temperature ↔ Occupancy**: 0.99 (extremely strong linear relationship)
 - **Price ↔ Occupancy**: 0.99 (extremely strong linear relationship)
@@ -355,6 +370,7 @@ All functions use O(n) or O(n log n) algorithms - scale well to large datasets.
 **✅ VERIFICATION COMPLETE**
 
 All prediction models are:
+
 - ✅ Fully integrated into the application
 - ✅ Receiving data from Supabase correctly
 - ✅ Producing accurate, actionable predictions

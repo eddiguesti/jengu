@@ -57,7 +57,7 @@ export const validate = (schema: ZodSchema) => {
     } catch (error) {
       res.status(400).json({
         error: 'VALIDATION_ERROR',
-        message: error.errors.map(e => e.message).join(', ')
+        message: error.errors.map(e => e.message).join(', '),
       })
     }
   }
@@ -72,7 +72,8 @@ export const validate = (schema: ZodSchema) => {
 import { validate } from '../middleware/validate.js'
 import { pricingQuoteSchema } from '../schemas/pricing.schema.js'
 
-router.post('/quote',
+router.post(
+  '/quote',
   authenticateUser,
   validate(pricingQuoteSchema), // Add validation
   async (req, res) => {
@@ -84,6 +85,7 @@ router.post('/quote',
 ### Step 5: Create Schemas for All Endpoints
 
 Files to create:
+
 - `backend/schemas/analytics.schema.ts`
 - `backend/schemas/data.schema.ts`
 - `backend/schemas/enrichment.schema.ts`
