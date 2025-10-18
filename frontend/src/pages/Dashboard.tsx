@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -6,13 +7,14 @@ import {
   DollarSign,
   BarChart3,
   ArrowUpRight,
+  ArrowDownRight,
   Activity,
   Zap,
   Database,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { useDataStore } from '../store'
+import { useUploadedFiles, useFileData } from '../hooks/queries/useFileData'
 import {
   LineChart,
   Line,
@@ -27,42 +29,141 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 
-// Mock data for charts
-const revenueData = [
-  { month: 'Jan', revenue: 42000, target: 40000 },
-  { month: 'Feb', revenue: 45000, target: 43000 },
-  { month: 'Mar', revenue: 52000, target: 48000 },
-  { month: 'Apr', revenue: 58000, target: 52000 },
-  { month: 'May', revenue: 62000, target: 58000 },
-  { month: 'Jun', revenue: 68000, target: 62000 },
-]
-
-const occupancyData = [
-  { day: 'Mon', occupancy: 65 },
-  { day: 'Tue', occupancy: 68 },
-  { day: 'Wed', occupancy: 72 },
-  { day: 'Thu', occupancy: 78 },
-  { day: 'Fri', occupancy: 92 },
-  { day: 'Sat', occupancy: 98 },
-  { day: 'Sun', occupancy: 95 },
-]
-
-const priceData = [
-  { date: '1', price: 245 },
-  { date: '5', price: 258 },
-  { date: '10', price: 275 },
-  { date: '15', price: 268 },
-  { date: '20', price: 290 },
-  { date: '25', price: 310 },
-  { date: '30', price: 295 },
-]
-
 export const Dashboard = () => {
   const navigate = useNavigate()
-  const { uploadedFiles } = useDataStore()
 
-  // Check if user has uploaded data
-  const hasData = uploadedFiles.length > 0
+  // Fetch files list and data using React Query
+  const { data: uploadedFiles = [] } = useUploadedFiles()
+  const firstFileId = uploadedFiles[0]?.id || ''
+  const { data: fileData = [], isLoading } = useFileData(firstFileId, 10000)
+
+  const hasData = fileData.length > 0
+
+  // Process real data from Supabase for charts and statistics
+  const processedData = useMemo(() => {
+    if (!fileData || fileData.length === 0) {
+      return {
+        totalRecords: 0,
+        avgPrice: 0,
+        avgOccupancy: 0,
+        revenueData: [],
+        occupancyByDay: [],
+        priceTimeSeries: [],
+      }
+    }
+
+    // Calculate totals
+    const totalRecords = fileData.length
+
+    // Calculate average price
+    const prices = fileData
+      .map((row: any) => parseFloat(row.price || row.rate || 0))
+      .filter(p => p > 0)
+    const avgPrice = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : 0
+
+    // Calculate average occupancy
+    const occupancies = fileData
+      .map((row: any) => {
+        let occ = parseFloat(row.occupancy || row.occupancy_rate || 0)
+        if (occ > 1 && occ <= 100) return occ // Already percentage
+        if (occ > 0 && occ <= 1) return occ * 100 // Convert decimal to percentage
+        return 0
+      })
+      .filter(o => o > 0)
+    const avgOccupancy =
+      occupancies.length > 0 ? occupancies.reduce((a, b) => a + b, 0) / occupancies.length : 0
+
+    // Revenue by month (last 6 months)
+    const revenueByMonth: Record<string, { revenue: number; count: number }> = {}
+    fileData.forEach((row: any) => {
+      const date = new Date(row.date || row.check_in || row.booking_date)
+      if (isNaN(date.getTime())) return
+
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      const price = parseFloat(row.price || row.rate || 0)
+
+      if (!revenueByMonth[monthKey]) {
+        revenueByMonth[monthKey] = { revenue: 0, count: 0 }
+      }
+
+      revenueByMonth[monthKey].revenue += price
+      revenueByMonth[monthKey].count++
+    })
+
+    const revenueData = Object.entries(revenueByMonth)
+      .map(([month, data]) => ({
+        month,
+        revenue: Math.round(data.revenue),
+        avgRevenue: Math.round(data.revenue / data.count),
+      }))
+      .sort((a, b) => {
+        const dateA = new Date(a.month)
+        const dateB = new Date(b.month)
+        return dateA.getTime() - dateB.getTime()
+      })
+      .slice(-6) // Last 6 months
+
+    // Occupancy by day of week
+    const dayGroups: Record<string, number[]> = {
+      Mon: [],
+      Tue: [],
+      Wed: [],
+      Thu: [],
+      Fri: [],
+      Sat: [],
+      Sun: [],
+    }
+
+    fileData.forEach((row: any) => {
+      const date = new Date(row.date || row.check_in || row.booking_date)
+      if (isNaN(date.getTime())) return
+
+      const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
+      let occupancy = parseFloat(row.occupancy || row.occupancy_rate || 0)
+
+      if (occupancy > 1 && occupancy <= 100) {
+        // Already percentage
+      } else if (occupancy > 0 && occupancy <= 1) {
+        occupancy = occupancy * 100
+      }
+
+      if (occupancy > 0 && dayOfWeek in dayGroups) {
+        dayGroups[dayOfWeek].push(occupancy)
+      }
+    })
+
+    const occupancyByDay = Object.entries(dayGroups).map(([day, occupancies]) => ({
+      day,
+      occupancy:
+        occupancies.length > 0
+          ? Math.round(occupancies.reduce((a, b) => a + b, 0) / occupancies.length)
+          : 0,
+    }))
+
+    // Price time series (last 30 days)
+    const last30Days = fileData
+      .map((row: any) => ({
+        date: new Date(row.date || row.check_in || row.booking_date),
+        price: parseFloat(row.price || row.rate || 0),
+      }))
+      .filter(d => !isNaN(d.date.getTime()) && d.price > 0)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(-30)
+
+    const priceTimeSeries = last30Days.map(d => ({
+      date: d.date.getDate().toString(),
+      price: Math.round(d.price),
+    }))
+
+    return {
+      totalRecords,
+      avgPrice: Math.round(avgPrice),
+      avgOccupancy: Math.round(avgOccupancy),
+      revenueData,
+      occupancyByDay,
+      priceTimeSeries,
+    }
+  }, [fileData])
 
   return (
     <motion.div
@@ -74,23 +175,28 @@ export const Dashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold text-text">Dashboard</h1>
+          <h1 className="flex items-center gap-3 text-4xl font-bold text-text">
+            Dashboard
+            {isLoading && (
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            )}
+          </h1>
           <p className="mt-2 text-muted">
             {hasData
-              ? 'Real-time insights into your pricing performance'
+              ? 'Real-time insights from your uploaded data'
               : 'Get started by uploading your data'}
           </p>
         </div>
         {hasData && (
           <Badge variant="success" className="px-4 py-2 text-base">
             <Activity className="mr-2 h-4 w-4" />
-            Live Data
+            {processedData.totalRecords.toLocaleString()} Records
           </Badge>
         )}
       </div>
 
       {/* Empty State - No Data */}
-      {!hasData && (
+      {!hasData && !isLoading && (
         <Card variant="elevated" className="py-20 text-center">
           <div className="mx-auto flex max-w-2xl flex-col items-center gap-6">
             <div className="rounded-full bg-primary/10 p-6">
@@ -137,7 +243,7 @@ export const Dashboard = () => {
         </Card>
       )}
 
-      {/* KPI Cards - Enhanced */}
+      {/* KPI Cards - Real Data */}
       {hasData && (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           <motion.div
@@ -155,15 +261,13 @@ export const Dashboard = () => {
                   <div className="rounded-xl bg-primary/10 p-3">
                     <BarChart3 className="h-6 w-6 text-primary" />
                   </div>
-                  <Badge variant="success" size="sm">
-                    +12.5%
-                  </Badge>
                 </div>
                 <p className="mb-1 text-sm text-muted">Total Records</p>
-                <h3 className="text-3xl font-bold text-text">3,972</h3>
-                <div className="mt-3 flex items-center gap-1 text-xs text-success">
-                  <ArrowUpRight className="h-3 w-3" />
-                  <span>487 this month</span>
+                <h3 className="text-3xl font-bold text-text">
+                  {processedData.totalRecords.toLocaleString()}
+                </h3>
+                <div className="mt-3 flex items-center gap-1 text-xs text-muted">
+                  <span>From uploaded data</span>
                 </div>
               </div>
             </Card>
@@ -184,15 +288,13 @@ export const Dashboard = () => {
                   <div className="rounded-xl bg-success/10 p-3">
                     <DollarSign className="h-6 w-6 text-success" />
                   </div>
-                  <Badge variant="success" size="sm">
-                    +8.2%
-                  </Badge>
                 </div>
                 <p className="mb-1 text-sm text-muted">Average Price</p>
-                <h3 className="text-3xl font-bold text-text">€287</h3>
-                <div className="mt-3 flex items-center gap-1 text-xs text-success">
-                  <ArrowUpRight className="h-3 w-3" />
-                  <span>€21 vs last month</span>
+                <h3 className="text-3xl font-bold text-text">
+                  €{processedData.avgPrice.toLocaleString()}
+                </h3>
+                <div className="mt-3 flex items-center gap-1 text-xs text-muted">
+                  <span>Across all records</span>
                 </div>
               </div>
             </Card>
@@ -213,15 +315,26 @@ export const Dashboard = () => {
                   <div className="rounded-xl bg-warning/10 p-3">
                     <TrendingUp className="h-6 w-6 text-warning" />
                   </div>
-                  <Badge variant="success" size="sm">
-                    +5.1%
-                  </Badge>
+                  {processedData.avgOccupancy > 75 ? (
+                    <Badge variant="success" size="sm">
+                      <ArrowUpRight className="mr-1 h-3 w-3" />
+                      High
+                    </Badge>
+                  ) : processedData.avgOccupancy > 50 ? (
+                    <Badge variant="default" size="sm">
+                      Moderate
+                    </Badge>
+                  ) : (
+                    <Badge variant="default" size="sm">
+                      <ArrowDownRight className="mr-1 h-3 w-3" />
+                      Low
+                    </Badge>
+                  )}
                 </div>
                 <p className="mb-1 text-sm text-muted">Occupancy Rate</p>
-                <h3 className="text-3xl font-bold text-text">87.3%</h3>
-                <div className="mt-3 flex items-center gap-1 text-xs text-success">
-                  <ArrowUpRight className="h-3 w-3" />
-                  <span>4.2% improvement</span>
+                <h3 className="text-3xl font-bold text-text">{processedData.avgOccupancy}%</h3>
+                <div className="mt-3 flex items-center gap-1 text-xs text-muted">
+                  <span>Average across dataset</span>
                 </div>
               </div>
             </Card>
@@ -243,13 +356,13 @@ export const Dashboard = () => {
                     <Zap className="h-6 w-6 text-primary" />
                   </div>
                   <Badge variant="primary" size="sm">
-                    Active
+                    Ready
                   </Badge>
                 </div>
-                <p className="mb-1 text-sm text-muted">ML Model Status</p>
-                <h3 className="text-2xl font-bold text-primary">Optimized</h3>
+                <p className="mb-1 text-sm text-muted">ML Predictions</p>
+                <h3 className="text-2xl font-bold text-primary">Available</h3>
                 <div className="mt-3 flex items-center gap-1 text-xs text-muted">
-                  <span>92% accuracy</span>
+                  <span>View in Insights</span>
                 </div>
               </div>
             </Card>
@@ -257,8 +370,8 @@ export const Dashboard = () => {
         </div>
       )}
 
-      {/* Charts Section */}
-      {hasData && (
+      {/* Charts Section - Real Data */}
+      {hasData && processedData.revenueData.length > 0 && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Revenue Trend */}
           <Card variant="default">
@@ -266,14 +379,13 @@ export const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-text">Revenue Performance</h2>
-                  <p className="mt-1 text-sm text-muted">Monthly revenue vs target</p>
+                  <p className="mt-1 text-sm text-muted">Monthly revenue (last 6 months)</p>
                 </div>
-                <Badge variant="success">+15.2%</Badge>
               </div>
             </Card.Header>
             <Card.Body>
               <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={revenueData}>
+                <AreaChart data={processedData.revenueData}>
                   <defs>
                     <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#EBFF57" stopOpacity={0.3} />
@@ -288,6 +400,7 @@ export const Dashboard = () => {
                       backgroundColor: '#1A1A1A',
                       border: '1px solid #2A2A2A',
                       borderRadius: '8px',
+                      color: '#FAFAFA',
                     }}
                   />
                   <Area
@@ -296,14 +409,6 @@ export const Dashboard = () => {
                     stroke="#EBFF57"
                     strokeWidth={3}
                     fill="url(#revenueGradient)"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="target"
-                    stroke="#9CA3AF"
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    dot={false}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -318,12 +423,11 @@ export const Dashboard = () => {
                   <h2 className="text-xl font-semibold text-text">Weekly Occupancy</h2>
                   <p className="mt-1 text-sm text-muted">Average occupancy by day</p>
                 </div>
-                <Badge variant="primary">Current Week</Badge>
               </div>
             </Card.Header>
             <Card.Body>
               <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={occupancyData}>
+                <BarChart data={processedData.occupancyByDay}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
                   <XAxis dataKey="day" stroke="#9CA3AF" />
                   <YAxis stroke="#9CA3AF" />
@@ -332,6 +436,7 @@ export const Dashboard = () => {
                       backgroundColor: '#1A1A1A',
                       border: '1px solid #2A2A2A',
                       borderRadius: '8px',
+                      color: '#FAFAFA',
                     }}
                   />
                   <Bar dataKey="occupancy" fill="#EBFF57" radius={[8, 8, 0, 0]} />
@@ -342,24 +447,23 @@ export const Dashboard = () => {
         </div>
       )}
 
-      {/* Price Trend */}
-      {hasData && (
+      {/* Price Trend - Real Data */}
+      {hasData && processedData.priceTimeSeries.length > 0 && (
         <Card variant="default">
           <Card.Header>
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-text">Price Trend (Last 30 Days)</h2>
-                <p className="mt-1 text-sm text-muted">Average daily price over time</p>
+                <h2 className="text-xl font-semibold text-text">Price Trend</h2>
+                <p className="mt-1 text-sm text-muted">
+                  Last {processedData.priceTimeSeries.length} days
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="default">€287 Avg</Badge>
-                <Badge variant="success">+8.2%</Badge>
-              </div>
+              <Badge variant="default">€{processedData.avgPrice} Avg</Badge>
             </div>
           </Card.Header>
           <Card.Body>
             <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={priceData}>
+              <LineChart data={processedData.priceTimeSeries}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
                 <XAxis dataKey="date" stroke="#9CA3AF" />
                 <YAxis stroke="#9CA3AF" />
@@ -368,6 +472,7 @@ export const Dashboard = () => {
                     backgroundColor: '#1A1A1A',
                     border: '1px solid #2A2A2A',
                     borderRadius: '8px',
+                    color: '#FAFAFA',
                   }}
                 />
                 <Line
@@ -383,11 +488,11 @@ export const Dashboard = () => {
         </Card>
       )}
 
-      {/* Quick Actions - Enhanced */}
+      {/* Quick Actions - Always show */}
       <div>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-semibold text-text">Quick Actions</h2>
-          <p className="text-sm text-muted">Start your pricing optimization journey</p>
+          <p className="text-sm text-muted">Manage your pricing intelligence</p>
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Card
@@ -450,34 +555,36 @@ export const Dashboard = () => {
       </div>
 
       {/* Getting Started Banner */}
-      <Card
-        variant="elevated"
-        className="border-l-4 border-primary bg-gradient-to-r from-primary/5 to-transparent"
-      >
-        <div className="flex items-start gap-4">
-          <div className="rounded-xl bg-primary/10 p-4">
-            <Zap className="h-8 w-8 text-primary" />
-          </div>
-          <div className="flex-1">
-            <h3 className="mb-2 text-xl font-semibold text-text">
-              Welcome to Jengu Dynamic Pricing
-            </h3>
-            <p className="mb-4 text-muted">
-              Start by uploading your booking data, then enrich it with weather and competitor
-              intelligence. Our ML models will help you optimize pricing for maximum revenue and
-              occupancy.
-            </p>
-            <div className="flex gap-3">
-              <Button variant="primary" onClick={() => navigate('/data')}>
-                Get Started
-              </Button>
-              <Button variant="ghost" onClick={() => navigate('/assistant')}>
-                Learn More
-              </Button>
+      {!hasData && (
+        <Card
+          variant="elevated"
+          className="border-l-4 border-primary bg-gradient-to-r from-primary/5 to-transparent"
+        >
+          <div className="flex items-start gap-4">
+            <div className="rounded-xl bg-primary/10 p-4">
+              <Zap className="h-8 w-8 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="mb-2 text-xl font-semibold text-text">
+                Welcome to Jengu Dynamic Pricing
+              </h3>
+              <p className="mb-4 text-muted">
+                Start by uploading your booking data, then enrich it with weather and competitor
+                intelligence. Our ML models will help you optimize pricing for maximum revenue and
+                occupancy.
+              </p>
+              <div className="flex gap-3">
+                <Button variant="primary" onClick={() => navigate('/data')}>
+                  Get Started
+                </Button>
+                <Button variant="ghost" onClick={() => navigate('/assistant')}>
+                  Learn More
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      )}
     </motion.div>
   )
 }
