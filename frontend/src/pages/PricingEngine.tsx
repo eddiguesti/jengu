@@ -5,6 +5,8 @@ import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDataStore } from '../store'
+import { getPricingQuotesForRange, PricingToggles } from '../lib/api/services/pricing'
+import { useFileData } from '../hooks/queries/useFileData'
 import {
   TrendingUp,
   DollarSign,
@@ -116,6 +118,10 @@ export const PricingEngine: React.FC = () => {
   const { uploadedFiles } = useDataStore()
   const hasData = uploadedFiles.length > 0
 
+  // Property selection
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>('')
+  const { data: fileData } = useFileData(selectedPropertyId)
+
   // Strategy and parameters
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy>('balanced')
   const [demandSensitivity, setDemandSensitivity] = useState(0.6)
@@ -127,78 +133,95 @@ export const PricingEngine: React.FC = () => {
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [showImpact, setShowImpact] = useState(false)
   const [appliedSuccess, setAppliedSuccess] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Generate realistic pricing data
-  const generatePricingData = (): PricingData[] => {
-    const data: PricingData[] = []
-    const today = new Date()
-    const basePrice = 280
-    const capacity = 100 // Total rooms/spots
-
-    for (let i = 0; i < forecastHorizon; i++) {
-      const date = new Date(today)
-      date.setDate(date.getDate() + i)
-      const dateStr = date.toISOString().split('T')[0]
-      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
-      const isWeekend = dayName === 'Sat' || dayName === 'Sun'
-
-      // Simulate demand pattern (0-100 scale)
-      const seasonalDemand = 70 + Math.sin((date.getMonth() / 12) * Math.PI * 2) * 15
-      const weekendBoost = isWeekend ? 20 : 0
-      const dayVariation = Math.sin(i * 0.4) * 10
-      const demandForecast = Math.round(
-        Math.max(40, Math.min(100, seasonalDemand + weekendBoost + dayVariation))
-      )
-
-      // Current pricing strategy (basic)
-      const currentPrice = isWeekend ? basePrice + 40 : basePrice
-      const currentOccupancy = Math.min(95, demandForecast * 0.8 + Math.random() * 10)
-
-      // Optimized pricing based on parameters
-      const demandMultiplier = 1 + ((demandForecast - 70) / 100) * demandSensitivity
-      const aggressionFactor = 1 + priceAggression * 0.3
-      const occupancyGap = currentOccupancy - occupancyTarget
-      const occupancyAdjustment = occupancyGap > 0 ? 1.1 : 0.95 // If above target, can charge more
-
-      let optimizedPrice = currentPrice * demandMultiplier * aggressionFactor * occupancyAdjustment
-
-      // Add day-of-week intelligence
-      if (isWeekend) {
-        optimizedPrice *= 1.15
-      }
-
-      // Clamp to realistic range
-      optimizedPrice = Math.round(
-        Math.max(basePrice * 0.7, Math.min(basePrice * 1.8, optimizedPrice))
-      )
-
-      // Calculate occupancy impact
-      // Higher prices reduce occupancy if demand isn't strong enough
-      const priceElasticity = 0.5
-      const priceChange = (optimizedPrice - currentPrice) / currentPrice
-      const occupancyImpact = -priceChange * priceElasticity * demandForecast * 0.3
-      const optimizedOccupancy = Math.round(
-        Math.max(30, Math.min(98, currentOccupancy + occupancyImpact))
-      )
-
-      // Calculate revenues
-      const revenueCurrent = Math.round((currentPrice * currentOccupancy * capacity) / 100)
-      const revenueOptimized = Math.round((optimizedPrice * optimizedOccupancy * capacity) / 100)
-
-      data.push({
-        date: dateStr,
-        day: dayName,
-        current_price: currentPrice,
-        optimized_price: optimizedPrice,
-        demand_forecast: demandForecast,
-        occupancy_current: Math.round(currentOccupancy),
-        occupancy_optimized: optimizedOccupancy,
-        revenue_current: revenueCurrent,
-        revenue_optimized: revenueOptimized,
-      })
+  // Fetch real pricing data from backend API
+  const fetchPricingData = async (): Promise<PricingData[]> => {
+    if (!selectedPropertyId) {
+      return []
     }
 
-    return data
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const today = new Date()
+      const startDate = today.toISOString().split('T')[0]
+
+      // Convert strategy to toggles
+      const toggles: PricingToggles = {
+        risk_mode: selectedStrategy,
+        strategy_fill_vs_rate: Math.round(priceAggression * 100),
+        exploration_pct: 5,
+        target_occ_by_lead: {
+          '0-7': occupancyTarget,
+          '8-14': occupancyTarget - 5,
+          '15-30': occupancyTarget - 10,
+        },
+      }
+
+      // Get quotes for the forecast horizon
+      const quotes = await getPricingQuotesForRange(
+        selectedPropertyId,
+        startDate,
+        forecastHorizon,
+        {
+          type: 'standard',
+          refundable: false,
+          los: 1,
+        },
+        toggles
+      )
+
+      // Calculate average current price from historical data
+      const prices = fileData
+        ?.map((row: any) => parseFloat(row.price || row.rate || 0))
+        .filter((p: number) => p > 0) || []
+      const avgCurrentPrice = prices.length > 0
+        ? prices.reduce((a: number, b: number) => a + b, 0) / prices.length
+        : 280
+
+      // Transform API response to PricingData format
+      const data: PricingData[] = quotes.map((quote, i) => {
+        const date = new Date(today)
+        date.setDate(date.getDate() + i)
+        const dateStr = date.toISOString().split('T')[0]
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
+
+        const optimizedPrice = quote.data.price
+        const currentPrice = avgCurrentPrice
+        const occupancyOptimized = Math.round((quote.data.expected?.occ_now || 0.75) * 100)
+        const occupancyCurrent = Math.round(occupancyOptimized * 0.95) // Estimate slightly lower
+
+        // Estimate demand from occupancy
+        const demandForecast = Math.round(occupancyOptimized * 1.1)
+
+        const capacity = 100
+        const revenueCurrent = Math.round((currentPrice * occupancyCurrent * capacity) / 100)
+        const revenueOptimized = Math.round((optimizedPrice * occupancyOptimized * capacity) / 100)
+
+        return {
+          date: dateStr,
+          day: dayName,
+          current_price: Math.round(currentPrice),
+          optimized_price: Math.round(optimizedPrice),
+          demand_forecast: demandForecast,
+          occupancy_current: occupancyCurrent,
+          occupancy_optimized: occupancyOptimized,
+          revenue_current: revenueCurrent,
+          revenue_optimized: revenueOptimized,
+        }
+      })
+
+      return data
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch pricing data')
+      console.error('❌ Pricing API error:', err)
+      return []
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const [pricingData, setPricingData] = useState<PricingData[]>([])
@@ -251,15 +274,23 @@ export const PricingEngine: React.FC = () => {
     URL.revokeObjectURL(url)
   }
 
-  // Auto-regenerate when parameters change
+  // Auto-fetch pricing when parameters change
   useEffect(() => {
+    if (!selectedPropertyId) return
+
     const timer = setTimeout(() => {
-      const newData = generatePricingData()
-      setPricingData(newData)
-    }, 300)
+      fetchPricingData().then(data => setPricingData(data))
+    }, 500) // Debounce API calls
 
     return () => clearTimeout(timer)
-  }, [demandSensitivity, priceAggression, occupancyTarget, forecastHorizon])
+  }, [selectedPropertyId, selectedStrategy, demandSensitivity, priceAggression, occupancyTarget, forecastHorizon])
+
+  // Select first property by default
+  useEffect(() => {
+    if (uploadedFiles.length > 0 && !selectedPropertyId) {
+      setSelectedPropertyId(uploadedFiles[0].id)
+    }
+  }, [uploadedFiles, selectedPropertyId])
 
   // Calculate business metrics
   const calculateMetrics = (): BusinessMetrics => {
@@ -318,13 +349,21 @@ export const PricingEngine: React.FC = () => {
     setOccupancyTarget(config.occupancyTarget)
   }
 
-  // Optimize animation
-  const handleOptimize = () => {
+  // Optimize - fetch real pricing from API
+  const handleOptimize = async () => {
+    if (!selectedPropertyId) {
+      setError('Please select a property first')
+      return
+    }
+
     setIsOptimizing(true)
-    setTimeout(() => {
-      setIsOptimizing(false)
+    const data = await fetchPricingData()
+    setPricingData(data)
+    setIsOptimizing(false)
+
+    if (data.length > 0) {
       setShowImpact(true)
-    }, 1500)
+    }
   }
 
   // Apply pricing
@@ -361,13 +400,13 @@ export const PricingEngine: React.FC = () => {
             variant="primary"
             size="md"
             onClick={handleOptimize}
-            disabled={isOptimizing}
+            disabled={isOptimizing || !selectedPropertyId || isLoading}
             className="flex items-center gap-2"
           >
-            {isOptimizing ? (
+            {isOptimizing || isLoading ? (
               <>
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                Optimizing...
+                {isLoading ? 'Loading...' : 'Optimizing...'}
               </>
             ) : (
               <>
@@ -378,6 +417,57 @@ export const PricingEngine: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Property Selector */}
+      {hasData && (
+        <Card variant="default">
+          <Card.Body className="flex items-center gap-4">
+            <Database className="h-5 w-5 text-primary" />
+            <div className="flex-1">
+              <label className="mb-2 block text-sm font-medium text-text">Select Property</label>
+              <select
+                value={selectedPropertyId}
+                onChange={(e) => setSelectedPropertyId(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-4 py-2 text-text focus:border-primary focus:outline-none"
+              >
+                <option value="">-- Select a property --</option>
+                {uploadedFiles.map((file) => (
+                  <option key={file.id} value={file.id}>
+                    {file.name} ({file.rows} records)
+                  </option>
+                ))}
+              </select>
+            </div>
+            {isLoading && (
+              <div className="flex items-center gap-2 text-sm text-muted">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                Loading pricing data...
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+      )}
+
+      {/* Error message */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="flex items-center gap-3 rounded-lg border border-error/30 bg-error/10 p-4"
+          >
+            <AlertTriangle className="h-5 w-5 text-error" />
+            <div className="flex-1">
+              <p className="font-semibold text-error">Pricing Error</p>
+              <p className="mt-1 text-sm text-muted">{error}</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setError(null)}>
+              Dismiss
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Success message */}
       <AnimatePresence>
