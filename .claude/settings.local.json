@@ -20,7 +20,10 @@
       "Bash(pnpm run format:*)",
       "Bash(cat:*)",
       "Bash(npx tsc:*)",
-      "Bash(pnpm run format:check:*)"
+      "Bash(pnpm run format:check:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(npx tsx:*)"
     ],
     "deny": [],
     "ask": []
