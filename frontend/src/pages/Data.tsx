@@ -76,7 +76,7 @@ export const Data = () => {
         uniqueId: file.id, // Use the stored ID as uniqueId
       }))
       setFiles(restoredFiles)
-      console.log('✅ Restored', uploadedFiles.length, 'files from localStorage')
+      console.log('✅ Restored', uploadedFiles.length, 'files from database')
 
       // Check if files are already enriched
       const enrichmentStatuses = uploadedFiles.map(file => file.enrichment_status)
@@ -87,7 +87,7 @@ export const Data = () => {
         setFeatures(prev => prev.map(f => ({ ...f, status: 'complete', progress: 100 })))
       }
     }
-  }, [])
+  }, [uploadedFiles])
 
   // Enrichment State
   const [features, setFeatures] = useState<EnrichmentFeature[]>([
