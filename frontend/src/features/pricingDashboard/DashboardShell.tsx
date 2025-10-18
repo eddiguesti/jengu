@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useDashboardStore } from './state/useDashboardStore'
+import { useDataStore } from '../../store'
 import {
   getRevenueSeries,
   getOccupancyPace,
@@ -12,9 +13,11 @@ import LineWithBand from './components/charts/LineWithBand'
 import HeatmapRevLead from './components/charts/HeatmapRevLead'
 import ElasticityCurve from './components/charts/ElasticityCurve'
 import WaterfallPrice from './components/charts/WaterfallPrice'
+import { Database } from 'lucide-react'
 
 export default function DashboardShell() {
-  const { propertyId, dateRange, leadBucket, strategy, productType } = useDashboardStore()
+  const { propertyId, dateRange, leadBucket, strategy, productType, set } = useDashboardStore()
+  const { uploadedFiles } = useDataStore()
 
   const qParams = { dateRange, leadBucket, strategy, productType }
 
@@ -49,16 +52,42 @@ export default function DashboardShell() {
     enabled: !!propertyId,
   })
 
-  if (!propertyId) {
-    return (
-      <div className="flex items-center justify-center py-12 text-muted">
-        Select a property to view analytics
-      </div>
-    )
-  }
-
   return (
-    <div className="grid grid-cols-12 gap-4">
+    <div className="space-y-4">
+      {/* Property Selector */}
+      {uploadedFiles.length > 0 && (
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="flex items-center gap-4">
+            <Database className="h-5 w-5 text-primary" />
+            <div className="flex-1">
+              <label className="mb-2 block text-sm font-medium text-text">
+                Select Property for Analytics
+              </label>
+              <select
+                value={propertyId || ''}
+                onChange={e => set({ propertyId: e.target.value })}
+                className="w-full rounded-lg border border-border bg-background px-4 py-2 text-text focus:border-primary focus:outline-none"
+              >
+                <option value="">-- Select a property --</option>
+                {uploadedFiles.map(file => (
+                  <option key={file.id} value={file.id}>
+                    {file.name} ({file.rows} records)
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!propertyId ? (
+        <div className="flex items-center justify-center rounded-lg border border-border bg-card py-12 text-muted">
+          {uploadedFiles.length === 0
+            ? 'Upload a CSV file to view analytics'
+            : 'Select a property above to view analytics'}
+        </div>
+      ) : (
+        <div className="grid grid-cols-12 gap-4">
       {/* Revenue Series */}
       <div className="col-span-12">
         <div className="rounded-lg border border-border bg-card p-4">
@@ -165,6 +194,8 @@ export default function DashboardShell() {
           )}
         </div>
       </div>
+        </div>
+      )}
     </div>
   )
 }
