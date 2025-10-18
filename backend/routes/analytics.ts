@@ -211,4 +211,115 @@ router.post(
   })
 )
 
+/**
+ * Revenue series (actual vs optimized)
+ * POST /api/analytics/revenue-series
+ */
+router.post(
+  '/revenue-series',
+  asyncHandler(async (req, res) => {
+    // Return mock data for now - implement real data later
+    res.json({
+      dates: [],
+      actual: [],
+      optimized: [],
+    })
+  })
+)
+
+/**
+ * Occupancy pace by lead bucket
+ * POST /api/analytics/occupancy-pace
+ */
+router.post(
+  '/occupancy-pace',
+  asyncHandler(async (req, res) => {
+    res.json({
+      lead: [],
+      actual: [],
+      target: [],
+      model: [],
+    })
+  })
+)
+
+/**
+ * ADR index vs market
+ * POST /api/analytics/adr-index
+ */
+router.post(
+  '/adr-index',
+  asyncHandler(async (req, res) => {
+    res.json({
+      dates: [],
+      propertyIndex: [],
+      marketIndex: [],
+    })
+  })
+)
+
+/**
+ * Revenue heatmap by lead × season
+ * POST /api/analytics/rev-lead-heatmap
+ */
+router.post(
+  '/rev-lead-heatmap',
+  asyncHandler(async (req, res) => {
+    res.json({
+      leadBuckets: [],
+      seasons: [],
+      matrix: [],
+    })
+  })
+)
+
+/**
+ * Forecast vs actual bookings
+ * POST /api/analytics/forecast-actual
+ */
+router.post(
+  '/forecast-actual',
+  asyncHandler(async (req, res) => {
+    res.json({
+      dates: [],
+      forecast: [],
+      actual: [],
+      mape: null,
+      crps: null,
+    })
+  })
+)
+
+/**
+ * Price elasticity curve
+ * POST /api/analytics/elasticity
+ */
+router.post(
+  '/elasticity',
+  asyncHandler(async (req, res) => {
+    res.json({
+      priceGrid: [],
+      probMean: [],
+      probLow: [],
+      probHigh: [],
+      compMedian: null,
+      chosenPrice: null,
+    })
+  })
+)
+
+/**
+ * Price explanation waterfall
+ * POST /api/analytics/price-explain
+ */
+router.post(
+  '/price-explain',
+  asyncHandler(async (req, res) => {
+    res.json({
+      steps: [],
+      final: 0,
+    })
+  })
+)
+
 export default router
