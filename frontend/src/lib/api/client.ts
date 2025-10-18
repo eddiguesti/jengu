@@ -4,7 +4,7 @@ import { supabase } from '../supabase'
 // Create axios instance with default config
 const apiClient: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
-  timeout: 30000,
+  timeout: 120000, // 2 minutes (for long-running operations like enrichment)
   headers: {
     'Content-Type': 'application/json',
   },
