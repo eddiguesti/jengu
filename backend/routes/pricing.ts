@@ -2,6 +2,8 @@ import { Router } from 'express'
 import crypto from 'node:crypto'
 import { authenticateUser, supabaseAdmin } from '../lib/supabase.js'
 import { asyncHandler, logError } from '../utils/errorHandler.js'
+import { validate } from '../middleware/validate.js'
+import { pricingQuoteSchema, pricingLearnSchema } from '../schemas/pricing.schema.js'
 
 const router = Router()
 
@@ -82,17 +84,11 @@ async function callPricingLearn(batch: unknown[]): Promise<{
 router.post(
   '/quote',
   authenticateUser,
+  validate(pricingQuoteSchema),
   asyncHandler(async (req, res) => {
     const userId = req.userId!
     const { propertyId, stayDate, product, toggles, allowed_price_grid } = req.body
-
-    // Validate required fields
-    if (!propertyId || !stayDate || !product?.type) {
-      return res.status(400).json({
-        error: 'missing_fields',
-        message: 'propertyId, stayDate, and product.type are required',
-      })
-    }
+    // Request is already validated by Zod middleware
 
     console.log(`📊 Pricing quote request for property ${propertyId}, stay date ${stayDate}`)
 
@@ -258,6 +254,7 @@ router.post(
 router.post(
   '/learn',
   authenticateUser,
+  validate(pricingLearnSchema),
   asyncHandler(async (req, res) => {
     const userId = req.userId!
     const batch = Array.isArray(req.body) ? req.body : []
