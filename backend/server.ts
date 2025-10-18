@@ -1,11 +1,15 @@
+// IMPORTANT: Sentry must be imported FIRST before all other imports
+import dotenv from 'dotenv'
+dotenv.config() // Load env vars before Sentry init
+
+import { initSentry } from './lib/sentry.js'
+import * as Sentry from '@sentry/node'
+initSentry() // Initialize Sentry error tracking
+
 import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
-import dotenv from 'dotenv'
 import { rateLimit, RATE_LIMIT } from './middleware/rateLimit.js'
 import { requestLogger, logger } from './middleware/logger.js'
-
-// Load environment variables
-dotenv.config()
 
 // Import route modules
 import healthRouter from './routes/health.js'
@@ -49,11 +53,27 @@ app.use('/api/analytics', analyticsRouter)
 app.use('/api/pricing', pricingRouter)
 
 // Error handling middleware
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+  // Capture error in Sentry
+  Sentry.captureException(err, {
+    contexts: {
+      request: {
+        method: req.method,
+        url: req.url,
+        query: req.query,
+        body: req.body,
+      },
+    },
+  })
+
   logger.error({ err }, 'Server Error')
+
+  // Don't expose internal error details in production
+  const errorMessage = process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
+
   res.status(500).json({
     error: 'Internal server error',
-    message: err.message,
+    message: errorMessage,
   })
 })
 

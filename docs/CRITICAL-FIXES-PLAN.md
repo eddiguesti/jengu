@@ -102,280 +102,90 @@ const structureValidation = validateCSVStructure(headers, allRows)
 
 ---
 
-## 🔴 REMAINING CRITICAL FIXES
+### 3. Error Tracking with Sentry ✅
 
-### 3. Error Tracking with Sentry
+**Status**: IMPLEMENTED
+**Files**:
 
-**Status**: NOT STARTED
-**Priority**: CRITICAL
-**Estimated Time**: 2-3 hours
+- `backend/lib/sentry.ts` (created)
+- `backend/server.ts` (modified)
+- `frontend/src/lib/sentry.ts` (created)
+- `frontend/src/main.tsx` (modified)
+- `frontend/src/components/ErrorBoundary.tsx` (created)
+- `backend/.env.example` (modified)
+- `frontend/.env.example` (modified)
 
-**Implementation Plan**:
+**Changes Made**:
 
-#### Step 1: Install Sentry
+- ✅ Installed @sentry/node, @sentry/profiling-node (backend)
+- ✅ Installed @sentry/react (frontend)
+- ✅ Configured backend Sentry with automatic error capture
+- ✅ Configured frontend Sentry with performance monitoring and session replay
+- ✅ Created React Error Boundary with Sentry integration
+- ✅ Wrapped app in ErrorBoundary component
+- ✅ Added Sentry DSN configuration to .env.example files
+
+**Features**:
+
+**Backend:**
+
+- Automatic error capture in all routes
+- Performance profiling (10% in prod, 100% in dev)
+- Privacy: Scrubs authorization headers and sensitive data
+- Ignores validation errors (user input issues)
+- Environment-aware configuration
+
+**Frontend:**
+
+- Error boundary catches React render errors
+- Session replay on errors (100% of error sessions)
+- Performance traces (10% in prod, 100% in dev)
+- Privacy: Masks all text and blocks media in replays
+- Beautiful fallback UI for errors
+
+**Testing Required**:
+
+1. Test backend error capture (throw error in route)
+2. Test frontend error boundary (throw error in component)
+3. Test error reporting to Sentry dashboard
+4. Test session replay functionality
+5. Verify privacy settings (no sensitive data in reports)
+
+**Code Changes**:
 
 ```typescript
-import { z } from 'zod'
-
-export const fileUploadSchema = z.object({
-  file: z.object({
-    mimetype: z.enum(['text/csv', 'application/vnd.ms-excel']),
-    size: z.number().max(50 * 1024 * 1024, 'File size must be less than 50MB'),
-    originalname: z.string().regex(/\.csv$/i, 'Only CSV files are allowed'),
-  }),
+// Backend - Automatic error capture
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+  Sentry.captureException(err, {
+    contexts: {
+      request: {
+        method: req.method,
+        url: req.url,
+        query: req.query,
+        body: req.body,
+      },
+    },
+  })
+  // ... error response
 })
 
-export const csvContentSchema = z.object({
-  headers: z.array(z.string()).min(1, 'CSV must have at least one column'),
-  rows: z.array(z.record(z.string(), z.any())).min(1, 'CSV must have at least one row'),
-})
-```
-
-#### Step 2: Add Content Validation Function
-
-**File**: `backend/utils/csvValidator.ts` (create new)
-
-```typescript
-/**
- * Validate CSV content for malicious code
- */
-export function validateCSVContent(content: string): { valid: boolean; error?: string } {
-  // Check for suspicious patterns
-  const suspiciousPatterns = [
-    /<script/i, // JavaScript injection
-    /javascript:/i, // JavaScript protocol
-    /onerror=/i, // Event handlers
-    /onclick=/i,
-    /<iframe/i, // iFrames
-    /eval\(/i, // eval() calls
-    /exec\(/i, // exec() calls
-  ]
-
-  for (const pattern of suspiciousPatterns) {
-    if (pattern.test(content)) {
-      return {
-        valid: false,
-        error: `Suspicious content detected: ${pattern.source}`,
-      }
-    }
-  }
-
-  return { valid: true }
-}
-
-/**
- * Validate CSV structure
- */
-export function validateCSVStructure(
-  headers: string[],
-  rows: any[]
-): {
-  valid: boolean
-  error?: string
-} {
-  // Check for required columns
-  const requiredColumns = ['date', 'price']
-  const normalizedHeaders = headers.map(h => h.trim().toLowerCase())
-
-  for (const required of requiredColumns) {
-    if (!normalizedHeaders.some(h => h.includes(required))) {
-      return {
-        valid: false,
-        error: `Missing required column: ${required}`,
-      }
-    }
-  }
-
-  // Check row count
-  if (rows.length === 0) {
-    return {
-      valid: false,
-      error: 'CSV file is empty',
-    }
-  }
-
-  if (rows.length > 100000) {
-    return {
-      valid: false,
-      error: 'CSV file too large (max 100,000 rows)',
-    }
-  }
-
-  return { valid: true }
-}
-```
-
-#### Step 3: Apply Validation to Upload Route
-
-**File**: `backend/routes/files.ts` (modify)
-
-```typescript
-import { validateCSVContent, validateCSVStructure } from '../utils/csvValidator.js'
-
-router.post('/upload', authenticateUser, upload.single('file'), async (req, res) => {
-  // ... existing code ...
-
-  // Add content validation
-  const fileContent = fs.readFileSync(filePath, 'utf-8')
-  const contentValidation = validateCSVContent(fileContent)
-
-  if (!contentValidation.valid) {
-    fs.unlinkSync(filePath)
-    return res.status(400).json({
-      error: 'INVALID_CONTENT',
-      message: contentValidation.error,
+// Frontend - Error boundary
+export class ErrorBoundary extends React.Component<Props, State> {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    Sentry.captureException(error, {
+      contexts: {
+        react: {
+          componentStack: errorInfo.componentStack,
+        },
+      },
     })
   }
-
-  // ... continue with existing parsing ...
-})
-```
-
----
-
-### 3. Error Tracking with Sentry
-
-**Status**: NOT STARTED
-**Priority**: CRITICAL
-**Estimated Time**: 2-3 hours
-
-**Implementation Plan**:
-
-#### Step 1: Install Sentry
-
-```bash
-# Backend
-cd backend
-pnpm add @sentry/node @sentry/profiling-node
-
-# Frontend
-cd frontend
-pnpm add @sentry/react @sentry/browser
-```
-
-#### Step 2: Configure Backend Sentry
-
-**File**: `backend/server.ts` (add at top)
-
-```typescript
-import * as Sentry from '@sentry/node'
-import { ProfilingIntegration } from '@sentry/profiling-node'
-
-// Initialize Sentry
-if (process.env.NODE_ENV === 'production') {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    integrations: [new ProfilingIntegration()],
-    tracesSampleRate: 1.0,
-    profilesSampleRate: 1.0,
-    environment: process.env.NODE_ENV,
-  })
-}
-
-// Request handler (before routes)
-app.use(Sentry.Handlers.requestHandler())
-
-// ... routes ...
-
-// Error handler (after routes, before custom error handler)
-app.use(Sentry.Handlers.errorHandler())
-```
-
-#### Step 3: Configure Frontend Sentry
-
-**File**: `frontend/src/main.tsx` (add at top)
-
-```typescript
-import * as Sentry from '@sentry/react'
-
-if (import.meta.env.PROD) {
-  Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN,
-    integrations: [new Sentry.BrowserTracing(), new Sentry.Replay()],
-    tracesSampleRate: 1.0,
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
-  })
-}
-```
-
-#### Step 4: Add Error Boundaries
-
-**File**: `frontend/src/components/ErrorBoundary.tsx` (create new)
-
-```typescript
-import * as Sentry from '@sentry/react'
-import { Component, ErrorInfo, ReactNode } from 'react'
-
-interface Props {
-  children: ReactNode
-}
-
-interface State {
-  hasError: boolean
-}
-
-class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false }
-  }
-
-  static getDerivedStateFromError(_: Error): State {
-    return { hasError: true }
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, errorInfo)
-    Sentry.captureException(error, { contexts: { react: errorInfo } })
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="flex items-center justify-center min-h-screen bg-background">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-text mb-4">
-              Something went wrong
-            </h1>
-            <p className="text-muted mb-4">
-              We've been notified and are working on a fix.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
-            >
-              Reload Page
-            </button>
-          </div>
-        </div>
-      )
-    }
-
-    return this.props.children
-  }
-}
-
-export default ErrorBoundary
-```
-
-#### Step 5: Wrap App with Error Boundary
-
-**File**: `frontend/src/App.tsx`
-
-```typescript
-import ErrorBoundary from './components/ErrorBoundary'
-
-function App() {
-  return (
-    <ErrorBoundary>
-      {/* existing app content */}
-    </ErrorBoundary>
-  )
 }
 ```
 
 ---
+
+## 🔴 REMAINING CRITICAL FIXES
 
 ### 4. Rate Limiting Middleware
 
@@ -573,18 +383,18 @@ export default defineConfig({
 
 ## 📊 IMPLEMENTATION PROGRESS
 
-### Completed (2/5)
+### Completed (3/5)
 
 - ✅ Token Refresh & Session Timeout
 - ✅ Enhanced File Upload Validation
+- ✅ Sentry Error Tracking
 
-### Remaining (3/5)
+### Remaining (2/5)
 
-- 🔴 Sentry Error Tracking
 - 🔴 Rate Limiting
 - 🔴 Bundle Size Optimization
 
-### Estimated Total Time: 5-8 hours remaining
+### Estimated Total Time: 3-5 hours remaining
 
 ---
 
@@ -610,14 +420,13 @@ export default defineConfig({
 
 ## 📝 NEXT STEPS
 
-1. **Fix #3**: Sentry Error Tracking
-2. **Fix #4**: Rate Limiting
-3. **Fix #5**: Bundle Size Optimization
-4. **Comprehensive Testing**: All fixes together
-5. **Deployment**: To staging environment
+1. **Fix #4**: Rate Limiting
+2. **Fix #5**: Bundle Size Optimization
+3. **Comprehensive Testing**: All fixes together
+4. **Deployment**: To staging environment
 
 ---
 
 **Document Owner**: Claude Code Agent
 **Last Updated**: October 18, 2025
-**Status**: In Progress (2/5 complete)
+**Status**: In Progress (3/5 complete)
