@@ -20,7 +20,12 @@ import { Card, Button, Table, Badge, Progress } from '../components/ui'
 import { useNavigate } from 'react-router-dom'
 import { useDataStore, useBusinessStore } from '../store'
 import { getHolidaysForDates, getCountryCode } from '../lib/api/services/holidays'
-import { useUploadedFiles, useUploadFile, useEnrichFile } from '../hooks/queries/useFileData'
+import {
+  useUploadedFiles,
+  useUploadFile,
+  useEnrichFile,
+  useDeleteFile,
+} from '../hooks/queries/useFileData'
 import clsx from 'clsx'
 
 interface UploadedFile {
@@ -56,6 +61,7 @@ export const Data = () => {
   const { data: uploadedFiles = [] } = useUploadedFiles()
   const uploadFileMutation = useUploadFile()
   const enrichFileMutation = useEnrichFile()
+  const deleteFileMutation = useDeleteFile()
 
   // Upload State
   const [files, setFiles] = useState<UploadedFile[]>([])
@@ -215,8 +221,15 @@ export const Data = () => {
     }
   }
 
-  const removeFile = (uniqueId: string) => {
-    setFiles(prev => prev.filter(f => f.uniqueId !== uniqueId))
+  const removeFile = async (uniqueId: string) => {
+    try {
+      console.log(`🗑️ Deleting file ${uniqueId}...`)
+      await deleteFileMutation.mutateAsync(uniqueId)
+      setFiles(prev => prev.filter(f => f.uniqueId !== uniqueId))
+      console.log(`✅ File ${uniqueId} deleted from database`)
+    } catch (error) {
+      console.error(`❌ Failed to delete file:`, error)
+    }
   }
 
   const formatFileSize = (bytes: number) => {
