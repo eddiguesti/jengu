@@ -227,8 +227,14 @@ export const Data = () => {
       await deleteFileMutation.mutateAsync(uniqueId)
       setFiles(prev => prev.filter(f => f.uniqueId !== uniqueId))
       console.log(`✅ File ${uniqueId} deleted from database`)
-    } catch (error) {
-      console.error(`❌ Failed to delete file:`, error)
+    } catch (error: any) {
+      // If 404, file already deleted - just remove from UI
+      if (error?.response?.status === 404) {
+        console.log(`⚠️ File ${uniqueId} not found in database, removing from UI only`)
+        setFiles(prev => prev.filter(f => f.uniqueId !== uniqueId))
+      } else {
+        console.error(`❌ Failed to delete file:`, error)
+      }
     }
   }
 

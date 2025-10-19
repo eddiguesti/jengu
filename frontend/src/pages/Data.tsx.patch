@@ -1,0 +1,14 @@
+Line 63: Add deleteFileMutation
+  const deleteFileMutation = useDeleteFile()
+
+Line 223-225: Replace removeFile function with database delete
+  const removeFile = async (uniqueId: string) => {
+    try {
+      console.log(`🗑️ Deleting file ${uniqueId}...`)
+      await deleteFileMutation.mutateAsync(uniqueId)
+      setFiles(prev => prev.filter(f => f.uniqueId !== uniqueId))
+      console.log(`✅ File ${uniqueId} deleted from database`)
+    } catch (error) {
+      console.error(`❌ Failed to delete file:`, error)
+    }
+  }
