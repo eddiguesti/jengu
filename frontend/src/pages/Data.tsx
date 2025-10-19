@@ -296,15 +296,24 @@ export const Data = () => {
     }
 
     const fileId = uploadedFiles[0]?.id || zustandFiles[0]?.id
+    const rowCount = uploadedFiles[0]?.rows || zustandFiles[0]?.rows || 1000
 
-    // Progress simulation
+    // Estimate duration: ~30ms per row for enrichment processing
+    const estimatedDurationMs = Math.max(60000, rowCount * 30) // At least 1 minute
+    const estimatedMinutes = Math.ceil(estimatedDurationMs / 60000)
+
+    console.log(
+      `⏱️ Estimated enrichment time: ${estimatedMinutes} minute(s) for ${rowCount.toLocaleString()} rows`
+    )
+
+    // Progress simulation - update every 0.5% based on estimated duration
     let progress = 0
     const progressInterval = setInterval(() => {
-      progress += 5
+      progress += 0.5
       if (progress <= 95) {
         setFeatures(prev => prev.map(f => (f.id === featureId ? { ...f, progress } : f)))
       }
-    }, 500)
+    }, estimatedDurationMs / 200)
 
     try {
       // Call backend enrichment endpoint using React Query mutation
