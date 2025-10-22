@@ -11,8 +11,7 @@
  * NOTE: All Claude API calls now go through backend proxy to secure API keys
  */
 
-// Backend proxy endpoint (no API key needed in frontend)
-const BACKEND_API = 'http://localhost:3001/api'
+import apiClient from '../client'
 
 export interface Message {
   id?: string
@@ -64,25 +63,13 @@ export async function sendMessage(
   callbacks?: StreamCallbacks
 ): Promise<string> {
   try {
-    const response = await fetch(`${BACKEND_API}/assistant/message`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message,
-        conversationHistory,
-        context,
-      }),
+    const response = await apiClient.post('/assistant/message', {
+      message,
+      conversationHistory,
+      context,
     })
 
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || `Backend API error: ${response.status}`)
-    }
-
-    const data = await response.json()
-    const fullResponse = data.content[0]?.text || ''
+    const fullResponse = response.data.content[0]?.text || ''
 
     // Call completion callback
     if (callbacks?.onComplete) {
@@ -104,20 +91,8 @@ export async function sendMessage(
  */
 export async function getQuickSuggestion(context: AssistantContext): Promise<string> {
   try {
-    const response = await fetch(`${BACKEND_API}/assistant/quick-suggestion`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ context }),
-    })
-
-    if (!response.ok) {
-      throw new Error(`Backend API error: ${response.status}`)
-    }
-
-    const data = await response.json()
-    return data.suggestion || 'No suggestion available'
+    const response = await apiClient.post('/assistant/quick-suggestion', { context })
+    return response.data.suggestion || 'No suggestion available'
   } catch (error) {
     console.error('Failed to get quick suggestion:', error)
     throw error
@@ -137,20 +112,8 @@ export async function analyzePricingData(data: {
   events?: string[]
 }): Promise<string> {
   try {
-    const response = await fetch(`${BACKEND_API}/assistant/analyze-pricing`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ data }),
-    })
-
-    if (!response.ok) {
-      throw new Error(`Backend API error: ${response.status}`)
-    }
-
-    const result = await response.json()
-    return result.analysis || 'Analysis failed'
+    const response = await apiClient.post('/assistant/analyze-pricing', { data })
+    return response.data.analysis || 'Analysis failed'
   } catch (error) {
     console.error('Failed to analyze pricing data:', error)
     throw error
@@ -166,26 +129,15 @@ export async function generatePricingRecommendations(
   context: AssistantContext
 ): Promise<Map<string, { price: number; reasoning: string }>> {
   try {
-    const response = await fetch(`${BACKEND_API}/assistant/pricing-recommendations`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        dates,
-        context,
-      }),
+    const response = await apiClient.post('/assistant/pricing-recommendations', {
+      dates,
+      context,
     })
 
-    if (!response.ok) {
-      throw new Error(`Backend API error: ${response.status}`)
-    }
-
-    const data = await response.json()
     const recommendations = new Map<string, { price: number; reasoning: string }>()
 
     // Convert object to Map
-    for (const [date, rec] of Object.entries(data.recommendations)) {
+    for (const [date, rec] of Object.entries(response.data.recommendations)) {
       recommendations.set(date, rec as { price: number; reasoning: string })
     }
 
@@ -203,19 +155,12 @@ export async function generatePricingRecommendations(
 export async function testConnection(): Promise<boolean> {
   try {
     // Test with a simple quick suggestion request
-    const response = await fetch(`${BACKEND_API}/assistant/quick-suggestion`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    await apiClient.post('/assistant/quick-suggestion', {
+      context: {
+        businessName: 'Test',
       },
-      body: JSON.stringify({
-        context: {
-          businessName: 'Test',
-        },
-      }),
     })
-
-    return response.ok
+    return true
   } catch (error) {
     console.error('Connection test failed:', error)
     return false

@@ -7,12 +7,15 @@ import { asyncHandler, sendError, logError } from '../utils/errorHandler.js'
 import { upload } from '../middleware/upload.js'
 import { enrichPropertyData } from '../services/enrichmentService.js'
 import { CSVRow, ParsedPricingData } from '../types/api.types.js'
-import {
-  validateCSVContent,
-  validateCSVStructure,
-  validateFileSize,
-} from '../utils/csvValidator.js'
+import { validateCSVContent, validateFileSize } from '../utils/csvValidator.js'
 import { uploadLimiter } from '../middleware/rateLimiters.js'
+import {
+  detectColumnMapping,
+  mapCSVRow,
+  validateBatch,
+  generateMappingReport,
+  StandardizedRow,
+} from '../services/csvMapper.js'
 
 const router = Router()
 
@@ -98,29 +101,6 @@ router.post(
       let totalRows = 0
       let columnCount = 0
       const preview: CSVRow[] = []
-
-      const parseDate = (dateStr: unknown): Date | null => {
-        if (!dateStr) return null
-        try {
-          const date = new Date(String(dateStr))
-          return isNaN(date.getTime()) ? null : date
-        } catch {
-          return null
-        }
-      }
-
-      const parseFloatSafe = (val: unknown): number | null => {
-        if (val === null || val === undefined || val === '') return null
-        const num = Number(val)
-        return isNaN(num) ? null : num
-      }
-
-      const parseIntSafe = (val: unknown): number | null => {
-        if (val === null || val === undefined || val === '') return null
-        const num = Number(val)
-        return isNaN(num) ? null : Math.floor(num)
-      }
-
       const allRows: CSVRow[] = []
       let headers: string[] = []
 
@@ -144,71 +124,107 @@ router.post(
           .on('error', reject)
       })
 
-      // Step 3: Validate CSV structure
-      console.log('🔍 Validating CSV structure...')
-      const structureValidation = validateCSVStructure(headers, allRows)
+      // Step 3: Intelligent Column Mapping
+      console.log('🧠 Detecting column mapping...')
+      const columnMapping = detectColumnMapping(headers)
+      console.log('📊 Column Mapping:', columnMapping)
 
-      if (!structureValidation.valid) {
-        console.warn(`⚠️  Invalid CSV structure: ${structureValidation.error}`)
-        fs.unlinkSync(filePath)
+      // Map all rows to standardized format
+      const standardizedRows: StandardizedRow[] = []
+      const mappingWarnings: string[] = []
 
-        // Clean up database records if already created
-        await supabaseAdmin.from('properties').delete().eq('id', property.id)
+      for (const rawRow of allRows) {
+        const { standardizedRow, warnings } = mapCSVRow(rawRow, columnMapping)
+        standardizedRows.push(standardizedRow)
 
-        return res.status(400).json({
-          error: 'INVALID_STRUCTURE',
-          message: structureValidation.error,
+        // Collect unique warnings
+        warnings.forEach(w => {
+          if (!mappingWarnings.includes(w)) {
+            mappingWarnings.push(w)
+          }
         })
       }
 
-      console.log('✅ CSV structure validation passed')
-      console.log(`📥 Parsed ${totalRows} rows, now inserting to database...`)
+      // Validate the batch
+      const validationStats = validateBatch(standardizedRows)
+
+      // Generate and log mapping report
+      const mappingReport = generateMappingReport(
+        headers,
+        columnMapping,
+        standardizedRows,
+        validationStats
+      )
+      console.log('\n' + mappingReport + '\n')
+
+      // Check if we have enough valid data
+      if (validationStats.validRows === 0) {
+        console.error('❌ No valid rows found in CSV')
+
+        // Check if this is due to unmapped columns
+        const missingRequiredFields: string[] = []
+        console.log(`🔍 Checking column mapping: date=${columnMapping.date}, price=${columnMapping.price}`)
+
+        if (!columnMapping.date) missingRequiredFields.push('date')
+        if (!columnMapping.price) missingRequiredFields.push('price')
+
+        console.log(`📋 Missing required fields: ${missingRequiredFields.join(', ') || 'none'}`)
+
+        // Always offer manual mapping when validation fails completely
+        // This handles: unmapped columns, incorrectly mapped columns, or bad data format
+        console.log('🔧 All rows failed validation - requesting manual column mapping...')
+        console.log(`📊 Detected columns: ${headers.join(', ')}`)
+        console.log(`📊 Current auto-mapping: date=${columnMapping.date}, price=${columnMapping.price}`)
+
+        // Keep the file and property for manual mapping
+        return res.status(200).json({
+          success: true,
+          requiresMapping: true,
+          propertyId: property.id,
+          fileName: req.file.filename,
+          detectedColumns: headers,
+          autoMapping: columnMapping,
+          missingFields: missingRequiredFields.length > 0 ? missingRequiredFields : ['date', 'price'],
+          message: 'Unable to process CSV data. Please verify column mappings.',
+        })
+      }
+
+      if (validationStats.validRows < totalRows * 0.5) {
+        console.warn(
+          `⚠️  Only ${validationStats.validRows}/${totalRows} rows are valid (${((validationStats.validRows / totalRows) * 100).toFixed(1)}%)`
+        )
+      }
+
+      console.log(`📥 Processing ${validationStats.validRows} valid rows...`)
 
       let totalInserted = 0
       let insertFailed = false
 
-      for (let i = 0; i < allRows.length; i += BATCH_SIZE) {
-        const batchRows = allRows.slice(i, i + BATCH_SIZE)
+      for (let i = 0; i < standardizedRows.length; i += BATCH_SIZE) {
+        const batchRows = standardizedRows.slice(i, i + BATCH_SIZE)
         const batchData: ParsedPricingData[] = []
 
-        for (const row of batchRows) {
-          const normalizedRow: CSVRow = {}
-          Object.keys(row).forEach(key => {
-            normalizedRow[key.trim().toLowerCase()] = row[key]
-          })
-
-          const dateField =
-            normalizedRow.date ||
-            normalizedRow.booking_date ||
-            normalizedRow.check_in ||
-            normalizedRow.checkin
-          const priceField = normalizedRow.price || normalizedRow.rate || normalizedRow.amount
-          const occupancyField = normalizedRow.occupancy || normalizedRow.occupancy_rate
-          const bookingsField = normalizedRow.bookings || normalizedRow.reservations
-          const temperatureField = normalizedRow.temperature || normalizedRow.temp
-          const weatherField = normalizedRow.weather || normalizedRow.weather_condition
-
-          const parsedDate = parseDate(dateField)
-
-          if (parsedDate) {
-            const dateString = parsedDate.toISOString().split('T')[0]
-            const weatherString =
-              weatherField !== null && weatherField !== undefined ? String(weatherField) : null
-
-            const pricingData = {
-              id: randomUUID(),
-              propertyId: property.id,
-              date: dateString,
-              price: parseFloatSafe(priceField),
-              occupancy: parseFloatSafe(occupancyField),
-              bookings: parseIntSafe(bookingsField),
-              temperature: parseFloatSafe(temperatureField),
-              weatherCondition: weatherString,
-              extraData: normalizedRow,
-            }
-
-            batchData.push(pricingData)
+        for (const standardRow of batchRows) {
+          // Skip invalid rows
+          if (!standardRow.date || !standardRow.price || standardRow.price <= 0) {
+            continue
           }
+
+          const dateString = standardRow.date.toISOString().split('T')[0]
+
+          const pricingData = {
+            id: randomUUID(),
+            propertyId: property.id,
+            date: dateString,
+            price: standardRow.price,
+            occupancy: standardRow.occupancy || null,
+            bookings: standardRow.bookings || null,
+            temperature: null, // Will be filled by enrichment
+            weatherCondition: null, // Will be filled by enrichment
+            extraData: standardRow, // Store all fields for flexibility (includes availability)
+          }
+
+          batchData.push(pricingData)
         }
 
         if (batchData.length > 0) {
@@ -377,6 +393,29 @@ router.post(
 )
 
 /**
+ * Submit manual column mapping and re-process CSV
+ * POST /api/files/:propertyId/map-columns
+ *
+ * TODO: This feature needs to be reimplemented since CSV files are no longer stored on disk.
+ * Need to either:
+ * 1. Store original CSV file content in database
+ * 2. Or remap existing pricing_data rows (if column headers are stored)
+ *
+ * Currently disabled to prevent errors.
+ */
+router.post(
+  '/:propertyId/map-columns',
+  authenticateUser,
+  asyncHandler(async (_req, res) => {
+    return sendError(
+      res,
+      'NOT_IMPLEMENTED',
+      'Manual column mapping is temporarily disabled. Please re-upload your CSV with correctly named columns.'
+    )
+  })
+)
+
+/**
  * Get file data with pagination
  * GET /api/files/:fileId/data
  */
@@ -460,9 +499,18 @@ router.get(
           .select('*', { count: 'exact', head: true })
           .eq('propertyId', property.id)
 
+        // Fetch first 5 rows as preview
+        const { data: previewData } = await supabaseAdmin
+          .from('pricing_data')
+          .select('*')
+          .eq('propertyId', property.id)
+          .order('date', { ascending: true })
+          .limit(5)
+
         return {
           ...property,
           actualRows: count || 0,
+          preview: previewData || [],
         }
       })
     )
@@ -485,7 +533,10 @@ router.delete(
     const fileId = req.params.fileId
     const userId = req.userId!
 
-    const { data: property, error: findError } = await supabaseAdmin
+    console.log(`🗑️ Delete request for file ${fileId} by user ${userId}`)
+
+    // Verify ownership
+    const { data: property, error: findError} = await supabaseAdmin
       .from('properties')
       .select('id')
       .eq('id', fileId)
@@ -493,19 +544,43 @@ router.delete(
       .single()
 
     if (findError || !property) {
+      console.warn(`⚠️ File ${fileId} not found or not owned by user ${userId}`)
       return sendError(res, 'NOT_FOUND', 'File not found')
     }
 
+    // Delete associated pricing data first
+    console.log(`🗑️ Deleting pricing_data for property ${fileId}...`)
+    const { error: pricingDataError, count: pricingDataCount } = await supabaseAdmin
+      .from('pricing_data')
+      .delete()
+      .eq('propertyId', fileId)
+
+    if (pricingDataError) {
+      console.error(`❌ Failed to delete pricing_data:`, pricingDataError)
+      logError(pricingDataError as Error, 'DELETE_PRICING_DATA', { fileId, userId })
+      throw pricingDataError
+    }
+
+    console.log(`✅ Deleted ${pricingDataCount || 0} pricing_data rows`)
+
+    // Delete the property record
+    console.log(`🗑️ Deleting property ${fileId}...`)
     const { error: deleteError } = await supabaseAdmin.from('properties').delete().eq('id', fileId)
 
     if (deleteError) {
-      logError(deleteError as Error, 'DELETE_FILE', { fileId, userId })
+      console.error(`❌ Failed to delete property:`, deleteError)
+      logError(deleteError as Error, 'DELETE_PROPERTY', { fileId, userId })
       throw deleteError
     }
+
+    console.log(`✅ Successfully deleted file ${fileId} and all associated data`)
 
     res.json({
       success: true,
       message: 'File deleted successfully',
+      deleted: {
+        pricingDataRows: pricingDataCount || 0,
+      },
     })
   })
 )

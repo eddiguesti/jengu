@@ -87,16 +87,37 @@ function findColumnName(data: RawDataRow[], expectedColumn: string): string | nu
   if (!firstRow) return null
   const columnNames = Object.keys(firstRow)
 
-  // Check if exact match exists
+  // Check if exact match exists at top level
   if (columnNames.includes(expectedColumn)) {
     return expectedColumn
   }
 
-  // Check mappings
+  // Check mappings at top level
   const mappings = COLUMN_MAPPINGS[expectedColumn] || []
   for (const mapping of mappings) {
     const found = columnNames.find(col => col.toLowerCase().trim() === mapping.toLowerCase())
     if (found) return found
+  }
+
+  // Check inside extraData if it exists
+  if (firstRow.extraData && typeof firstRow.extraData === 'object') {
+    const extraData = firstRow.extraData as Record<string, unknown>
+    const extraDataKeys = Object.keys(extraData)
+
+    // Check exact match in extraData
+    if (extraDataKeys.includes(expectedColumn)) {
+      console.log(`   ✓ Found ${expectedColumn} in extraData`)
+      return `extraData.${expectedColumn}`
+    }
+
+    // Check mappings in extraData
+    for (const mapping of mappings) {
+      const found = extraDataKeys.find(col => col.toLowerCase().trim() === mapping.toLowerCase())
+      if (found) {
+        console.log(`   ✓ Found ${expectedColumn} → extraData.${found}`)
+        return `extraData.${found}`
+      }
+    }
   }
 
   return null
@@ -116,6 +137,23 @@ function calculateOccupancy(bookings: unknown, availability: unknown): number {
 
   // Clamp between 0 and 1
   return Math.max(0, Math.min(1, occupancy))
+}
+
+/**
+ * Get value from row, handling both direct fields and nested extraData fields
+ */
+function getRowValue(row: RawDataRow, columnPath: string | null): unknown {
+  if (!columnPath) return null
+
+  // Handle nested extraData fields (e.g., "extraData.availability")
+  if (columnPath.startsWith('extraData.')) {
+    const field = columnPath.replace('extraData.', '')
+    const extraData = row.extraData as Record<string, unknown> | undefined
+    return extraData?.[field]
+  }
+
+  // Handle direct fields
+  return row[columnPath]
 }
 
 /**
@@ -144,6 +182,16 @@ export function transformDataForAnalytics(rawData: RawDataRow[]): TransformedDat
   }
 
   console.log(`🔄 Transforming ${rawData.length} rows...`)
+
+  // Debug: Log the first row structure
+  if (rawData[0]) {
+    console.log('🔍 First row structure:', {
+      topLevelKeys: Object.keys(rawData[0]),
+      hasExtraData: !!rawData[0].extraData,
+      extraDataType: typeof rawData[0].extraData,
+      extraDataKeys: rawData[0].extraData ? Object.keys(rawData[0].extraData as Record<string, unknown>) : [],
+    })
+  }
 
   // Find actual column names
   const dateCol = findColumnName(rawData, 'date')
@@ -184,14 +232,14 @@ export function transformDataForAnalytics(rawData: RawDataRow[]): TransformedDat
   rawData.forEach((row, index) => {
     try {
       // Parse date
-      const date = parseDate(row[dateCol])
+      const date = parseDate(getRowValue(row, dateCol))
       if (!date) {
         skippedRows++
         return
       }
 
       // Parse price
-      const price = parseFloat(String(row[priceCol])) || 0
+      const price = parseFloat(String(getRowValue(row, priceCol))) || 0
       if (price <= 0) {
         skippedRows++
         return
@@ -199,14 +247,18 @@ export function transformDataForAnalytics(rawData: RawDataRow[]): TransformedDat
 
       // Get or calculate occupancy
       let occupancy = 0
-      if (occupancyCol && row[occupancyCol]) {
-        occupancy = parseFloat(String(row[occupancyCol])) || 0
+      const occupancyValue = getRowValue(row, occupancyCol)
+      if (occupancyCol && occupancyValue) {
+        occupancy = parseFloat(String(occupancyValue)) || 0
         // If occupancy is percentage (>1), convert to decimal
         if (occupancy > 1) {
           occupancy = occupancy / 100
         }
       } else if (bookingsCol && availabilityCol) {
-        occupancy = calculateOccupancy(row[bookingsCol], row[availabilityCol])
+        occupancy = calculateOccupancy(
+          getRowValue(row, bookingsCol),
+          getRowValue(row, availabilityCol)
+        )
       }
 
       // Clamp occupancy between 0 and 1
@@ -220,28 +272,34 @@ export function transformDataForAnalytics(rawData: RawDataRow[]): TransformedDat
       }
 
       // Add optional fields
-      if (weatherCol && row[weatherCol]) {
-        transformedRow.weather = String(row[weatherCol])
+      const weatherValue = getRowValue(row, weatherCol)
+      if (weatherCol && weatherValue) {
+        transformedRow.weather = String(weatherValue)
       }
 
-      if (temperatureCol && row[temperatureCol]) {
-        transformedRow.temperature = parseFloat(String(row[temperatureCol])) || null
+      const temperatureValue = getRowValue(row, temperatureCol)
+      if (temperatureCol && temperatureValue) {
+        transformedRow.temperature = parseFloat(String(temperatureValue)) || null
       }
 
-      if (bookingsCol && row[bookingsCol]) {
-        transformedRow.bookings = parseFloat(String(row[bookingsCol])) || 0
+      const bookingsValue = getRowValue(row, bookingsCol)
+      if (bookingsCol && bookingsValue) {
+        transformedRow.bookings = parseFloat(String(bookingsValue)) || 0
       }
 
-      if (availabilityCol && row[availabilityCol]) {
-        transformedRow.availability = parseFloat(String(row[availabilityCol])) || 0
+      const availabilityValue = getRowValue(row, availabilityCol)
+      if (availabilityCol && availabilityValue) {
+        transformedRow.availability = parseFloat(String(availabilityValue)) || 0
       }
 
-      if (unitTypeCol && row[unitTypeCol]) {
-        transformedRow.unit_type = String(row[unitTypeCol])
+      const unitTypeValue = getRowValue(row, unitTypeCol)
+      if (unitTypeCol && unitTypeValue) {
+        transformedRow.unit_type = String(unitTypeValue)
       }
 
-      if (channelCol && row[channelCol]) {
-        transformedRow.channel = String(row[channelCol])
+      const channelValue = getRowValue(row, channelCol)
+      if (channelCol && channelValue) {
+        transformedRow.channel = String(channelValue)
       }
 
       transformed.push(transformedRow)

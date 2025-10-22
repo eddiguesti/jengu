@@ -63,6 +63,8 @@ backend/uploads/*.xls
 *.tmp
 *.temp
 .cache/
+*.bak
+*.backup
 
 # Lock files (keep pnpm-lock.yaml but ignore others)
 package-lock.json

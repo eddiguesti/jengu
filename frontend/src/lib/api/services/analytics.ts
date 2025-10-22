@@ -11,7 +11,7 @@ export const getAnalyticsSummary = async (payload: { data: unknown[] }) => {
 /**
  * Analyze market sentiment
  */
-export const analyzeMarketSentiment = async (payload: unknown) => {
+export const analyzeMarketSentiment = async (payload: { data: unknown[] }) => {
   const response = await apiClient.post('/analytics/market-sentiment', payload)
   return response.data
 }

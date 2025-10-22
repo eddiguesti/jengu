@@ -10,8 +10,7 @@
  * NOTE: All weather API calls now go through backend proxy to secure API keys
  */
 
-// Backend proxy endpoints (no API key needed in frontend)
-const BACKEND_API = 'http://localhost:3001/api'
+import apiClient from '../client'
 
 // ===== TYPES =====
 
@@ -72,22 +71,14 @@ export interface WeatherForecast {
  */
 export async function getCurrentWeather(lat: number, lon: number): Promise<WeatherData> {
   try {
-    const response = await fetch(
-      `${BACKEND_API}/weather/current?latitude=${lat}&longitude=${lon}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+    const response = await apiClient.get('/weather/current', {
+      params: {
+        latitude: lat,
+        longitude: lon,
+      },
+    })
 
-    if (!response.ok) {
-      throw new Error(`Weather API error: ${response.status}`)
-    }
-
-    const data = await response.json()
-    return parseCurrentWeather(data)
+    return parseCurrentWeather(response.data)
   } catch (error) {
     console.error('Failed to fetch current weather:', error)
     throw error
@@ -128,22 +119,19 @@ export async function getHistoricalWeather(
   const timestamp = Math.floor(date.getTime() / 1000)
 
   try {
-    const response = await fetch(
-      `${BACKEND_API}/weather/historical?latitude=${lat}&longitude=${lon}&timestamp=${timestamp}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+    const response = await apiClient.post('/weather/historical', {
+      latitude: lat,
+      longitude: lon,
+      dates: [timestamp],
+    })
 
-    if (!response.ok) {
-      throw new Error(`Historical weather API error: ${response.status}`)
+    // Backend returns array, we need first item
+    const weatherData = response.data.data[0]
+    if (!weatherData) {
+      throw new Error('No weather data returned')
     }
 
-    const data = await response.json()
-    return parseHistoricalWeather(data.data, timestamp)
+    return parseHistoricalWeather(weatherData, timestamp)
   } catch (error) {
     console.error('Failed to fetch historical weather:', error)
     throw error
@@ -151,22 +139,22 @@ export async function getHistoricalWeather(
 }
 
 function parseHistoricalWeather(data: any, timestamp: number): WeatherData {
+  // Backend returns Open-Meteo format with temperature object
+  const temp = data.temperature?.mean || data.temperature?.max || data.temperature
   return {
-    temperature: data.temp,
-    feels_like: data.feels_like,
-    temp_min: data.temp, // Historical doesn't have min/max
-    temp_max: data.temp,
-    humidity: data.humidity,
-    pressure: data.pressure,
-    weather_main: data.weather[0].main,
-    weather_description: data.weather[0].description,
-    wind_speed: data.wind_speed,
-    clouds: data.clouds,
-    rain_1h: data.rain?.['1h'],
-    snow_1h: data.snow?.['1h'],
-    visibility: data.visibility || 10000,
-    uv_index: data.uvi,
-    date: new Date(timestamp * 1000).toISOString(),
+    temperature: temp,
+    feels_like: temp, // Open-Meteo doesn't provide feels_like
+    temp_min: data.temperature?.min || temp,
+    temp_max: data.temperature?.max || temp,
+    humidity: 50, // Open-Meteo doesn't provide humidity in archive API
+    pressure: 1013, // Standard pressure fallback
+    weather_main: data.weather || 'Unknown',
+    weather_description: data.weather || 'Unknown',
+    wind_speed: 0, // Open-Meteo archive doesn't provide wind
+    clouds: 0,
+    rain_1h: data.precipitation || 0,
+    visibility: 10000,
+    date: data.date || new Date(timestamp * 1000).toISOString().split('T')[0],
     timestamp,
   }
 }
@@ -217,24 +205,15 @@ export async function getHistoricalWeatherBatch(
  */
 export async function getWeatherForecast5Day(lat: number, lon: number): Promise<WeatherForecast[]> {
   try {
-    const response = await fetch(
-      `${BACKEND_API}/weather/forecast?latitude=${lat}&longitude=${lon}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-
-    if (!response.ok) {
-      throw new Error(`Forecast API error: ${response.status}`)
-    }
-
-    const data = await response.json()
+    const response = await apiClient.get('/weather/forecast', {
+      params: {
+        latitude: lat,
+        longitude: lon,
+      },
+    })
 
     // Backend returns already formatted data
-    return data.data.map((day: any) => ({
+    return response.data.data.map((day: any) => ({
       date: day.date,
       day: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
       temp: day.temperature.avg,

@@ -16,6 +16,9 @@ const CompetitorMonitor = lazy(() =>
   import('./pages/CompetitorMonitor').then(m => ({ default: m.CompetitorMonitor }))
 )
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })))
+const DirectorDashboard = lazy(() =>
+  import('./pages/DirectorDashboard').then(m => ({ default: m.DirectorDashboard }))
+)
 
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -36,8 +39,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center">
     <div className="flex flex-col items-center gap-4">
-      <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      <p className="animate-pulse text-muted">Loading...</p>
+      <div className="border-primary h-12 w-12 animate-spin rounded-full border-4 border-t-transparent" />
+      <p className="text-muted animate-pulse">Loading...</p>
     </div>
   </div>
 )
@@ -68,6 +71,7 @@ function App() {
               <Route path="insights" element={<Insights />} />
               <Route path="assistant" element={<Assistant />} />
               <Route path="competitor-monitor" element={<CompetitorMonitor />} />
+              <Route path="director" element={<DirectorDashboard />} />
               <Route path="settings" element={<Settings />} />
               {/* 404 Fallback */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />

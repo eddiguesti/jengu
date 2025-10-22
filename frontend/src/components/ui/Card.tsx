@@ -67,7 +67,7 @@ Card.Footer = ({
   onClick?: () => void
 }) => (
   <div
-    className={clsx('mt-6 border-t border-border pt-4', className, onClick && 'cursor-pointer')}
+    className={clsx('border-border mt-6 border-t pt-4', className, onClick && 'cursor-pointer')}
     onClick={onClick}
   >
     {children}

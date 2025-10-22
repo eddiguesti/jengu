@@ -19,7 +19,7 @@ export function useAnalyticsSummary(fileId: string, data: unknown[]) {
     queryKey: analyticsKeys.summary(fileId),
     queryFn: async () => {
       const response = await analyticsService.getAnalyticsSummary({ data })
-      return response.data.data
+      return response.data
     },
     enabled: !!fileId && data.length > 0,
     staleTime: 15 * 60 * 1000, // Analytics results stable, cache 15 min
@@ -33,8 +33,8 @@ export function useMarketSentiment(fileId: string, data: unknown[]) {
   return useQuery({
     queryKey: analyticsKeys.sentiment(fileId),
     queryFn: async () => {
-      const response = await analyticsService.analyzeMarketSentiment(data)
-      return response.data.data
+      const response = await analyticsService.analyzeMarketSentiment({ data })
+      return response.data
     },
     enabled: !!fileId && data.length > 0,
     staleTime: 15 * 60 * 1000,
@@ -49,7 +49,7 @@ export function useDemandForecast(fileId: string, data: unknown[], daysAhead: nu
     queryKey: analyticsKeys.demand(fileId),
     queryFn: async () => {
       const response = await analyticsService.forecastDemand({ data, daysAhead })
-      return response.data.data
+      return response.data
     },
     enabled: !!fileId && data.length > 0,
     staleTime: 15 * 60 * 1000,
@@ -64,7 +64,7 @@ export function useWeatherAnalysis(fileId: string, data: unknown[]) {
     queryKey: analyticsKeys.weather(fileId),
     queryFn: async () => {
       const response = await analyticsService.analyzeWeatherImpact({ data })
-      return response.data.data
+      return response.data
     },
     enabled: !!fileId && data.length > 0,
     staleTime: 15 * 60 * 1000,
@@ -79,7 +79,7 @@ export function useAIInsights(fileId: string, analyticsData: unknown) {
     queryKey: analyticsKeys.ai(fileId),
     queryFn: async () => {
       const response = await analyticsService.generateAIInsights({ analyticsData })
-      return response.data.data
+      return response.data
     },
     enabled: !!fileId && !!analyticsData,
     staleTime: 30 * 60 * 1000, // AI insights expensive, cache 30 min

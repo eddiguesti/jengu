@@ -28,7 +28,16 @@
       "Bash(pnpm run build:*)",
       "Bash(pnpm run fix-all:*)",
       "Bash(pnpm run type-check:backend:*)",
-      "Bash(pnpm run dev)"
+      "Bash(pnpm run dev)",
+      "Bash(node clear-database.js)",
+      "Bash(node check-database.js)",
+      "Bash(node backend/check-database.js)",
+      "Bash(taskkill /PID 54400 /F)",
+      "Bash(node run-pricing-migration.js)",
+      "Bash(node add-capacity-config.js)",
+      "Bash(node test-analytics.js)",
+      "Bash(pnpm remove:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

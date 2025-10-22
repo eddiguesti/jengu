@@ -225,11 +225,13 @@ export function forecastDemand(
     }
   }
 
-  // Extract occupancy time series
+  // Extract enriched time series with weather and temperature
   const timeSeries = historicalData
     .map(row => ({
       date: new Date(row.date || row.check_in || ''),
       occupancy: parseFloat(String(row.occupancy || 0)),
+      temperature: parseFloat(String(row.temperature || 0)),
+      weather: row.weather || row.weather_condition || 'Unknown',
     }))
     .filter(d => d.occupancy > 0)
     .sort((a, b) => a.date.getTime() - b.date.getTime())
@@ -242,17 +244,21 @@ export function forecastDemand(
     }
   }
 
-  // Calculate day-of-week averages (seasonality)
+  // Calculate day-of-week averages (seasonality) with weather impact
   const dayAverages = Array(7)
     .fill(0)
-    .map(() => ({ sum: 0, count: 0 }))
+    .map(() => ({ sum: 0, count: 0, tempSum: 0, tempCount: 0 }))
 
-  timeSeries.forEach(({ date, occupancy }) => {
+  timeSeries.forEach(({ date, occupancy, temperature }) => {
     const dayOfWeek = date.getDay()
     const dayAvg = dayAverages[dayOfWeek]
     if (dayAvg) {
       dayAvg.sum += occupancy
       dayAvg.count++
+      if (temperature > 0) {
+        dayAvg.tempSum += temperature
+        dayAvg.tempCount++
+      }
     }
   })
 
@@ -260,10 +266,15 @@ export function forecastDemand(
     day => (day.count > 0 ? day.sum / day.count : 70) // Default to 70% if no data
   )
 
-  // Calculate trend (simple moving average)
+  // Calculate trend (weighted moving average with temperature correlation)
   const windowSize = Math.min(7, Math.floor(timeSeries.length / 2))
   const recentData = timeSeries.slice(-windowSize)
   const recentAvg = recentData.reduce((sum, d) => sum + d.occupancy, 0) / recentData.length
+
+  // Calculate temperature impact on occupancy (correlation)
+  const temperatures = timeSeries.map(d => d.temperature).filter(t => t > 0)
+  const occupancies = timeSeries.filter(d => d.temperature > 0).map(d => d.occupancy)
+  const tempOccCorr = pearsonCorrelation(temperatures, occupancies)
 
   // Generate forecast
   const lastDate = timeSeries[timeSeries.length - 1]?.date
@@ -282,9 +293,20 @@ export function forecastDemand(
     forecastDate.setDate(lastDate.getDate() + i)
     const dayOfWeek = forecastDate.getDay()
 
-    // Combine trend and seasonality
+    // Combine trend, seasonality, and temperature impact
     const seasonalFactor = (dayFactors[dayOfWeek] ?? 70) / (recentAvg || 1)
-    const predicted = Math.round(Math.max(0, Math.min(100, recentAvg * seasonalFactor)))
+
+    // Apply temperature correlation if significant (>0.3 or <-0.3)
+    let tempAdjustment = 1
+    if (Math.abs(tempOccCorr) > 0.3) {
+      // Positive correlation: higher temp = higher occupancy
+      // Negative correlation: higher temp = lower occupancy
+      tempAdjustment = 1 + (tempOccCorr * 0.1) // Max ±10% adjustment
+    }
+
+    const predicted = Math.round(
+      Math.max(0, Math.min(100, recentAvg * seasonalFactor * tempAdjustment))
+    )
 
     forecast.push({
       date: forecastDate.toISOString().split('T')[0],

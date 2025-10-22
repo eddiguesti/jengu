@@ -61,9 +61,18 @@ export const Insights = () => {
     const weatherGroups: Record<string, { prices: number[]; occupancies: number[] }> = {}
 
     fileData.forEach((row: any) => {
-      const weather = row.weather || row.weather_condition || ''
+      const weather = row.weatherCondition || row.weathercondition || row.weather_condition || row.weather || ''
       const price = parseFloat(row.price || row.rate || 0)
       let occupancy = parseFloat(row.occupancy || row.occupancy_rate || 0)
+
+      // Calculate occupancy from bookings and availability if not provided
+      if (!occupancy || occupancy === 0) {
+        const bookings = parseFloat(row.bookings || 0)
+        const availability = parseFloat(row.availability || 0)
+        if (bookings > 0 && availability > 0) {
+          occupancy = (bookings / availability) * 100
+        }
+      }
 
       if (occupancy > 1 && occupancy <= 100) {
         // Already percentage
@@ -140,6 +149,15 @@ export const Insights = () => {
       const price = parseFloat(row.price || row.rate || 0)
       let occupancy = parseFloat(row.occupancy || row.occupancy_rate || 0)
 
+      // Calculate occupancy from bookings and availability if not provided
+      if (!occupancy || occupancy === 0) {
+        const bookings = parseFloat(row.bookings || 0)
+        const availability = parseFloat(row.availability || 0)
+        if (bookings > 0 && availability > 0) {
+          occupancy = (bookings / availability) * 100
+        }
+      }
+
       if (occupancy > 1 && occupancy <= 100) {
         // Already percentage
       } else if (occupancy > 0 && occupancy <= 1) {
@@ -177,6 +195,15 @@ export const Insights = () => {
         const temperature = parseFloat(row.temperature || row.temp || 0)
         const price = parseFloat(row.price || row.rate || 0)
         let occupancy = parseFloat(row.occupancy || row.occupancy_rate || 0)
+
+        // Calculate occupancy from bookings and availability if not provided
+        if (!occupancy || occupancy === 0) {
+          const bookings = parseFloat(row.bookings || 0)
+          const availability = parseFloat(row.availability || 0)
+          if (bookings > 0 && availability > 0) {
+            occupancy = (bookings / availability) * 100
+          }
+        }
 
         if (occupancy > 1 && occupancy <= 100) {
           // Already percentage
@@ -224,10 +251,17 @@ export const Insights = () => {
     refetch: refetchSentiment,
   } = useMarketSentiment(firstFileId, fileData)
 
-  // Prepare analytics data for AI insights
-  const analyticsData = analyticsSummary
-    ? { marketSentiment, weatherAnalysis, demandForecast }
-    : null
+  // Prepare analytics data for AI insights (only when ALL data is loaded)
+  const analyticsData =
+    analyticsSummary && marketSentiment
+      ? {
+          marketSentiment,
+          weatherAnalysis,
+          demandForecast,
+          competitorAnalysis: null, // Not implemented yet
+          featureImportance: null, // Not implemented yet
+        }
+      : null
 
   // Fetch AI insights using React Query (only when analytics data is ready)
   const {

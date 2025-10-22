@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import axios from 'axios'
 import { asyncHandler, sendError } from '../utils/errorHandler.js'
+import { authenticateUser } from '../lib/supabase.js'
 import { mapWeatherCode } from '../utils/weatherCodes.js'
 import { DailyForecast, ForecastItem } from '../types/api.types.js'
 
@@ -12,6 +13,7 @@ const router = Router()
  */
 router.post(
   '/historical',
+  authenticateUser,
   asyncHandler(async (req, res) => {
     const { latitude, longitude, dates } = req.body
 
@@ -73,6 +75,7 @@ router.post(
  */
 router.get(
   '/current',
+  authenticateUser,
   asyncHandler(async (req, res) => {
     const { latitude, longitude } = req.query
 
@@ -120,6 +123,7 @@ router.get(
  */
 router.get(
   '/forecast',
+  authenticateUser,
   asyncHandler(async (req, res) => {
     const { latitude, longitude } = req.query
 

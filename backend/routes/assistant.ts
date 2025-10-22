@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import axios from 'axios'
 import { asyncHandler, sendError } from '../utils/errorHandler.js'
+import { authenticateUser } from '../lib/supabase.js'
 
 const router = Router()
 
@@ -10,6 +11,7 @@ const router = Router()
  */
 router.post(
   '/message',
+  authenticateUser,
   asyncHandler(async (req, res) => {
     const { message, conversationHistory, context } = req.body
 
@@ -41,6 +43,7 @@ router.post(
  */
 router.post(
   '/quick-suggestion',
+  authenticateUser,
   asyncHandler(async (req, res) => {
     const { context } = req.body
 
@@ -88,6 +91,7 @@ router.post(
  */
 router.post(
   '/analyze-pricing',
+  authenticateUser,
   asyncHandler(async (req, res) => {
     const { data } = req.body
 
@@ -143,6 +147,7 @@ Total Data Points: ${data.dates.length}
  */
 router.post(
   '/pricing-recommendations',
+  authenticateUser,
   asyncHandler(async (req, res) => {
     const { dates, context } = req.body
 

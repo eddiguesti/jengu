@@ -79,6 +79,9 @@ export const enrichFile = async (
   fileId: string,
   location: { latitude: number; longitude: number; country?: string }
 ) => {
-  const response = await apiClient.post(`/files/${fileId}/enrich`, location)
+  // Use extended timeout for enrichment (10 minutes for very large datasets)
+  const response = await apiClient.post(`/files/${fileId}/enrich`, location, {
+    timeout: 600000, // 10 minutes
+  })
   return response.data
 }
