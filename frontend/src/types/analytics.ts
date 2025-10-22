@@ -77,3 +77,56 @@ export interface DashboardFilters {
   leadBucket?: string
   strategyMode?: 'conservative' | 'balanced' | 'aggressive'
 }
+
+// Event/Holiday Uplift Analysis
+export interface EventUplift {
+  type: string // 'Weekday', 'Weekend', 'Holiday'
+  occupancyUplift: number
+  priceUplift: number
+  count: number
+}
+
+// Correlation Heatmap
+export interface CorrelationHeatmap {
+  features: string[] // ['price', 'occupancy', 'temperature', 'day_of_week']
+  matrix: number[][] // correlation matrix [-1..1]
+}
+
+// Weather Impact Scatter
+export interface WeatherImpact {
+  temperature: number[]
+  occupancy: number[]
+  bookings: number[]
+  correlation: number // -1..1
+}
+
+// Price-Revenue/Occupancy Frontier
+export interface PriceFrontier {
+  price: number
+  revenue: number
+  occupancy: number
+}
+
+// Risk-Return Scatter
+export interface RiskReturn {
+  strategy: string // 'Conservative', 'Balanced', 'Aggressive'
+  risk: number // standard deviation
+  expectedReturn: number // expected revenue
+  count: number
+}
+
+// Conformal Prediction Safe Range
+export interface ConformalRange {
+  intervals: Array<{
+    confidence: number // 0.90, 0.95, 0.99
+    lower: number
+    upper: number
+  }>
+  recommended: {
+    price: number
+    lowerBound: number
+    upperBound: number
+    confidence: number
+  }
+  currentPrice: number
+}

@@ -8,6 +8,12 @@ import type {
   ForecastActual,
   ElasticityCurve,
   PriceExplain,
+  EventUplift,
+  CorrelationHeatmap,
+  WeatherImpact,
+  PriceFrontier,
+  RiskReturn,
+  ConformalRange,
 } from '@/types/analytics'
 
 // Helper to fetch data from files API
@@ -124,6 +130,102 @@ export function usePriceExplain(fileId: string, date: string | null, enabled = t
       return response.data.data as PriceExplain
     },
     enabled: !!fileId && !!date && enabled,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * Fetch event/holiday uplift analysis
+ */
+export function useEventUplift(fileId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['insights', 'event-uplift', fileId],
+    queryFn: async () => {
+      const fileData = await fetchFileData(fileId)
+      const response = await apiClient.post('/analytics/event-uplift', { data: fileData })
+      return response.data.data as EventUplift[]
+    },
+    enabled: !!fileId && enabled,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * Fetch feature correlation heatmap
+ */
+export function useCorrelationHeatmap(fileId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['insights', 'correlation-heatmap', fileId],
+    queryFn: async () => {
+      const fileData = await fetchFileData(fileId)
+      const response = await apiClient.post('/analytics/correlation-heatmap', { data: fileData })
+      return response.data.data as CorrelationHeatmap
+    },
+    enabled: !!fileId && enabled,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * Fetch weather impact on bookings
+ */
+export function useWeatherImpact(fileId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['insights', 'weather-impact', fileId],
+    queryFn: async () => {
+      const fileData = await fetchFileData(fileId)
+      const response = await apiClient.post('/analytics/weather-impact', { data: fileData })
+      return response.data.data as WeatherImpact
+    },
+    enabled: !!fileId && enabled,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * Fetch price-revenue/occupancy frontier
+ */
+export function usePriceFrontier(fileId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['optimize', 'price-frontier', fileId],
+    queryFn: async () => {
+      const fileData = await fetchFileData(fileId)
+      const response = await apiClient.post('/analytics/price-frontier', { data: fileData })
+      return response.data.data as PriceFrontier[]
+    },
+    enabled: !!fileId && enabled,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * Fetch risk-return scatter analysis
+ */
+export function useRiskReturn(fileId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['optimize', 'risk-return', fileId],
+    queryFn: async () => {
+      const fileData = await fetchFileData(fileId)
+      const response = await apiClient.post('/analytics/risk-return', { data: fileData })
+      return response.data.data as RiskReturn[]
+    },
+    enabled: !!fileId && enabled,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * Fetch conformal prediction safe price range
+ */
+export function useConformalRange(fileId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['optimize', 'conformal-range', fileId],
+    queryFn: async () => {
+      const fileData = await fetchFileData(fileId)
+      const response = await apiClient.post('/analytics/conformal-range', { data: fileData })
+      return response.data.data as ConformalRange
+    },
+    enabled: !!fileId && enabled,
     staleTime: 5 * 60 * 1000,
   })
 }

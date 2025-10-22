@@ -10,15 +10,14 @@ const Data = lazy(() => import('./pages/Data').then(m => ({ default: m.Data })))
 const PricingEngine = lazy(() =>
   import('./pages/PricingEngine').then(m => ({ default: m.PricingEngine }))
 )
-const Insights = lazy(() => import('./pages/Insights').then(m => ({ default: m.Insights })))
 const Assistant = lazy(() => import('./pages/Assistant').then(m => ({ default: m.Assistant })))
 const CompetitorMonitor = lazy(() =>
   import('./pages/CompetitorMonitor').then(m => ({ default: m.CompetitorMonitor }))
 )
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })))
-const DirectorDashboard = lazy(() =>
-  import('./pages/DirectorDashboard').then(m => ({ default: m.DirectorDashboard }))
-)
+
+// New unified Analytics page (combines Insights + Director)
+const Analytics = lazy(() => import('./pages/Analytics').then(m => ({ default: m.Analytics })))
 
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -64,17 +63,44 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="/dashboard" replace />} />
+              {/* Root redirect to dashboard */}
+              <Route index element={<Dashboard />} />
+
+              {/* Primary Routes (New IA) */}
               <Route path="dashboard" element={<Dashboard />} />
-              <Route path="data" element={<Data />} />
-              <Route path="pricing-engine" element={<PricingEngine />} />
-              <Route path="insights" element={<Insights />} />
-              <Route path="assistant" element={<Assistant />} />
-              <Route path="competitor-monitor" element={<CompetitorMonitor />} />
-              <Route path="director" element={<DirectorDashboard />} />
-              <Route path="settings" element={<Settings />} />
+              <Route path="home" element={<Navigate to="/" replace />} />
+
+              {/* Analytics Section */}
+              <Route path="analytics" element={<Analytics />} />
+
+              {/* Pricing Section */}
+              <Route path="pricing">
+                <Route path="optimizer" element={<PricingEngine />} />
+                <Route path="competitors" element={<CompetitorMonitor />} />
+                <Route index element={<Navigate to="/pricing/optimizer" replace />} />
+              </Route>
+
+              {/* Data Section */}
+              <Route path="data-sources" element={<Data />} />
+
+              {/* Tools Section */}
+              <Route path="tools">
+                <Route path="assistant" element={<Assistant />} />
+                <Route path="settings" element={<Settings />} />
+                <Route index element={<Navigate to="/tools/assistant" replace />} />
+              </Route>
+
+              {/* Legacy Routes (Redirects for backwards compatibility) */}
+              <Route path="data" element={<Navigate to="/data-sources" replace />} />
+              <Route path="pricing-engine" element={<Navigate to="/pricing/optimizer" replace />} />
+              <Route path="competitor-monitor" element={<Navigate to="/pricing/competitors" replace />} />
+              <Route path="insights" element={<Navigate to="/analytics" replace />} />
+              <Route path="director" element={<Navigate to="/analytics?view=advanced" replace />} />
+              <Route path="assistant" element={<Navigate to="/tools/assistant" replace />} />
+              <Route path="settings" element={<Navigate to="/tools/settings" replace />} />
+
               {/* 404 Fallback */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
         </Suspense>

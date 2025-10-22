@@ -195,6 +195,105 @@ export const Dashboard = () => {
         )}
       </div>
 
+      {/* Quick Action Cards */}
+      {hasData && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Card
+              variant="elevated"
+              className="group cursor-pointer border-l-4 border-l-[#EBFF57] p-6 transition-all hover:shadow-xl"
+              onClick={() => navigate('/pricing/optimizer')}
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Quick Action</p>
+                  <h3 className="mt-1 text-lg font-semibold text-gray-100">Get Price Quote</h3>
+                  <p className="mt-2 text-sm text-gray-400">
+                    AI-powered pricing recommendation
+                  </p>
+                </div>
+                <div className="rounded-lg bg-[#EBFF57]/10 p-3">
+                  <Zap className="h-6 w-6 text-[#EBFF57]" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm font-medium text-[#EBFF57]">
+                Open Optimizer
+                <ArrowUpRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </div>
+            </Card>
+          </motion.div>
+
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Card
+              variant="elevated"
+              className="group cursor-pointer border-l-4 border-l-blue-500 p-6 transition-all hover:shadow-xl"
+              onClick={() => navigate('/data-sources')}
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Quick Action</p>
+                  <h3 className="mt-1 text-lg font-semibold text-gray-100">Upload Data</h3>
+                  <p className="mt-2 text-sm text-gray-400">Add new CSV files to analyze</p>
+                </div>
+                <div className="rounded-lg bg-blue-500/10 p-3">
+                  <Database className="h-6 w-6 text-blue-500" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm font-medium text-blue-500">
+                Manage Files
+                <ArrowUpRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </div>
+            </Card>
+          </motion.div>
+
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Card
+              variant="elevated"
+              className="group cursor-pointer border-l-4 border-l-purple-500 p-6 transition-all hover:shadow-xl"
+              onClick={() => navigate('/analytics')}
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Quick Action</p>
+                  <h3 className="mt-1 text-lg font-semibold text-gray-100">View Analytics</h3>
+                  <p className="mt-2 text-sm text-gray-400">Deep dive into trends & insights</p>
+                </div>
+                <div className="rounded-lg bg-purple-500/10 p-3">
+                  <BarChart3 className="h-6 w-6 text-purple-500" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm font-medium text-purple-500">
+                Explore Charts
+                <ArrowUpRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </div>
+            </Card>
+          </motion.div>
+
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Card
+              variant="elevated"
+              className="group cursor-pointer border-l-4 border-l-green-500 p-6 transition-all hover:shadow-xl"
+              onClick={() => navigate('/tools/assistant')}
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Quick Action</p>
+                  <h3 className="mt-1 text-lg font-semibold text-gray-100">Ask AI</h3>
+                  <p className="mt-2 text-sm text-gray-400">Get instant answers & advice</p>
+                </div>
+                <div className="rounded-lg bg-green-500/10 p-3">
+                  <Activity className="h-6 w-6 text-green-500" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm font-medium text-green-500">
+                Open Assistant
+                <ArrowUpRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      )}
+
       {/* Empty State - No Data */}
       {!hasData && !isLoading && (
         <Card variant="elevated" className="py-20 text-center">

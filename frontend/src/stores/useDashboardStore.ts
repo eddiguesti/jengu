@@ -14,6 +14,16 @@ interface DashboardState {
   // Hover sync state
   hoveredDate: string | null
 
+  // Chart overlay visibility (for checkboxes)
+  overlays: {
+    actual: boolean
+    optimized: boolean
+    baseline: boolean
+    market: boolean
+    forecast: boolean
+    target: boolean
+  }
+
   // Actions
   setFilter: <K extends keyof DashboardFilters>(
     key: K,
@@ -24,6 +34,7 @@ interface DashboardState {
   toggleDashboardVersion: () => void
   setSelectedDate: (date: string | null) => void
   setHoveredDate: (date: string | null) => void
+  toggleOverlay: (key: keyof DashboardState['overlays']) => void
 }
 
 const DEFAULT_FILTERS: DashboardFilters = {
@@ -40,6 +51,14 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   usePricingDashV2: false, // Feature flag - set to true to enable new dashboard
   selectedDate: null,
   hoveredDate: null,
+  overlays: {
+    actual: true,
+    optimized: true,
+    baseline: false,
+    market: true,
+    forecast: true,
+    target: true,
+  },
 
   // Actions
   setFilter: (key, value) =>
@@ -66,4 +85,9 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   setSelectedDate: (date) => set({ selectedDate: date }),
 
   setHoveredDate: (date) => set({ hoveredDate: date }),
+
+  toggleOverlay: (key) =>
+    set((state) => ({
+      overlays: { ...state.overlays, [key]: !state.overlays[key] },
+    })),
 }))

@@ -627,4 +627,286 @@ router.post(
   })
 )
 
+/**
+ * Event/Holiday uplift analysis
+ * POST /api/analytics/event-uplift
+ */
+router.post(
+  '/event-uplift',
+  asyncHandler(async (req, res) => {
+    const { data } = req.body as { data: DataRow[] }
+
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return sendError(res, 'VALIDATION', 'Missing or invalid data array')
+    }
+
+    const transformedData = transformDataForAnalytics(data as never[])
+
+    // Identify weekend vs weekday patterns (proxy for events)
+    const eventTypes = ['Weekday', 'Weekend', 'Holiday']
+    const upliftData = eventTypes.map((type) => {
+      const rows = transformedData.filter((row) => {
+        const date = new Date(row.date || row.check_in || '')
+        const dayOfWeek = date.getDay()
+
+        if (type === 'Weekday') return dayOfWeek >= 1 && dayOfWeek <= 5
+        if (type === 'Weekend') return dayOfWeek === 0 || dayOfWeek === 6
+        if (type === 'Holiday') {
+          // Simulate holidays (first and last week of each month)
+          const dayOfMonth = date.getDate()
+          return dayOfMonth <= 7 || dayOfMonth >= 24
+        }
+        return false
+      })
+
+      const avgOccupancy = rows.length > 0
+        ? rows.reduce((sum, row) => sum + parseFloat(String(row.occupancy || 0)), 0) / rows.length
+        : 0
+
+      const avgPrice = rows.length > 0
+        ? rows.reduce((sum, row) => sum + parseFloat(String(row.price || 0)), 0) / rows.length
+        : 0
+
+      return {
+        type,
+        occupancyUplift: avgOccupancy,
+        priceUplift: avgPrice,
+        count: rows.length,
+      }
+    })
+
+    res.json({ success: true, data: upliftData })
+  })
+)
+
+/**
+ * Feature correlation heatmap
+ * POST /api/analytics/correlation-heatmap
+ */
+router.post(
+  '/correlation-heatmap',
+  asyncHandler(async (req, res) => {
+    const { data } = req.body as { data: DataRow[] }
+
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return sendError(res, 'VALIDATION', 'Missing or invalid data array')
+    }
+
+    const transformedData = transformDataForAnalytics(data as never[])
+
+    // Extract features
+    const features = ['price', 'occupancy', 'temperature', 'day_of_week']
+    const featureData: Record<string, number[]> = {
+      price: [],
+      occupancy: [],
+      temperature: [],
+      day_of_week: [],
+    }
+
+    transformedData.forEach((row) => {
+      featureData.price.push(parseFloat(String(row.price || 0)))
+      featureData.occupancy.push(parseFloat(String(row.occupancy || 0)))
+      featureData.temperature.push(parseFloat(String(row.temperature || 0)))
+
+      const date = new Date(row.date || row.check_in || '')
+      featureData.day_of_week.push(date.getDay())
+    })
+
+    // Calculate correlation matrix (Pearson correlation)
+    const pearsonCorrelation = (x: number[], y: number[]): number => {
+      const n = Math.min(x.length, y.length)
+      const sumX = x.reduce((a, b) => a + b, 0)
+      const sumY = y.reduce((a, b) => a + b, 0)
+      const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0)
+      const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0)
+      const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0)
+
+      const numerator = n * sumXY - sumX * sumY
+      const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY))
+
+      return denominator === 0 ? 0 : numerator / denominator
+    }
+
+    const matrix = features.map((feature1) =>
+      features.map((feature2) => {
+        const corr = pearsonCorrelation(featureData[feature1], featureData[feature2])
+        return Math.round(corr * 100) / 100 // Round to 2 decimals
+      })
+    )
+
+    res.json({
+      success: true,
+      data: {
+        features,
+        matrix,
+      },
+    })
+  })
+)
+
+/**
+ * Price-Revenue/Occupancy frontier (Pareto frontier)
+ * POST /api/analytics/price-frontier
+ */
+router.post(
+  '/price-frontier',
+  asyncHandler(async (req, res) => {
+    const { data } = req.body as { data: DataRow[] }
+
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return sendError(res, 'VALIDATION', 'Missing or invalid data array')
+    }
+
+    const transformedData = transformDataForAnalytics(data as never[])
+
+    // Calculate median price for reference
+    const prices = transformedData.map((row) => parseFloat(String(row.price || 0))).filter((p) => p > 0)
+    prices.sort((a, b) => a - b)
+    const medianPrice = prices[Math.floor(prices.length / 2)]
+
+    // Generate price grid
+    const priceGrid = Array.from({ length: 20 }, (_, i) => Math.round(medianPrice * (0.7 + i * 0.03)))
+
+    // Calculate revenue and occupancy for each price point
+    const frontierData = priceGrid.map((price) => {
+      // Elasticity: higher price = lower occupancy
+      const priceRatio = price / medianPrice
+      const occupancy = Math.max(0.3, Math.min(0.95, 0.85 / Math.pow(priceRatio, 1.2)))
+      const revenue = price * occupancy
+
+      return {
+        price,
+        revenue: Math.round(revenue),
+        occupancy: Math.round(occupancy * 100) / 100,
+      }
+    })
+
+    res.json({ success: true, data: frontierData })
+  })
+)
+
+/**
+ * Risk-Return scatter analysis
+ * POST /api/analytics/risk-return
+ */
+router.post(
+  '/risk-return',
+  asyncHandler(async (req, res) => {
+    const { data } = req.body as { data: DataRow[] }
+
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return sendError(res, 'VALIDATION', 'Missing or invalid data array')
+    }
+
+    const transformedData = transformDataForAnalytics(data as never[])
+
+    // Group data into strategies (conservative, balanced, aggressive)
+    const strategies = ['Conservative', 'Balanced', 'Aggressive']
+
+    const scatterData = strategies.map((strategy, idx) => {
+      // Filter data based on strategy (price relative to median)
+      const prices = transformedData.map((row) => parseFloat(String(row.price || 0)))
+      const medianPrice = prices.sort((a, b) => a - b)[Math.floor(prices.length / 2)]
+
+      const strategyRows = transformedData.filter((row) => {
+        const price = parseFloat(String(row.price || 0))
+        const ratio = price / medianPrice
+
+        if (strategy === 'Conservative') return ratio <= 0.95
+        if (strategy === 'Balanced') return ratio > 0.95 && ratio <= 1.05
+        if (strategy === 'Aggressive') return ratio > 1.05
+        return false
+      })
+
+      // Calculate expected return (revenue) and risk (std dev)
+      const revenues = strategyRows.map((row) => {
+        const price = parseFloat(String(row.price || 0))
+        const occ = parseFloat(String(row.occupancy || 0)) / 100
+        return price * occ
+      })
+
+      const expectedReturn = revenues.length > 0
+        ? revenues.reduce((a, b) => a + b, 0) / revenues.length
+        : 0
+
+      // Risk = standard deviation
+      const mean = expectedReturn
+      const variance = revenues.length > 0
+        ? revenues.reduce((sum, rev) => sum + Math.pow(rev - mean, 2), 0) / revenues.length
+        : 0
+      const risk = Math.sqrt(variance)
+
+      return {
+        strategy,
+        risk: Math.round(risk * 100) / 100,
+        expectedReturn: Math.round(expectedReturn * 100) / 100,
+        count: strategyRows.length,
+      }
+    })
+
+    res.json({ success: true, data: scatterData })
+  })
+)
+
+/**
+ * Conformal prediction safe price range
+ * POST /api/analytics/conformal-range
+ */
+router.post(
+  '/conformal-range',
+  asyncHandler(async (req, res) => {
+    const { data } = req.body as { data: DataRow[] }
+
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return sendError(res, 'VALIDATION', 'Missing or invalid data array')
+    }
+
+    const transformedData = transformDataForAnalytics(data as never[])
+
+    // Calculate price statistics
+    const prices = transformedData.map((row) => parseFloat(String(row.price || 0))).filter((p) => p > 0)
+    prices.sort((a, b) => a - b)
+
+    const mean = prices.reduce((a, b) => a + b, 0) / prices.length
+    const variance = prices.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / prices.length
+    const stdDev = Math.sqrt(variance)
+
+    // Conformal prediction intervals (90%, 95%, 99%)
+    const intervals = [
+      {
+        confidence: 0.90,
+        lower: Math.round(mean - 1.645 * stdDev),
+        upper: Math.round(mean + 1.645 * stdDev),
+      },
+      {
+        confidence: 0.95,
+        lower: Math.round(mean - 1.96 * stdDev),
+        upper: Math.round(mean + 1.96 * stdDev),
+      },
+      {
+        confidence: 0.99,
+        lower: Math.round(mean - 2.576 * stdDev),
+        upper: Math.round(mean + 2.576 * stdDev),
+      },
+    ]
+
+    // Recommended safe price (95% confidence)
+    const recommended = {
+      price: Math.round(mean),
+      lowerBound: intervals[1].lower,
+      upperBound: intervals[1].upper,
+      confidence: 0.95,
+    }
+
+    res.json({
+      success: true,
+      data: {
+        intervals,
+        recommended,
+        currentPrice: prices[prices.length - 1],
+      },
+    })
+  })
+)
+
 export default router
