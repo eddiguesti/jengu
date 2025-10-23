@@ -390,4 +390,372 @@ grep -r "supabaseAdmin.from" backend/
 
 ---
 
+## httpOnly Cookie Authentication (Task2 - 2025-10-23)
+
+### Overview
+
+Jengu now uses **httpOnly cookies** for authentication, replacing localStorage token storage for enhanced security.
+
+#### Security Benefits
+
+1. **XSS Protection**: Tokens stored in httpOnly cookies cannot be accessed by JavaScript
+2. **CSRF Protection**: SameSite cookie attributes prevent cross-site request forgery
+3. **Refresh Token Rotation**: Each refresh generates a new refresh token, preventing replay attacks
+4. **Structured Logging**: Request IDs enable request tracking across logs for debugging and security auditing
+
+### Cookie Configuration
+
+**Access Token** (short-lived, 15 minutes):
+
+```javascript
+{
+  httpOnly: true,              // Not accessible via JavaScript
+  secure: true,                // HTTPS only in production
+  sameSite: 'lax',            // CSRF protection (allows top-level navigation)
+  path: '/',
+  maxAge: 15 * 60 * 1000      // 15 minutes
+}
+```
+
+**Refresh Token** (long-lived, 7 days):
+
+```javascript
+{
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict',         // Stricter CSRF protection
+  path: '/api/auth',          // Limited scope to auth endpoints only
+  maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+}
+```
+
+### Auth Endpoints
+
+#### POST /api/auth/login
+
+Authenticates user and sets httpOnly cookies.
+
+**Request**:
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response** (cookies set automatically):
+
+```json
+{
+  "user": {
+    "id": "user-123",
+    "email": "user@example.com",
+    "role": "authenticated"
+  },
+  "session": {
+    "expires_at": "2025-10-24T00:00:00Z"
+  }
+}
+```
+
+**Cookies Set**:
+
+- `access_token=<jwt>` (HttpOnly, SameSite=Lax, 15min)
+- `refresh_token=<refresh>` (HttpOnly, SameSite=Strict, 7 days, path=/api/auth)
+
+#### POST /api/auth/refresh
+
+Refreshes access token using refresh token with **rotation**.
+
+**Request**: No body (refresh token from cookie)
+
+**Response**:
+
+```json
+{
+  "user": {
+    "id": "user-123",
+    "email": "user@example.com"
+  },
+  "session": {
+    "expires_at": "2025-10-24T00:15:00Z"
+  }
+}
+```
+
+**Cookies Set** (new tokens):
+
+- `access_token=<new-jwt>` (HttpOnly, 15min)
+- `refresh_token=<new-refresh>` (HttpOnly, **rotated**, 7 days)
+
+**Important**: The old refresh token is invalidated. Replaying it will fail with 401.
+
+#### POST /api/auth/logout
+
+Clears all auth cookies and signs out.
+
+**Request**: No body
+
+**Response**:
+
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+**Cookies Cleared**:
+
+- `access_token` (Expires=Thu, 01 Jan 1970)
+- `refresh_token` (Expires=Thu, 01 Jan 1970)
+
+#### GET /api/auth/me
+
+Returns current authenticated user from cookie.
+
+**Request**: No body (access token from cookie)
+
+**Response**:
+
+```json
+{
+  "user": {
+    "id": "user-123",
+    "email": "user@example.com",
+    "role": "authenticated"
+  }
+}
+```
+
+**Returns 401** if no token or invalid token.
+
+### Request ID Middleware
+
+Every request now includes a unique request ID for tracking.
+
+**Request Object Extensions**:
+
+```typescript
+req.id // UUID v4 request ID
+req.startTime // Timestamp when request started
+req.userId // User ID (after authenticateUser middleware)
+```
+
+**Response Headers**:
+
+```
+X-Request-ID: 550e8400-e29b-41d4-a716-446655440000
+```
+
+**Structured Logs**:
+
+```json
+{
+  "reqId": "550e8400-e29b-41d4-a716-446655440000",
+  "userId": "user-123",
+  "method": "POST",
+  "path": "/api/files/upload",
+  "status": 200,
+  "latencyMs": 1234,
+  "message": "Request completed"
+}
+```
+
+### Frontend Integration
+
+#### Axios Configuration
+
+```typescript
+import axios from 'axios'
+
+const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
+  withCredentials: true, // REQUIRED: Send cookies with requests
+})
+
+// Auto-refresh on 401
+apiClient.interceptors.response.use(
+  response => response,
+  async error => {
+    const originalRequest = error.config
+
+    // If 401 and not already retrying
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+
+      try {
+        // Refresh token (cookies updated automatically)
+        await apiClient.post('/api/auth/refresh')
+
+        // Retry original request with new token
+        return apiClient.request(originalRequest)
+      } catch (refreshError) {
+        // Refresh failed - redirect to login
+        window.location.href = '/login'
+        return Promise.reject(refreshError)
+      }
+    }
+
+    return Promise.reject(error)
+  }
+)
+```
+
+#### Auth Context Updates
+
+```typescript
+// Login
+const login = async (email: string, password: string) => {
+  const response = await apiClient.post('/api/auth/login', { email, password })
+  setUser(response.data.user)
+  // Tokens are in cookies - no localStorage needed
+}
+
+// Logout
+const logout = async () => {
+  await apiClient.post('/api/auth/logout')
+  setUser(null)
+  // Cookies cleared automatically
+}
+
+// Check auth status
+const checkAuth = async () => {
+  try {
+    const response = await apiClient.get('/api/auth/me')
+    setUser(response.data.user)
+  } catch (error) {
+    setUser(null)
+  }
+}
+```
+
+### Backend Middleware Updates
+
+The `authenticateUser` middleware now supports both cookies and headers:
+
+```typescript
+export function authenticateUser(req: Request, res: Response, next: NextFunction): void {
+  // Check for token in cookies first (new httpOnly cookie auth)
+  const cookieToken = req.cookies?.access_token
+  // Fall back to authorization header (legacy support)
+  const headerToken = req.headers.authorization
+
+  const token = cookieToken ? `Bearer ${cookieToken}` : headerToken
+
+  if (!token) {
+    res.status(401).json({
+      error: 'Unauthorized',
+      message: 'No authorization token provided',
+    })
+    return
+  }
+
+  // Validate and set req.userId...
+}
+```
+
+### Testing httpOnly Cookies
+
+#### XSS Protection Test
+
+```javascript
+// In browser console, this should NOT work:
+console.log(document.cookie) // Should NOT contain access_token or refresh_token
+
+// httpOnly cookies are not accessible to JavaScript
+```
+
+#### CSRF Protection Test
+
+```bash
+# Cross-site requests should be blocked by SameSite attribute
+curl -X POST http://localhost:3001/api/auth/refresh \
+  --cookie "refresh_token=stolen-token" \
+  --header "Origin: https://evil.com"
+# Should fail due to SameSite=Strict
+```
+
+#### Refresh Token Rotation Test
+
+```bash
+# 1. Login and capture refresh token
+curl -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}' \
+  -c cookies.txt
+
+# 2. Refresh once (gets new refresh token)
+curl -X POST http://localhost:3001/api/auth/refresh \
+  -b cookies.txt \
+  -c cookies2.txt
+
+# 3. Try to use old refresh token (should fail with 401)
+curl -X POST http://localhost:3001/api/auth/refresh \
+  -b cookies.txt
+# Should return 401 - old refresh token is invalidated
+```
+
+### Migration from localStorage
+
+**Old Pattern** (Insecure):
+
+```typescript
+// DON'T DO THIS ANYMORE
+localStorage.setItem('access_token', token)
+const token = localStorage.getItem('access_token')
+```
+
+**New Pattern** (Secure):
+
+```typescript
+// Tokens are in httpOnly cookies - no localStorage needed
+// Just make sure withCredentials: true in axios config
+await apiClient.post('/api/auth/login', { email, password })
+```
+
+### Troubleshooting
+
+#### Cookies Not Being Set
+
+**Problem**: Login succeeds but cookies aren't set.
+
+**Solution**: Ensure `withCredentials: true` in axios config:
+
+```typescript
+axios.create({
+  baseURL: 'http://localhost:3001',
+  withCredentials: true, // REQUIRED
+})
+```
+
+#### 401 on All Requests After Login
+
+**Problem**: Backend returns 401 even after successful login.
+
+**Solution**: Check that cookies are being sent:
+
+```typescript
+// In browser DevTools Network tab:
+// Request Headers should include:
+Cookie: access_token=...; refresh_token=...
+```
+
+#### CORS Errors with Cookies
+
+**Problem**: CORS errors when sending credentials.
+
+**Solution**: Backend must allow credentials in CORS config:
+
+```typescript
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true, // REQUIRED
+  })
+)
+```
+
+---
+
 **Remember**: With great power (service role key) comes great responsibility (manual filtering)!

@@ -30,6 +30,7 @@
     "@sentry/profiling-node": "^10.20.0",
     "@supabase/supabase-js": "^2.75.0",
     "axios": "^1.6.8",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "csv-parser": "^3.2.0",
     "dotenv": "^16.4.5",
@@ -42,6 +43,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/multer": "^2.0.0",

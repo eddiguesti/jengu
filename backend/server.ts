@@ -8,11 +8,14 @@ initSentry() // Initialize Sentry error tracking
 
 import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import { requestLogger, logger } from './middleware/logger.js'
 import { generalLimiter } from './middleware/rateLimiters.js'
+import { requestIdMiddleware } from './middleware/requestId.js'
 
 // Import route modules
 import healthRouter from './routes/health.js'
+import authRouter from './routes/auth.js'
 import filesRouter from './routes/files.js'
 import settingsRouter from './routes/settings.js'
 import assistantRouter from './routes/assistant.js'
@@ -27,6 +30,7 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 // Global middleware
+app.use(requestIdMiddleware) // Generate request IDs and log requests
 app.use(requestLogger) // Add request logging
 app.use(
   cors({
@@ -34,11 +38,13 @@ app.use(
     credentials: true,
   })
 )
+app.use(cookieParser()) // Parse cookies for auth
 app.use(express.json({ limit: '10mb' }))
 app.use(generalLimiter) // General rate limiting for all endpoints
 
 // Mount route modules
 app.use('/health', healthRouter)
+app.use('/api/auth', authRouter)
 app.use('/api/files', filesRouter)
 app.use('/api/settings', settingsRouter)
 app.use('/api/assistant', assistantRouter)

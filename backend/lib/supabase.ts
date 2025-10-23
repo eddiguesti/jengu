@@ -70,10 +70,15 @@ export async function getUserIdFromToken(token: string): Promise<string | null> 
 
 /**
  * Middleware to authenticate requests
- * Extracts user ID from JWT token and attaches to request
+ * Extracts user ID from JWT token (cookie or header) and attaches to request
  */
 export function authenticateUser(req: Request, res: Response, next: NextFunction): void {
-  const token = req.headers.authorization
+  // Check for token in cookies first (new httpOnly cookie auth)
+  const cookieToken = req.cookies?.access_token
+  // Fall back to authorization header (legacy support)
+  const headerToken = req.headers.authorization
+
+  const token = cookieToken ? `Bearer ${cookieToken}` : headerToken
 
   if (!token) {
     res.status(401).json({
