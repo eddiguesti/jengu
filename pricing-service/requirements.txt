@@ -18,3 +18,8 @@ python-dotenv
 
 # CORS Support
 python-multipart
+
+# Testing
+pytest
+pytest-asyncio
+pytest-cov
