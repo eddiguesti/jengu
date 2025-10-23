@@ -108,8 +108,8 @@ export const Model = () => {
     >
       {/* Header */}
       <div>
-        <h1 className="text-text text-4xl font-bold">Model Training</h1>
-        <p className="text-muted mt-2">Train ML models to predict optimal pricing</p>
+        <h1 className="text-4xl font-bold text-text">Model Training</h1>
+        <p className="mt-2 text-muted">Train ML models to predict optimal pricing</p>
       </div>
 
       {/* Algorithm Selection */}
@@ -121,18 +121,18 @@ export const Model = () => {
             <Card
               key={key}
               variant={isSelected ? 'elevated' : 'default'}
-              className={clsx('cursor-pointer transition-all', isSelected && 'ring-primary ring-2')}
+              className={clsx('cursor-pointer transition-all', isSelected && 'ring-2 ring-primary')}
               onClick={() => setConfig({ ...config, algorithm: key as any })}
             >
               <div className="flex items-start gap-4">
-                <div className={clsx('bg-elevated rounded-lg p-3')}>
+                <div className={clsx('rounded-lg bg-elevated p-3')}>
                   <Icon className={clsx('h-6 w-6', info.color)} />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-text mb-1 text-lg font-semibold">{info.name}</h3>
-                  <p className="text-muted text-sm">{info.description}</p>
+                  <h3 className="mb-1 text-lg font-semibold text-text">{info.name}</h3>
+                  <p className="text-sm text-muted">{info.description}</p>
                 </div>
-                {isSelected && <CheckCircle2 className="text-primary h-5 w-5" />}
+                {isSelected && <CheckCircle2 className="h-5 w-5 text-primary" />}
               </div>
             </Card>
           )
@@ -142,13 +142,13 @@ export const Model = () => {
       {/* Configuration */}
       <Card variant="default">
         <Card.Header>
-          <h2 className="text-text text-xl font-semibold">Model Configuration</h2>
-          <p className="text-muted mt-1 text-sm">Select features and training parameters</p>
+          <h2 className="text-xl font-semibold text-text">Model Configuration</h2>
+          <p className="mt-1 text-sm text-muted">Select features and training parameters</p>
         </Card.Header>
         <Card.Body>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <h3 className="text-text mb-3 text-sm font-semibold">Selected Features</h3>
+              <h3 className="mb-3 text-sm font-semibold text-text">Selected Features</h3>
               <div className="space-y-2">
                 {availableFeatures.map(feature => {
                   const isSelected = config.features.includes(feature)
@@ -178,9 +178,9 @@ export const Model = () => {
                             })
                           }
                         }}
-                        className="border-border text-primary focus:ring-primary h-4 w-4 rounded"
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                       />
-                      <span className="text-text font-mono text-sm">{feature}</span>
+                      <span className="font-mono text-sm text-text">{feature}</span>
                     </label>
                   )
                 })}
@@ -189,7 +189,7 @@ export const Model = () => {
 
             <div className="space-y-6">
               <div>
-                <h3 className="text-text mb-3 text-sm font-semibold">Target Variable</h3>
+                <h3 className="mb-3 text-sm font-semibold text-text">Target Variable</h3>
                 <Select
                   value={config.target}
                   onChange={e => setConfig({ ...config, target: e.target.value })}
@@ -202,7 +202,7 @@ export const Model = () => {
               </div>
 
               <div>
-                <h3 className="text-text mb-3 text-sm font-semibold">Test Set Size</h3>
+                <h3 className="mb-3 text-sm font-semibold text-text">Test Set Size</h3>
                 <Select
                   value={config.test_size.toString()}
                   onChange={e => setConfig({ ...config, test_size: parseFloat(e.target.value) })}
@@ -214,11 +214,11 @@ export const Model = () => {
                 />
               </div>
 
-              <div className="border-border bg-elevated rounded-lg border p-4">
-                <p className="text-muted mb-2 text-xs font-medium">Selected Algorithm</p>
+              <div className="rounded-lg border border-border bg-elevated p-4">
+                <p className="mb-2 text-xs font-medium text-muted">Selected Algorithm</p>
                 <div className="flex items-center gap-2">
                   <AlgoIcon className={clsx('h-5 w-5', currentAlgoInfo.color)} />
-                  <span className="text-text text-sm font-semibold">{currentAlgoInfo.name}</span>
+                  <span className="text-sm font-semibold text-text">{currentAlgoInfo.name}</span>
                 </div>
               </div>
             </div>
@@ -226,7 +226,7 @@ export const Model = () => {
         </Card.Body>
         <Card.Footer>
           <div className="flex w-full items-center justify-between">
-            <p className="text-muted text-sm">
+            <p className="text-sm text-muted">
               {config.features.length} features selected for training
             </p>
             <Button
@@ -255,12 +255,12 @@ export const Model = () => {
           <Card variant="elevated" className="border-primary/20 bg-primary/5">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="bg-primary/10 rounded-lg p-2">
-                  <Brain className="text-primary h-6 w-6 animate-pulse" />
+                <div className="rounded-lg bg-primary/10 p-2">
+                  <Brain className="h-6 w-6 animate-pulse text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-text text-lg font-semibold">Training in Progress</h3>
-                  <p className="text-muted text-sm">Optimizing {currentAlgoInfo.name} model...</p>
+                  <h3 className="text-lg font-semibold text-text">Training in Progress</h3>
+                  <p className="text-sm text-muted">Optimizing {currentAlgoInfo.name} model...</p>
                 </div>
               </div>
               <Progress value={trainingProgress} showLabel variant="primary" size="lg" />
@@ -275,12 +275,12 @@ export const Model = () => {
           <Card variant="elevated" className="border-success/20 bg-success/5">
             <Card.Header>
               <div className="flex items-center gap-3">
-                <div className="bg-success/10 rounded-lg p-2">
-                  <CheckCircle2 className="text-success h-6 w-6" />
+                <div className="rounded-lg bg-success/10 p-2">
+                  <CheckCircle2 className="h-6 w-6 text-success" />
                 </div>
                 <div>
-                  <h2 className="text-text text-xl font-semibold">Model Trained Successfully</h2>
-                  <p className="text-muted mt-1 text-sm">
+                  <h2 className="text-xl font-semibold text-text">Model Trained Successfully</h2>
+                  <p className="mt-1 text-sm text-muted">
                     Trained at {new Date(trainedModel.trained_at).toLocaleString()}
                   </p>
                 </div>
@@ -292,26 +292,26 @@ export const Model = () => {
             <Card.Body>
               <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
                 <div className="text-center">
-                  <p className="text-muted mb-2 text-sm">Accuracy</p>
-                  <p className="text-success text-3xl font-bold">
+                  <p className="mb-2 text-sm text-muted">Accuracy</p>
+                  <p className="text-3xl font-bold text-success">
                     {(trainedModel.metrics.accuracy * 100).toFixed(1)}%
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-muted mb-2 text-sm">R² Score</p>
-                  <p className="text-primary text-3xl font-bold">
+                  <p className="mb-2 text-sm text-muted">R² Score</p>
+                  <p className="text-3xl font-bold text-primary">
                     {trainedModel.metrics.r2_score.toFixed(2)}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-muted mb-2 text-sm">MAE</p>
-                  <p className="text-text text-3xl font-bold">
+                  <p className="mb-2 text-sm text-muted">MAE</p>
+                  <p className="text-3xl font-bold text-text">
                     €{trainedModel.metrics.mae.toFixed(1)}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-muted mb-2 text-sm">RMSE</p>
-                  <p className="text-text text-3xl font-bold">
+                  <p className="mb-2 text-sm text-muted">RMSE</p>
+                  <p className="text-3xl font-bold text-text">
                     €{trainedModel.metrics.rmse.toFixed(1)}
                   </p>
                 </div>
@@ -319,7 +319,7 @@ export const Model = () => {
             </Card.Body>
             <Card.Footer>
               <div className="flex w-full items-center justify-between">
-                <p className="text-muted text-sm">
+                <p className="text-sm text-muted">
                   Model performs well with {(trainedModel.metrics.r2_score * 100).toFixed(0)}%
                   variance explained
                 </p>
@@ -336,10 +336,10 @@ export const Model = () => {
       {/* Info Section */}
       <Card variant="default">
         <Card.Header>
-          <h3 className="text-text text-lg font-semibold">About Model Training</h3>
+          <h3 className="text-lg font-semibold text-text">About Model Training</h3>
         </Card.Header>
         <Card.Body>
-          <div className="text-muted space-y-4 text-sm">
+          <div className="space-y-4 text-sm text-muted">
             <p>
               Our ML models analyze your historical data to identify patterns and predict optimal
               pricing. Each algorithm has different strengths:

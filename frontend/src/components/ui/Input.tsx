@@ -11,21 +11,21 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, helperText, className, ...props }, ref) => {
     return (
       <div className="w-full">
-        {label && <label className="text-text mb-1.5 block text-sm font-medium">{label}</label>}
+        {label && <label className="mb-1.5 block text-sm font-medium text-text">{label}</label>}
         <input
           ref={ref}
           className={clsx(
-            'border-border bg-elevated w-full rounded-lg border px-4 py-2',
+            'w-full rounded-lg border border-border bg-elevated px-4 py-2',
             'text-text placeholder:text-muted',
-            'focus:ring-primary focus:border-transparent focus:outline-none focus:ring-2',
+            'focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary',
             'transition-all duration-200',
             error && 'border-error focus:ring-error',
             className
           )}
           {...props}
         />
-        {error && <p className="text-error mt-1 text-sm">{error}</p>}
-        {helperText && !error && <p className="text-muted mt-1 text-sm">{helperText}</p>}
+        {error && <p className="mt-1 text-sm text-error">{error}</p>}
+        {helperText && !error && <p className="mt-1 text-sm text-muted">{helperText}</p>}
       </div>
     )
   }

@@ -56,17 +56,17 @@ export default function DashboardShell() {
     <div className="space-y-4">
       {/* Property Selector */}
       {uploadedFiles.length > 0 && (
-        <div className="border-border bg-card rounded-lg border p-4">
+        <div className="rounded-lg border border-border bg-card p-4">
           <div className="flex items-center gap-4">
-            <Database className="text-primary h-5 w-5" />
+            <Database className="h-5 w-5 text-primary" />
             <div className="flex-1">
-              <label className="text-text mb-2 block text-sm font-medium">
+              <label className="mb-2 block text-sm font-medium text-text">
                 Select Property for Analytics
               </label>
               <select
                 value={propertyId || ''}
                 onChange={e => set({ propertyId: e.target.value })}
-                className="border-border bg-background text-text focus:border-primary w-full rounded-lg border px-4 py-2 focus:outline-none"
+                className="w-full rounded-lg border border-border bg-background px-4 py-2 text-text focus:border-primary focus:outline-none"
               >
                 <option value="">-- Select a property --</option>
                 {uploadedFiles.map(file => (
@@ -81,7 +81,7 @@ export default function DashboardShell() {
       )}
 
       {!propertyId ? (
-        <div className="border-border bg-card text-muted flex items-center justify-center rounded-lg border py-12">
+        <div className="flex items-center justify-center rounded-lg border border-border bg-card py-12 text-muted">
           {uploadedFiles.length === 0
             ? 'Upload a CSV file to view analytics'
             : 'Select a property above to view analytics'}
@@ -90,59 +90,59 @@ export default function DashboardShell() {
         <div className="grid grid-cols-12 gap-4">
           {/* Revenue Series */}
           <div className="col-span-12">
-            <div className="border-border bg-card rounded-lg border p-4">
-              <h3 className="text-text mb-4 text-lg font-semibold">Revenue vs Optimized</h3>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <h3 className="mb-4 text-lg font-semibold text-text">Revenue vs Optimized</h3>
               {rev.isLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                 </div>
               ) : rev.data ? (
                 <LineWithBand x={rev.data.dates} y={rev.data.actual} name="Actual Revenue" />
               ) : (
-                <div className="text-muted py-12 text-center">No revenue data available</div>
+                <div className="py-12 text-center text-muted">No revenue data available</div>
               )}
             </div>
           </div>
 
           {/* Occupancy Pace */}
           <div className="col-span-7">
-            <div className="border-border bg-card rounded-lg border p-4">
-              <h3 className="text-text mb-4 text-lg font-semibold">Occupancy Pace</h3>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <h3 className="mb-4 text-lg font-semibold text-text">Occupancy Pace</h3>
               {pace.isLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                 </div>
               ) : pace.data ? (
                 <LineWithBand x={pace.data.lead} y={pace.data.actual} name="Occupancy Pace" />
               ) : (
-                <div className="text-muted py-12 text-center">No occupancy data available</div>
+                <div className="py-12 text-center text-muted">No occupancy data available</div>
               )}
             </div>
           </div>
 
           {/* Price Waterfall */}
           <div className="col-span-5">
-            <div className="border-border bg-card rounded-lg border p-4">
-              <h3 className="text-text mb-4 text-lg font-semibold">Price Breakdown</h3>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <h3 className="mb-4 text-lg font-semibold text-text">Price Breakdown</h3>
               {wf.isLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                 </div>
               ) : wf.data && wf.data.steps && wf.data.steps.length > 0 ? (
                 <WaterfallPrice steps={wf.data.steps} />
               ) : (
-                <div className="text-muted py-12 text-center">No price breakdown available</div>
+                <div className="py-12 text-center text-muted">No price breakdown available</div>
               )}
             </div>
           </div>
 
           {/* Heatmap */}
           <div className="col-span-6">
-            <div className="border-border bg-card rounded-lg border p-4">
-              <h3 className="text-text mb-4 text-lg font-semibold">Revenue Heatmap</h3>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <h3 className="mb-4 text-lg font-semibold text-text">Revenue Heatmap</h3>
               {hm.isLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                 </div>
               ) : hm.data ? (
                 <HeatmapRevLead
@@ -151,34 +151,34 @@ export default function DashboardShell() {
                   matrix={hm.data.matrix}
                 />
               ) : (
-                <div className="text-muted py-12 text-center">No heatmap data available</div>
+                <div className="py-12 text-center text-muted">No heatmap data available</div>
               )}
             </div>
           </div>
 
           {/* Forecast vs Actual */}
           <div className="col-span-6">
-            <div className="border-border bg-card rounded-lg border p-4">
-              <h3 className="text-text mb-4 text-lg font-semibold">Forecast vs Actual</h3>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <h3 className="mb-4 text-lg font-semibold text-text">Forecast vs Actual</h3>
               {fa.isLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                 </div>
               ) : fa.data ? (
                 <LineWithBand x={fa.data.dates} y={fa.data.forecast} name="Forecast Bookings" />
               ) : (
-                <div className="text-muted py-12 text-center">No forecast data available</div>
+                <div className="py-12 text-center text-muted">No forecast data available</div>
               )}
             </div>
           </div>
 
           {/* Elasticity Curve */}
           <div className="col-span-12">
-            <div className="border-border bg-card rounded-lg border p-4">
-              <h3 className="text-text mb-4 text-lg font-semibold">Price Elasticity</h3>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <h3 className="mb-4 text-lg font-semibold text-text">Price Elasticity</h3>
               {el.isLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                 </div>
               ) : el.data ? (
                 <ElasticityCurve
@@ -190,7 +190,7 @@ export default function DashboardShell() {
                   chosen={el.data.chosenPrice}
                 />
               ) : (
-                <div className="text-muted py-12 text-center">No elasticity data available</div>
+                <div className="py-12 text-center text-muted">No elasticity data available</div>
               )}
             </div>
           </div>

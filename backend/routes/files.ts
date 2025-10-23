@@ -163,7 +163,9 @@ router.post(
 
         // Check if this is due to unmapped columns
         const missingRequiredFields: string[] = []
-        console.log(`🔍 Checking column mapping: date=${columnMapping.date}, price=${columnMapping.price}`)
+        console.log(
+          `🔍 Checking column mapping: date=${columnMapping.date}, price=${columnMapping.price}`
+        )
 
         if (!columnMapping.date) missingRequiredFields.push('date')
         if (!columnMapping.price) missingRequiredFields.push('price')
@@ -174,7 +176,9 @@ router.post(
         // This handles: unmapped columns, incorrectly mapped columns, or bad data format
         console.log('🔧 All rows failed validation - requesting manual column mapping...')
         console.log(`📊 Detected columns: ${headers.join(', ')}`)
-        console.log(`📊 Current auto-mapping: date=${columnMapping.date}, price=${columnMapping.price}`)
+        console.log(
+          `📊 Current auto-mapping: date=${columnMapping.date}, price=${columnMapping.price}`
+        )
 
         // Keep the file and property for manual mapping
         return res.status(200).json({
@@ -184,7 +188,8 @@ router.post(
           fileName: req.file.filename,
           detectedColumns: headers,
           autoMapping: columnMapping,
-          missingFields: missingRequiredFields.length > 0 ? missingRequiredFields : ['date', 'price'],
+          missingFields:
+            missingRequiredFields.length > 0 ? missingRequiredFields : ['date', 'price'],
           message: 'Unable to process CSV data. Please verify column mappings.',
         })
       }
@@ -536,7 +541,7 @@ router.delete(
     console.log(`🗑️ Delete request for file ${fileId} by user ${userId}`)
 
     // Verify ownership
-    const { data: property, error: findError} = await supabaseAdmin
+    const { data: property, error: findError } = await supabaseAdmin
       .from('properties')
       .select('id')
       .eq('id', fileId)

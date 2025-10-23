@@ -4,15 +4,15 @@
 
 ## Components
 
-| Component | Purpose | Interactivity |
-|-----------|---------|---------------|
-| `RevenueGainChart.tsx` | Revenue vs Optimized (ROI) | Zoom, hover-sync, click for waterfall, export |
-| `OccupancyPaceChart.tsx` | Pace vs Target by Lead | Click to filter, hover, export |
-| `AdrIndexChart.tsx` | ADR vs Market Index | Hover-sync, zoom, color zones, export |
-| `RevLeadHeatmap.tsx` | Revenue by Lead × Season | Click cell to filter, export |
-| `ForecastActualChart.tsx` | Forecast Validation | Outlier detection, hover-sync, export |
-| `ElasticityCurveChart.tsx` | Price Sensitivity | **Click to simulate prices**, export |
-| `PriceWaterfallChart.tsx` | Price Decision Breakdown | AntV waterfall, export |
+| Component                  | Purpose                    | Interactivity                                 |
+| -------------------------- | -------------------------- | --------------------------------------------- |
+| `RevenueGainChart.tsx`     | Revenue vs Optimized (ROI) | Zoom, hover-sync, click for waterfall, export |
+| `OccupancyPaceChart.tsx`   | Pace vs Target by Lead     | Click to filter, hover, export                |
+| `AdrIndexChart.tsx`        | ADR vs Market Index        | Hover-sync, zoom, color zones, export         |
+| `RevLeadHeatmap.tsx`       | Revenue by Lead × Season   | Click cell to filter, export                  |
+| `ForecastActualChart.tsx`  | Forecast Validation        | Outlier detection, hover-sync, export         |
+| `ElasticityCurveChart.tsx` | Price Sensitivity          | **Click to simulate prices**, export          |
+| `PriceWaterfallChart.tsx`  | Price Decision Breakdown   | AntV waterfall, export                        |
 
 ## Usage
 

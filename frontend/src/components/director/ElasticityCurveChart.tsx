@@ -15,7 +15,7 @@ export function ElasticityCurveChart({ data, loading }: ElasticityCurveChartProp
 
   // Calculate expected RevPAU at simulated price
   const calculateExpectedRevPAU = (price: number) => {
-    const priceIndex = data.priceGrid.findIndex((p) => p >= price)
+    const priceIndex = data.priceGrid.findIndex(p => p >= price)
     if (priceIndex === -1) return 0
 
     const prob = data.probMean[priceIndex] ?? 0
@@ -59,7 +59,13 @@ export function ElasticityCurveChart({ data, loading }: ElasticityCurveChartProp
       },
     },
     legend: {
-      data: ['Booking Probability', 'Confidence Band', 'Market Median', 'Chosen Price', 'Simulated'],
+      data: [
+        'Booking Probability',
+        'Confidence Band',
+        'Market Median',
+        'Chosen Price',
+        'Simulated',
+      ],
       top: 40,
     },
     grid: {
@@ -178,7 +184,7 @@ export function ElasticityCurveChart({ data, loading }: ElasticityCurveChartProp
               data: [
                 [
                   data.chosenPrice,
-                  data.probMean[data.priceGrid.findIndex((p) => p >= data.chosenPrice!)] ?? 0.5,
+                  data.probMean[data.priceGrid.findIndex(p => p >= data.chosenPrice!)] ?? 0.5,
                 ] as any,
               ] as any,
               symbolSize: 15,
@@ -207,7 +213,7 @@ export function ElasticityCurveChart({ data, loading }: ElasticityCurveChartProp
               data: [
                 [
                   simulatedPrice,
-                  data.probMean[data.priceGrid.findIndex((p) => p >= simulatedPrice)] ?? 0.5,
+                  data.probMean[data.priceGrid.findIndex(p => p >= simulatedPrice)] ?? 0.5,
                 ] as any,
               ] as any,
               symbolSize: 18,

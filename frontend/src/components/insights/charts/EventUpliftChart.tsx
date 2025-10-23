@@ -69,7 +69,7 @@ export function EventUpliftChart({ data, loading }: EventUpliftChartProps) {
     },
     xAxis: {
       type: 'category',
-      data: data.map((d) => d.type),
+      data: data.map(d => d.type),
       axisLine: {
         lineStyle: {
           color: '#2A2A2A',
@@ -123,7 +123,7 @@ export function EventUpliftChart({ data, loading }: EventUpliftChartProps) {
         name: 'Occupancy Uplift',
         type: 'bar',
         yAxisIndex: 0,
-        data: data.map((d) => d.occupancyUplift),
+        data: data.map(d => d.occupancyUplift),
         itemStyle: {
           color: '#00D9FF',
         },
@@ -132,7 +132,7 @@ export function EventUpliftChart({ data, loading }: EventUpliftChartProps) {
         name: 'Price Uplift',
         type: 'bar',
         yAxisIndex: 1,
-        data: data.map((d) => d.priceUplift),
+        data: data.map(d => d.priceUplift),
         itemStyle: {
           color: '#EBFF57',
         },

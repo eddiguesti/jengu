@@ -42,7 +42,7 @@ export function PriceFrontierChart({ data, loading }: PriceFrontierChartProps) {
   }
 
   // Prepare scatter data [occupancy, revenue, price]
-  const scatterData = data.map((d) => [d.occupancy * 100, d.revenue, d.price])
+  const scatterData = data.map(d => [d.occupancy * 100, d.revenue, d.price])
 
   const option: EChartsOption = {
     backgroundColor: 'transparent',
@@ -108,8 +108,8 @@ export function PriceFrontierChart({ data, loading }: PriceFrontierChartProps) {
     visualMap: {
       show: false,
       dimension: 2, // Color by price
-      min: Math.min(...data.map((d) => d.price)),
-      max: Math.max(...data.map((d) => d.price)),
+      min: Math.min(...data.map(d => d.price)),
+      max: Math.max(...data.map(d => d.price)),
       inRange: {
         color: ['#4ECDC4', '#EBFF57', '#FF6B6B'],
       },
@@ -134,9 +134,7 @@ export function PriceFrontierChart({ data, loading }: PriceFrontierChartProps) {
     <Card className="p-6">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-100">
-            Price-Revenue/Occupancy Frontier
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-100">Price-Revenue/Occupancy Frontier</h3>
           <p className="text-sm text-gray-400">Pareto frontier showing optimal trade-offs</p>
         </div>
         <button

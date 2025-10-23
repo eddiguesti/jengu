@@ -254,16 +254,7 @@ export const directorDashboardTheme = {
     symbolSize: 4,
     symbol: 'circle',
     smooth: false,
-    color: [
-      '#EBFF57',
-      '#00D9FF',
-      '#FF6B6B',
-      '#4ECDC4',
-      '#FFE66D',
-      '#A8DADC',
-      '#FF8A5B',
-      '#95E1D3',
-    ],
+    color: ['#EBFF57', '#00D9FF', '#FF6B6B', '#4ECDC4', '#FFE66D', '#A8DADC', '#FF8A5B', '#95E1D3'],
     label: {
       color: '#E5E5E5',
     },

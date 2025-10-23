@@ -38,8 +38,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center">
     <div className="flex flex-col items-center gap-4">
-      <div className="border-primary h-12 w-12 animate-spin rounded-full border-4 border-t-transparent" />
-      <p className="text-muted animate-pulse">Loading...</p>
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <p className="animate-pulse text-muted">Loading...</p>
     </div>
   </div>
 )
@@ -93,7 +93,10 @@ function App() {
               {/* Legacy Routes (Redirects for backwards compatibility) */}
               <Route path="data" element={<Navigate to="/data-sources" replace />} />
               <Route path="pricing-engine" element={<Navigate to="/pricing/optimizer" replace />} />
-              <Route path="competitor-monitor" element={<Navigate to="/pricing/competitors" replace />} />
+              <Route
+                path="competitor-monitor"
+                element={<Navigate to="/pricing/competitors" replace />}
+              />
               <Route path="insights" element={<Navigate to="/analytics" replace />} />
               <Route path="director" element={<Navigate to="/analytics?view=advanced" replace />} />
               <Route path="assistant" element={<Navigate to="/tools/assistant" replace />} />

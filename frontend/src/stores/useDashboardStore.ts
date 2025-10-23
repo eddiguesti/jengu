@@ -25,10 +25,7 @@ interface DashboardState {
   }
 
   // Actions
-  setFilter: <K extends keyof DashboardFilters>(
-    key: K,
-    value: DashboardFilters[K]
-  ) => void
+  setFilter: <K extends keyof DashboardFilters>(key: K, value: DashboardFilters[K]) => void
   setFilters: (filters: Partial<DashboardFilters>) => void
   resetFilters: () => void
   toggleDashboardVersion: () => void
@@ -45,7 +42,7 @@ const DEFAULT_FILTERS: DashboardFilters = {
   strategyMode: 'balanced',
 }
 
-export const useDashboardStore = create<DashboardState>((set) => ({
+export const useDashboardStore = create<DashboardState>(set => ({
   // Initial state
   filters: DEFAULT_FILTERS,
   usePricingDashV2: false, // Feature flag - set to true to enable new dashboard
@@ -62,12 +59,12 @@ export const useDashboardStore = create<DashboardState>((set) => ({
 
   // Actions
   setFilter: (key, value) =>
-    set((state) => ({
+    set(state => ({
       filters: { ...state.filters, [key]: value },
     })),
 
-  setFilters: (filters) =>
-    set((state) => ({
+  setFilters: filters =>
+    set(state => ({
       filters: { ...state.filters, ...filters },
     })),
 
@@ -78,16 +75,16 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     }),
 
   toggleDashboardVersion: () =>
-    set((state) => ({
+    set(state => ({
       usePricingDashV2: !state.usePricingDashV2,
     })),
 
-  setSelectedDate: (date) => set({ selectedDate: date }),
+  setSelectedDate: date => set({ selectedDate: date }),
 
-  setHoveredDate: (date) => set({ hoveredDate: date }),
+  setHoveredDate: date => set({ hoveredDate: date }),
 
-  toggleOverlay: (key) =>
-    set((state) => ({
+  toggleOverlay: key =>
+    set(state => ({
       overlays: { ...state.overlays, [key]: !state.overlays[key] },
     })),
 }))

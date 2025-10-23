@@ -301,7 +301,7 @@ export function forecastDemand(
     if (Math.abs(tempOccCorr) > 0.3) {
       // Positive correlation: higher temp = higher occupancy
       // Negative correlation: higher temp = lower occupancy
-      tempAdjustment = 1 + (tempOccCorr * 0.1) // Max ±10% adjustment
+      tempAdjustment = 1 + tempOccCorr * 0.1 // Max ±10% adjustment
     }
 
     const predicted = Math.round(

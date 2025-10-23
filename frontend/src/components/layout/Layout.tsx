@@ -9,7 +9,7 @@ export const Layout = () => {
   const { useNewNavigation } = useNavigationStore()
 
   return (
-    <div className="bg-background flex min-h-screen">
+    <div className="flex min-h-screen bg-background">
       {/* Conditionally render sidebar based on feature flag */}
       {useNewNavigation ? <SidebarV2 /> : <Sidebar />}
 

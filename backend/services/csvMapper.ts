@@ -153,7 +153,10 @@ export function detectColumnMapping(csvHeaders: string[]): Record<string, string
 
   // Normalize headers (lowercase, trim, remove special chars)
   const normalizedHeaders = csvHeaders.map(h =>
-    h.toLowerCase().trim().replace(/[^a-z0-9_]/g, '_')
+    h
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9_]/g, '_')
   )
 
   // For each standard field, find matching CSV column
@@ -318,7 +321,10 @@ export function mapCSVRow(
 
   // Add any unmapped columns as-is (for flexibility)
   originalColumns.forEach(col => {
-    const normalizedCol = col.toLowerCase().trim().replace(/[^a-z0-9_]/g, '_')
+    const normalizedCol = col
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9_]/g, '_')
     // Only add if not already mapped to a standard field
     const isMapped = Object.values(columnMapping).includes(col)
     if (!isMapped && rawRow[col] !== null && rawRow[col] !== undefined) {
@@ -433,7 +439,9 @@ export function generateMappingReport(
   // Validation stats
   lines.push('📈 Validation Stats:')
   lines.push(`   Total Rows: ${stats.totalRows}`)
-  lines.push(`   Valid Rows: ${stats.validRows} (${((stats.validRows / stats.totalRows) * 100).toFixed(1)}%)`)
+  lines.push(
+    `   Valid Rows: ${stats.validRows} (${((stats.validRows / stats.totalRows) * 100).toFixed(1)}%)`
+  )
   if (stats.invalidRows > 0) {
     lines.push(`   Invalid Rows: ${stats.invalidRows}`)
   }
@@ -469,8 +477,7 @@ export function generateMappingReport(
       if (row.unit_type) lines.push(`      Unit Type: ${row.unit_type}`)
       if (row.bookings !== undefined) lines.push(`      Bookings: ${row.bookings}`)
       if (row.availability !== undefined) lines.push(`      Availability: ${row.availability}`)
-      if (row.occupancy !== undefined)
-        lines.push(`      Occupancy: ${row.occupancy.toFixed(1)}%`)
+      if (row.occupancy !== undefined) lines.push(`      Occupancy: ${row.occupancy.toFixed(1)}%`)
       if (row.channel) lines.push(`      Channel: ${row.channel}`)
     })
   }

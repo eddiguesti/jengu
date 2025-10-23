@@ -37,7 +37,13 @@
       "Bash(node add-capacity-config.js)",
       "Bash(node test-analytics.js)",
       "Bash(pnpm remove:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git push:*)",
+      "Bash(pnpm list:*)",
+      "Bash(dir:*)",
+      "Bash(python -m pip install:*)",
+      "Bash(python:*)",
+      "Read(//c/**)"
     ],
     "deny": [],
     "ask": []

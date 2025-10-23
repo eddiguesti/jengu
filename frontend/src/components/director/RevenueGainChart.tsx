@@ -54,7 +54,9 @@ export function RevenueGainChart({ data, loading }: RevenueGainChartProps) {
       },
     },
     legend: {
-      data: data.optimized ? ['Actual Revenue', 'Optimized Revenue', 'Gain Area'] : ['Actual Revenue'],
+      data: data.optimized
+        ? ['Actual Revenue', 'Optimized Revenue', 'Gain Area']
+        : ['Actual Revenue'],
       top: 40,
     },
     grid: {

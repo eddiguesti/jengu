@@ -18,7 +18,7 @@ export function PriceWaterfallChart({ data, loading }: PriceWaterfallChartProps)
     if (!chartRef.current || loading) return
 
     // Transform data for waterfall
-    const waterfallData = data.steps.map((step) => ({
+    const waterfallData = data.steps.map(step => ({
       type: step.name,
       value: step.value,
     }))

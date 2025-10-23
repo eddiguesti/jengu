@@ -55,8 +55,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
       // Default error UI
       return (
-        <div className="bg-background flex min-h-screen items-center justify-center px-4">
-          <div className="border-border bg-card w-full max-w-md space-y-6 rounded-lg border p-8 text-center shadow-lg">
+        <div className="flex min-h-screen items-center justify-center bg-background px-4">
+          <div className="w-full max-w-md space-y-6 rounded-lg border border-border bg-card p-8 text-center shadow-lg">
             <div className="flex justify-center">
               <div className="bg-destructive/10 rounded-full p-4">
                 <AlertTriangle className="text-destructive h-12 w-12" />
@@ -72,14 +72,14 @@ export class ErrorBoundary extends React.Component<Props, State> {
             </div>
 
             {this.state.error && import.meta.env.MODE === 'development' && (
-              <div className="bg-muted rounded-lg p-4 text-left">
+              <div className="rounded-lg bg-muted p-4 text-left">
                 <p className="text-destructive font-mono text-sm">{this.state.error.message}</p>
               </div>
             )}
 
             <button
               onClick={this.handleReset}
-              className="text-primary-foreground bg-primary hover:bg-primary/90 inline-flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3 font-medium transition-colors"
+              className="text-primary-foreground inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 font-medium transition-colors hover:bg-primary/90"
             >
               <RefreshCw className="h-4 w-4" />
               Reload Page

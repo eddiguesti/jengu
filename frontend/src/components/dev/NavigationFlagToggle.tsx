@@ -41,20 +41,14 @@ export function NavigationFlagToggle() {
       'useGroupedSidebar',
       'dashboardAsRoot',
     ] as (keyof NavigationFlags)[],
-    'Analytics': [
-      'unifyAnalyticsPages',
-      'defaultToAdvancedAnalytics',
-    ] as (keyof NavigationFlags)[],
-    'Pricing & Data': [
-      'usePricingSectionGroup',
-      'enhancedDataView',
-    ] as (keyof NavigationFlags)[],
+    Analytics: ['unifyAnalyticsPages', 'defaultToAdvancedAnalytics'] as (keyof NavigationFlags)[],
+    'Pricing & Data': ['usePricingSectionGroup', 'enhancedDataView'] as (keyof NavigationFlags)[],
     'Onboarding & Discovery': [
       'showQuickStartWizard',
       'highlightCoreActions',
       'showWhatsNew',
     ] as (keyof NavigationFlags)[],
-    'Experimental': ['useCompactSidebar', 'enableBreadcrumbs'] as (keyof NavigationFlags)[],
+    Experimental: ['useCompactSidebar', 'enableBreadcrumbs'] as (keyof NavigationFlags)[],
   }
 
   const activeFlagsCount = Object.keys(navigationStore.getActiveFlags()).length
@@ -67,7 +61,7 @@ export function NavigationFlagToggle() {
         className="fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg transition-all hover:scale-110 hover:shadow-xl"
         title="Toggle Navigation Flags"
       >
-        <Settings className="h-6 w-6 animate-spin-slow" />
+        <Settings className="animate-spin-slow h-6 w-6" />
         {activeFlagsCount > 0 && (
           <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold">
             {activeFlagsCount}
@@ -78,7 +72,7 @@ export function NavigationFlagToggle() {
       {/* Modal Panel */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <Card className="w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <Card className="flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-700 p-4">
               <div>
@@ -127,7 +121,7 @@ export function NavigationFlagToggle() {
                       {category}
                     </h3>
                     <div className="space-y-2">
-                      {flags.map((flag) => {
+                      {flags.map(flag => {
                         const isEnabled = navigationStore[flag]
 
                         return (
@@ -156,9 +150,7 @@ export function NavigationFlagToggle() {
                                   </span>
                                 )}
                               </div>
-                              <p className="mt-1 text-sm text-gray-400">
-                                {flagDescriptions[flag]}
-                              </p>
+                              <p className="mt-1 text-sm text-gray-400">{flagDescriptions[flag]}</p>
                             </div>
                           </label>
                         )

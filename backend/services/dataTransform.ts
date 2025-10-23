@@ -189,7 +189,9 @@ export function transformDataForAnalytics(rawData: RawDataRow[]): TransformedDat
       topLevelKeys: Object.keys(rawData[0]),
       hasExtraData: !!rawData[0].extraData,
       extraDataType: typeof rawData[0].extraData,
-      extraDataKeys: rawData[0].extraData ? Object.keys(rawData[0].extraData as Record<string, unknown>) : [],
+      extraDataKeys: rawData[0].extraData
+        ? Object.keys(rawData[0].extraData as Record<string, unknown>)
+        : [],
     })
   }
 

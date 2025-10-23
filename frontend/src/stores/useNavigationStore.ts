@@ -75,8 +75,8 @@ export const useNavigationStore = create<NavigationState>()(
       ...DEFAULT_FLAGS,
 
       // Actions
-      toggleFlag: (flag) =>
-        set((state) => ({
+      toggleFlag: flag =>
+        set(state => ({
           [flag]: !state[flag],
         })),
 
@@ -112,7 +112,7 @@ export const useNavigationStore = create<NavigationState>()(
         const state = get()
         const activeFlags: Partial<NavigationFlags> = {}
 
-        Object.keys(DEFAULT_FLAGS).forEach((key) => {
+        Object.keys(DEFAULT_FLAGS).forEach(key => {
           const flagKey = key as keyof NavigationFlags
           if (state[flagKey]) {
             activeFlags[flagKey] = true
@@ -125,7 +125,7 @@ export const useNavigationStore = create<NavigationState>()(
     {
       name: 'jengu-navigation-flags', // LocalStorage key
       // Only persist flags that should survive page refresh
-      partialize: (state) => ({
+      partialize: state => ({
         useNewNavigation: state.useNewNavigation,
         useGroupedSidebar: state.useGroupedSidebar,
         dashboardAsRoot: state.dashboardAsRoot,
@@ -178,7 +178,7 @@ if (typeof window !== 'undefined' && import.meta.env.MODE === 'development') {
     list: () => {
       const flags = useNavigationStore.getState()
       console.table(
-        Object.keys(DEFAULT_FLAGS).map((key) => ({
+        Object.keys(DEFAULT_FLAGS).map(key => ({
           Flag: key,
           Enabled: flags[key as keyof NavigationFlags] ? '✅' : '❌',
         }))

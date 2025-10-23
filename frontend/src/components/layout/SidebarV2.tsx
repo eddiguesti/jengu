@@ -138,11 +138,11 @@ export const SidebarV2 = () => {
 
   // Track which sections are expanded
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(navigationSections.filter((s) => s.defaultOpen).map((s) => s.id))
+    new Set(navigationSections.filter(s => s.defaultOpen).map(s => s.id))
   )
 
   const toggleSection = (sectionId: string) => {
-    setExpandedSections((prev) => {
+    setExpandedSections(prev => {
       const next = new Set(prev)
       if (next.has(sectionId)) {
         next.delete(sectionId)
@@ -171,19 +171,19 @@ export const SidebarV2 = () => {
   }
 
   return (
-    <aside className="border-border bg-card fixed left-0 top-0 flex h-screen w-64 flex-col border-r">
+    <aside className="fixed left-0 top-0 flex h-screen w-64 flex-col border-r border-border bg-card">
       {/* Logo */}
-      <div className="border-border border-b p-6">
+      <div className="border-b border-border p-6">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="bg-primary/20 absolute inset-0 rounded-full blur-xl"></div>
-            <div className="from-primary to-primary/60 shadow-primary/25 relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg">
-              <Zap className="text-background h-6 w-6" strokeWidth={2.5} />
+            <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl"></div>
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/25">
+              <Zap className="h-6 w-6 text-background" strokeWidth={2.5} />
             </div>
           </div>
           <div>
-            <span className="text-text text-2xl font-bold tracking-tight">Jengu</span>
-            <p className="text-muted text-xs font-medium">AI Pricing Intelligence</p>
+            <span className="text-2xl font-bold tracking-tight text-text">Jengu</span>
+            <p className="text-xs font-medium text-muted">AI Pricing Intelligence</p>
           </div>
         </div>
       </div>
@@ -191,7 +191,7 @@ export const SidebarV2 = () => {
       {/* Navigation */}
       <nav className="scrollbar-hide flex-1 overflow-y-auto p-4">
         <ul className="space-y-2">
-          {navigationSections.map((section) => {
+          {navigationSections.map(section => {
             const isExpanded = expandedSections.has(section.id)
             const isSingleItem = section.items.length === 1
             const SectionIcon = section.icon
@@ -208,11 +208,11 @@ export const SidebarV2 = () => {
                     to={item.path}
                     className={clsx(
                       'flex items-center gap-3 rounded-lg px-4 py-3 transition-all duration-200',
-                      'hover:bg-elevated group relative',
+                      'group relative hover:bg-elevated',
                       isActive
-                        ? 'border-primary bg-elevated text-primary border-l-4'
+                        ? 'border-l-4 border-primary bg-elevated text-primary'
                         : 'text-muted hover:text-text',
-                      item.highlight && 'ring-primary/20 ring-1'
+                      item.highlight && 'ring-1 ring-primary/20'
                     )}
                   >
                     <Icon className={clsx('h-5 w-5 flex-shrink-0', isActive && 'text-primary')} />
@@ -220,13 +220,13 @@ export const SidebarV2 = () => {
                       <div className="flex items-center gap-2">
                         <span className="truncate font-medium">{item.label}</span>
                         {item.isNew && (
-                          <span className="bg-primary text-background rounded px-1.5 py-0.5 text-[10px] font-bold uppercase">
+                          <span className="rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold uppercase text-background">
                             New
                           </span>
                         )}
                       </div>
                       {item.description && (
-                        <div className="text-muted truncate text-xs">{item.description}</div>
+                        <div className="truncate text-xs text-muted">{item.description}</div>
                       )}
                     </div>
                   </Link>
@@ -239,7 +239,7 @@ export const SidebarV2 = () => {
               // Flat rendering when grouped sidebar is disabled
               return (
                 <li key={section.id} className="space-y-1">
-                  {section.items.map((item) => {
+                  {section.items.map(item => {
                     const isActive = isPathActive(item.path)
                     const Icon = item.icon
 
@@ -249,11 +249,11 @@ export const SidebarV2 = () => {
                         to={item.path}
                         className={clsx(
                           'flex items-center gap-3 rounded-lg px-4 py-3 transition-all duration-200',
-                          'hover:bg-elevated group relative',
+                          'group relative hover:bg-elevated',
                           isActive
-                            ? 'border-primary bg-elevated text-primary border-l-4'
+                            ? 'border-l-4 border-primary bg-elevated text-primary'
                             : 'text-muted hover:text-text',
-                          item.highlight && 'ring-primary/20 ring-1'
+                          item.highlight && 'ring-1 ring-primary/20'
                         )}
                       >
                         <Icon
@@ -263,13 +263,13 @@ export const SidebarV2 = () => {
                           <div className="flex items-center gap-2">
                             <span className="truncate font-medium">{item.label}</span>
                             {item.isNew && (
-                              <span className="bg-primary text-background rounded px-1.5 py-0.5 text-[10px] font-bold uppercase">
+                              <span className="rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold uppercase text-background">
                                 New
                               </span>
                             )}
                           </div>
                           {item.description && (
-                            <div className="text-muted truncate text-xs">{item.description}</div>
+                            <div className="truncate text-xs text-muted">{item.description}</div>
                           )}
                         </div>
                       </Link>
@@ -285,7 +285,7 @@ export const SidebarV2 = () => {
                 {/* Section Header */}
                 <button
                   onClick={() => toggleSection(section.id)}
-                  className="text-muted hover:text-text hover:bg-elevated flex w-full items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold uppercase tracking-wide transition-all"
+                  className="flex w-full items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold uppercase tracking-wide text-muted transition-all hover:bg-elevated hover:text-text"
                 >
                   {SectionIcon && <SectionIcon className="h-4 w-4" />}
                   <span className="flex-1 text-left">{section.label}</span>
@@ -299,7 +299,7 @@ export const SidebarV2 = () => {
                 {/* Section Items */}
                 {isExpanded && (
                   <ul className="space-y-1 pl-2">
-                    {section.items.map((item) => {
+                    {section.items.map(item => {
                       const isActive = isPathActive(item.path)
                       const Icon = item.icon
 
@@ -309,11 +309,11 @@ export const SidebarV2 = () => {
                             to={item.path}
                             className={clsx(
                               'flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-200',
-                              'hover:bg-elevated group relative',
+                              'group relative hover:bg-elevated',
                               isActive
-                                ? 'border-primary bg-elevated text-primary border-l-4'
+                                ? 'border-l-4 border-primary bg-elevated text-primary'
                                 : 'text-muted hover:text-text',
-                              item.highlight && 'ring-primary/20 ring-1'
+                              item.highlight && 'ring-1 ring-primary/20'
                             )}
                           >
                             <Icon
@@ -323,21 +323,21 @@ export const SidebarV2 = () => {
                               <div className="flex items-center gap-2">
                                 <span className="truncate text-sm font-medium">{item.label}</span>
                                 {item.isNew && (
-                                  <span className="bg-primary text-background rounded px-1.5 py-0.5 text-[10px] font-bold uppercase">
+                                  <span className="rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold uppercase text-background">
                                     New
                                   </span>
                                 )}
                               </div>
                               {item.description && (
-                                <div className="text-muted truncate text-xs">
+                                <div className="truncate text-xs text-muted">
                                   {item.description}
                                 </div>
                               )}
                             </div>
                             {item.highlight && (
                               <span className="absolute -right-1 -top-1 flex h-2 w-2">
-                                <span className="bg-primary absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"></span>
-                                <span className="bg-primary relative inline-flex h-2 w-2 rounded-full"></span>
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
+                                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
                               </span>
                             )}
                           </Link>
@@ -353,24 +353,24 @@ export const SidebarV2 = () => {
       </nav>
 
       {/* User Profile & Logout */}
-      <div className="border-border space-y-3 border-t p-4">
+      <div className="space-y-3 border-t border-border p-4">
         {/* User Info */}
-        <div className="bg-elevated flex items-center gap-3 rounded-lg p-3">
-          <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
-            <User className="text-primary h-4 w-4" />
+        <div className="flex items-center gap-3 rounded-lg bg-elevated p-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+            <User className="h-4 w-4 text-primary" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-text truncate text-sm font-medium">
+            <p className="truncate text-sm font-medium text-text">
               {user?.user_metadata?.name || user?.email?.split('@')[0] || 'User'}
             </p>
-            <p className="text-muted truncate text-xs">{user?.email}</p>
+            <p className="truncate text-xs text-muted">{user?.email}</p>
           </div>
         </div>
 
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="bg-elevated text-muted group flex w-full items-center gap-2 rounded-lg px-4 py-2 text-sm transition-all duration-200 hover:bg-red-500/10 hover:text-red-500"
+          className="group flex w-full items-center gap-2 rounded-lg bg-elevated px-4 py-2 text-sm text-muted transition-all duration-200 hover:bg-red-500/10 hover:text-red-500"
         >
           <LogOut className="h-4 w-4 transition-transform group-hover:scale-110" />
           <span>Logout</span>
@@ -378,7 +378,7 @@ export const SidebarV2 = () => {
 
         {/* Footer */}
         <div className="text-center">
-          <p className="text-muted text-xs">Jengu v2.0.0</p>
+          <p className="text-xs text-muted">Jengu v2.0.0</p>
         </div>
       </div>
     </aside>

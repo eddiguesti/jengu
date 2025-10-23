@@ -147,8 +147,8 @@ export const CompetitorMonitor = () => {
     >
       {/* Header */}
       <div>
-        <h1 className="text-text text-4xl font-bold">Market Data Collection</h1>
-        <p className="text-muted mt-2">
+        <h1 className="text-4xl font-bold text-text">Market Data Collection</h1>
+        <p className="mt-2 text-muted">
           Automatically collect competitor pricing for {profile?.location?.city || 'your location'}
         </p>
       </div>
@@ -157,12 +157,12 @@ export const CompetitorMonitor = () => {
       {!hasLocation ? (
         <Card variant="elevated" className="border-warning/20 bg-warning/5">
           <Card.Body className="flex items-start gap-4">
-            <div className="bg-warning/10 flex-shrink-0 rounded-lg p-3">
-              <MapPin className="text-warning h-6 w-6" />
+            <div className="flex-shrink-0 rounded-lg bg-warning/10 p-3">
+              <MapPin className="h-6 w-6 text-warning" />
             </div>
             <div className="flex-1">
-              <h3 className="text-text mb-1 text-lg font-semibold">Location Required</h3>
-              <p className="text-muted mb-3 text-sm">
+              <h3 className="mb-1 text-lg font-semibold text-text">Location Required</h3>
+              <p className="mb-3 text-sm text-muted">
                 Configure your business location in Settings to automatically collect competitor
                 pricing data for your market.
               </p>
@@ -177,12 +177,12 @@ export const CompetitorMonitor = () => {
         <Card variant="default">
           <Card.Body>
             <div className="flex items-center gap-4">
-              <div className="bg-success/10 rounded-lg p-3">
-                <MapPin className="text-success h-6 w-6" />
+              <div className="rounded-lg bg-success/10 p-3">
+                <MapPin className="h-6 w-6 text-success" />
               </div>
               <div>
-                <p className="text-muted text-sm">Monitoring Location</p>
-                <p className="text-text text-lg font-semibold">
+                <p className="text-sm text-muted">Monitoring Location</p>
+                <p className="text-lg font-semibold text-text">
                   {profile.location.city}, {profile.location.country}
                 </p>
               </div>
@@ -196,8 +196,8 @@ export const CompetitorMonitor = () => {
         <Card variant="default">
           <Card.Body>
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-muted text-sm">API Calls Remaining</span>
-              <span className="text-primary text-2xl font-bold">{remainingCalls}/30</span>
+              <span className="text-sm text-muted">API Calls Remaining</span>
+              <span className="text-2xl font-bold text-primary">{remainingCalls}/30</span>
             </div>
             <Progress value={(remainingCalls / 30) * 100} className="h-2" />
           </Card.Body>
@@ -206,10 +206,10 @@ export const CompetitorMonitor = () => {
         <Card variant="default">
           <Card.Body>
             <div className="flex items-center gap-3">
-              <Database className="text-success h-5 w-5" />
+              <Database className="h-5 w-5 text-success" />
               <div>
-                <p className="text-muted text-sm">Hotels Tracked</p>
-                <p className="text-text text-2xl font-bold">{cacheStats.total_histories}</p>
+                <p className="text-sm text-muted">Hotels Tracked</p>
+                <p className="text-2xl font-bold text-text">{cacheStats.total_histories}</p>
               </div>
             </div>
           </Card.Body>
@@ -220,8 +220,8 @@ export const CompetitorMonitor = () => {
             <div className="flex items-center gap-3">
               <Clock className="text-info h-5 w-5" />
               <div>
-                <p className="text-muted text-sm">Cache Size</p>
-                <p className="text-text text-2xl font-bold">{cacheStats.cache_size_kb} KB</p>
+                <p className="text-sm text-muted">Cache Size</p>
+                <p className="text-2xl font-bold text-text">{cacheStats.cache_size_kb} KB</p>
               </div>
             </div>
           </Card.Body>
@@ -231,8 +231,8 @@ export const CompetitorMonitor = () => {
       {/* Data Collection Actions */}
       <Card variant="default">
         <Card.Header>
-          <h2 className="text-text text-xl font-semibold">Collect Competitor Data</h2>
-          <p className="text-muted mt-1 text-sm">
+          <h2 className="text-xl font-semibold text-text">Collect Competitor Data</h2>
+          <p className="mt-1 text-sm text-muted">
             Choose Historical (free, cached) or Live (uses 1 API call, real-time)
           </p>
         </Card.Header>
@@ -243,17 +243,17 @@ export const CompetitorMonitor = () => {
               variant="elevated"
               className={clsx(
                 'cursor-pointer transition-all',
-                dataType === 'historical' && 'ring-success ring-2'
+                dataType === 'historical' && 'ring-2 ring-success'
               )}
             >
               <Card.Body onClick={fetchHistoricalData}>
                 <div className="flex items-start gap-4">
-                  <div className="bg-success/10 rounded-xl p-4">
-                    <Database className="text-success h-8 w-8" />
+                  <div className="rounded-xl bg-success/10 p-4">
+                    <Database className="h-8 w-8 text-success" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-text mb-1 text-lg font-semibold">Historical Data</h3>
-                    <p className="text-muted mb-3 text-sm">
+                    <h3 className="mb-1 text-lg font-semibold text-text">Historical Data</h3>
+                    <p className="mb-3 text-sm text-muted">
                       Use cached competitor prices. No API calls used.
                     </p>
                     <Badge variant="success">FREE - No API Call</Badge>
@@ -286,18 +286,18 @@ export const CompetitorMonitor = () => {
               variant="elevated"
               className={clsx(
                 'cursor-pointer transition-all',
-                dataType === 'live' && 'ring-primary ring-2',
+                dataType === 'live' && 'ring-2 ring-primary',
                 remainingCalls === 0 && 'opacity-50'
               )}
             >
               <Card.Body onClick={remainingCalls > 0 ? fetchLiveData : undefined}>
                 <div className="flex items-start gap-4">
-                  <div className="bg-primary/10 rounded-xl p-4">
-                    <RefreshCw className="text-primary h-8 w-8" />
+                  <div className="rounded-xl bg-primary/10 p-4">
+                    <RefreshCw className="h-8 w-8 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-text mb-1 text-lg font-semibold">Live Data</h3>
-                    <p className="text-muted mb-3 text-sm">
+                    <h3 className="mb-1 text-lg font-semibold text-text">Live Data</h3>
+                    <p className="mb-3 text-sm text-muted">
                       Fetch real-time competitor prices. Uses 1 API call.
                     </p>
                     <Badge variant="warning">Uses 1 API Call</Badge>
@@ -327,15 +327,15 @@ export const CompetitorMonitor = () => {
           </div>
 
           {error && (
-            <div className="border-error/20 bg-error/10 mt-4 flex items-start gap-3 rounded-lg border p-4">
-              <AlertCircle className="text-error mt-0.5 h-5 w-5 flex-shrink-0" />
-              <p className="text-error text-sm">{error}</p>
+            <div className="mt-4 flex items-start gap-3 rounded-lg border border-error/20 bg-error/10 p-4">
+              <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-error" />
+              <p className="text-sm text-error">{error}</p>
             </div>
           )}
 
           {hotels.length > 0 && (
             <div className="mt-4 flex items-center justify-between">
-              <p className="text-muted text-sm">
+              <p className="text-sm text-muted">
                 {hotels.length} hotels loaded from{' '}
                 {dataType === 'historical' ? 'cache' : 'live API'}
               </p>
@@ -353,7 +353,7 @@ export const CompetitorMonitor = () => {
         <Card variant="default">
           <Card.Header>
             <div className="flex items-center justify-between">
-              <h2 className="text-text text-xl font-semibold">Competitor Prices</h2>
+              <h2 className="text-xl font-semibold text-text">Competitor Prices</h2>
               <Badge variant={dataType === 'live' ? 'primary' : 'success'}>
                 {dataType === 'historical' ? 'Cached Data' : 'Live Data'}
               </Badge>
@@ -371,12 +371,12 @@ export const CompetitorMonitor = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="border-border bg-elevated hover:border-primary/50 rounded-lg border p-4 transition-colors"
+                    className="rounded-lg border border-border bg-elevated p-4 transition-colors hover:border-primary/50"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h3 className="text-text mb-1 text-lg font-semibold">{hotel.hotel_name}</h3>
-                        <div className="text-muted flex items-center gap-4 text-sm">
+                        <h3 className="mb-1 text-lg font-semibold text-text">{hotel.hotel_name}</h3>
+                        <div className="flex items-center gap-4 text-sm text-muted">
                           <span>{hotel.city_name}</span>
                           {hasHistory && (
                             <Badge variant="info" size="sm">
@@ -386,7 +386,7 @@ export const CompetitorMonitor = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-primary text-2xl font-bold">
+                        <div className="text-2xl font-bold text-primary">
                           {hotel.currency} {hotel.price.toFixed(2)}
                         </div>
                         {hasHistory && (
@@ -417,16 +417,16 @@ export const CompetitorMonitor = () => {
       {/* Info Card */}
       <Card
         variant="elevated"
-        className="border-primary from-primary/5 border-l-4 bg-gradient-to-r to-transparent"
+        className="border-l-4 border-primary bg-gradient-to-r from-primary/5 to-transparent"
       >
         <Card.Body>
           <div className="flex items-start gap-4">
-            <div className="bg-primary/10 flex-shrink-0 rounded-lg p-3">
-              <AlertCircle className="text-primary h-6 w-6" />
+            <div className="flex-shrink-0 rounded-lg bg-primary/10 p-3">
+              <AlertCircle className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-text mb-2 text-lg font-semibold">How Market Data Works</h3>
-              <ul className="text-muted space-y-2 text-sm">
+              <h3 className="mb-2 text-lg font-semibold text-text">How Market Data Works</h3>
+              <ul className="space-y-2 text-sm text-muted">
                 <li>
                   • <strong>Historical Data</strong>: Loads previously fetched prices from cache
                   (free)

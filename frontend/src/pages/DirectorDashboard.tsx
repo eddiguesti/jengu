@@ -5,7 +5,7 @@ import { RevenueGainChart } from '@/components/director/RevenueGainChart'
 import { OccupancyPaceChart } from '@/components/director/OccupancyPaceChart'
 import { AdrIndexChart } from '@/components/director/AdrIndexChart'
 import { RevLeadHeatmapChart } from '@/components/director/RevLeadHeatmap'
-import { ForecastActualChart} from '@/components/director/ForecastActualChart'
+import { ForecastActualChart } from '@/components/director/ForecastActualChart'
 import { ElasticityCurveChart } from '@/components/director/ElasticityCurveChart'
 import { PriceWaterfallChart } from '@/components/director/PriceWaterfallChart'
 import { registerDirectorTheme } from '@/config/echartsTheme'
@@ -80,13 +80,35 @@ export function DirectorDashboard() {
   const { currentFileId } = useDataStore()
 
   // Fetch all dashboard data
-  const { data: revenueSeries, isLoading: revenueLoading } = useRevenueSeries(currentFileId || '', !!currentFileId)
-  const { data: occupancyPace, isLoading: paceLoading } = useOccupancyPace(currentFileId || '', !!currentFileId)
-  const { data: adrIndex, isLoading: adrLoading } = useAdrIndex(currentFileId || '', !!currentFileId)
-  const { data: heatmap, isLoading: heatmapLoading } = useRevLeadHeatmap(currentFileId || '', !!currentFileId)
-  const { data: forecastActual, isLoading: forecastLoading } = useForecastActual(currentFileId || '', !!currentFileId)
-  const { data: elasticity, isLoading: elasticityLoading } = useElasticityCurve(currentFileId || '', !!currentFileId)
-  const { data: priceExplain, isLoading: waterfallLoading } = usePriceExplain(currentFileId || '', selectedDate, !!currentFileId)
+  const { data: revenueSeries, isLoading: revenueLoading } = useRevenueSeries(
+    currentFileId || '',
+    !!currentFileId
+  )
+  const { data: occupancyPace, isLoading: paceLoading } = useOccupancyPace(
+    currentFileId || '',
+    !!currentFileId
+  )
+  const { data: adrIndex, isLoading: adrLoading } = useAdrIndex(
+    currentFileId || '',
+    !!currentFileId
+  )
+  const { data: heatmap, isLoading: heatmapLoading } = useRevLeadHeatmap(
+    currentFileId || '',
+    !!currentFileId
+  )
+  const { data: forecastActual, isLoading: forecastLoading } = useForecastActual(
+    currentFileId || '',
+    !!currentFileId
+  )
+  const { data: elasticity, isLoading: elasticityLoading } = useElasticityCurve(
+    currentFileId || '',
+    !!currentFileId
+  )
+  const { data: priceExplain, isLoading: waterfallLoading } = usePriceExplain(
+    currentFileId || '',
+    selectedDate,
+    !!currentFileId
+  )
 
   // Register ECharts theme on mount
   useEffect(() => {
@@ -173,7 +195,9 @@ export function DirectorDashboard() {
           <RevenueGainChart data={revenueSeries} loading={revenueLoading} />
         ) : (
           <div className="flex h-96 items-center justify-center rounded-lg border border-border bg-card">
-            <div className="text-muted">{revenueLoading ? 'Loading revenue data...' : 'No data available'}</div>
+            <div className="text-muted">
+              {revenueLoading ? 'Loading revenue data...' : 'No data available'}
+            </div>
           </div>
         )}
       </div>
@@ -185,7 +209,9 @@ export function DirectorDashboard() {
             <OccupancyPaceChart data={occupancyPace} loading={paceLoading} />
           ) : (
             <div className="flex h-96 items-center justify-center rounded-lg border border-border bg-card">
-              <div className="text-muted">{paceLoading ? 'Loading occupancy data...' : 'No data available'}</div>
+              <div className="text-muted">
+                {paceLoading ? 'Loading occupancy data...' : 'No data available'}
+              </div>
             </div>
           )}
         </div>
@@ -194,7 +220,9 @@ export function DirectorDashboard() {
             <AdrIndexChart data={adrIndex} loading={adrLoading} />
           ) : (
             <div className="flex h-96 items-center justify-center rounded-lg border border-border bg-card">
-              <div className="text-muted">{adrLoading ? 'Loading ADR data...' : 'No data available'}</div>
+              <div className="text-muted">
+                {adrLoading ? 'Loading ADR data...' : 'No data available'}
+              </div>
             </div>
           )}
         </div>
@@ -206,14 +234,18 @@ export function DirectorDashboard() {
           <RevLeadHeatmapChart data={heatmap} loading={heatmapLoading} />
         ) : (
           <div className="flex h-96 items-center justify-center rounded-lg border border-border bg-card">
-            <div className="text-muted">{heatmapLoading ? 'Loading heatmap data...' : 'No data available'}</div>
+            <div className="text-muted">
+              {heatmapLoading ? 'Loading heatmap data...' : 'No data available'}
+            </div>
           </div>
         )}
         {forecastActual ? (
           <ForecastActualChart data={forecastActual} loading={forecastLoading} />
         ) : (
           <div className="flex h-96 items-center justify-center rounded-lg border border-border bg-card">
-            <div className="text-muted">{forecastLoading ? 'Loading forecast data...' : 'No data available'}</div>
+            <div className="text-muted">
+              {forecastLoading ? 'Loading forecast data...' : 'No data available'}
+            </div>
           </div>
         )}
       </div>
@@ -225,7 +257,9 @@ export function DirectorDashboard() {
             <ElasticityCurveChart data={elasticity} loading={elasticityLoading} />
           ) : (
             <div className="flex h-96 items-center justify-center rounded-lg border border-border bg-card">
-              <div className="text-muted">{elasticityLoading ? 'Loading elasticity data...' : 'No data available'}</div>
+              <div className="text-muted">
+                {elasticityLoading ? 'Loading elasticity data...' : 'No data available'}
+              </div>
             </div>
           )}
         </div>
@@ -246,9 +280,11 @@ export function DirectorDashboard() {
       {/* Footer Info */}
       <div className="rounded-lg border border-border bg-card p-4 text-xs text-muted">
         <p>
-          <strong className="text-text">Director Dashboard:</strong> All charts use your uploaded CSV data with enriched weather and temporal features.
-          The predictive model analyzes correlations between temperature, occupancy, and pricing.
-          Interactive features: hover to sync tooltips, zoom timelines, click dates for price breakdown, and simulate elasticity curves.
+          <strong className="text-text">Director Dashboard:</strong> All charts use your uploaded
+          CSV data with enriched weather and temporal features. The predictive model analyzes
+          correlations between temperature, occupancy, and pricing. Interactive features: hover to
+          sync tooltips, zoom timelines, click dates for price breakdown, and simulate elasticity
+          curves.
         </p>
       </div>
     </div>

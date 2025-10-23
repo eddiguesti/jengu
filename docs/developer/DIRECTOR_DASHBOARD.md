@@ -48,9 +48,11 @@ frontend/src/
 ## Features Implemented
 
 ### 1. Revenue vs Optimized (Gain Chart)
+
 **Purpose**: Quantify model ROI visually
 **Shows**: Daily revenue (actual) vs simulated optimized line with shaded gain area
 **Interactive**:
+
 - Zoom/brush timeline
 - Hover-sync with other charts
 - Click day to show price waterfall
@@ -59,9 +61,11 @@ frontend/src/
 **Key Metrics**: Cumulative gain ($), RevPAU lift (%)
 
 ### 2. Occupancy Pace vs Target (Lead Buckets)
+
 **Purpose**: Monitor sell-through by booking lead time
 **Shows**: Actual pace vs target curve and model projection
 **Interactive**:
+
 - Click bucket to filter other charts
 - Hover to see gap from target
 - Export as PNG
@@ -69,9 +73,11 @@ frontend/src/
 **Key Metrics**: Gap from target per lead bucket
 
 ### 3. ADR vs Market Index
+
 **Purpose**: Competitive pricing context
 **Shows**: Indexed ADR (property ÷ market median × 100)
 **Interactive**:
+
 - Color zones (red = overpriced, green = competitive, yellow = underpriced)
 - Hover-sync
 - Zoom/brush
@@ -80,9 +86,11 @@ frontend/src/
 **Key Metrics**: ADR delta vs market (%)
 
 ### 4. Revenue Heatmap by Lead × Season
+
 **Purpose**: See where money comes from (segment analysis)
 **Shows**: RevPAU heatmap with lead windows and seasons
 **Interactive**:
+
 - Click cell to filter to segment
 - Hover to see top drivers
 - Export as PNG
@@ -90,9 +98,11 @@ frontend/src/
 **Key Metrics**: Revenue concentration by segment
 
 ### 5. Forecast vs Actual Bookings
+
 **Purpose**: Validate forecasting credibility
 **Shows**: Forecast vs actual with error metrics and outlier flags
 **Interactive**:
+
 - Zoom timeline
 - Hover-sync
 - Outlier detection (>2σ)
@@ -101,9 +111,11 @@ frontend/src/
 **Key Metrics**: MAPE (%), CRPS score
 
 ### 6. Elasticity Curve (Interactive)
+
 **Purpose**: Make price sensitivity tangible
 **Shows**: Booking probability vs price with confidence bands
 **Interactive**:
+
 - **Click curve to simulate different prices**
 - See expected RevPAU update in real-time
 - Market median and chosen price markers
@@ -113,9 +125,11 @@ frontend/src/
 **Key Metrics**: Expected RevPAU at simulated price
 
 ### 7. Price Decision Waterfall
+
 **Purpose**: Explain how model arrived at final price
 **Shows**: Baseline → market shift → occupancy gap → risk clamp → event uplift → final
 **Interactive**:
+
 - Shows on Revenue chart date click
 - Step hover with deltas
 - Close button
@@ -191,6 +205,7 @@ useEffect(() => {
 ## Navigation
 
 The dashboard is accessible via:
+
 - **URL**: `/director`
 - **Sidebar**: "Director View" (Crown icon, highlighted)
 
@@ -311,15 +326,18 @@ pnpm run dev
 ## Troubleshooting
 
 ### Charts not rendering
+
 - Check browser console for errors
 - Verify ECharts theme is registered
 - Ensure mock data structure matches types
 
 ### Type errors
+
 - All chart series use `as any` to bypass strict ECharts typing
 - This is intentional for rapid development
 
 ### Export not working
+
 - Ensure chart ref is properly initialized
 - Check browser canvas support
 

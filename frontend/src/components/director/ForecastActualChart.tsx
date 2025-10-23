@@ -26,9 +26,7 @@ export function ForecastActualChart({ data, loading }: ForecastActualChartProps)
   )
   const outlierThreshold = meanError + 2 * stdError
 
-  const outlierIndices = errors
-    .map((e, i) => (e > outlierThreshold ? i : -1))
-    .filter((i) => i !== -1)
+  const outlierIndices = errors.map((e, i) => (e > outlierThreshold ? i : -1)).filter(i => i !== -1)
 
   const option: EChartsOption = {
     title: {
@@ -160,7 +158,7 @@ export function ForecastActualChart({ data, loading }: ForecastActualChartProps)
       {
         name: 'Outliers',
         type: 'scatter',
-        data: outlierIndices.map((i) => [data.dates[i], data.actual[i]]),
+        data: outlierIndices.map(i => [data.dates[i], data.actual[i]]),
         symbolSize: 12,
         itemStyle: {
           color: '#FF6B6B',

@@ -42,7 +42,7 @@ export function RiskReturnChart({ data, loading }: RiskReturnChartProps) {
   }
 
   // Prepare scatter data [risk, return, count]
-  const scatterData = data.map((d) => ({
+  const scatterData = data.map(d => ({
     value: [d.risk, d.expectedReturn],
     name: d.strategy,
     symbolSize: Math.max(20, Math.min(60, d.count)), // Size by count
@@ -60,7 +60,7 @@ export function RiskReturnChart({ data, loading }: RiskReturnChartProps) {
     tooltip: {
       trigger: 'item',
       formatter: (params: any) => {
-        const strategy = data.find((d) => d.strategy === params.name)
+        const strategy = data.find(d => d.strategy === params.name)
         if (!strategy) return ''
         return `<div style="text-align: left;">
           <strong>${strategy.strategy}</strong><br/>
@@ -149,9 +149,7 @@ export function RiskReturnChart({ data, loading }: RiskReturnChartProps) {
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-100">Risk-Return Analysis</h3>
-          <p className="text-sm text-gray-400">
-            Risk vs expected return by pricing strategy
-          </p>
+          <p className="text-sm text-gray-400">Risk vs expected return by pricing strategy</p>
         </div>
         <button
           onClick={handleExport}

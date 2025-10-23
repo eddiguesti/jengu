@@ -23,12 +23,14 @@ This session implements the foundation for an enhanced analytics dashboard syste
 **Location**: `frontend/src/stores/useDashboardStore.ts`
 
 **Features Added**:
+
 - `usePricingDashV2`: Boolean feature flag (default: false)
 - `toggleDashboardVersion()`: Toggle function for enabling/disabling V2
 - `overlays`: Object tracking visibility of chart overlays (actual, optimized, baseline, market, forecast, target)
 - `toggleOverlay()`: Function to toggle individual overlay visibility
 
 **Usage**:
+
 ```typescript
 const { usePricingDashV2, toggleDashboardVersion, overlays, toggleOverlay } = useDashboardStore()
 ```
@@ -40,6 +42,7 @@ const { usePricingDashV2, toggleDashboardVersion, overlays, toggleOverlay } = us
 **New Endpoints**:
 
 #### For Insights Page:
+
 1. **POST /api/analytics/event-uplift**
    - Returns: `EventUplift[]`
    - Purpose: Analyze occupancy and price patterns by event type (Weekday, Weekend, Holiday)
@@ -51,6 +54,7 @@ const { usePricingDashV2, toggleDashboardVersion, overlays, toggleOverlay } = us
    - Features: price, occupancy, temperature, day_of_week
 
 #### For Optimize Price Page:
+
 3. **POST /api/analytics/price-frontier**
    - Returns: `PriceFrontier[]`
    - Purpose: Calculate Pareto frontier showing price vs revenue/occupancy trade-offs
@@ -67,6 +71,7 @@ const { usePricingDashV2, toggleDashboardVersion, overlays, toggleOverlay } = us
    - Intervals: 90%, 95%, 99% confidence levels
 
 **Note**: The following charts reuse existing endpoints:
+
 - Capacity vs Demand Pace: Uses `/api/analytics/occupancy-pace`
 - Weather Impact on Bookings: Uses `/api/analytics/weather-impact`
 - ADR vs Market Index: Uses `/api/analytics/adr-index`
@@ -80,6 +85,7 @@ const { usePricingDashV2, toggleDashboardVersion, overlays, toggleOverlay } = us
 **Location**: `frontend/src/types/analytics.ts`
 
 **New Types**:
+
 ```typescript
 export interface EventUplift {
   type: string // 'Weekday', 'Weekend', 'Holiday'
@@ -134,6 +140,7 @@ export interface ConformalRange {
 **Location**: `frontend/src/hooks/queries/useDirectorAnalytics.ts`
 
 **New Hooks**:
+
 - `useEventUplift(fileId, enabled)` - Fetch event/holiday uplift data
 - `useCorrelationHeatmap(fileId, enabled)` - Fetch correlation heatmap
 - `useWeatherImpact(fileId, enabled)` - Fetch weather impact scatter data
@@ -142,11 +149,13 @@ export interface ConformalRange {
 - `useConformalRange(fileId, enabled)` - Fetch conformal prediction intervals
 
 **Pattern**:
+
 ```typescript
 const { data, isLoading } = useEventUplift(currentFileId, !!currentFileId)
 ```
 
 All hooks:
+
 - Auto-fetch file data from `/api/files/{fileId}/data`
 - Post to analytics endpoint with file data
 - Cache for 5 minutes (staleTime)
@@ -189,6 +198,7 @@ All hooks:
    - Features: Export PNG, color zones (red/teal/yellow), 90%/95%/99% intervals table
 
 **All charts include**:
+
 - Unified theme (`director-dashboard`)
 - Export to PNG functionality
 - Loading states with spinners
@@ -201,12 +211,14 @@ All hooks:
 **Location**: `frontend/src/components/ui/DashboardHeader.tsx`
 
 **Features**:
+
 - KPI tiles with trend indicators (TrendingUp/TrendingDown/Minus icons)
 - Global filters: Property, Product Type, Lead Bucket, Strategy Mode, Date Range
 - Chart overlay checkboxes: Actual, Optimized, Baseline, Market, Forecast, Target
 - Feature flag toggle button (V2 Enable/Disable)
 
 **KPIs Displayed**:
+
 1. RevPAU Lift % (with trend)
 2. ADR vs Market % (with trend)
 3. Occupancy Gap % (with trend)
@@ -214,6 +226,7 @@ All hooks:
 5. Constraint Violations % (no trend)
 
 **Usage**:
+
 ```typescript
 <DashboardHeader
   kpis={kpisData}
@@ -284,6 +297,7 @@ frontend/
 **Location**: `frontend/src/pages/Insights.tsx`
 
 **Tasks**:
+
 - [ ] Add feature flag check at top of component
 - [ ] Import new chart components
 - [ ] Add `DashboardHeader` component with KPIs
@@ -293,6 +307,7 @@ frontend/
 - [ ] Apply global filters to chart data
 
 **Charts to Add** (7 total):
+
 1. Capacity vs Demand Pace (use `OccupancyPaceChart` from director)
 2. Weather Impact on Bookings (`WeatherImpactChart`)
 3. Event/Holiday Uplift Bars (`EventUpliftChart`)
@@ -306,6 +321,7 @@ frontend/
 **Location**: `frontend/src/pages/PricingEngine.tsx` (or create new `OptimizePrice.tsx`)
 
 **Tasks**:
+
 - [ ] Add feature flag check
 - [ ] Import new chart components
 - [ ] Add `DashboardHeader` component
@@ -315,6 +331,7 @@ frontend/
 - [ ] Integrate waterfall chart with date selection
 
 **Charts to Add** (6 total):
+
 1. Elasticity Curve (use `ElasticityCurveChart` from director, add draggable marker)
 2. Price→Revenue/Occupancy Frontier (`PriceFrontierChart`)
 3. Risk–Return Scatter (`RiskReturnChart`)
@@ -325,6 +342,7 @@ frontend/
 ### 3. Implement Cross-Chart Interactivity
 
 **Tasks**:
+
 - [ ] Connect `hoveredDate` from store to all time-series charts
 - [ ] Sync tooltips across charts when hovering
 - [ ] Implement zoom synchronization
@@ -334,6 +352,7 @@ frontend/
 ### 4. Testing
 
 **Tasks**:
+
 - [ ] Test feature flag toggle (V2 on/off)
 - [ ] Test overlay checkboxes (show/hide lines)
 - [ ] Test global filters (property, product, date range, lead, strategy)
@@ -346,6 +365,7 @@ frontend/
 ### 5. Documentation
 
 **Tasks**:
+
 - [ ] Update `DIRECTOR_DASHBOARD.md` with V2 information
 - [ ] Create user guide for feature flag
 - [ ] Document chart overlay system
@@ -357,6 +377,7 @@ frontend/
 
 **Decision**: Use client-side feature flag in Zustand store
 **Rationale**:
+
 - Instant toggle without server restart
 - Easy for dev/QA testing
 - Can be promoted to env var or database config later
@@ -366,6 +387,7 @@ frontend/
 
 **Decision**: Continue using ECharts 6.0 + echarts-for-react
 **Rationale**:
+
 - Already integrated in Director Dashboard
 - Enterprise-grade performance (canvas rendering)
 - Rich interactivity (zoom, brush, hover sync)
@@ -376,6 +398,7 @@ frontend/
 
 **Decision**: Reuse existing 7 analytics endpoints where possible
 **Rationale**:
+
 - Avoid duplication
 - Consistent data contracts
 - Reduces backend maintenance
@@ -385,6 +408,7 @@ frontend/
 
 **Decision**: Fetch file data once, post to each analytics endpoint
 **Rationale**:
+
 - Backend can apply transformations
 - Centralized data validation
 - Easier to add new analytics without frontend changes
@@ -393,6 +417,7 @@ frontend/
 ## Dependencies
 
 **Already Installed**:
+
 - echarts@6.0.0
 - echarts-for-react@3.0.2
 - @antv/g2plot@2.4.35
@@ -430,6 +455,7 @@ frontend/
 ## Success Metrics
 
 Once fully integrated, success will be measured by:
+
 - [ ] Feature flag toggle works without errors
 - [ ] All 13 charts render with real data
 - [ ] Overlays show/hide correctly

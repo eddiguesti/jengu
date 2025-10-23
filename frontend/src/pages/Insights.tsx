@@ -61,7 +61,8 @@ export const Insights = () => {
     const weatherGroups: Record<string, { prices: number[]; occupancies: number[] }> = {}
 
     fileData.forEach((row: any) => {
-      const weather = row.weatherCondition || row.weathercondition || row.weather_condition || row.weather || ''
+      const weather =
+        row.weatherCondition || row.weathercondition || row.weather_condition || row.weather || ''
       const price = parseFloat(row.price || row.rate || 0)
       let occupancy = parseFloat(row.occupancy || row.occupancy_rate || 0)
 
