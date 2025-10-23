@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-worker
+  namespace: jengu
+  labels:
+    app: analytics-worker
+    component: queue-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analytics-worker
+  template:
+    metadata:
+      labels:
+        app: analytics-worker
+        component: queue-worker
+    spec:
+      containers:
+        - name: analytics-worker
+          image: jengu/backend:latest
+          command: ["node", "dist/workers/analyticsWorker.js"]
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: jengu-secrets
+                  key: redis-url
+            - name: SUPABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: jengu-secrets
+                  key: supabase-url
+            - name: SUPABASE_SERVICE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jengu-secrets
+                  key: supabase-service-key
+            - name: ANALYTICS_WORKER_CONCURRENCY
+              value: "3"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m" # Analytics can be CPU-intensive
+      restartPolicy: Always
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: analytics-worker-hpa
+  namespace: jengu
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: analytics-worker
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: External
+      external:
+        metric:
+          name: bullmq_queue_waiting_jobs
+          selector:
+            matchLabels:
+              queue: analytics-heavy
+        target:
+          type: AverageValue
+          averageValue: "10"
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 85

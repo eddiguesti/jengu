@@ -441,4 +441,176 @@ router.get(
   })
 )
 
+/**
+ * Pricing Simulation Sandbox - "What-if" Analysis
+ * POST /api/pricing/simulate
+ *
+ * Generates multiple pricing variants to preview impact before applying.
+ * Returns 5 coherent variants with reasons, CI bands, and RevPAR deltas.
+ *
+ * Request body:
+ * {
+ *   propertyId: string
+ *   stayDate: string (YYYY-MM-DD)
+ *   product: { type: string, refundable: boolean, los: number }
+ *   toggles: { ... pricing strategy settings ... }
+ *   baselinePrice?: number (if not provided, calculates from /score)
+ * }
+ *
+ * Response:
+ * {
+ *   variants: [
+ *     {
+ *       label: string (e.g., "-10%", "Baseline", "+10%")
+ *       price: number
+ *       adjustment: number (percentage)
+ *       conf_band: { lower: number, upper: number }
+ *       expected: { occ_delta: number, revpar_delta: number }
+ *       reasons: string[]
+ *     }
+ *   ],
+ *   baseline: { price: number, occ: number, revpar: number }
+ * }
+ */
+router.post(
+  '/simulate',
+  authenticateUser,
+  // Reuse same validation as /quote
+  validate(pricingQuoteSchema),
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!
+    const { propertyId, stayDate, product, toggles, baselinePrice } = req.body
+
+    console.log(`🧪 Pricing simulation for property ${propertyId}, stay date ${stayDate}`)
+
+    // Fetch user's business settings
+    const { data: settings, error: settingsError } = await supabaseAdmin
+      .from('business_settings')
+      .select('userid, timezone, capacity_config')
+      .eq('userid', userId)
+      .single()
+
+    if (settingsError || !settings) {
+      console.error('❌ Failed to fetch business settings:', settingsError)
+      return res.status(500).json({ error: 'Failed to fetch business settings' })
+    }
+
+    // Fetch property data for enrichment
+    const { data: propertyData, error: propertyError } = await supabaseAdmin
+      .from('properties')
+      .select('address, bedrooms, max_guests, propertyType, latitude, longitude')
+      .eq('id', propertyId)
+      .eq('userId', userId)
+      .single()
+
+    if (propertyError || !propertyData) {
+      console.error('❌ Property not found:', propertyError)
+      return res.status(404).json({ error: 'Property not found' })
+    }
+
+    // Get baseline price if not provided
+    let baseline = baselinePrice
+    if (!baseline) {
+      const baselineBody = {
+        property_id: propertyId,
+        stay_date: stayDate,
+        product_type: product.type,
+        refundable: product.refundable,
+        los: product.los,
+        toggles,
+        capacity: settings.capacity_config || 1,
+      }
+
+      try {
+        const baselineResult = await callPricingScore(baselineBody)
+        baseline = baselineResult.price
+      } catch (error) {
+        logError(error as Error, 'Failed to get baseline price')
+        return res.status(500).json({ error: 'Failed to calculate baseline price' })
+      }
+    }
+
+    // Generate simulation variants: -15%, -10%, -5%, baseline, +5%, +10%, +15%
+    const adjustments = [-15, -10, -5, 0, 5, 10, 15]
+    const variants = []
+
+    for (const adjustment of adjustments) {
+      const adjustedPrice = baseline * (1 + adjustment / 100)
+
+      // Build request body for this variant
+      const variantBody = {
+        property_id: propertyId,
+        stay_date: stayDate,
+        product_type: product.type,
+        refundable: product.refundable,
+        los: product.los,
+        toggles: {
+          ...toggles,
+          // Override price bounds to allow this specific price
+          min_price_override: Math.floor(adjustedPrice * 0.9),
+          max_price_override: Math.ceil(adjustedPrice * 1.1),
+        },
+        capacity: settings.capacity_config || 1,
+        allowed_price_grid: [adjustedPrice], // Force this specific price
+      }
+
+      try {
+        const result = await callPricingScore(variantBody)
+
+        // Calculate occupancy and RevPAR deltas (mock for now - would need ML model)
+        // Assumption: lower prices -> higher occupancy
+        const occDelta = adjustment * -0.5 // -15% price = +7.5% occupancy
+        const currentOcc = result.expected?.occ_now || 0.7
+        const newOcc = Math.max(0, Math.min(1, currentOcc + occDelta / 100))
+
+        const baselineRevPAR = baseline * currentOcc
+        const variantRevPAR = adjustedPrice * newOcc
+        const revparDelta = ((variantRevPAR - baselineRevPAR) / baselineRevPAR) * 100
+
+        variants.push({
+          label: adjustment === 0 ? 'Baseline' : `${adjustment > 0 ? '+' : ''}${adjustment}%`,
+          price: Math.round(adjustedPrice),
+          adjustment,
+          conf_band: result.conf_band || { lower: adjustedPrice * 0.9, upper: adjustedPrice * 1.1 },
+          expected: {
+            occ_delta: parseFloat(occDelta.toFixed(1)),
+            revpar_delta: parseFloat(revparDelta.toFixed(1)),
+            projected_occ: parseFloat((newOcc * 100).toFixed(1)),
+            projected_revpar: parseFloat(variantRevPAR.toFixed(2)),
+          },
+          reasons: result.reasons || [
+            `Price adjusted ${adjustment}% from baseline`,
+            `Expected occupancy ${occDelta > 0 ? 'increase' : occDelta < 0 ? 'decrease' : 'stable'}`,
+            `RevPAR ${revparDelta > 0 ? 'increase' : revparDelta < 0 ? 'decrease' : 'stable'} of ${Math.abs(revparDelta).toFixed(1)}%`,
+          ],
+        })
+      } catch (error) {
+        console.error(`⚠️  Failed to calculate variant ${adjustment}%:`, error)
+        // Continue with other variants even if one fails
+      }
+    }
+
+    if (variants.length === 0) {
+      return res.status(500).json({ error: 'Failed to generate any simulation variants' })
+    }
+
+    console.log(`✅ Generated ${variants.length} simulation variants`)
+
+    res.json({
+      variants,
+      baseline: {
+        price: baseline,
+        occ: 70, // Default - would come from actual data
+        revpar: baseline * 0.7,
+      },
+      metadata: {
+        property_id: propertyId,
+        stay_date: stayDate,
+        product,
+        generated_at: new Date().toISOString(),
+      },
+    })
+  })
+)
+
 export default router

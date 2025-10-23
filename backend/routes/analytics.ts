@@ -22,6 +22,17 @@ import type {
   MarketSentimentRequest,
   PricingRecommendationsAnalyticsRequest,
 } from '../types/requests.types.js'
+import {
+  registry,
+  AnalyticsSummaryRequestSchema,
+  AnalyticsSummaryResponseSchema,
+  WeatherImpactRequestSchema,
+  WeatherImpactResponseSchema,
+  DemandForecastRequestSchema,
+  DemandForecastResponseSchema,
+  ErrorResponseSchema,
+} from '../lib/openapi/index.js'
+import { z } from 'zod'
 
 // DataRow type to match mlAnalytics service expectations
 interface DataRow {
@@ -37,6 +48,189 @@ interface DataRow {
 }
 
 const router = Router()
+
+// OpenAPI: Analytics summary endpoint
+registry.registerPath({
+  method: 'post',
+  path: '/api/analytics/summary',
+  tags: ['Analytics'],
+  summary: 'Get comprehensive analytics summary',
+  description: 'Analyzes pricing data and returns statistical summary, trends, and insights',
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: AnalyticsSummaryRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Analytics summary generated successfully',
+      content: {
+        'application/json': {
+          schema: AnalyticsSummaryResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: 'Invalid request data',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+})
+
+// OpenAPI: Weather impact endpoint
+registry.registerPath({
+  method: 'post',
+  path: '/api/analytics/weather-impact',
+  tags: ['Analytics'],
+  summary: 'Analyze weather impact on pricing',
+  description: 'Correlates weather conditions with pricing patterns and occupancy',
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: WeatherImpactRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Weather impact analysis completed',
+      content: {
+        'application/json': {
+          schema: WeatherImpactResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: 'Invalid request data',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+})
+
+// OpenAPI: Demand forecast endpoint
+registry.registerPath({
+  method: 'post',
+  path: '/api/analytics/demand-forecast',
+  tags: ['Analytics'],
+  summary: 'Forecast future demand',
+  description: 'Predicts future occupancy and pricing trends using historical data',
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: DemandForecastRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Demand forecast generated successfully',
+      content: {
+        'application/json': {
+          schema: DemandForecastResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: 'Invalid request data',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+})
+
+// OpenAPI: Feature importance endpoint
+registry.registerPath({
+  method: 'post',
+  path: '/api/analytics/feature-importance',
+  tags: ['Analytics'],
+  summary: 'Calculate feature importance',
+  description: 'Identifies which factors (weather, day of week, etc.) most impact pricing',
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.array(z.unknown()).openapi({ description: 'Pricing data array' }),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Feature importance calculated',
+      content: {
+        'application/json': {
+          schema: z.object({
+            success: z.literal(true),
+            data: z.unknown(),
+          }),
+        },
+      },
+    },
+  },
+})
+
+// OpenAPI: AI Insights endpoint
+registry.registerPath({
+  method: 'post',
+  path: '/api/analytics/ai-insights',
+  tags: ['Analytics', 'AI'],
+  summary: 'Get Claude-powered AI insights',
+  description: 'Generates natural language insights and recommendations using Claude AI',
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            data: z.array(z.unknown()).openapi({ description: 'Pricing data array' }),
+            insights: z.object({}).optional().openapi({ description: 'Pre-computed analytics' }),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'AI insights generated',
+      content: {
+        'application/json': {
+          schema: z.object({
+            success: z.literal(true),
+            data: z.object({
+              insights: z.string(),
+              confidence: z.number().optional(),
+            }),
+          }),
+        },
+      },
+    },
+  },
+})
 
 /**
  * Comprehensive analytics summary

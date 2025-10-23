@@ -1,0 +1,1267 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Jengu API",
+    "description": "# Jengu Dynamic Pricing API\n\nHospitality revenue management and dynamic pricing intelligence platform.\n\n## Features\n\n- **File Management**: Upload CSV pricing data with streaming support\n- **Data Enrichment**: Weather, holidays, and temporal feature enrichment\n- **ML Analytics**: Demand forecasting, feature importance, competitor analysis\n- **AI Insights**: Claude-powered pricing recommendations\n- **Dynamic Pricing**: Real-time price quotes with ML-based optimization\n\n## Authentication\n\nMost endpoints require authentication via:\n- **Bearer Token**: Supabase JWT in Authorization header\n- **Cookie**: HttpOnly session cookie (sb-access-token)\n\n## Rate Limiting\n\n- General endpoints: 60 requests/minute\n- File uploads: 5 requests/minute\n- Analytics: 10 requests/minute\n- Assistant: 20 requests/minute\n\n## Error Responses\n\nAll endpoints return errors in this format:\n```json\n{\n  \"error\": \"ERROR_TYPE\",\n  \"message\": \"Human-readable error message\"\n}\n```",
+    "contact": {
+      "name": "Jengu Support",
+      "email": "support@jengu.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.jengu.com",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Health check endpoints"
+    },
+    {
+      "name": "Auth",
+      "description": "Authentication and authorization"
+    },
+    {
+      "name": "Files",
+      "description": "File upload and management"
+    },
+    {
+      "name": "Analytics",
+      "description": "ML analytics and insights"
+    },
+    {
+      "name": "Pricing",
+      "description": "Dynamic pricing engine"
+    },
+    {
+      "name": "Weather",
+      "description": "Weather data (Open-Meteo, OpenWeather)"
+    },
+    {
+      "name": "Location",
+      "description": "Geocoding and location services"
+    },
+    {
+      "name": "Competitor",
+      "description": "Competitor data scraping"
+    },
+    {
+      "name": "Assistant",
+      "description": "AI-powered pricing assistant"
+    },
+    {
+      "name": "Settings",
+      "description": "Business settings management"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    },
+    {
+      "cookieAuth": []
+    },
+    {
+      "apiKeyAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Supabase JWT token (for user sessions)"
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sb-access-token",
+        "description": "Supabase session cookie (httpOnly)"
+      },
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Partner API key (format: jen_live_...)"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "healthy"
+            ],
+            "example": "healthy"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00.000Z"
+          },
+          "uptime": {
+            "type": "number",
+            "example": 3600.5,
+            "description": "Server uptime in seconds"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "development",
+              "production",
+              "test"
+            ],
+            "example": "development"
+          }
+        },
+        "required": [
+          "status",
+          "timestamp",
+          "uptime",
+          "environment"
+        ]
+      },
+      "FileMetadata": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "name": {
+            "type": "string",
+            "example": "hotel-bookings-2024.csv"
+          },
+          "originalName": {
+            "type": "string",
+            "example": "bookings.csv"
+          },
+          "size": {
+            "type": "number",
+            "example": 1048576
+          },
+          "rows": {
+            "type": "number",
+            "example": 5000
+          },
+          "columns": {
+            "type": "number",
+            "example": 8
+          },
+          "uploaded_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "complete",
+              "processing",
+              "error"
+            ],
+            "example": "complete"
+          },
+          "enrichment_status": {
+            "type": "string",
+            "enum": [
+              "none",
+              "pending",
+              "completed",
+              "failed"
+            ],
+            "example": "completed"
+          },
+          "enriched_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:35:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "originalName",
+          "size",
+          "rows",
+          "columns",
+          "uploaded_at",
+          "status"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "VALIDATION_ERROR"
+          },
+          "message": {
+            "type": "string",
+            "example": "Invalid input parameters"
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ]
+      },
+      "PricingData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "price": {
+            "type": "number"
+          },
+          "temperature": {
+            "type": "number",
+            "nullable": true
+          },
+          "precipitation": {
+            "type": "number",
+            "nullable": true
+          },
+          "weatherCondition": {
+            "type": "string",
+            "nullable": true
+          },
+          "sunshineHours": {
+            "type": "number",
+            "nullable": true
+          },
+          "dayOfWeek": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 6
+          },
+          "month": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 12
+          },
+          "season": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "Winter",
+              "Spring",
+              "Summer",
+              "Fall"
+            ]
+          },
+          "isWeekend": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "isHoliday": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "holidayName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "price",
+          "temperature",
+          "precipitation",
+          "weatherCondition",
+          "sunshineHours",
+          "dayOfWeek",
+          "month",
+          "season",
+          "isWeekend",
+          "isHoliday",
+          "holidayName"
+        ]
+      },
+      "FileDataResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PricingData"
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "offset": {
+                "type": "number"
+              },
+              "limit": {
+                "type": "number"
+              },
+              "total": {
+                "type": "number"
+              },
+              "hasMore": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "offset",
+              "limit",
+              "total",
+              "hasMore"
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "data",
+          "pagination"
+        ]
+      },
+      "FilesListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FileMetadata"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "files"
+        ]
+      },
+      "EnrichmentResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "results": {
+            "type": "object",
+            "properties": {
+              "weatherEnriched": {
+                "type": "number"
+              },
+              "holidaysEnriched": {
+                "type": "number"
+              },
+              "temporalFeaturesAdded": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "weatherEnriched",
+              "holidaysEnriched",
+              "temporalFeaturesAdded"
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "message",
+          "results"
+        ]
+      },
+      "EnrichmentRequest": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "country": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ]
+      },
+      "AnalyticsSummary": {
+        "type": "object",
+        "properties": {
+          "totalRows": {
+            "type": "number"
+          },
+          "avgPrice": {
+            "type": "number"
+          },
+          "medianPrice": {
+            "type": "number"
+          },
+          "priceStdDev": {
+            "type": "number"
+          },
+          "minPrice": {
+            "type": "number"
+          },
+          "maxPrice": {
+            "type": "number"
+          },
+          "priceRange": {
+            "type": "number"
+          },
+          "dateRange": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "string",
+                "format": "date"
+              },
+              "end": {
+                "type": "string",
+                "format": "date"
+              },
+              "days": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "start",
+              "end",
+              "days"
+            ]
+          }
+        },
+        "required": [
+          "totalRows",
+          "avgPrice",
+          "medianPrice",
+          "priceStdDev",
+          "minPrice",
+          "maxPrice",
+          "priceRange",
+          "dateRange"
+        ]
+      },
+      "AnalyticsSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/AnalyticsSummary"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "AnalyticsSummaryRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "nullable": true
+            },
+            "description": "Array of pricing data"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "WeatherImpactResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "correlation": {
+                "type": "number"
+              },
+              "impactScore": {
+                "type": "number"
+              },
+              "insights": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "correlation",
+              "impactScore",
+              "insights"
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "WeatherImpactRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "nullable": true
+            },
+            "description": "Array of pricing data with weather"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "DemandForecast": {
+        "type": "object",
+        "properties": {
+          "forecasts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "predictedPrice": {
+                  "type": "number"
+                },
+                "confidence": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "date",
+                "predictedPrice",
+                "confidence"
+              ]
+            }
+          },
+          "accuracy": {
+            "type": "number"
+          },
+          "model": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "forecasts",
+          "accuracy",
+          "model"
+        ]
+      },
+      "DemandForecastResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/DemandForecast"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "DemandForecastRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "nullable": true
+            },
+            "description": "Historical pricing data"
+          },
+          "daysAhead": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 14,
+            "description": "Number of days to forecast"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health check",
+        "description": "Returns server health status, uptime, and environment information",
+        "responses": {
+          "200": {
+            "description": "Server is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/files/upload": {
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Upload CSV file",
+        "description": "Upload a CSV file with pricing data. Supports automatic column mapping, validation, and background enrichment.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "CSV file containing pricing data"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "file": {
+                      "$ref": "#/components/schemas/FileMetadata"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "file"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid file or content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/files/{fileId}/data": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Get file pricing data",
+        "description": "Retrieve pricing data for a specific file with pagination support",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "File ID"
+            },
+            "required": true,
+            "description": "File ID",
+            "name": "fileId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 10000,
+              "description": "Number of rows to return (max 10000)",
+              "example": 1000
+            },
+            "required": false,
+            "description": "Number of rows to return (max 10000)",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0,
+              "description": "Offset for pagination",
+              "example": 0
+            },
+            "required": false,
+            "description": "Offset for pagination",
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileDataResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/files": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "List uploaded files",
+        "description": "Get all files uploaded by the authenticated user, with row counts and preview data",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Files retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilesListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/files/{fileId}": {
+      "delete": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Delete file",
+        "description": "Delete a file and all associated pricing data",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "File ID to delete"
+            },
+            "required": true,
+            "description": "File ID to delete",
+            "name": "fileId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "deleted": {
+                      "type": "object",
+                      "properties": {
+                        "pricingDataRows": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "pricingDataRows"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "message",
+                    "deleted"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/files/{fileId}/enrich": {
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Enrich file with external data",
+        "description": "Add weather, holiday, and temporal features to pricing data",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "File ID to enrich"
+            },
+            "required": true,
+            "description": "File ID to enrich",
+            "name": "fileId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrichmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Enrichment completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrichmentResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/summary": {
+      "post": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get comprehensive analytics summary",
+        "description": "Analyzes pricing data and returns statistical summary, trends, and insights",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyticsSummaryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Analytics summary generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsSummaryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/weather-impact": {
+      "post": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Analyze weather impact on pricing",
+        "description": "Correlates weather conditions with pricing patterns and occupancy",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeatherImpactRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Weather impact analysis completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeatherImpactResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/demand-forecast": {
+      "post": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Forecast future demand",
+        "description": "Predicts future occupancy and pricing trends using historical data",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemandForecastRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Demand forecast generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemandForecastResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/feature-importance": {
+      "post": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Calculate feature importance",
+        "description": "Identifies which factors (weather, day of week, etc.) most impact pricing",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "nullable": true
+                    },
+                    "description": "Pricing data array"
+                  }
+                },
+                "required": [
+                  "data"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feature importance calculated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/ai-insights": {
+      "post": {
+        "tags": [
+          "Analytics",
+          "AI"
+        ],
+        "summary": "Get Claude-powered AI insights",
+        "description": "Generates natural language insights and recommendations using Claude AI",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "nullable": true
+                    },
+                    "description": "Pricing data array"
+                  },
+                  "insights": {
+                    "type": "object",
+                    "properties": {},
+                    "description": "Pre-computed analytics"
+                  }
+                },
+                "required": [
+                  "data"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AI insights generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "insights": {
+                          "type": "string"
+                        },
+                        "confidence": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "insights"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

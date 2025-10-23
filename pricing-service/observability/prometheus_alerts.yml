@@ -1,0 +1,246 @@
+groups:
+  - name: pricing_service_alerts
+    interval: 30s
+    rules:
+      # ========================================================================
+      # API Performance Alerts
+      # ========================================================================
+
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(pricing_api_latency_seconds_bucket[5m])) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          service: pricing-service
+          category: performance
+        annotations:
+          summary: "High API latency detected"
+          description: "API p95 latency is {{ $value }}s (threshold: 1.0s) for endpoint {{ $labels.endpoint }}"
+
+      - alert: CriticalScoreLatency
+        expr: histogram_quantile(0.95, rate(pricing_score_latency_seconds_bucket{pricing_method="ml_elasticity"}[5m])) > 0.08
+        for: 5m
+        labels:
+          severity: critical
+          service: pricing-service
+          category: performance
+        annotations:
+          summary: "/score p95 latency exceeded critical threshold"
+          description: "/score ML prediction p95 latency is {{ $value }}s (threshold: 80ms)"
+
+      - alert: SlowScoreLatency
+        expr: histogram_quantile(0.95, rate(pricing_score_latency_seconds_bucket[5m])) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          service: pricing-service
+          category: performance
+        annotations:
+          summary: "/score latency is slow"
+          description: "/score p95 latency is {{ $value }}s for method {{ $labels.pricing_method }}"
+
+      # ========================================================================
+      # Error Rate Alerts
+      # ========================================================================
+
+      - alert: HighErrorRate
+        expr: rate(pricing_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: pricing-service
+          category: errors
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors/sec for endpoint {{ $labels.endpoint }}"
+
+      - alert: IncreasedErrorRate
+        expr: rate(pricing_errors_total[5m]) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+          service: pricing-service
+          category: errors
+        annotations:
+          summary: "Increased error rate"
+          description: "Error rate is {{ $value }} errors/sec ({{ $labels.error_type }}) for endpoint {{ $labels.endpoint }}"
+
+      - alert: ServiceDown
+        expr: up{job="pricing-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: pricing-service
+          category: availability
+        annotations:
+          summary: "Pricing service is down"
+          description: "Pricing service has been down for more than 1 minute"
+
+      # ========================================================================
+      # ML Model Alerts
+      # ========================================================================
+
+      - alert: SlowModelPrediction
+        expr: histogram_quantile(0.95, rate(pricing_model_prediction_seconds_bucket[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: pricing-service
+          category: ml
+        annotations:
+          summary: "ML model prediction is slow"
+          description: "Model prediction p95 latency is {{ $value }}s for {{ $labels.model_type }}"
+
+      - alert: LowModelCacheHitRate
+        expr: rate(pricing_model_cache_hits_total[5m]) / (rate(pricing_model_cache_hits_total[5m]) + rate(pricing_model_cache_misses_total[5m])) < 0.7
+        for: 10m
+        labels:
+          severity: warning
+          service: pricing-service
+          category: ml
+        annotations:
+          summary: "Low model cache hit rate"
+          description: "Model cache hit rate is {{ $value }} (threshold: 70%)"
+
+      - alert: NoModelsLoaded
+        expr: pricing_models_loaded == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: pricing-service
+          category: ml
+        annotations:
+          summary: "No ML models loaded"
+          description: "No ML models are currently loaded in the service"
+
+      # ========================================================================
+      # Learning Loop Alerts
+      # ========================================================================
+
+      - alert: HighInvalidOutcomesRate
+        expr: rate(pricing_outcomes_invalid_total[5m]) / rate(pricing_outcomes_ingested_total[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          service: pricing-service
+          category: learning
+        annotations:
+          summary: "High rate of invalid outcomes"
+          description: "Invalid outcomes rate is {{ $value }} for property {{ $labels.property_id }} (reason: {{ $labels.reason }})"
+
+      - alert: RetrainingFailures
+        expr: rate(pricing_retraining_total{status="failed"}[1h]) > 0
+        for: 5m
+        labels:
+          severity: critical
+          service: pricing-service
+          category: learning
+        annotations:
+          summary: "Model retraining failures detected"
+          description: "Model retraining failed for {{ $labels.model_type }} - {{ $labels.property_id }}"
+
+      - alert: LongRetrainingDuration
+        expr: histogram_quantile(0.95, rate(pricing_retraining_duration_seconds_bucket[1h])) > 1800
+        for: 5m
+        labels:
+          severity: warning
+          service: pricing-service
+          category: learning
+        annotations:
+          summary: "Model retraining taking too long"
+          description: "Retraining p95 duration is {{ $value }}s (threshold: 30 minutes) for {{ $labels.model_type }}"
+
+      - alert: FrequentDriftDetection
+        expr: rate(pricing_drift_detected_total{trigger_retrain="true"}[1h]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          service: pricing-service
+          category: learning
+        annotations:
+          summary: "Frequent drift detection triggering retrains"
+          description: "Drift-triggered retrains occurring at {{ $value }}/hour for property {{ $labels.property_id }}"
+
+      # ========================================================================
+      # A/B Testing Alerts
+      # ========================================================================
+
+      - alert: ABTestImbalance
+        expr: |
+          abs(
+            rate(pricing_ab_assignments_total{variant="ml"}[1h]) -
+            rate(pricing_ab_assignments_total{variant="rule_based"}[1h])
+          ) / rate(pricing_ab_assignments_total[1h]) > 0.2
+        for: 30m
+        labels:
+          severity: warning
+          service: pricing-service
+          category: ab_testing
+        annotations:
+          summary: "A/B test traffic imbalance"
+          description: "Experiment {{ $labels.experiment_id }} has imbalanced traffic (>20% difference)"
+
+      - alert: LowABTestConversionRate
+        expr: |
+          rate(pricing_ab_outcomes_total{accepted="true"}[1h]) /
+          rate(pricing_ab_outcomes_total[1h]) < 0.05
+        for: 1h
+        labels:
+          severity: warning
+          service: pricing-service
+          category: ab_testing
+        annotations:
+          summary: "Low A/B test conversion rate"
+          description: "Conversion rate is {{ $value }} for variant {{ $labels.variant }} in experiment {{ $labels.experiment_id }}"
+
+      # ========================================================================
+      # Competitor Data Alerts
+      # ========================================================================
+
+      - alert: CompetitorDataFetchFailures
+        expr: rate(pricing_competitor_fetches_total{status="error"}[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          service: pricing-service
+          category: competitor_data
+        annotations:
+          summary: "High competitor data fetch failure rate"
+          description: "Competitor data fetch failures at {{ $value }}/sec for property {{ $labels.property_id }}"
+
+      - alert: StaleCompetitorData
+        expr: pricing_competitor_staleness_seconds > 86400
+        for: 1h
+        labels:
+          severity: warning
+          service: pricing-service
+          category: competitor_data
+        annotations:
+          summary: "Competitor data is stale"
+          description: "Competitor data for property {{ $labels.property_id }} is {{ $value }}s old (threshold: 24 hours)"
+
+      # ========================================================================
+      # Resource Alerts
+      # ========================================================================
+
+      - alert: HighActiveRequests
+        expr: pricing_active_requests > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: pricing-service
+          category: resources
+        annotations:
+          summary: "High number of active requests"
+          description: "{{ $value }} active requests for endpoint {{ $labels.endpoint }} (may indicate slow processing or traffic spike)"
+
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes / 1024 / 1024 / 1024 > 4
+        for: 10m
+        labels:
+          severity: warning
+          service: pricing-service
+          category: resources
+        annotations:
+          summary: "High memory usage"
+          description: "Service memory usage is {{ $value }}GB (threshold: 4GB)"

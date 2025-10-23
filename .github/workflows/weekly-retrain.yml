@@ -1,0 +1,250 @@
+name: Weekly Model Retraining
+
+on:
+  schedule:
+    # Run every Sunday at 2 AM UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      property_id:
+        description: 'Property ID to retrain (leave empty for all)'
+        required: false
+      force:
+        description: 'Force retrain even if criteria not met'
+        required: false
+        default: 'false'
+
+jobs:
+  drift-detection:
+    name: Detect Data Drift
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          cd pricing-service
+          pip install -r requirements.txt
+
+      - name: Run drift detection
+        id: drift
+        run: |
+          cd pricing-service
+
+          # Get list of properties
+          properties=$(python -c "from learning.outcomes_storage import get_outcomes_storage; print(' '.join(get_outcomes_storage().list_properties()))")
+
+          echo "Properties with outcomes: $properties"
+
+          drift_detected=false
+
+          # Check drift for each property
+          for prop in $properties; do
+            echo "Checking drift for property: $prop"
+
+            if python -m learning.drift_detection --property-id "$prop"; then
+              echo "No significant drift detected for $prop"
+            else
+              echo "⚠️  Drift detected for $prop"
+              drift_detected=true
+            fi
+          done
+
+          echo "drift_detected=$drift_detected" >> $GITHUB_OUTPUT
+
+      - name: Create drift report
+        run: |
+          cd pricing-service
+          echo "# Drift Detection Report" > drift_report.md
+          echo "**Date**: $(date)" >> drift_report.md
+          echo "" >> drift_report.md
+
+          # TODO: Add detailed drift metrics
+
+      - name: Upload drift report
+        uses: actions/upload-artifact@v3
+        with:
+          name: drift-report
+          path: pricing-service/drift_report.md
+
+  retrain-models:
+    name: Retrain Models
+    runs-on: ubuntu-latest
+    needs: drift-detection
+
+    strategy:
+      matrix:
+        model_type: [conversion]  # Add 'adr', 'revpar' as needed
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          cd pricing-service
+          pip install -r requirements.txt
+
+      - name: Download outcomes data
+        run: |
+          # In production, download from cloud storage (S3, GCS, etc.)
+          # For now, assume data is in repository or mounted volume
+          echo "Outcomes data location: pricing-service/data/outcomes/"
+
+      - name: Run weekly retraining
+        id: retrain
+        run: |
+          cd pricing-service
+
+          if [ -n "${{ github.event.inputs.property_id }}" ]; then
+            # Retrain specific property
+            echo "Retraining property: ${{ github.event.inputs.property_id }}"
+            python training/retrain_weekly.py \
+              --property-id "${{ github.event.inputs.property_id }}" \
+              --model-type ${{ matrix.model_type }} \
+              ${{ github.event.inputs.force == 'true' && '--force' || '' }}
+          else
+            # Retrain all properties
+            echo "Retraining all properties"
+            python training/retrain_weekly.py \
+              --all-properties \
+              --model-type ${{ matrix.model_type }}
+          fi
+
+      - name: Upload retraining results
+        uses: actions/upload-artifact@v3
+        with:
+          name: retrain-results-${{ matrix.model_type }}
+          path: pricing-service/data/retraining/
+
+      - name: Upload new models
+        uses: actions/upload-artifact@v3
+        with:
+          name: models-${{ matrix.model_type }}
+          path: pricing-service/models/
+
+  deploy-models:
+    name: Deploy Models
+    runs-on: ubuntu-latest
+    needs: retrain-models
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download models
+        uses: actions/download-artifact@v3
+        with:
+          name: models-conversion
+          path: pricing-service/models/
+
+      - name: Deploy to production
+        run: |
+          # In production, deploy models to:
+          # - Cloud storage (S3, GCS)
+          # - Model registry (MLflow, Weights & Biases)
+          # - Kubernetes ConfigMap/Volume
+
+          echo "Deploying models to production..."
+
+          # Example: Upload to S3
+          # aws s3 sync pricing-service/models/ s3://jengu-models/
+
+          # Example: Update model registry
+          # mlflow models deploy -m models:/pricing-conversion/latest
+
+          # Example: Trigger service restart to load new models
+          # kubectl rollout restart deployment/pricing-service
+
+      - name: Notify on deployment
+        run: |
+          echo "Models deployed successfully"
+
+          # Send notification (Slack, email, etc.)
+          # curl -X POST -H 'Content-type: application/json' \
+          #   --data '{"text":"Weekly retraining complete. New models deployed."}' \
+          #   $SLACK_WEBHOOK_URL
+
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [drift-detection, retrain-models, deploy-models]
+    if: always()
+
+    steps:
+      - name: Download reports
+        uses: actions/download-artifact@v3
+        with:
+          name: drift-report
+
+      - name: Download retrain results
+        uses: actions/download-artifact@v3
+        with:
+          name: retrain-results-conversion
+
+      - name: Create summary
+        run: |
+          echo "# Weekly Retraining Summary" > summary.md
+          echo "**Date**: $(date)" >> summary.md
+          echo "" >> summary.md
+
+          echo "## Drift Detection" >> summary.md
+          cat drift_report.md >> summary.md || echo "No drift report available" >> summary.md
+
+          echo "" >> summary.md
+          echo "## Retraining Results" >> summary.md
+
+          # Parse retraining results
+          if [ -f "retrain_summary_*.json" ]; then
+            echo "Results available in artifacts" >> summary.md
+          else
+            echo "No retraining results available" >> summary.md
+          fi
+
+      - name: Post to Slack
+        if: success()
+        run: |
+          # Example Slack notification
+          # curl -X POST -H 'Content-type: application/json' \
+          #   --data '{
+          #     "text": "Weekly retraining completed successfully",
+          #     "attachments": [
+          #       {
+          #         "color": "good",
+          #         "title": "Retraining Summary",
+          #         "text": "Check artifacts for detailed results"
+          #       }
+          #     ]
+          #   }' \
+          #   ${{ secrets.SLACK_WEBHOOK_URL }}
+          echo "Notification sent"
+
+      - name: Post failure notification
+        if: failure()
+        run: |
+          # Example failure notification
+          # curl -X POST -H 'Content-type: application/json' \
+          #   --data '{
+          #     "text": "⚠️  Weekly retraining failed",
+          #     "attachments": [
+          #       {
+          #         "color": "danger",
+          #         "title": "Retraining Failure",
+          #         "text": "Check GitHub Actions logs for details"
+          #       }
+          #     ]
+          #   }' \
+          #   ${{ secrets.SLACK_WEBHOOK_URL }}
+          echo "Failure notification sent"

@@ -16,8 +16,224 @@ import {
   generateMappingReport,
   StandardizedRow,
 } from '../services/csvMapper.js'
+import {
+  registry,
+  FileMetadataSchema,
+  FileDataResponseSchema,
+  FilesListResponseSchema,
+  EnrichmentRequestSchema,
+  EnrichmentResponseSchema,
+  ErrorResponseSchema,
+} from '../lib/openapi/index.js'
+import { z } from 'zod'
+import { enqueueEnrichment } from '../lib/queue/queues.js'
 
 const router = Router()
+
+// OpenAPI: Upload CSV file endpoint
+registry.registerPath({
+  method: 'post',
+  path: '/api/files/upload',
+  tags: ['Files'],
+  summary: 'Upload CSV file',
+  description:
+    'Upload a CSV file with pricing data. Supports automatic column mapping, validation, and background enrichment.',
+  security: [{ bearerAuth: [] }],
+  requestBody: {
+    required: true,
+    content: {
+      'multipart/form-data': {
+        schema: {
+          type: 'object',
+          properties: {
+            file: {
+              type: 'string',
+              format: 'binary',
+              description: 'CSV file containing pricing data',
+            },
+          },
+          required: ['file'],
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'File uploaded successfully',
+      content: {
+        'application/json': {
+          schema: z.object({
+            success: z.literal(true),
+            file: FileMetadataSchema,
+          }),
+        },
+      },
+    },
+    400: {
+      description: 'Invalid file or content',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+})
+
+// OpenAPI: Get file data endpoint
+registry.registerPath({
+  method: 'get',
+  path: '/api/files/{fileId}/data',
+  tags: ['Files'],
+  summary: 'Get file pricing data',
+  description: 'Retrieve pricing data for a specific file with pagination support',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      fileId: z.string().uuid().openapi({ description: 'File ID' }),
+    }),
+    query: z.object({
+      limit: z.coerce
+        .number()
+        .int()
+        .positive()
+        .max(10000)
+        .optional()
+        .openapi({ description: 'Number of rows to return (max 10000)', example: 1000 }),
+      offset: z.coerce
+        .number()
+        .int()
+        .nonnegative()
+        .optional()
+        .openapi({ description: 'Offset for pagination', example: 0 }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'File data retrieved successfully',
+      content: {
+        'application/json': {
+          schema: FileDataResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: 'File not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+})
+
+// OpenAPI: List files endpoint
+registry.registerPath({
+  method: 'get',
+  path: '/api/files',
+  tags: ['Files'],
+  summary: 'List uploaded files',
+  description: "Get all files uploaded by the authenticated user, with row counts and preview data",
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: 'Files retrieved successfully',
+      content: {
+        'application/json': {
+          schema: FilesListResponseSchema,
+        },
+      },
+    },
+  },
+})
+
+// OpenAPI: Delete file endpoint
+registry.registerPath({
+  method: 'delete',
+  path: '/api/files/{fileId}',
+  tags: ['Files'],
+  summary: 'Delete file',
+  description: 'Delete a file and all associated pricing data',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      fileId: z.string().uuid().openapi({ description: 'File ID to delete' }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'File deleted successfully',
+      content: {
+        'application/json': {
+          schema: z.object({
+            success: z.literal(true),
+            message: z.string(),
+            deleted: z.object({
+              pricingDataRows: z.number(),
+            }),
+          }),
+        },
+      },
+    },
+    404: {
+      description: 'File not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+})
+
+// OpenAPI: Enrich file endpoint
+registry.registerPath({
+  method: 'post',
+  path: '/api/files/{fileId}/enrich',
+  tags: ['Files'],
+  summary: 'Enrich file with external data',
+  description: 'Add weather, holiday, and temporal features to pricing data',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      fileId: z.string().uuid().openapi({ description: 'File ID to enrich' }),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: EnrichmentRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Enrichment completed successfully',
+      content: {
+        'application/json': {
+          schema: EnrichmentResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: 'File not found',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+})
 
 // Helper to get error message from unknown error
 function getErrorMessage(error: unknown): string {
@@ -591,7 +807,7 @@ router.delete(
 )
 
 /**
- * Manual enrichment endpoint
+ * Manual enrichment endpoint (async with job queue)
  * POST /api/files/:fileId/enrich
  */
 router.post(
@@ -617,46 +833,33 @@ router.post(
       return sendError(res, 'NOT_FOUND', 'File not found')
     }
 
-    console.log(`🌤️  Manual enrichment requested for property ${fileId}...`)
+    console.log(`📥 Enrichment job requested for property ${fileId}...`)
     console.log(`📍 Location: ${latitude}, ${longitude}`)
 
-    const enrichmentResult = await enrichPropertyData(
-      fileId,
-      {
+    try {
+      // Enqueue enrichment job (non-blocking)
+      const jobId = await enqueueEnrichment({
+        propertyId: fileId,
+        userId,
         location: {
           latitude: parseFloat(latitude),
           longitude: parseFloat(longitude),
         },
         countryCode: country || 'FR',
         calendarificApiKey: process.env.CALENDARIFIC_API_KEY,
-      },
-      supabaseAdmin
-    )
+      })
 
-    if (enrichmentResult.success) {
-      await supabaseAdmin
-        .from('properties')
-        .update({
-          enrichmentstatus: 'completed',
-          enrichedat: new Date().toISOString(),
-        })
-        .eq('id', fileId)
-
+      // Return immediately with job ID
       res.json({
         success: true,
-        message: 'Enrichment completed successfully',
-        results: enrichmentResult.results,
+        message: 'Enrichment job queued successfully',
+        jobId,
+        status: 'queued',
+        statusUrl: `/api/jobs/${jobId}`,
       })
-    } else {
-      await supabaseAdmin
-        .from('properties')
-        .update({
-          enrichmentstatus: 'failed',
-          enrichmenterror: enrichmentResult.error,
-        })
-        .eq('id', fileId)
-
-      return sendError(res, 'INTERNAL', enrichmentResult.error || 'Enrichment failed')
+    } catch (error) {
+      console.error('Failed to enqueue enrichment job:', error)
+      return sendError(res, 'INTERNAL', 'Failed to queue enrichment job')
     }
   })
 )

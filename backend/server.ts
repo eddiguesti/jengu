@@ -9,9 +9,11 @@ initSentry() // Initialize Sentry error tracking
 import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
+import swaggerUi from 'swagger-ui-express'
 import { requestLogger, logger } from './middleware/logger.js'
 import { generalLimiter } from './middleware/rateLimiters.js'
 import { requestIdMiddleware } from './middleware/requestId.js'
+import { generateOpenAPIDocument } from './lib/openapi/index.js'
 
 // Import route modules
 import healthRouter from './routes/health.js'
@@ -25,6 +27,12 @@ import holidaysRouter from './routes/holidays.js'
 import competitorRouter from './routes/competitor.js'
 import analyticsRouter from './routes/analytics.js'
 import pricingRouter from './routes/pricing.js'
+import jobsRouter from './routes/jobs.js'
+import metricsRouter from './routes/metrics.js'
+import competitorDataRouter from './routes/competitorData.js'
+import alertsRouter from './routes/alerts.js'
+import neighborhoodIndexRouter from './routes/neighborhoodIndex.js'
+import banditRouter from './routes/bandit.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -42,8 +50,25 @@ app.use(cookieParser()) // Parse cookies for auth
 app.use(express.json({ limit: '10mb' }))
 app.use(generalLimiter) // General rate limiting for all endpoints
 
+// OpenAPI/Swagger documentation
+const openAPIDocument = generateOpenAPIDocument()
+app.use(
+  '/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(openAPIDocument, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Jengu API Documentation',
+  })
+)
+
+// Serve OpenAPI spec as JSON
+app.get('/openapi.json', (_req: Request, res: Response) => {
+  res.json(openAPIDocument)
+})
+
 // Mount route modules
 app.use('/health', healthRouter)
+app.use('/metrics', metricsRouter) // Prometheus metrics (no auth for scraping)
 app.use('/api/auth', authRouter)
 app.use('/api/files', filesRouter)
 app.use('/api/settings', settingsRouter)
@@ -55,6 +80,11 @@ app.use('/api/competitor', competitorRouter)
 app.use('/api/hotels', competitorRouter) // hotels/search is in competitor router
 app.use('/api/analytics', analyticsRouter)
 app.use('/api/pricing', pricingRouter)
+app.use('/api/jobs', jobsRouter)
+app.use('/api/competitor-data', competitorDataRouter)
+app.use('/api/alerts', alertsRouter)
+app.use('/api/neighborhood-index', neighborhoodIndexRouter)
+app.use('/api/bandit', banditRouter)
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
@@ -97,8 +127,18 @@ process.on('SIGTERM', () => {
   process.exit(0)
 })
 
+// Create HTTP server and attach Socket.IO
+import { createServer } from 'http'
+import { setupWebSocketServer } from './lib/socket/server.js'
+
+const httpServer = createServer(app)
+const io = setupWebSocketServer(httpServer)
+
+// Make io available to routes if needed
+app.set('io', io)
+
 // Start server
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`
 🚀 Jengu Backend API Server (Supabase + PostgreSQL)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -107,9 +147,18 @@ app.listen(PORT, () => {
 ✅ Database: Supabase PostgreSQL (REST API)
 ✅ Frontend URL: ${process.env.FRONTEND_URL}
 ✅ Rate limiting: Enhanced (endpoint-specific limits)
+✅ WebSocket: Real-time job updates enabled
+✅ Redis: Job queue enabled (BullMQ)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📡 Available endpoints:
+   📚 API Documentation:
+   - GET  /docs (Swagger UI)
+   - GET  /openapi.json (OpenAPI spec)
+
+   🏥 Health Check & Monitoring:
    - GET  /health
+   - GET  /metrics (Prometheus format)
+   - GET  /metrics/json (JSON format)
 
    📁 File Management (Supabase):
    - POST   /api/files/upload (streaming + batch inserts)
@@ -151,6 +200,12 @@ app.listen(PORT, () => {
    - POST /api/pricing/quote (get price quote)
    - POST /api/pricing/learn (submit outcomes for ML)
    - GET  /api/pricing/check-readiness
+
+   📋 Job Queue (Async Processing):
+   - GET  /api/jobs (list all jobs)
+   - GET  /api/jobs/:id (get job status)
+   - POST /api/jobs/:id/retry (retry failed job)
+   - GET  /api/jobs/dlq/list (view dead letter queue)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   `)
 })

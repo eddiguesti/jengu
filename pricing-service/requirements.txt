@@ -9,6 +9,12 @@ pydantic
 # Data manipulation
 numpy
 pandas
+pyarrow  # For efficient parquet storage
+
+# Machine Learning
+lightgbm
+scikit-learn
+scipy
 
 # HTTP Client
 httpx
@@ -23,3 +29,12 @@ python-multipart
 pytest
 pytest-asyncio
 pytest-cov
+
+# Observability
+sentry-sdk[fastapi]
+prometheus-client
+
+# gRPC
+grpcio
+grpcio-tools
+protobuf

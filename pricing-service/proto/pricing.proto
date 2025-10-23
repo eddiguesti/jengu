@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package pricing;
+
+// Pricing Service - gRPC API
+// Optimized binary protocol for Node.js <-> FastAPI communication
+
+service PricingService {
+  // Get pricing quote for a stay date
+  rpc GetPriceQuote(PriceQuoteRequest) returns (PriceQuoteResponse);
+
+  // Submit learning outcomes (batch)
+  rpc SubmitOutcomes(SubmitOutcomesRequest) returns (SubmitOutcomesResponse);
+
+  // Health check
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// Price Quote Request
+message PriceQuoteRequest {
+  string property_id = 1;
+  string stay_date = 2;  // YYYY-MM-DD
+  string product_type = 3;
+  bool refundable = 4;
+  int32 los = 5;  // Length of stay
+
+  // Toggles
+  PricingToggles toggles = 6;
+
+  // Capacity
+  int32 capacity = 7;
+
+  // Optional price grid
+  repeated double allowed_price_grid = 8;
+}
+
+message PricingToggles {
+  string strategy = 1;  // conservative, balanced, aggressive
+  bool use_ml = 2;
+  bool use_competitors = 3;
+  bool use_weather = 4;
+  bool use_events = 5;
+
+  // Advanced settings
+  optional double demand_sensitivity = 6;
+  optional double price_aggression = 7;
+  optional double occupancy_target = 8;
+  optional double min_price_override = 9;
+  optional double max_price_override = 10;
+}
+
+// Price Quote Response
+message PriceQuoteResponse {
+  double price = 1;
+  repeated double price_grid = 2;
+
+  // Confidence band
+  ConfidenceBand conf_band = 3;
+
+  // Expected metrics
+  ExpectedMetrics expected = 4;
+
+  // Reasoning
+  repeated string reasons = 5;
+
+  // Safety info
+  map<string, string> safety = 6;
+}
+
+message ConfidenceBand {
+  double lower = 1;
+  double upper = 2;
+}
+
+message ExpectedMetrics {
+  optional double occ_now = 1;
+  optional double occ_end_bucket = 2;
+  optional double revenue = 3;
+}
+
+// Submit Outcomes Request
+message SubmitOutcomesRequest {
+  repeated PricingOutcome outcomes = 1;
+}
+
+message PricingOutcome {
+  string property_id = 1;
+  string stay_date = 2;
+  double quoted_price = 3;
+  bool booked = 4;
+  optional double final_price = 5;
+  int64 timestamp = 6;  // Unix timestamp
+  map<string, string> metadata = 7;
+}
+
+// Submit Outcomes Response
+message SubmitOutcomesResponse {
+  bool success = 1;
+  int32 processed = 2;
+  optional string message = 3;
+}
+
+// Health Check
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  string status = 1;  // "healthy", "unhealthy"
+  string version = 2;
+  int64 uptime_seconds = 3;
+}

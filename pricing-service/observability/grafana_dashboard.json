@@ -1,0 +1,374 @@
+{
+  "dashboard": {
+    "title": "Jengu Pricing Service - Production Monitoring",
+    "description": "Comprehensive monitoring dashboard for ML-powered dynamic pricing service",
+    "tags": ["pricing", "ml", "production"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Request Rate",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "rate(pricing_requests_total[5m])",
+            "legendFormat": "{{method}} {{endpoint}} - {{status_code}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "reqps", "label": "Requests/sec" },
+          { "format": "short" }
+        ],
+        "legend": { "show": true, "values": true, "current": true }
+      },
+      {
+        "id": 2,
+        "title": "/score Latency (p50, p95, p99)",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(pricing_score_latency_seconds_bucket[5m]))",
+            "legendFormat": "p50 - {{pricing_method}}",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(pricing_score_latency_seconds_bucket[5m]))",
+            "legendFormat": "p95 - {{pricing_method}}",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(pricing_score_latency_seconds_bucket[5m]))",
+            "legendFormat": "p99 - {{pricing_method}}",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "Latency" },
+          { "format": "short" }
+        ],
+        "alert": {
+          "name": "/score p95 latency alert",
+          "conditions": [
+            {
+              "evaluator": { "params": [0.08], "type": "gt" },
+              "operator": { "type": "and" },
+              "query": { "params": ["B", "5m", "now"] },
+              "reducer": { "params": [], "type": "avg" },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "/score p95 latency exceeded 80ms threshold",
+          "noDataState": "no_data",
+          "for": "5m"
+        },
+        "thresholds": [
+          {
+            "value": 0.08,
+            "colorMode": "critical",
+            "fill": true,
+            "line": true,
+            "op": "gt"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 8, "w": 8, "h": 7 },
+        "targets": [
+          {
+            "expr": "rate(pricing_errors_total[5m])",
+            "legendFormat": "{{endpoint}} - {{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "errps", "label": "Errors/sec" },
+          { "format": "short" }
+        ],
+        "alert": {
+          "name": "High error rate alert",
+          "conditions": [
+            {
+              "evaluator": { "params": [0.1], "type": "gt" },
+              "operator": { "type": "and" },
+              "query": { "params": ["A", "5m", "now"] },
+              "reducer": { "params": [], "type": "avg" },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "Error rate exceeded 0.1 errors/sec",
+          "noDataState": "no_data",
+          "for": "5m"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Active Requests",
+        "type": "graph",
+        "gridPos": { "x": 8, "y": 8, "w": 8, "h": 7 },
+        "targets": [
+          {
+            "expr": "pricing_active_requests",
+            "legendFormat": "{{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "short", "label": "Active Requests" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Service Uptime",
+        "type": "singlestat",
+        "gridPos": { "x": 16, "y": 8, "w": 8, "h": 7 },
+        "targets": [
+          {
+            "expr": "pricing_uptime_seconds",
+            "refId": "A"
+          }
+        ],
+        "format": "dtdurations",
+        "valueName": "current",
+        "colorBackground": false,
+        "sparkline": { "show": false }
+      },
+      {
+        "id": 6,
+        "title": "API Latency by Route (p95)",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 15, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(pricing_api_latency_seconds_bucket[5m]))",
+            "legendFormat": "{{endpoint}} - {{status_code}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "p95 Latency" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Model Prediction Latency (p95)",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 15, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(pricing_model_prediction_seconds_bucket[5m]))",
+            "legendFormat": "{{model_type}} - {{property_id}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "Prediction Latency" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Model Cache Hit Rate",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 23, "w": 12, "h": 7 },
+        "targets": [
+          {
+            "expr": "rate(pricing_model_cache_hits_total[5m]) / (rate(pricing_model_cache_hits_total[5m]) + rate(pricing_model_cache_misses_total[5m]))",
+            "legendFormat": "Cache Hit Rate",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "percentunit", "label": "Hit Rate", "max": 1, "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Models Loaded",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 23, "w": 12, "h": 7 },
+        "targets": [
+          {
+            "expr": "pricing_models_loaded",
+            "legendFormat": "Loaded Models",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "short", "label": "Count" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Outcomes Ingested (rate)",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 30, "w": 8, "h": 7 },
+        "targets": [
+          {
+            "expr": "rate(pricing_outcomes_ingested_total[5m])",
+            "legendFormat": "{{property_id}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "ops", "label": "Outcomes/sec" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Invalid Outcomes",
+        "type": "graph",
+        "gridPos": { "x": 8, "y": 30, "w": 8, "h": 7 },
+        "targets": [
+          {
+            "expr": "rate(pricing_outcomes_invalid_total[5m])",
+            "legendFormat": "{{property_id}} - {{reason}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "ops", "label": "Invalid/sec" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Model Retraining Events",
+        "type": "graph",
+        "gridPos": { "x": 16, "y": 30, "w": 8, "h": 7 },
+        "targets": [
+          {
+            "expr": "rate(pricing_retraining_total[5m])",
+            "legendFormat": "{{status}} - {{model_type}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "ops", "label": "Retraining Events" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Retraining Duration (p95)",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 37, "w": 12, "h": 7 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(pricing_retraining_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{model_type}} - {{property_id}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "Duration" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Drift Detection Events",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 37, "w": 12, "h": 7 },
+        "targets": [
+          {
+            "expr": "rate(pricing_drift_detected_total[5m])",
+            "legendFormat": "{{property_id}} - trigger_retrain={{trigger_retrain}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "ops", "label": "Drift Events" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "A/B Test Assignments",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 44, "w": 12, "h": 7 },
+        "targets": [
+          {
+            "expr": "rate(pricing_ab_assignments_total[5m])",
+            "legendFormat": "{{experiment_id}} - {{variant}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "ops", "label": "Assignments/sec" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "A/B Test Conversion Rate",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 44, "w": 12, "h": 7 },
+        "targets": [
+          {
+            "expr": "rate(pricing_ab_outcomes_total{accepted=\"true\"}[5m]) / rate(pricing_ab_outcomes_total[5m])",
+            "legendFormat": "{{variant}} - {{experiment_id}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "percentunit", "label": "Conversion Rate", "max": 1, "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 17,
+        "title": "Competitor Data Fetch Success Rate",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 51, "w": 12, "h": 7 },
+        "targets": [
+          {
+            "expr": "rate(pricing_competitor_fetches_total{status=\"success\"}[5m]) / rate(pricing_competitor_fetches_total[5m])",
+            "legendFormat": "Success Rate",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "percentunit", "label": "Success Rate", "max": 1, "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 18,
+        "title": "Competitor Data Staleness",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 51, "w": 12, "h": 7 },
+        "targets": [
+          {
+            "expr": "pricing_competitor_staleness_seconds",
+            "legendFormat": "{{property_id}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "Staleness" },
+          { "format": "short" }
+        ]
+      }
+    ]
+  }
+}
