@@ -1,7 +1,10 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Layout } from './components/layout/Layout'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { queryClient } from './lib/query/queryClient'
 import Auth from './pages/Auth'
 
 // Lazy load pages for better performance
@@ -46,69 +49,79 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<Auth />} />
-            <Route path="/signup" element={<Auth />} />
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<Auth />} />
+              <Route path="/signup" element={<Auth />} />
 
-            {/* Protected routes */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
-              {/* Root redirect to dashboard */}
-              <Route index element={<Dashboard />} />
-
-              {/* Primary Routes (New IA) */}
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="home" element={<Navigate to="/" replace />} />
-
-              {/* Analytics Section */}
-              <Route path="analytics" element={<Analytics />} />
-
-              {/* Pricing Section */}
-              <Route path="pricing">
-                <Route path="optimizer" element={<PricingEngine />} />
-                <Route path="competitors" element={<CompetitorMonitor />} />
-                <Route index element={<Navigate to="/pricing/optimizer" replace />} />
-              </Route>
-
-              {/* Data Section */}
-              <Route path="data-sources" element={<Data />} />
-
-              {/* Tools Section */}
-              <Route path="tools">
-                <Route path="assistant" element={<Assistant />} />
-                <Route path="settings" element={<Settings />} />
-                <Route index element={<Navigate to="/tools/assistant" replace />} />
-              </Route>
-
-              {/* Legacy Routes (Redirects for backwards compatibility) */}
-              <Route path="data" element={<Navigate to="/data-sources" replace />} />
-              <Route path="pricing-engine" element={<Navigate to="/pricing/optimizer" replace />} />
+              {/* Protected routes */}
               <Route
-                path="competitor-monitor"
-                element={<Navigate to="/pricing/competitors" replace />}
-              />
-              <Route path="insights" element={<Navigate to="/analytics" replace />} />
-              <Route path="director" element={<Navigate to="/analytics?view=advanced" replace />} />
-              <Route path="assistant" element={<Navigate to="/tools/assistant" replace />} />
-              <Route path="settings" element={<Navigate to="/tools/settings" replace />} />
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }
+              >
+                {/* Root redirect to dashboard */}
+                <Route index element={<Dashboard />} />
 
-              {/* 404 Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </AuthProvider>
+                {/* Primary Routes (New IA) */}
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="home" element={<Navigate to="/" replace />} />
+
+                {/* Analytics Section */}
+                <Route path="analytics" element={<Analytics />} />
+
+                {/* Pricing Section */}
+                <Route path="pricing">
+                  <Route path="optimizer" element={<PricingEngine />} />
+                  <Route path="competitors" element={<CompetitorMonitor />} />
+                  <Route index element={<Navigate to="/pricing/optimizer" replace />} />
+                </Route>
+
+                {/* Data Section */}
+                <Route path="data-sources" element={<Data />} />
+
+                {/* Tools Section */}
+                <Route path="tools">
+                  <Route path="assistant" element={<Assistant />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route index element={<Navigate to="/tools/assistant" replace />} />
+                </Route>
+
+                {/* Legacy Routes (Redirects for backwards compatibility) */}
+                <Route path="data" element={<Navigate to="/data-sources" replace />} />
+                <Route
+                  path="pricing-engine"
+                  element={<Navigate to="/pricing/optimizer" replace />}
+                />
+                <Route
+                  path="competitor-monitor"
+                  element={<Navigate to="/pricing/competitors" replace />}
+                />
+                <Route path="insights" element={<Navigate to="/analytics" replace />} />
+                <Route
+                  path="director"
+                  element={<Navigate to="/analytics?view=advanced" replace />}
+                />
+                <Route path="assistant" element={<Navigate to="/tools/assistant" replace />} />
+                <Route path="settings" element={<Navigate to="/tools/settings" replace />} />
+
+                {/* 404 Fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Route>
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </AuthProvider>
+      {/* React Query Devtools - only in development */}
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   )
 }
 
