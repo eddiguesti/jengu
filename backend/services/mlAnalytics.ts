@@ -72,34 +72,6 @@ function calculateMAPE(actual: number[], predicted: number[]): number {
 }
 
 /**
- * Simple linear regression
- * @deprecated Not currently used but kept for potential future use
- */
-// @ts-ignore - Function kept for potential future use
-function linearRegression(
-  x: number[],
-  y: number[]
-): { slope: number; intercept: number; r2: number } {
-  if (x.length !== y.length || x.length < 2) {
-    return { slope: 0, intercept: 0, r2: 0 }
-  }
-
-  const n = x.length
-  const sumX = x.reduce((a, b) => a + b, 0)
-  const sumY = y.reduce((a, b) => a + b, 0)
-  const sumXY = x.reduce((sum, xi, i) => sum + xi * (y[i] ?? 0), 0)
-  const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0)
-
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
-  const intercept = (sumY - slope * sumX) / n
-
-  const predicted = x.map(xi => slope * xi + intercept)
-  const r2 = calculateR2(y, predicted)
-
-  return { slope, intercept, r2 }
-}
-
-/**
  * Analyze weather impact on pricing and occupancy
  */
 export function analyzeWeatherImpact(data: DataRow[]): {

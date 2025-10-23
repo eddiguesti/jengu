@@ -21,7 +21,7 @@
 
 import { Router, Request, Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
-import { authenticateUser } from '../middleware/authenticateUser.js';
+import { authenticateUser } from '../lib/supabase.js';
 import { AlertEngine } from '../services/alertEngine.js';
 
 const router = Router();
