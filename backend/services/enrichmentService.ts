@@ -66,35 +66,44 @@ export async function enrichWithWeather(
     for (let i = 0; i < pricingData.length; i += BATCH_SIZE) {
       const batch = pricingData.slice(i, i + BATCH_SIZE)
 
-      for (const row of batch) {
-        // Skip if already enriched (idempotent)
-        if (row.temperature !== null) {
-          skippedCount++
-          continue
-        }
-
-        const dateStr = new Date(row.date).toISOString().split('T')[0]
-        const weather = weatherMap[dateStr]
-
-        if (weather) {
-          const { error: updateError } = await supabaseClient
-            .from('pricing_data')
-            .update({
-              temperature: weather.temperature,
-              precipitation: weather.precipitation,
-              weatherCondition: weather.weatherDescription,
-              sunshineHours: weather.sunshineHours,
-            })
-            .eq('id', row.id)
-            .is('temperature', null) // Idempotent: only update if null
-
-          if (!updateError) {
-            enrichedCount++
-          } else {
-            console.warn(`Failed to update row ${row.id}:`, updateError.message)
+      // Parallel batch updates for performance
+      const updatePromises = batch
+        .filter((row: any) => {
+          // Skip if already enriched (idempotent)
+          if (row.temperature !== null) {
+            skippedCount++
+            return false
           }
-        }
-      }
+          return true
+        })
+        .map(async (row: any) => {
+          const dateStr = new Date(row.date).toISOString().split('T')[0]
+          const weather = weatherMap[dateStr]
+
+          if (weather) {
+            const { error: updateError } = await supabaseClient
+              .from('pricing_data')
+              .update({
+                temperature: weather.temperature,
+                precipitation: weather.precipitation,
+                weatherCondition: weather.weatherDescription,
+                sunshineHours: weather.sunshineHours,
+              })
+              .eq('id', row.id)
+              .is('temperature', null) // Idempotent: only update if null
+
+            if (updateError) {
+              console.warn(`Failed to update row ${row.id}:`, updateError.message)
+              return false
+            }
+            return true
+          }
+          return false
+        })
+
+      // Wait for all updates in batch to complete
+      const results = await Promise.allSettled(updatePromises)
+      enrichedCount += results.filter(r => r.status === 'fulfilled' && r.value === true).length
 
       console.log(
         `📊 Enriched ${i + batch.length}/${pricingData.length} rows (${enrichedCount} updated, ${skippedCount} already enriched)...`
@@ -132,57 +141,80 @@ export async function enrichWithTemporalFeatures(
   propertyId: string,
   supabaseClient: any
 ): Promise<any> {
+  const startTime = Date.now()
   console.log(`📆 Starting temporal enrichment for property ${propertyId}...`)
 
   const { data: pricingData, error } = await supabaseClient
     .from('pricing_data')
-    .select('id, date')
+    .select('id, date, dayOfWeek') // Include dayOfWeek to check if already enriched
     .eq('propertyId', propertyId)
 
   if (error || !pricingData || pricingData.length === 0) {
     console.log('⚠️  No pricing data found for temporal enrichment')
-    return { enriched: 0 }
+    return { enriched: 0, skipped: 0, duration: Date.now() - startTime }
   }
 
   let enrichedCount = 0
+  let skippedCount = 0
   const BATCH_SIZE = 100
 
   for (let i = 0; i < pricingData.length; i += BATCH_SIZE) {
     const batch = pricingData.slice(i, i + BATCH_SIZE)
 
-    for (const row of batch) {
-      const date = new Date(row.date)
-      const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
-      const month = date.getMonth() + 1 // 1-12
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+    // Parallel batch updates for performance
+    const updatePromises = batch
+      .filter((row: any) => {
+        // Skip if already enriched (idempotent)
+        if (row.dayOfWeek !== null) {
+          skippedCount++
+          return false
+        }
+        return true
+      })
+      .map(async (row: any) => {
+        const date = new Date(row.date)
+        const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
+        const month = date.getMonth() + 1 // 1-12
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
 
-      // Determine season (Northern Hemisphere)
-      let season
-      if ([12, 1, 2].includes(month)) season = 'Winter'
-      else if ([3, 4, 5].includes(month)) season = 'Spring'
-      else if ([6, 7, 8].includes(month)) season = 'Summer'
-      else season = 'Fall'
+        // Determine season (Northern Hemisphere)
+        let season
+        if ([12, 1, 2].includes(month)) season = 'Winter'
+        else if ([3, 4, 5].includes(month)) season = 'Spring'
+        else if ([6, 7, 8].includes(month)) season = 'Summer'
+        else season = 'Fall'
 
-      const { error: updateError } = await supabaseClient
-        .from('pricing_data')
-        .update({
-          dayOfWeek,
-          month,
-          season,
-          isWeekend,
-        })
-        .eq('id', row.id)
+        const { error: updateError } = await supabaseClient
+          .from('pricing_data')
+          .update({
+            dayOfWeek,
+            month,
+            season,
+            isWeekend,
+          })
+          .eq('id', row.id)
+          .is('dayOfWeek', null) // Idempotent: only update if null
 
-      if (!updateError) {
-        enrichedCount++
-      }
-    }
+        return !updateError
+      })
 
-    console.log(`📊 Enriched ${i + batch.length}/${pricingData.length} rows with temporal data...`)
+    // Wait for all updates in batch to complete
+    const results = await Promise.allSettled(updatePromises)
+    enrichedCount += results.filter(r => r.status === 'fulfilled' && r.value === true).length
+
+    console.log(
+      `📊 Enriched ${i + batch.length}/${pricingData.length} rows (${enrichedCount} updated, ${skippedCount} already enriched)...`
+    )
   }
 
-  console.log(`✅ Temporal enrichment complete: ${enrichedCount} rows enriched`)
-  return { enriched: enrichedCount }
+  const duration = Date.now() - startTime
+
+  console.log(`✅ Temporal enrichment complete:`)
+  console.log(`   - Updated: ${enrichedCount} rows`)
+  console.log(`   - Skipped (already enriched): ${skippedCount} rows`)
+  console.log(`   - Duration: ${(duration / 1000).toFixed(2)}s`)
+
+  return { enriched: enrichedCount, skipped: skippedCount, total: pricingData.length, duration }
 }
 
 /**
@@ -254,43 +286,53 @@ export async function enrichWithHolidays(
     for (let i = 0; i < pricingData.length; i += BATCH_SIZE) {
       const batch = pricingData.slice(i, i + BATCH_SIZE)
 
-      for (const row of batch) {
-        // Skip if already enriched (idempotent)
-        if (row.isHoliday !== null) {
-          skippedCount++
-          continue
-        }
-
-        const dateStr = new Date(row.date).toISOString().split('T')[0]
-        const holidays = holidayMap[dateStr]
-
-        if (holidays && holidays.length > 0) {
-          const { error: updateError } = await supabaseClient
-            .from('pricing_data')
-            .update({
-              isHoliday: true,
-              holidayName: holidays.join(', '),
-            })
-            .eq('id', row.id)
-            .is('isHoliday', null) // Idempotent: only update if null
-
-          if (!updateError) {
-            enrichedCount++
-          } else {
-            console.warn(`Failed to update row ${row.id}:`, updateError.message)
+      // Parallel batch updates for performance
+      const updatePromises = batch
+        .filter((row: any) => {
+          // Skip if already enriched (idempotent)
+          if (row.isHoliday !== null) {
+            skippedCount++
+            return false
           }
-        } else {
-          // Mark as non-holiday to avoid re-checking
-          await supabaseClient
-            .from('pricing_data')
-            .update({
-              isHoliday: false,
-              holidayName: null,
-            })
-            .eq('id', row.id)
-            .is('isHoliday', null)
-        }
-      }
+          return true
+        })
+        .map(async (row: any) => {
+          const dateStr = new Date(row.date).toISOString().split('T')[0]
+          const holidays = holidayMap[dateStr]
+
+          if (holidays && holidays.length > 0) {
+            const { error: updateError } = await supabaseClient
+              .from('pricing_data')
+              .update({
+                isHoliday: true,
+                holidayName: holidays.join(', '),
+              })
+              .eq('id', row.id)
+              .is('isHoliday', null) // Idempotent: only update if null
+
+            if (updateError) {
+              console.warn(`Failed to update row ${row.id}:`, updateError.message)
+              return false
+            }
+            return true
+          } else {
+            // Mark as non-holiday to avoid re-checking
+            const { error: updateError } = await supabaseClient
+              .from('pricing_data')
+              .update({
+                isHoliday: false,
+                holidayName: null,
+              })
+              .eq('id', row.id)
+              .is('isHoliday', null)
+
+            return !updateError
+          }
+        })
+
+      // Wait for all updates in batch to complete
+      const results = await Promise.allSettled(updatePromises)
+      enrichedCount += results.filter(r => r.status === 'fulfilled' && r.value === true).length
 
       console.log(
         `📊 Enriched ${i + batch.length}/${pricingData.length} rows (${enrichedCount} holidays, ${skippedCount} already enriched)...`
@@ -333,7 +375,16 @@ export async function enrichPropertyData(
   const totalStartTime = Date.now()
   const { location, countryCode, calendarificApiKey } = options
 
-  const results = {
+  const results: {
+    temporal: any
+    weather: any
+    holidays: any
+    summary: {
+      totalDuration: number
+      totalEnriched: number
+      cacheHitRate: number
+    }
+  } = {
     temporal: null,
     weather: null,
     holidays: null,
