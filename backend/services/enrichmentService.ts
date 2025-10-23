@@ -1,10 +1,11 @@
 /**
  * Data Enrichment Service
  * Enriches pricing data with weather, holidays, and temporal features
+ * Task3: Now with caching support for weather and holidays
  */
 
-import axios from 'axios'
-import { mapWeatherCode } from '../utils/weatherCodes.js'
+import { fetchWeatherWithCache } from './weatherCacheService.js'
+import { fetchHolidaysWithCache, isHolidayEnrichmentEnabled } from './holidayService.js'
 
 /**
  * Enrich property data with weather information (Supabase version)
@@ -17,6 +18,7 @@ export async function enrichWithWeather(
   location: { latitude: number; longitude: number },
   supabaseClient: any
 ): Promise<any> {
+  const startTime = Date.now()
   const { latitude, longitude } = location
 
   console.log(`🌤️  Starting weather enrichment for property ${propertyId}...`)
@@ -24,13 +26,13 @@ export async function enrichWithWeather(
   // Get all dates from pricing data for this property
   const { data: pricingData, error } = await supabaseClient
     .from('pricing_data')
-    .select('id, date')
+    .select('id, date, temperature') // Include temperature to check if already enriched
     .eq('propertyId', propertyId)
     .order('date', { ascending: true })
 
   if (error || !pricingData || pricingData.length === 0) {
     console.log('⚠️  No pricing data found for this property')
-    return { enriched: 0 }
+    return { enriched: 0, duration: Date.now() - startTime, cacheHitRate: 0 }
   }
 
   const dates = pricingData.map((d: any) => new Date(d.date))
@@ -41,47 +43,36 @@ export async function enrichWithWeather(
     `📅 Date range: ${minDate.toISOString().split('T')[0]} to ${maxDate.toISOString().split('T')[0]}`
   )
 
-  // Call Open-Meteo Historical Weather API (FREE)
+  // Fetch weather data with caching
   try {
-    const response = await axios.get('https://archive-api.open-meteo.com/v1/archive', {
-      params: {
-        latitude,
-        longitude,
-        start_date: minDate.toISOString().split('T')[0],
-        end_date: maxDate.toISOString().split('T')[0],
-        daily:
-          'temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,weathercode,sunshine_duration',
-        timezone: 'auto',
-      },
-      timeout: 15000, // 15 second timeout
-    })
+    const weatherMap = await fetchWeatherWithCache(
+      supabaseClient,
+      latitude,
+      longitude,
+      minDate,
+      maxDate
+    )
 
-    // Create a map of date -> weather data
-    const weatherMap: Record<string, any> = {}
-    response.data.daily.time.forEach((date: string, index: number) => {
-      const weathercode = response.data.daily.weathercode[index]
+    // Calculate cache hit rate for metrics
+    const totalDates = pricingData.length
+    const weatherDates = Object.keys(weatherMap).length
+    const cacheHitRate = weatherDates / totalDates
 
-      // Use centralized weather code mapping
-      const weatherDescription = mapWeatherCode(weathercode)
-
-      weatherMap[date] = {
-        temperature: response.data.daily.temperature_2m_mean[index],
-        precipitation: response.data.daily.precipitation_sum[index],
-        weatherCondition: weatherDescription,
-        sunshineHours: response.data.daily.sunshine_duration[index]
-          ? response.data.daily.sunshine_duration[index] / 3600
-          : null, // Convert seconds to hours
-      }
-    })
-
-    // Update pricing data with weather information (batch updates using Supabase)
+    // Idempotent update: only update rows where temperature is null
     let enrichedCount = 0
-    const BATCH_SIZE = 100 // Update in batches for better performance
+    let skippedCount = 0
+    const BATCH_SIZE = 100
 
     for (let i = 0; i < pricingData.length; i += BATCH_SIZE) {
       const batch = pricingData.slice(i, i + BATCH_SIZE)
 
       for (const row of batch) {
+        // Skip if already enriched (idempotent)
+        if (row.temperature !== null) {
+          skippedCount++
+          continue
+        }
+
         const dateStr = new Date(row.date).toISOString().split('T')[0]
         const weather = weatherMap[dateStr]
 
@@ -91,10 +82,11 @@ export async function enrichWithWeather(
             .update({
               temperature: weather.temperature,
               precipitation: weather.precipitation,
-              weatherCondition: weather.weatherCondition,
+              weatherCondition: weather.weatherDescription,
               sunshineHours: weather.sunshineHours,
             })
             .eq('id', row.id)
+            .is('temperature', null) // Idempotent: only update if null
 
           if (!updateError) {
             enrichedCount++
@@ -104,16 +96,29 @@ export async function enrichWithWeather(
         }
       }
 
-      console.log(`📊 Enriched ${i + batch.length}/${pricingData.length} rows...`)
+      console.log(
+        `📊 Enriched ${i + batch.length}/${pricingData.length} rows (${enrichedCount} updated, ${skippedCount} already enriched)...`
+      )
     }
 
-    console.log(
-      `✅ Weather enrichment complete: ${enrichedCount}/${pricingData.length} rows enriched`
-    )
-    return { enriched: enrichedCount, total: pricingData.length }
+    const duration = Date.now() - startTime
+
+    console.log(`✅ Weather enrichment complete:`)
+    console.log(`   - Updated: ${enrichedCount} rows`)
+    console.log(`   - Skipped (already enriched): ${skippedCount} rows`)
+    console.log(`   - Cache hit rate: ${(cacheHitRate * 100).toFixed(1)}%`)
+    console.log(`   - Duration: ${(duration / 1000).toFixed(2)}s`)
+
+    return {
+      enriched: enrichedCount,
+      skipped: skippedCount,
+      total: pricingData.length,
+      duration,
+      cacheHitRate,
+    }
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error('Weather API Error:', errorMessage)
+    console.error('Weather enrichment error:', errorMessage)
     throw error
   }
 }
@@ -201,99 +206,119 @@ export async function enrichWithHolidays(
   propertyId: string,
   countryCode: string,
   _calendarificApiKey: string | undefined,
-  _supabaseClient: any
+  supabaseClient: any
 ): Promise<any> {
-  console.log(`🎉 Holiday enrichment requested for property ${propertyId} (${countryCode})...`)
-  console.warn('⚠️  Holiday enrichment is not yet migrated to Supabase - skipping')
+  const startTime = Date.now()
 
-  // Temporary implementation - return early until migration is complete
-  return {
-    enriched: 0,
-    total: 0,
-    skipped: true,
-    reason: 'Holiday enrichment not yet migrated to Supabase',
+  console.log(`🎉 Holiday enrichment requested for property ${propertyId} (${countryCode})...`)
+
+  // Check if holiday enrichment is enabled
+  if (!isHolidayEnrichmentEnabled()) {
+    return {
+      enriched: 0,
+      skipped: true,
+      reason: 'Holiday enrichment disabled (HOLIDAYS_ENABLED=false or no API key)',
+      duration: Date.now() - startTime,
+    }
   }
 
-  /*
-  // TODO: Uncomment and test this implementation after migration
-
-  console.log(`🎉 Starting holiday enrichment for property ${propertyId} (${countryCode})...`);
-
+  // Get all dates from pricing data for this property
   const { data: pricingData, error } = await supabaseClient
     .from('pricing_data')
-    .select('id, date')
+    .select('id, date, isHoliday') // Include isHoliday to check if already enriched
     .eq('propertyId', propertyId)
-    .order('date', { ascending: true });
+    .order('date', { ascending: true })
 
   if (error || !pricingData || pricingData.length === 0) {
-    console.log('⚠️  No pricing data found for holiday enrichment');
-    return { enriched: 0, total: 0 };
+    console.log('⚠️  No pricing data found for holiday enrichment')
+    return { enriched: 0, total: 0, duration: Date.now() - startTime }
   }
 
-  const dates = pricingData.map(d => new Date(d.date));
-  const minYear = dates[0].getFullYear();
-  const maxYear = dates[dates.length - 1].getFullYear();
-  const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => minYear + i);
+  const dates = pricingData.map((d: any) => new Date(d.date))
+  const minDate = dates[0]
+  const maxDate = dates[dates.length - 1]
 
-  // Fetch holidays for each year
-  const holidayMap = {};
-  for (const year of years) {
-    try {
-      const response = await axios.get('https://calendarific.com/api/v2/holidays', {
-        params: {
-          api_key: calendarificApiKey,
-          country: countryCode,
-          year
-        },
-        timeout: 10000 // 10 second timeout
-      });
+  console.log(
+    `📅 Date range: ${minDate.toISOString().split('T')[0]} to ${maxDate.toISOString().split('T')[0]}`
+  )
 
-      response.data.response.holidays.forEach(holiday => {
-        const date = holiday.date.iso.split('T')[0]; // YYYY-MM-DD
-        if (!holidayMap[date]) {
-          holidayMap[date] = [];
+  // Fetch holidays with caching
+  try {
+    const holidayMap = await fetchHolidaysWithCache(supabaseClient, countryCode, minDate, maxDate)
+
+    // Idempotent update: only update rows where isHoliday is null
+    let enrichedCount = 0
+    let skippedCount = 0
+    const BATCH_SIZE = 100
+
+    for (let i = 0; i < pricingData.length; i += BATCH_SIZE) {
+      const batch = pricingData.slice(i, i + BATCH_SIZE)
+
+      for (const row of batch) {
+        // Skip if already enriched (idempotent)
+        if (row.isHoliday !== null) {
+          skippedCount++
+          continue
         }
-        holidayMap[date].push(holiday.name);
-      });
-    } catch (error) {
-      console.warn(`Failed to fetch holidays for ${year}:`, error.message);
-    }
-  }
 
-  // Update pricing data with holiday information (batch updates)
-  let enrichedCount = 0;
-  const BATCH_SIZE = 100;
+        const dateStr = new Date(row.date).toISOString().split('T')[0]
+        const holidays = holidayMap[dateStr]
 
-  for (let i = 0; i < pricingData.length; i += BATCH_SIZE) {
-    const batch = pricingData.slice(i, i + BATCH_SIZE);
+        if (holidays && holidays.length > 0) {
+          const { error: updateError } = await supabaseClient
+            .from('pricing_data')
+            .update({
+              isHoliday: true,
+              holidayName: holidays.join(', '),
+            })
+            .eq('id', row.id)
+            .is('isHoliday', null) // Idempotent: only update if null
 
-    for (const row of batch) {
-      const dateStr = new Date(row.date).toISOString().split('T')[0];
-      const holidays = holidayMap[dateStr];
-
-      if (holidays && holidays.length > 0) {
-        const { error: updateError } = await supabaseClient
-          .from('pricing_data')
-          .update({
-            isHoliday: true,
-            holidayName: holidays.join(', ')
-          })
-          .eq('id', row.id);
-
-        if (!updateError) {
-          enrichedCount++;
+          if (!updateError) {
+            enrichedCount++
+          } else {
+            console.warn(`Failed to update row ${row.id}:`, updateError.message)
+          }
         } else {
-          console.warn(`Failed to update row ${row.id}:`, updateError.message);
+          // Mark as non-holiday to avoid re-checking
+          await supabaseClient
+            .from('pricing_data')
+            .update({
+              isHoliday: false,
+              holidayName: null,
+            })
+            .eq('id', row.id)
+            .is('isHoliday', null)
         }
       }
+
+      console.log(
+        `📊 Enriched ${i + batch.length}/${pricingData.length} rows (${enrichedCount} holidays, ${skippedCount} already enriched)...`
+      )
     }
 
-    console.log(`📊 Enriched ${i + batch.length}/${pricingData.length} rows with holiday data...`);
-  }
+    const duration = Date.now() - startTime
 
-  console.log(`✅ Holiday enrichment complete: ${enrichedCount} rows marked as holidays`);
-  return { enriched: enrichedCount, total: pricingData.length };
-  */
+    console.log(`✅ Holiday enrichment complete:`)
+    console.log(`   - Holidays found: ${enrichedCount} rows`)
+    console.log(`   - Skipped (already enriched): ${skippedCount} rows`)
+    console.log(`   - Duration: ${(duration / 1000).toFixed(2)}s`)
+
+    return {
+      enriched: enrichedCount,
+      skipped: skippedCount,
+      total: pricingData.length,
+      duration,
+    }
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Holiday enrichment error:', errorMessage)
+    return {
+      enriched: 0,
+      error: errorMessage,
+      duration: Date.now() - startTime,
+    }
+  }
 }
 
 /**
@@ -305,12 +330,18 @@ export async function enrichPropertyData(
   options: any,
   supabaseClient: any
 ): Promise<any> {
+  const totalStartTime = Date.now()
   const { location, countryCode, calendarificApiKey } = options
 
   const results = {
     temporal: null,
     weather: null,
     holidays: null,
+    summary: {
+      totalDuration: 0,
+      totalEnriched: 0,
+      cacheHitRate: 0,
+    },
   }
 
   try {
@@ -319,15 +350,16 @@ export async function enrichPropertyData(
     // Always enrich temporal features (no API needed, fast)
     results.temporal = await enrichWithTemporalFeatures(propertyId, supabaseClient)
 
-    // Enrich with weather if location provided (requires API call)
+    // Enrich with weather if location provided (with caching)
     if (location && location.latitude && location.longitude) {
       results.weather = await enrichWithWeather(propertyId, location, supabaseClient)
     } else {
       console.log('⚠️  Skipping weather enrichment - no location provided')
+      results.weather = { skipped: true, reason: 'No location provided' }
     }
 
-    // Enrich with holidays if country code and API key provided
-    if (countryCode && calendarificApiKey) {
+    // Enrich with holidays if country code provided (with caching and feature flag)
+    if (countryCode) {
       results.holidays = await enrichWithHolidays(
         propertyId,
         countryCode,
@@ -335,10 +367,30 @@ export async function enrichPropertyData(
         supabaseClient
       )
     } else {
-      console.log('⚠️  Skipping holiday enrichment - no country code or API key provided')
+      console.log('⚠️  Skipping holiday enrichment - no country code provided')
+      results.holidays = { skipped: true, reason: 'No country code provided' }
+    }
+
+    // Calculate summary metrics
+    const totalDuration = Date.now() - totalStartTime
+    const totalEnriched =
+      (results.temporal?.enriched || 0) +
+      (results.weather?.enriched || 0) +
+      (results.holidays?.enriched || 0)
+
+    const cacheHitRate = results.weather?.cacheHitRate || 0
+
+    results.summary = {
+      totalDuration,
+      totalEnriched,
+      cacheHitRate,
     }
 
     console.log(`\n✅ Enrichment pipeline complete!`)
+    console.log(`   - Total enriched: ${totalEnriched} rows`)
+    console.log(`   - Total duration: ${(totalDuration / 1000).toFixed(2)}s`)
+    console.log(`   - Weather cache hit rate: ${(cacheHitRate * 100).toFixed(1)}%`)
+
     return {
       success: true,
       results,
@@ -346,6 +398,9 @@ export async function enrichPropertyData(
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     console.error('❌ Enrichment pipeline error:', error)
+
+    results.summary.totalDuration = Date.now() - totalStartTime
+
     return {
       success: false,
       error: errorMessage,
