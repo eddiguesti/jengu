@@ -19,6 +19,7 @@ import {
   usePriceExplain,
 } from '@/hooks/queries/useDirectorAnalytics'
 import { TrendingUp, TrendingDown, Target, Activity, AlertCircle } from 'lucide-react'
+import { DashboardSkeleton } from '@/components/ui/Skeleton'
 
 interface KPICardProps {
   label: string
@@ -128,6 +129,31 @@ export function DirectorDashboard() {
             Upload a CSV file from the Data page to view Director Dashboard analytics
           </p>
         </div>
+      </div>
+    )
+  }
+
+  // Show skeleton loaders while data is loading
+  const isAnyLoading =
+    revenueLoading ||
+    paceLoading ||
+    adrLoading ||
+    heatmapLoading ||
+    forecastLoading ||
+    elasticityLoading ||
+    waterfallLoading
+
+  if (isAnyLoading) {
+    return (
+      <div className="space-y-6 p-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-text">Director Dashboard</h1>
+          <p className="mt-1 text-sm text-muted">
+            Boardroom-grade pricing intelligence and ROI metrics
+          </p>
+        </div>
+        <DashboardSkeleton />
       </div>
     )
   }

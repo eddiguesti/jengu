@@ -26,6 +26,7 @@ import {
   useDeleteFile,
 } from '../hooks/queries/useFileData'
 import { ColumnMappingModal } from '../components/data/ColumnMappingModal'
+import { EnrichmentProgress } from '../components/features/EnrichmentProgress'
 import apiClient from '../lib/api/client'
 import clsx from 'clsx'
 
@@ -881,6 +882,22 @@ export const Data = () => {
                 variant={allEnrichmentComplete ? 'success' : 'primary'}
               />
             </Card>
+
+            {/* Real-time Enrichment Progress Tracking */}
+            {uploadedFiles && uploadedFiles.length > 0 && uploadedFiles[0]?.id && (
+              <EnrichmentProgress
+                propertyId={uploadedFiles[0].id}
+                onComplete={() => {
+                  console.log('✅ Enrichment completed - refreshing data')
+                  // Update features to completed state
+                  setFeatures(prev => prev.map(f => ({ ...f, status: 'complete', progress: 100 })))
+                }}
+                onError={error => {
+                  console.error('❌ Enrichment error:', error)
+                  setFeatures(prev => prev.map(f => ({ ...f, status: 'error', progress: 0 })))
+                }}
+              />
+            )}
 
             {/* Feature Cards */}
             <div className="grid grid-cols-1 gap-4">
