@@ -43,7 +43,7 @@ export function ConformalRangeChart({ data, loading }: ConformalRangeChartProps)
 
   // Find the global min and max for the gauge range
   const allValues = [
-    ...data.intervals.flatMap((i) => [i.lower, i.upper]),
+    ...data.intervals.flatMap(i => [i.lower, i.upper]),
     data.currentPrice,
     data.recommended.price,
   ]
@@ -51,13 +51,13 @@ export function ConformalRangeChart({ data, loading }: ConformalRangeChartProps)
   const maxValue = Math.max(...allValues)
 
   // Calculate position of current price as percentage
-  const currentPricePercent =
-    ((data.currentPrice - minValue) / (maxValue - minValue)) * 100
+  // const currentPricePercent =
+  //   ((data.currentPrice - minValue) / (maxValue - minValue)) * 100
 
   const option: EChartsOption = {
     backgroundColor: 'transparent',
     tooltip: {
-      formatter: (params: any) => {
+      formatter: () => {
         return `<div style="text-align: left;">
           <strong>Current Price:</strong> $${data.currentPrice}<br/>
           <strong>Recommended:</strong> $${data.recommended.price}<br/>
@@ -140,8 +140,7 @@ export function ConformalRangeChart({ data, loading }: ConformalRangeChartProps)
         <div>
           <h3 className="text-lg font-semibold text-gray-100">Conformal Safe Price Range</h3>
           <p className="text-sm text-gray-400">
-            95% confidence interval: ${data.recommended.lowerBound} - $
-            {data.recommended.upperBound}
+            95% confidence interval: ${data.recommended.lowerBound} - ${data.recommended.upperBound}
           </p>
         </div>
         <button
@@ -174,18 +173,13 @@ export function ConformalRangeChart({ data, loading }: ConformalRangeChartProps)
           </thead>
           <tbody>
             {data.intervals.map((interval, i) => (
-              <tr
-                key={i}
-                className={i === 1 ? 'bg-gray-800/50' : 'bg-gray-900/20'}
-              >
+              <tr key={i} className={i === 1 ? 'bg-gray-800/50' : 'bg-gray-900/20'}>
                 <td className="px-4 py-2 text-gray-300">
                   {(interval.confidence * 100).toFixed(0)}%
                 </td>
                 <td className="px-4 py-2 text-gray-300">${interval.lower}</td>
                 <td className="px-4 py-2 text-gray-300">${interval.upper}</td>
-                <td className="px-4 py-2 text-gray-300">
-                  ${interval.upper - interval.lower}
-                </td>
+                <td className="px-4 py-2 text-gray-300">${interval.upper - interval.lower}</td>
               </tr>
             ))}
           </tbody>

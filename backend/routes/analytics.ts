@@ -229,8 +229,9 @@ router.post(
     // Group by month and calculate revenue
     const monthlyRevenue = new Map<string, { actual: number; count: number }>()
 
-    transformedData.forEach((row) => {
-      const date = new Date(row.date || row.check_in || '')
+    transformedData.forEach(row => {
+      const dateStr = row.date || (row['check_in'] as string) || ''
+      const date = new Date(dateStr)
       if (isNaN(date.getTime())) return
 
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
@@ -254,9 +255,12 @@ router.post(
     const actual = sorted.map(([_, value]) => Math.round(value.actual))
 
     // Simulate optimized revenue (10-15% lift based on enriched data)
-    const optimized = actual.map((rev) => Math.round(rev * 1.125))
+    const optimized = actual.map(rev => Math.round(rev * 1.125))
 
-    const revpau_lift_pct = ((optimized.reduce((a, b) => a + b, 0) - actual.reduce((a, b) => a + b, 0)) / actual.reduce((a, b) => a + b, 0)) * 100
+    const revpau_lift_pct =
+      ((optimized.reduce((a, b) => a + b, 0) - actual.reduce((a, b) => a + b, 0)) /
+        actual.reduce((a, b) => a + b, 0)) *
+      100
 
     res.json({
       success: true,
@@ -289,17 +293,18 @@ router.post(
     const leadBuckets = ['0-1', '2-7', '8-21', '22-90', '91+']
     const bucketData = new Map<string, { occupancies: number[]; count: number }>()
 
-    leadBuckets.forEach((bucket) => {
+    leadBuckets.forEach(bucket => {
       bucketData.set(bucket, { occupancies: [], count: 0 })
     })
 
     // Calculate lead time for each row and bucket it
-    transformedData.forEach((row) => {
+    transformedData.forEach(row => {
       const occupancy = parseFloat(String(row.occupancy || 0)) / 100
       if (isNaN(occupancy)) return
 
       // Simulate lead time based on day of week (mock - in real app, calculate from booking date)
-      const date = new Date(row.date || row.check_in || '')
+      const dateStr2 = row.date || (row['check_in'] as string) || ''
+      const date = new Date(dateStr2)
       const dayOfWeek = date.getDay()
       const leadDays = dayOfWeek * 13 // Approximate lead time
 
@@ -315,18 +320,18 @@ router.post(
     })
 
     // Calculate averages for each bucket
-    const actual = leadBuckets.map((bucket) => {
+    const actual = leadBuckets.map(bucket => {
       const entry = bucketData.get(bucket)!
-      return entry.count > 0
-        ? entry.occupancies.reduce((a, b) => a + b, 0) / entry.count
-        : 0
+      return entry.count > 0 ? entry.occupancies.reduce((a, b) => a + b, 0) / entry.count : 0
     })
 
     // Set targets (typical targets for each lead bucket)
-    const target = [0.92, 0.80, 0.70, 0.50, 0.25]
+    const target = [0.92, 0.8, 0.7, 0.5, 0.25]
 
     // Model projection (use forecast model adjustments)
-    const model = actual.map((val, i) => Math.min(0.99, val * 1.02 + 0.01 * (leadBuckets.length - i)))
+    const model = actual.map((val, i) =>
+      Math.min(0.99, val * 1.02 + 0.01 * (leadBuckets.length - i))
+    )
 
     res.json({
       success: true,
@@ -358,8 +363,9 @@ router.post(
     // Group by month and calculate ADR
     const monthlyADR = new Map<string, { totalPrice: number; count: number }>()
 
-    transformedData.forEach((row) => {
-      const date = new Date(row.date || row.check_in || '')
+    transformedData.forEach(row => {
+      const dateStr3 = row.date || (row['check_in'] as string) || ''
+      const date = new Date(dateStr3)
       if (isNaN(date.getTime())) return
 
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
@@ -386,7 +392,7 @@ router.post(
     const marketMedian = allPrices[Math.floor(allPrices.length / 2)]
 
     // Convert to index (100 = market parity)
-    const propertyIndex = adr.map((price) => (price / marketMedian) * 100)
+    const propertyIndex = adr.map(price => (price / marketMedian) * 100)
     const marketIndex = new Array(dates.length).fill(100)
 
     res.json({
@@ -422,15 +428,18 @@ router.post(
     const matrix: number[][] = seasons.map(() => new Array(leadBuckets.length).fill(0))
     const counts: number[][] = seasons.map(() => new Array(leadBuckets.length).fill(0))
 
-    transformedData.forEach((row) => {
-      const date = new Date(row.date || row.check_in || '')
+    transformedData.forEach(row => {
+      const dateStr4 = row.date || (row['check_in'] as string) || ''
+      const date = new Date(dateStr4)
       if (isNaN(date.getTime())) return
 
       // Determine season
       const month = date.getMonth()
       let seasonIndex = 0
-      if (month >= 2 && month <= 4) seasonIndex = 1 // Spring
-      else if (month >= 5 && month <= 7) seasonIndex = 2 // Summer
+      if (month >= 2 && month <= 4)
+        seasonIndex = 1 // Spring
+      else if (month >= 5 && month <= 7)
+        seasonIndex = 2 // Summer
       else if (month >= 8 && month <= 10) seasonIndex = 3 // Fall
 
       // Simulate lead bucket
@@ -497,7 +506,9 @@ router.post(
       forecast.push(item.predictedOccupancy)
       // For actual, use historical data if available, otherwise 0 (future dates)
       const historicalRow = transformedData.find(
-        (row) => new Date(row.date || row.check_in || '').toISOString().split('T')[0] === item.date
+        row =>
+          new Date(row.date || (row['check_in'] as string) || '').toISOString().split('T')[0] ===
+          item.date
       )
       actual.push(historicalRow ? parseFloat(String(historicalRow.occupancy || 0)) : 0)
     })
@@ -531,7 +542,7 @@ router.post(
     const transformedData = transformDataForAnalytics(data as never[])
 
     // Calculate median price
-    const prices = transformedData.map((row) => parseFloat(String(row.price || 0))).filter((p) => p > 0)
+    const prices = transformedData.map(row => parseFloat(String(row.price || 0))).filter(p => p > 0)
     prices.sort((a, b) => a - b)
     const medianPrice = prices[Math.floor(prices.length / 2)]
 
@@ -542,15 +553,15 @@ router.post(
     const priceGrid = Array.from({ length: 21 }, (_, i) => Math.round(minPrice + i * step))
 
     // Calculate elasticity curve (demand vs price)
-    const probMean = priceGrid.map((price) => {
+    const probMean = priceGrid.map(price => {
       // Simple elasticity model: probability decreases as price increases
       const priceRatio = price / medianPrice
       return Math.max(0.05, Math.min(0.95, 0.9 / Math.pow(priceRatio, 1.5)))
     })
 
     // Confidence bands
-    const probLow = probMean.map((p) => Math.max(0, p - 0.1))
-    const probHigh = probMean.map((p) => Math.min(1, p + 0.1))
+    const probLow = probMean.map(p => Math.max(0, p - 0.1))
+    const probHigh = probMean.map(p => Math.min(1, p + 0.1))
 
     res.json({
       success: true,
@@ -585,26 +596,31 @@ router.post(
     let targetRow = transformedData[transformedData.length - 1]
     if (date) {
       const found = transformedData.find(
-        (row) => new Date(row.date || row.check_in || '').toISOString().split('T')[0] === date
+        row =>
+          new Date(row.date || (row['check_in'] as string) || '').toISOString().split('T')[0] ===
+          date
       )
       if (found) targetRow = found
     }
 
     // Calculate baseline from historical average
-    const avgPrice = transformedData.reduce((sum, row) => sum + parseFloat(String(row.price || 0)), 0) / transformedData.length
+    const avgPrice =
+      transformedData.reduce((sum, row) => sum + parseFloat(String(row.price || 0)), 0) /
+      transformedData.length
 
     // Build waterfall steps
     const baseline = Math.round(avgPrice)
     const temperature = parseFloat(String(targetRow.temperature || 0))
     const occupancy = parseFloat(String(targetRow.occupancy || 70))
-    const weather = targetRow.weather || targetRow.weather_condition || 'Clear'
+    const weatherStr = (targetRow.weather || targetRow['weather_condition'] || 'Clear') as string
 
     // Calculate adjustments
     const marketShift = Math.round((occupancy - 70) / 10) * 5 // Market demand
     const tempAdj = temperature > 25 ? 8 : temperature < 10 ? -5 : 0 // Weather impact
     const occGap = Math.round((occupancy - 80) / 5) * 3 // Occupancy gap
     const riskClamp = occGap < -10 ? -8 : 0 // Risk management
-    const weatherBonus = weather.toLowerCase().includes('clear') || weather.toLowerCase().includes('sun') ? 6 : 0
+    const weatherBonus =
+      weatherStr.toLowerCase().includes('clear') || weatherStr.toLowerCase().includes('sun') ? 6 : 0
 
     const steps = [
       { name: 'Baseline', value: baseline },
@@ -644,9 +660,10 @@ router.post(
 
     // Identify weekend vs weekday patterns (proxy for events)
     const eventTypes = ['Weekday', 'Weekend', 'Holiday']
-    const upliftData = eventTypes.map((type) => {
-      const rows = transformedData.filter((row) => {
-        const date = new Date(row.date || row.check_in || '')
+    const upliftData = eventTypes.map(type => {
+      const rows = transformedData.filter(row => {
+        const dateStr5 = row.date || (row['check_in'] as string) || ''
+        const date = new Date(dateStr5)
         const dayOfWeek = date.getDay()
 
         if (type === 'Weekday') return dayOfWeek >= 1 && dayOfWeek <= 5
@@ -659,13 +676,15 @@ router.post(
         return false
       })
 
-      const avgOccupancy = rows.length > 0
-        ? rows.reduce((sum, row) => sum + parseFloat(String(row.occupancy || 0)), 0) / rows.length
-        : 0
+      const avgOccupancy =
+        rows.length > 0
+          ? rows.reduce((sum, row) => sum + parseFloat(String(row.occupancy || 0)), 0) / rows.length
+          : 0
 
-      const avgPrice = rows.length > 0
-        ? rows.reduce((sum, row) => sum + parseFloat(String(row.price || 0)), 0) / rows.length
-        : 0
+      const avgPrice =
+        rows.length > 0
+          ? rows.reduce((sum, row) => sum + parseFloat(String(row.price || 0)), 0) / rows.length
+          : 0
 
       return {
         type,
@@ -703,12 +722,13 @@ router.post(
       day_of_week: [],
     }
 
-    transformedData.forEach((row) => {
+    transformedData.forEach(row => {
       featureData.price.push(parseFloat(String(row.price || 0)))
       featureData.occupancy.push(parseFloat(String(row.occupancy || 0)))
       featureData.temperature.push(parseFloat(String(row.temperature || 0)))
 
-      const date = new Date(row.date || row.check_in || '')
+      const dateStr6 = row.date || (row['check_in'] as string) || ''
+      const date = new Date(dateStr6)
       featureData.day_of_week.push(date.getDay())
     })
 
@@ -727,8 +747,8 @@ router.post(
       return denominator === 0 ? 0 : numerator / denominator
     }
 
-    const matrix = features.map((feature1) =>
-      features.map((feature2) => {
+    const matrix = features.map(feature1 =>
+      features.map(feature2 => {
         const corr = pearsonCorrelation(featureData[feature1], featureData[feature2])
         return Math.round(corr * 100) / 100 // Round to 2 decimals
       })
@@ -760,15 +780,17 @@ router.post(
     const transformedData = transformDataForAnalytics(data as never[])
 
     // Calculate median price for reference
-    const prices = transformedData.map((row) => parseFloat(String(row.price || 0))).filter((p) => p > 0)
+    const prices = transformedData.map(row => parseFloat(String(row.price || 0))).filter(p => p > 0)
     prices.sort((a, b) => a - b)
     const medianPrice = prices[Math.floor(prices.length / 2)]
 
     // Generate price grid
-    const priceGrid = Array.from({ length: 20 }, (_, i) => Math.round(medianPrice * (0.7 + i * 0.03)))
+    const priceGrid = Array.from({ length: 20 }, (_, i) =>
+      Math.round(medianPrice * (0.7 + i * 0.03))
+    )
 
     // Calculate revenue and occupancy for each price point
-    const frontierData = priceGrid.map((price) => {
+    const frontierData = priceGrid.map(price => {
       // Elasticity: higher price = lower occupancy
       const priceRatio = price / medianPrice
       const occupancy = Math.max(0.3, Math.min(0.95, 0.85 / Math.pow(priceRatio, 1.2)))
@@ -803,12 +825,12 @@ router.post(
     // Group data into strategies (conservative, balanced, aggressive)
     const strategies = ['Conservative', 'Balanced', 'Aggressive']
 
-    const scatterData = strategies.map((strategy, idx) => {
+    const scatterData = strategies.map(strategy => {
       // Filter data based on strategy (price relative to median)
-      const prices = transformedData.map((row) => parseFloat(String(row.price || 0)))
+      const prices = transformedData.map(row => parseFloat(String(row.price || 0)))
       const medianPrice = prices.sort((a, b) => a - b)[Math.floor(prices.length / 2)]
 
-      const strategyRows = transformedData.filter((row) => {
+      const strategyRows = transformedData.filter(row => {
         const price = parseFloat(String(row.price || 0))
         const ratio = price / medianPrice
 
@@ -819,21 +841,21 @@ router.post(
       })
 
       // Calculate expected return (revenue) and risk (std dev)
-      const revenues = strategyRows.map((row) => {
+      const revenues = strategyRows.map(row => {
         const price = parseFloat(String(row.price || 0))
         const occ = parseFloat(String(row.occupancy || 0)) / 100
         return price * occ
       })
 
-      const expectedReturn = revenues.length > 0
-        ? revenues.reduce((a, b) => a + b, 0) / revenues.length
-        : 0
+      const expectedReturn =
+        revenues.length > 0 ? revenues.reduce((a, b) => a + b, 0) / revenues.length : 0
 
       // Risk = standard deviation
       const mean = expectedReturn
-      const variance = revenues.length > 0
-        ? revenues.reduce((sum, rev) => sum + Math.pow(rev - mean, 2), 0) / revenues.length
-        : 0
+      const variance =
+        revenues.length > 0
+          ? revenues.reduce((sum, rev) => sum + Math.pow(rev - mean, 2), 0) / revenues.length
+          : 0
       const risk = Math.sqrt(variance)
 
       return {
@@ -864,7 +886,7 @@ router.post(
     const transformedData = transformDataForAnalytics(data as never[])
 
     // Calculate price statistics
-    const prices = transformedData.map((row) => parseFloat(String(row.price || 0))).filter((p) => p > 0)
+    const prices = transformedData.map(row => parseFloat(String(row.price || 0))).filter(p => p > 0)
     prices.sort((a, b) => a - b)
 
     const mean = prices.reduce((a, b) => a + b, 0) / prices.length
@@ -874,7 +896,7 @@ router.post(
     // Conformal prediction intervals (90%, 95%, 99%)
     const intervals = [
       {
-        confidence: 0.90,
+        confidence: 0.9,
         lower: Math.round(mean - 1.645 * stdDev),
         upper: Math.round(mean + 1.645 * stdDev),
       },

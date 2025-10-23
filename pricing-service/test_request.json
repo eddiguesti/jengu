@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "userId": "test-user-123",
+    "propertyId": "test-prop-456"
+  },
+  "stay_date": "2025-11-01",
+  "quote_time": "2025-10-22T12:00:00Z",
+  "product": {
+    "type": "standard",
+    "refundable": false,
+    "los": 2
+  },
+  "inventory": {
+    "capacity": 50,
+    "remaining": 10,
+    "overbook_limit": 0
+  },
+  "market": {
+    "comp_price_p10": 90.0,
+    "comp_price_p50": 120.0,
+    "comp_price_p90": 150.0
+  },
+  "context": {
+    "season": "Summer",
+    "day_of_week": 5,
+    "weather": {}
+  },
+  "toggles": {
+    "aggressive": false,
+    "conservative": false,
+    "use_ml": true,
+    "use_competitors": true,
+    "apply_seasonality": true
+  },
+  "allowed_price_grid": null
+}

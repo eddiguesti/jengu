@@ -58,7 +58,7 @@ router.post(
     const response = await axios.post(
       'https://api.anthropic.com/v1/messages',
       {
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 256,
         system: systemPrompt,
         messages: [
@@ -113,7 +113,7 @@ Total Data Points: ${data.dates.length}
     const response = await axios.post(
       'https://api.anthropic.com/v1/messages',
       {
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 2048,
         system:
           'You are a pricing analyst. Analyze the data and provide insights about patterns, trends, and optimization opportunities.',
@@ -178,7 +178,7 @@ Format as JSON:
     const response = await axios.post(
       'https://api.anthropic.com/v1/messages',
       {
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 4096,
         system: systemPrompt,
         messages: [

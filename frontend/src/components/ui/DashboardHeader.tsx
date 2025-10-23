@@ -10,6 +10,43 @@ interface DashboardHeaderProps {
   showOverlays?: boolean
 }
 
+// Extract KPICard component to avoid creating it during render
+const KPICard = ({
+  label,
+  value,
+  suffix = '',
+  showTrend = true,
+}: {
+  label: string
+  value: number
+  suffix?: string
+  showTrend?: boolean
+}) => {
+  const isPositive = value > 0
+  const isNeutral = value === 0
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-gray-400">{label}</p>
+          <p className="mt-1 text-2xl font-semibold text-gray-100">
+            {value.toFixed(1)}
+            {suffix}
+          </p>
+        </div>
+        {showTrend && (
+          <div className="mt-1">
+            {isPositive && <TrendingUp className="h-5 w-5 text-green-400" />}
+            {isNeutral && <Minus className="h-5 w-5 text-gray-400" />}
+            {!isPositive && !isNeutral && <TrendingDown className="h-5 w-5 text-red-400" />}
+          </div>
+        )}
+      </div>
+    </Card>
+  )
+}
+
 export function DashboardHeader({
   kpis,
   showFilters = true,
@@ -17,42 +54,6 @@ export function DashboardHeader({
 }: DashboardHeaderProps) {
   const { filters, setFilter, overlays, toggleOverlay, usePricingDashV2, toggleDashboardVersion } =
     useDashboardStore()
-
-  const KPICard = ({
-    label,
-    value,
-    suffix = '',
-    showTrend = true,
-  }: {
-    label: string
-    value: number
-    suffix?: string
-    showTrend?: boolean
-  }) => {
-    const isPositive = value > 0
-    const isNeutral = value === 0
-
-    return (
-      <Card className="p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm text-gray-400">{label}</p>
-            <p className="mt-1 text-2xl font-semibold text-gray-100">
-              {value.toFixed(1)}
-              {suffix}
-            </p>
-          </div>
-          {showTrend && (
-            <div className="mt-1">
-              {isPositive && <TrendingUp className="h-5 w-5 text-green-400" />}
-              {isNeutral && <Minus className="h-5 w-5 text-gray-400" />}
-              {!isPositive && !isNeutral && <TrendingDown className="h-5 w-5 text-red-400" />}
-            </div>
-          )}
-        </div>
-      </Card>
-    )
-  }
 
   return (
     <div className="space-y-4">
@@ -99,7 +100,7 @@ export function DashboardHeader({
                   <label className="mb-1 block text-xs text-gray-400">Property</label>
                   <Select
                     value={filters.propertyId || ''}
-                    onChange={(value) => setFilter('propertyId', value)}
+                    onChange={e => setFilter('propertyId', e.target.value)}
                     options={[
                       { value: '', label: 'All Properties' },
                       { value: 'prop1', label: 'Property 1' },
@@ -111,7 +112,7 @@ export function DashboardHeader({
                   <label className="mb-1 block text-xs text-gray-400">Product Type</label>
                   <Select
                     value={filters.productType || ''}
-                    onChange={(value) => setFilter('productType', value)}
+                    onChange={e => setFilter('productType', e.target.value)}
                     options={[
                       { value: '', label: 'All Products' },
                       { value: 'standard', label: 'Standard' },
@@ -123,7 +124,7 @@ export function DashboardHeader({
                   <label className="mb-1 block text-xs text-gray-400">Lead Bucket</label>
                   <Select
                     value={filters.leadBucket || ''}
-                    onChange={(value) => setFilter('leadBucket', value)}
+                    onChange={e => setFilter('leadBucket', e.target.value)}
                     options={[
                       { value: '', label: 'All Leads' },
                       { value: '0-7', label: '0-7 days' },
@@ -137,10 +138,10 @@ export function DashboardHeader({
                   <label className="mb-1 block text-xs text-gray-400">Strategy Mode</label>
                   <Select
                     value={filters.strategyMode || 'balanced'}
-                    onChange={(value) =>
+                    onChange={e =>
                       setFilter(
                         'strategyMode',
-                        value as 'conservative' | 'balanced' | 'aggressive'
+                        e.target.value as 'conservative' | 'balanced' | 'aggressive'
                       )
                     }
                     options={[

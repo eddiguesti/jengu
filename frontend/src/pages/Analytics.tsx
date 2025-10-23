@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Insights } from './Insights'
 import { DirectorDashboard } from './DirectorDashboard'
@@ -24,25 +23,11 @@ export const Analytics = () => {
   const { unifyAnalyticsPages, defaultToAdvancedAnalytics } = useNavigationStore()
   const { usePricingDashV2 } = useDashboardStore()
 
-  // Determine initial view based on query param or feature flag
+  // Derive view state from URL query param (single source of truth)
   const queryView = searchParams.get('view')
-  const initialView =
-    queryView === 'advanced' || defaultToAdvancedAnalytics ? 'advanced' : 'basic'
-
-  const [activeView, setActiveView] = useState<'basic' | 'advanced'>(initialView)
-
-  // Sync view with URL query param
-  useEffect(() => {
-    if (queryView === 'advanced' && activeView !== 'advanced') {
-      setActiveView('advanced')
-    } else if (!queryView && activeView === 'advanced') {
-      // Only sync if explicitly set to advanced
-      setSearchParams({ view: 'advanced' })
-    }
-  }, [queryView, activeView, setSearchParams])
+  const activeView = queryView === 'advanced' || defaultToAdvancedAnalytics ? 'advanced' : 'basic'
 
   const handleViewChange = (view: 'basic' | 'advanced') => {
-    setActiveView(view)
     if (view === 'advanced') {
       setSearchParams({ view: 'advanced' })
     } else {

@@ -1,0 +1,20 @@
+# Python Pricing ML Service Dependencies
+# Simplified without heavy ML libs to avoid build issues on Windows
+
+# Web Framework
+fastapi
+uvicorn[standard]
+pydantic
+
+# Data manipulation
+numpy
+pandas
+
+# HTTP Client
+httpx
+
+# Environment Variables
+python-dotenv
+
+# CORS Support
+python-multipart
