@@ -4,7 +4,7 @@
  */
 
 import Redis from 'ioredis'
-import { logger } from '../middleware/logger.js'
+import { logger } from '../../middleware/logger.js'
 
 // Redis connection options with resilience
 const redisOptions = {

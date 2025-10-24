@@ -1,143 +1,96 @@
-import { useSearchParams } from 'react-router-dom'
-import { Insights } from './Insights'
-import { DirectorDashboard } from './DirectorDashboard'
-import { useDashboardStore } from '@/stores/useDashboardStore'
-import { useNavigationStore } from '@/stores/useNavigationStore'
-import { BarChart3, Crown, ToggleRight } from 'lucide-react'
+import { BarChart3, TrendingUp, DollarSign, Users } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 
 /**
- * Unified Analytics Page
+ * Analytics Page - Placeholder
  *
- * Combines Insights (basic analytics) and Director Dashboard (advanced analytics)
- * into a single page with a view toggle.
- *
- * Controlled by:
- * - URL query param: ?view=advanced
- * - Feature flag: defaultToAdvancedAnalytics
- * - Dashboard store: usePricingDashV2
+ * TODO: Implement analytics dashboard with:
+ * - Revenue insights
+ * - Demand forecasting
+ * - Competitor analysis
+ * - Price optimization recommendations
  */
 
 export const Analytics = () => {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const { unifyAnalyticsPages, defaultToAdvancedAnalytics } = useNavigationStore()
-  const { usePricingDashV2 } = useDashboardStore()
-
-  // Derive view state from URL query param (single source of truth)
-  const queryView = searchParams.get('view')
-  const activeView = queryView === 'advanced' || defaultToAdvancedAnalytics ? 'advanced' : 'basic'
-
-  const handleViewChange = (view: 'basic' | 'advanced') => {
-    if (view === 'advanced') {
-      setSearchParams({ view: 'advanced' })
-    } else {
-      setSearchParams({}) // Remove query param
-    }
-  }
-
-  // If analytics pages are NOT unified (flag off), decide which to show
-  if (!unifyAnalyticsPages) {
-    // Default to Director Dashboard if V2 flag is on, otherwise Insights
-    return usePricingDashV2 ? <DirectorDashboard /> : <Insights />
-  }
-
-  // Unified view with toggle
   return (
-    <div className="space-y-6">
-      {/* View Toggle Header */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-100">Analytics</h1>
-            <p className="text-sm text-gray-400">
-              {activeView === 'basic'
-                ? 'Comprehensive insights and trend analysis'
-                : 'Executive-level analytics with advanced visualizations'}
-            </p>
-          </div>
-
-          {/* Toggle Buttons */}
-          <div className="flex items-center gap-2 rounded-lg bg-gray-800 p-1">
-            <button
-              onClick={() => handleViewChange('basic')}
-              className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${
-                activeView === 'basic'
-                  ? 'bg-[#EBFF57] text-black shadow-md'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              <BarChart3 className="h-4 w-4" />
-              <span>Overview</span>
-            </button>
-            <button
-              onClick={() => handleViewChange('advanced')}
-              className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${
-                activeView === 'advanced'
-                  ? 'bg-[#EBFF57] text-black shadow-md'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              <Crown className="h-4 w-4" />
-              <span>Advanced View</span>
-              <span className="ml-1 rounded bg-green-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-green-400">
-                New
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* View Description */}
-        <div className="mt-4 flex items-start gap-3 rounded-lg bg-gray-800/50 p-3">
-          {activeView === 'basic' ? (
-            <>
-              <BarChart3 className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#EBFF57]" />
-              <div>
-                <h3 className="font-semibold text-gray-100">Overview Analytics</h3>
-                <p className="text-sm text-gray-400">
-                  Weather correlations, forecasting, market sentiment, and AI-powered insights.
-                  Perfect for daily analysis and trend monitoring.
-                </p>
-              </div>
-            </>
-          ) : (
-            <>
-              <Crown className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#EBFF57]" />
-              <div>
-                <h3 className="font-semibold text-gray-100">Advanced Analytics</h3>
-                <p className="text-sm text-gray-400">
-                  Executive-level dashboards with interactive charts, revenue optimization analysis,
-                  elasticity curves, and predictive modeling. Boardroom-grade visualizations.
-                </p>
-              </div>
-            </>
-          )}
-        </div>
-      </Card>
-
-      {/* Content based on active view */}
-      <div className="analytics-content">
-        {activeView === 'basic' ? <Insights /> : <DirectorDashboard />}
+    <div className="space-y-6 p-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-text mb-2">Analytics</h1>
+        <p className="text-muted">
+          Comprehensive insights and trend analysis for your pricing strategy
+        </p>
       </div>
 
-      {/* Quick Toggle FAB (Floating Action Button) */}
-      <button
-        onClick={() => handleViewChange(activeView === 'basic' ? 'advanced' : 'basic')}
-        className="fixed bottom-20 right-4 z-40 flex h-14 items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-5 py-3 text-sm font-medium text-white shadow-lg transition-all hover:scale-110 hover:shadow-xl"
-        title={`Switch to ${activeView === 'basic' ? 'Advanced' : 'Overview'} View`}
-      >
-        {activeView === 'basic' ? (
-          <>
-            <Crown className="h-5 w-5" />
-            <span>Advanced</span>
-          </>
-        ) : (
-          <>
-            <BarChart3 className="h-5 w-5" />
-            <span>Overview</span>
-          </>
-        )}
-        <ToggleRight className="h-5 w-5" />
-      </button>
+      {/* Placeholder Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-muted mb-1">Total Revenue</p>
+              <p className="text-3xl font-bold text-text">€24,500</p>
+              <p className="text-xs text-success mt-1">+12.5% vs last month</p>
+            </div>
+            <DollarSign className="w-8 h-8 text-primary" />
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-muted mb-1">Avg Occupancy</p>
+              <p className="text-3xl font-bold text-text">78%</p>
+              <p className="text-xs text-success mt-1">+5.2% vs last month</p>
+            </div>
+            <Users className="w-8 h-8 text-primary" />
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-muted mb-1">Avg Price</p>
+              <p className="text-3xl font-bold text-text">€185</p>
+              <p className="text-xs text-error mt-1">-3.1% vs last month</p>
+            </div>
+            <TrendingUp className="w-8 h-8 text-primary" />
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-muted mb-1">Bookings</p>
+              <p className="text-3xl font-bold text-text">132</p>
+              <p className="text-xs text-success mt-1">+8.3% vs last month</p>
+            </div>
+            <BarChart3 className="w-8 h-8 text-primary" />
+          </div>
+        </Card>
+      </div>
+
+      {/* Coming Soon Notice */}
+      <Card className="p-12 text-center">
+        <div className="max-w-md mx-auto">
+          <BarChart3 className="w-16 h-16 text-primary mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-text mb-2">Analytics Dashboard Coming Soon</h2>
+          <p className="text-muted mb-6">
+            We're building a comprehensive analytics dashboard with revenue insights, demand
+            forecasting, competitor analysis, and AI-powered recommendations.
+          </p>
+          <div className="text-sm text-muted">
+            <p className="font-semibold mb-2">Planned Features:</p>
+            <ul className="text-left space-y-1 max-w-xs mx-auto">
+              <li>• Revenue trend analysis</li>
+              <li>• Weather impact correlation</li>
+              <li>• Demand forecasting models</li>
+              <li>• Competitor price tracking</li>
+              <li>• AI-powered pricing recommendations</li>
+              <li>• Custom report generation</li>
+            </ul>
+          </div>
+        </div>
+      </Card>
     </div>
   )
 }

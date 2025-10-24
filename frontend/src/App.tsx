@@ -22,6 +22,11 @@ const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.S
 // New unified Analytics page (combines Insights + Director)
 const Analytics = lazy(() => import('./pages/Analytics').then(m => ({ default: m.Analytics })))
 
+// Pricing Calendar Demo
+const PricingCalendarDemo = lazy(() =>
+  import('./pages/PricingCalendarDemo').then(m => ({ default: m.PricingCalendarDemo }))
+)
+
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth()
@@ -81,6 +86,7 @@ function App() {
                 <Route path="pricing">
                   <Route path="optimizer" element={<PricingEngine />} />
                   <Route path="competitors" element={<CompetitorMonitor />} />
+                  <Route path="calendar" element={<PricingCalendarDemo />} />
                   <Route index element={<Navigate to="/pricing/optimizer" replace />} />
                 </Route>
 

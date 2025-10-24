@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -11,10 +11,13 @@ import {
   Activity,
   Zap,
   Database,
+  Calendar,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useUploadedFiles, useFileData } from '../hooks/queries/useFileData'
+import { PriceDemandCalendar } from '../components/pricing/PriceDemandCalendar'
+import type { DayData } from '../components/pricing/PriceDemandCalendar'
 import {
   LineChart,
   Line,
@@ -155,6 +158,51 @@ export const Dashboard = () => {
       price: Math.round(d.price),
     }))
 
+    // Calendar data - transform fileData to calendar format
+    const calendarData: DayData[] = []
+    const dataByDate: Record<string, any[]> = {}
+
+    // Group data by date
+    fileData.forEach((row: any) => {
+      const date = new Date(row.date || row.check_in || row.booking_date)
+      if (isNaN(date.getTime())) return
+
+      const dateStr = date.toISOString().split('T')[0]
+      if (!dataByDate[dateStr]) {
+        dataByDate[dateStr] = []
+      }
+      dataByDate[dateStr].push(row)
+    })
+
+    // Create calendar entries for each date
+    Object.entries(dataByDate).forEach(([dateStr, rows]) => {
+      const avgPriceForDate = rows.reduce((sum, r) => sum + parseFloat(r.price || r.rate || 0), 0) / rows.length
+
+      let avgOccupancyForDate = rows.reduce((sum, r) => {
+        let occ = parseFloat(r.occupancy || r.occupancy_rate || 0)
+        if (occ > 1 && occ <= 100) occ = occ / 100
+        return sum + occ
+      }, 0) / rows.length
+
+      const date = new Date(dateStr)
+      const dayOfWeek = date.getDay()
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+      const isPast = date < new Date()
+
+      // Simple demand calculation based on occupancy
+      const demand = Math.min(1, avgOccupancyForDate * 1.2)
+
+      calendarData.push({
+        date: dateStr,
+        price: Math.round(avgPriceForDate),
+        demand: demand,
+        occupancy: avgOccupancyForDate,
+        isWeekend,
+        isPast,
+        isHoliday: false, // Could be enriched from holiday data
+      })
+    })
+
     return {
       totalRecords,
       avgPrice: Math.round(avgPrice),
@@ -162,8 +210,11 @@ export const Dashboard = () => {
       revenueData,
       occupancyByDay,
       priceTimeSeries,
+      calendarData,
     }
   }, [fileData])
+
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   return (
     <motion.div
@@ -583,6 +634,50 @@ export const Dashboard = () => {
             </ResponsiveContainer>
           </Card.Body>
         </Card>
+      )}
+
+      {/* Pricing Calendar - Real Data */}
+      {hasData && processedData.calendarData && processedData.calendarData.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card variant="default">
+            <Card.Header>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-primary/10 p-2">
+                    <Calendar className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-text">Price & Demand Calendar</h2>
+                    <p className="mt-1 text-sm text-muted">
+                      Interactive calendar showing pricing and demand patterns from your data
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/pricing/calendar')}
+                >
+                  Full View →
+                </Button>
+              </div>
+            </Card.Header>
+            <Card.Body>
+              <PriceDemandCalendar
+                data={processedData.calendarData}
+                currency="€"
+                onDateClick={(date) => {
+                  setSelectedDate(date)
+                  console.log('Selected date:', date)
+                }}
+              />
+            </Card.Body>
+          </Card>
+        </motion.div>
       )}
 
       {/* Quick Actions - Always show */}

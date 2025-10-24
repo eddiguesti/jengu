@@ -5,7 +5,7 @@
 
 import { Queue, QueueOptions } from 'bullmq'
 import { createRedisConnection } from './connection.js'
-import { logger } from '../middleware/logger.js'
+import { logger } from '../../middleware/logger.js'
 
 // Job data types
 export interface EnrichmentJobData {

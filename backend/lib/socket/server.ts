@@ -5,7 +5,7 @@
 
 import { Server as SocketIOServer } from 'socket.io'
 import { Server as HTTPServer } from 'http'
-import { logger } from '../middleware/logger.js'
+import { logger } from '../../middleware/logger.js'
 import { enrichmentQueue, competitorQueue, analyticsQueue } from '../queue/queues.js'
 
 export function setupWebSocketServer(httpServer: HTTPServer): SocketIOServer {
