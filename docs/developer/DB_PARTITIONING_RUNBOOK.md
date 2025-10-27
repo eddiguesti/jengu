@@ -33,18 +33,18 @@ Converts the `pricing_data` table from a standard PostgreSQL table to a **range-
 
 ### Expected Impact
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Property + date range query | 250ms | 50ms | 5.0x |
-| Analytics aggregation | 1200ms | 400ms | 3.0x |
-| Recent data fetch | 150ms | 30ms | 5.0x |
-| Buffer usage | 100% | 30% | 70% reduction |
+| Metric                      | Before | After | Improvement   |
+| --------------------------- | ------ | ----- | ------------- |
+| Property + date range query | 250ms  | 50ms  | 5.0x          |
+| Analytics aggregation       | 1200ms | 400ms | 3.0x          |
+| Recent data fetch           | 150ms  | 30ms  | 5.0x          |
+| Buffer usage                | 100%   | 30%   | 70% reduction |
 
 ---
 
 ## Prerequisites
 
-###  1. Database Requirements
+### 1. Database Requirements
 
 - ✅ PostgreSQL 10+ (for native partitioning)
 - ✅ Supabase Pro plan or self-hosted Postgres
@@ -85,17 +85,20 @@ psql -U postgres -d your_database -f benchmark-queries.sql > baseline-before.txt
 ### 2. Backup Database
 
 **Option A: Supabase Dashboard**
+
 1. Navigate to Database → Backups
 2. Click "Create backup"
 3. Wait for completion
 4. Verify backup exists
 
 **Option B: pg_dump**
+
 ```bash
 pg_dump -h your-host -U your-user -d your-database -F c -f pricing_data_backup_$(date +%Y%m%d).dump
 ```
 
 **Verify backup:**
+
 ```bash
 pg_restore --list pricing_data_backup_20251023.dump | grep pricing_data
 ```
@@ -155,6 +158,7 @@ Questions? Contact: engineering@company.com
 ### Step 1: Enter Maintenance Mode (Optional)
 
 **Option A: Backend flag**
+
 ```bash
 # Set in .env
 MAINTENANCE_MODE=true
@@ -164,6 +168,7 @@ pm2 restart backend
 ```
 
 **Option B: Nginx redirect**
+
 ```nginx
 # /etc/nginx/sites-enabled/default
 location /api {
@@ -174,16 +179,19 @@ location /api {
 ### Step 2: Run Partition Migration
 
 **Connect to database:**
+
 ```bash
 psql -h your-host -U postgres -d your-database
 ```
 
 **Execute migration:**
+
 ```sql
 \i backend/migrations/partition_pricing_data.sql
 ```
 
 **Expected output:**
+
 ```
 ALTER TABLE
 CREATE TABLE
@@ -195,6 +203,7 @@ VACUUM
 ```
 
 **Watch for errors:**
+
 - ❌ `ERROR: partition bound ... conflicts with existing partition` → Date range overlap (fix partition boundaries)
 - ❌ `ERROR: cannot create index on partitioned table` → Index already exists (safe to ignore)
 - ❌ `ERROR: out of memory` → Reduce batch size in migration script
@@ -218,12 +227,14 @@ If counts don't match, **STOP** and investigate.
 Most queries work unchanged with partitioning, but verify:
 
 **❌ Bad: Queries without partition key**
+
 ```typescript
 // Missing date filter - will scan all partitions
-const data = await supabase.from('pricing_data').select('*').eq('propertyId', id);
+const data = await supabase.from('pricing_data').select('*').eq('propertyId', id)
 ```
 
 **✅ Good: Include date in WHERE clause**
+
 ```typescript
 // Includes date - partition pruning active
 const data = await supabase
@@ -231,7 +242,7 @@ const data = await supabase
   .select('*')
   .eq('propertyId', id)
   .gte('date', startDate)
-  .lte('date', endDate);
+  .lte('date', endDate)
 ```
 
 ### Step 5: Exit Maintenance Mode
@@ -262,6 +273,7 @@ diff baseline-before.txt baseline-after.txt
 ```
 
 **Expected improvements:**
+
 - Execution time: 3-5x faster for date-range queries
 - Buffers read: 50-70% reduction
 - EXPLAIN plans show "Partitions scanned: 1" (not all)
@@ -281,6 +293,7 @@ ORDER BY partition_name;
 ```
 
 **Expected:**
+
 - Each partition contains ~1 month of data
 - No overlapping date ranges
 - Recent partitions have most data
@@ -288,12 +301,14 @@ ORDER BY partition_name;
 ### 3. Verify Application Functionality
 
 **Test critical endpoints:**
+
 - [ ] `GET /api/properties/:id/pricing-data` - Property data fetch
 - [ ] `POST /api/properties/:id/upload-csv` - CSV upload
 - [ ] `GET /api/analytics/demand-forecast` - Analytics query
 - [ ] `GET /api/dashboard/director` - Dashboard load
 
 **Check logs for errors:**
+
 ```bash
 tail -f /var/log/backend/error.log | grep pricing_data
 ```
@@ -301,11 +316,13 @@ tail -f /var/log/backend/error.log | grep pricing_data
 ### 4. Monitor Performance Metrics
 
 **Grafana dashboards:**
+
 - API latency (should decrease)
 - Database query time (should decrease)
 - Error rate (should remain stable)
 
 **Sentry:**
+
 - No new database errors
 - No query timeout errors
 
@@ -313,9 +330,9 @@ tail -f /var/log/backend/error.log | grep pricing_data
 
 ```typescript
 // backend/scripts/test-replica.ts
-import { runHealthChecks } from '../config/database';
+import { runHealthChecks } from '../config/database'
 
-await runHealthChecks();
+await runHealthChecks()
 // Expected:
 // Primary: ✓ Healthy
 // Replica: ✓ Healthy
@@ -346,11 +363,13 @@ VACUUM ANALYZE pricing_data;
 ```
 
 **Restart backend:**
+
 ```bash
 pm2 restart backend
 ```
 
 **Verify rollback:**
+
 ```sql
 SELECT count(*) FROM pricing_data;
 ```
@@ -396,6 +415,7 @@ SELECT * FROM cron.job WHERE jobname = 'partition-maintenance';
 ```
 
 **Or use system cron:**
+
 ```bash
 # Add to crontab
 0 2 1 * * psql -d your-database -f backend/scripts/maintain-partitions.sql
@@ -404,6 +424,7 @@ SELECT * FROM cron.job WHERE jobname = 'partition-maintenance';
 ### Manual Partition Creation
 
 **Create next month's partition:**
+
 ```sql
 CREATE TABLE pricing_data_2026_11 PARTITION OF pricing_data
   FOR VALUES FROM ('2026-11-01') TO ('2026-12-01');
@@ -412,6 +433,7 @@ CREATE TABLE pricing_data_2026_11 PARTITION OF pricing_data
 ### Partition Cleanup
 
 **Drop old partitions (after retention period):**
+
 ```sql
 -- Drop partition older than 3 years
 DROP TABLE pricing_data_2022_01;
@@ -427,10 +449,12 @@ SELECT tablename FROM pg_tables WHERE tablename LIKE 'pricing_data_2022%';
 ### Issue 1: High Replication Lag
 
 **Symptoms:**
+
 - Read replica shows stale data
 - Replication lag > 5 seconds
 
 **Diagnosis:**
+
 ```sql
 -- Check replication status
 SELECT * FROM pg_stat_replication;
@@ -440,6 +464,7 @@ SELECT EXTRACT(EPOCH FROM (NOW() - pg_last_xact_replay_timestamp())) as lag_seco
 ```
 
 **Solutions:**
+
 1. **Increase replica instance size** (may be under-resourced)
 2. **Reduce write load on primary** (batch uploads)
 3. **Check network latency** (cross-region replication)
@@ -447,10 +472,12 @@ SELECT EXTRACT(EPOCH FROM (NOW() - pg_last_xact_replay_timestamp())) as lag_seco
 ### Issue 2: Query Still Slow After Partitioning
 
 **Symptoms:**
+
 - Queries not showing expected speedup
 - EXPLAIN shows "Seq Scan" instead of "Index Scan"
 
 **Diagnosis:**
+
 ```sql
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT * FROM pricing_data
@@ -458,12 +485,14 @@ WHERE "propertyId" = 'test' AND date >= '2025-10-01' AND date < '2025-11-01';
 ```
 
 **Look for:**
+
 - "Partitions scanned: 1" ← Good (partition pruning working)
 - "Partitions scanned: 36" ← Bad (partition pruning not working)
 - "Index Scan" ← Good
 - "Seq Scan" ← Bad (missing/unused index)
 
 **Solutions:**
+
 1. **Add date filter to WHERE clause** (enables partition pruning)
 2. **Run ANALYZE** to update statistics:
    ```sql
@@ -481,11 +510,13 @@ WHERE "propertyId" = 'test' AND date >= '2025-10-01' AND date < '2025-11-01';
 ### Issue 3: "Partition Already Exists" Error
 
 **Error:**
+
 ```
 ERROR: relation "pricing_data_2025_10" already exists
 ```
 
 **Solution:**
+
 ```sql
 -- Check existing partitions
 SELECT tablename FROM pg_tables WHERE tablename LIKE 'pricing_data_%' ORDER BY tablename;
@@ -501,10 +532,12 @@ CREATE TABLE pricing_data_2025_10 PARTITION OF pricing_data
 ### Issue 4: Missing Partition for Current Month
 
 **Symptoms:**
+
 - INSERT fails with "no partition of relation ... found for row"
 - Data not appearing in recent queries
 
 **Solution:**
+
 ```sql
 -- Create missing partition
 CREATE TABLE pricing_data_2025_10 PARTITION OF pricing_data
@@ -515,24 +548,29 @@ SELECT * FROM pg_tables WHERE tablename = 'pricing_data_2025_10';
 ```
 
 **Prevent future issues:**
+
 - Set up automated partition creation (see Maintenance section)
 - Create partitions 3 months in advance
 
 ### Issue 5: Out of Memory During Migration
 
 **Error:**
+
 ```
 ERROR: out of memory
 DETAIL: Failed on request of size X
 ```
 
 **Solution:**
+
 1. **Increase work_mem temporarily:**
+
    ```sql
    SET work_mem = '256MB';
    ```
 
 2. **Migrate in batches:**
+
    ```sql
    -- Instead of: INSERT INTO pricing_data SELECT * FROM pricing_data_old;
    -- Do:
@@ -553,16 +591,19 @@ DETAIL: Failed on request of size X
 ### Key Metrics to Track
 
 **Query Performance:**
+
 - Average query time (should decrease 3-5x)
 - P95 latency for analytics endpoints
 - Database CPU usage (should decrease)
 
 **Partition Health:**
+
 - Number of partitions
 - Size per partition
 - Rows per partition
 
 **Replication (if using replica):**
+
 - Replication lag (should be < 5s)
 - Replica query load
 - Failover readiness
@@ -572,16 +613,19 @@ DETAIL: Failed on request of size X
 **Create dashboard panels for:**
 
 1. **Query Latency by Endpoint**
+
 ```promql
 histogram_quantile(0.95, rate(pricing_api_latency_seconds_bucket{endpoint="/api/analytics/*"}[5m]))
 ```
 
 2. **Database Query Time**
+
 ```promql
 rate(database_query_duration_seconds_sum[5m]) / rate(database_query_duration_seconds_count[5m])
 ```
 
 3. **Partition Size**
+
 ```sql
 -- Export to Prometheus via custom exporter
 SELECT
@@ -597,11 +641,13 @@ FROM (
 ### Alerts to Configure
 
 **Critical:**
+
 - 🔴 Partition creation failed
 - 🔴 Query timeout rate > 1%
 - 🔴 Replication lag > 60s
 
 **Warning:**
+
 - 🟡 Missing partition for next month
 - 🟡 Partition size > 10GB
 - 🟡 Replication lag > 10s

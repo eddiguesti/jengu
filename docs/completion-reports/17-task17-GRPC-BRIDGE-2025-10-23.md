@@ -15,21 +15,25 @@ Implemented a high-performance gRPC bridge for communication between Node.js bac
 **Decision:** Chose **gRPC** for the following reasons:
 
 ✅ **Better Fit for Synchronous Calls**
+
 - Pricing `/score` endpoint is request-reply pattern
 - gRPC native request-response model
 - NATS better for pub/sub and async messaging
 
 ✅ **Strong Typing**
+
 - Protocol Buffers provide compile-time type safety
 - Automatic code generation for both languages
 - Prevents API drift
 
 ✅ **Performance**
+
 - Binary protocol vs JSON (smaller payloads)
 - HTTP/2 multiplexing
 - Connection pooling and keepalive
 
 ✅ **Ecosystem Support**
+
 - Excellent Node.js and Python libraries
 - Wide adoption in microservices
 - Better tooling (`grpcurl`, `grpcui`)
@@ -41,6 +45,7 @@ Implemented a high-performance gRPC bridge for communication between Node.js bac
 ### 1. Protocol Buffer Definition (`pricing-service/proto/pricing.proto`)
 
 **Features:**
+
 - Service definition for 3 RPC methods:
   - `GetPriceQuote` - Pricing calculation
   - `SubmitOutcomes` - Learning loop
@@ -61,18 +66,21 @@ Implemented a high-performance gRPC bridge for communication between Node.js bac
 **Features:**
 
 #### PricingServicer Implementation
+
 - Maps gRPC calls to existing `PricingEngine`
 - Converts Protocol Buffer messages to/from Python dicts
 - Full error handling with gRPC status codes
 - Logging for observability
 
 #### Server Configuration
+
 - Thread pool executor (10 workers)
 - 50MB message size limits
 - Graceful shutdown on SIGINT
 - Port 50051 (configurable)
 
 **Key Methods:**
+
 ```python
 class PricingServicer:
     def GetPriceQuote(self, request, context)
@@ -89,27 +97,32 @@ class PricingServicer:
 **Features:**
 
 #### Automatic Fallback
+
 - Tries gRPC first if enabled
 - Falls back to REST on any failure
 - Zero user-visible errors
 - Transparent to callers
 
 #### Feature Flag Controlled
+
 - `ENABLE_GRPC=true/false` environment variable
 - Can disable gRPC without code changes
 - Gradual rollout support
 
 #### Connection Management
+
 - Keepalive settings (30s interval)
 - HTTP/2 connection reuse
 - Automatic reconnection
 
 #### Observability
+
 - Returns `_method` and `_latency` metadata
 - Detailed logging (debug/info/warn levels)
 - Ready for Prometheus metrics
 
 **API:**
+
 ```typescript
 getPriceQuote(request) // gRPC with REST fallback
 submitOutcomes(outcomes) // gRPC with REST fallback
@@ -125,12 +138,14 @@ closeGrpcClient() // Cleanup
 ### 4. Code Generation Script (`pricing-service/generate_grpc.sh`)
 
 **Features:**
+
 - Compiles `.proto` to Python code
 - Generates `pricing_pb2.py` and `pricing_pb2_grpc.py`
 - Fixes import statements automatically
 - Detects and installs `grpcio-tools` if missing
 
 **Usage:**
+
 ```bash
 cd pricing-service
 chmod +x generate_grpc.sh
@@ -144,6 +159,7 @@ chmod +x generate_grpc.sh
 ### 5. Documentation (`docs/developer/GRPC_SETUP.md`)
 
 **Comprehensive Guide Including:**
+
 - Architecture diagram
 - Setup instructions for both services
 - Protocol Buffer documentation
@@ -161,6 +177,7 @@ chmod +x generate_grpc.sh
 ### 6. Dependency Updates
 
 **Backend (package.json):**
+
 ```json
 {
   "@grpc/grpc-js": "^1.12.4",
@@ -169,6 +186,7 @@ chmod +x generate_grpc.sh
 ```
 
 **Pricing Service (requirements.txt):**
+
 ```
 grpcio
 grpcio-tools
@@ -180,30 +198,35 @@ protobuf
 ## Key Features Delivered
 
 ### ✅ High Performance
+
 - **30-50% latency reduction** vs REST
 - Binary protocol (smaller payloads)
 - HTTP/2 multiplexing
 - Connection pooling
 
 ### ✅ Automatic Fallback
+
 - Seamless degradation to REST
 - No errors exposed to users
 - Feature flag controlled
 - Zero-downtime deployment
 
 ### ✅ Strong Typing
+
 - Protocol Buffers type safety
 - Prevents API drift
 - Compile-time validation
 - Auto-generated code
 
 ### ✅ Production Ready
+
 - Error handling and recovery
 - Health checks
 - Observability hooks
 - Security considerations documented
 
 ### ✅ Developer Friendly
+
 - Easy to enable/disable
 - Transparent API
 - Comprehensive documentation
@@ -235,13 +258,13 @@ protobuf
 
 ### Expected Improvements (Under Load)
 
-| Metric | REST (HTTP/1.1) | gRPC (HTTP/2) | Improvement |
-|--------|-----------------|---------------|-------------|
-| P50 Latency | 45ms | 25ms | **44%** |
-| P95 Latency | 120ms | 70ms | **42%** |
-| P99 Latency | 250ms | 150ms | **40%** |
-| Throughput | 800 rps | 1200 rps | **50%** |
-| Payload Size | 2.5 KB (JSON) | 1.2 KB (protobuf) | **52% smaller** |
+| Metric       | REST (HTTP/1.1) | gRPC (HTTP/2)     | Improvement     |
+| ------------ | --------------- | ----------------- | --------------- |
+| P50 Latency  | 45ms            | 25ms              | **44%**         |
+| P95 Latency  | 120ms           | 70ms              | **42%**         |
+| P99 Latency  | 250ms           | 150ms             | **40%**         |
+| Throughput   | 800 rps         | 1200 rps          | **50%**         |
+| Payload Size | 2.5 KB (JSON)   | 1.2 KB (protobuf) | **52% smaller** |
 
 ### Why gRPC is Faster
 
@@ -303,6 +326,7 @@ if (result._method === 'grpc') {
 ### 1. Install Dependencies
 
 **Backend:**
+
 ```bash
 cd backend
 pnpm install
@@ -310,6 +334,7 @@ pnpm install
 ```
 
 **Pricing Service:**
+
 ```bash
 cd pricing-service
 pip install grpcio grpcio-tools protobuf
@@ -324,12 +349,14 @@ chmod +x generate_grpc.sh
 ```
 
 Generates:
+
 - `pricing_pb2.py` - Message classes
 - `pricing_pb2_grpc.py` - Service stubs
 
 ### 3. Configure Environment
 
 **Backend `.env`:**
+
 ```bash
 ENABLE_GRPC=true
 PRICING_GRPC_HOST=localhost:50051
@@ -339,12 +366,14 @@ PRICING_SERVICE_URL=http://localhost:8000  # Fallback
 ### 4. Start Services
 
 **Terminal 1 (gRPC Server):**
+
 ```bash
 cd pricing-service
 python grpc_server.py
 ```
 
 **Terminal 2 (Backend):**
+
 ```bash
 cd backend
 pnpm run dev
@@ -375,9 +404,11 @@ tail -f backend/logs/app.log | grep "gRPC"
 ### Canary Deployment
 
 1. **Phase 1: Deploy with gRPC Disabled**
+
    ```bash
    ENABLE_GRPC=false
    ```
+
    - Verify stability for 24 hours
    - Baseline REST performance
 
@@ -402,11 +433,13 @@ tail -f backend/logs/app.log | grep "gRPC"
 ### Rollback Procedure
 
 **Instant rollback (no restart needed):**
+
 ```bash
 export ENABLE_GRPC=false
 ```
 
 Or restart with updated .env:
+
 ```bash
 pm2 restart backend
 ```
@@ -418,12 +451,14 @@ pm2 restart backend
 ### Log Messages
 
 **gRPC Success:**
+
 ```
 ✅ gRPC client initialized: localhost:50051
 ✅ gRPC GetPriceQuote: property=prop-123, date=2025-12-25, price=150
 ```
 
 **gRPC Failure + Fallback:**
+
 ```
 ⚠️  gRPC GetPriceQuote failed, falling back to REST: <error details>
 ✅ REST fallback: 45ms
@@ -447,6 +482,7 @@ pricing_fallback_total{reason="grpc_error"} 15
 ```
 
 **Derived Metrics:**
+
 - Fallback rate: `rate(pricing_fallback_total[5m])`
 - Latency reduction: `(rest_p95 - grpc_p95) / rest_p95 * 100`
 - gRPC adoption: `grpc_calls / (grpc_calls + rest_calls) * 100`
@@ -458,6 +494,7 @@ pricing_fallback_total{reason="grpc_error"} 15
 ### Unit Tests
 
 **Test gRPC Fallback:**
+
 ```typescript
 // Mock grpcClient to throw error
 test('should fallback to REST on gRPC failure', async () => {
@@ -512,11 +549,13 @@ grpc.credentials.createInsecure()
 ### Production (Recommended)
 
 **1. Generate TLS Certificates:**
+
 ```bash
 openssl req -x509 -newkey rsa:4096 -keyout server-key.pem -out server-cert.pem -days 365
 ```
 
 **2. Update Client:**
+
 ```typescript
 const sslCreds = grpc.credentials.createSsl(
   fs.readFileSync('ca.pem'),
@@ -526,6 +565,7 @@ const sslCreds = grpc.credentials.createSsl(
 ```
 
 **3. Update Server:**
+
 ```python
 server_credentials = grpc.ssl_server_credentials([
     (private_key, certificate_chain)
@@ -561,7 +601,7 @@ From original task specification:
 
 - ✅ **Metrics and observability**
   - Latency tracking
-  - Method metadata (_method, _latency)
+  - Method metadata (\_method, \_latency)
   - Logging for debugging
 
 - ✅ **Documentation complete**
@@ -575,20 +615,25 @@ From original task specification:
 ## Files Created
 
 ### Protocol Definition
+
 1. `pricing-service/proto/pricing.proto` (~140 lines)
 
 ### Server
+
 2. `pricing-service/grpc_server.py` (~230 lines)
 3. `pricing-service/generate_grpc.sh` (~35 lines)
 
 ### Client
+
 4. `backend/lib/grpc/pricingClient.ts` (~270 lines)
 
 ### Configuration
+
 5. `pricing-service/requirements.txt` - Added grpc dependencies
 6. `backend/package.json` - Added @grpc packages
 
 ### Documentation
+
 7. `docs/developer/GRPC_SETUP.md` (~700 lines)
 8. `docs/tasks-done/task17-GRPC-NATS-INTERNAL-BRIDGE-COMPLETED.md` (this file)
 

@@ -32,6 +32,7 @@ This directory contains Kubernetes manifests for deploying Jengu workers with au
    - Recommendations: EKS, GKE, AKS, or local (minikube, kind)
 
 2. **Prometheus + Prometheus Adapter** (for custom metrics)
+
    ```bash
    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
    helm install prometheus prometheus-community/kube-prometheus-stack
@@ -39,6 +40,7 @@ This directory contains Kubernetes manifests for deploying Jengu workers with au
    ```
 
 3. **Metrics Server** (for CPU/memory-based autoscaling)
+
    ```bash
    kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
    ```
@@ -103,11 +105,13 @@ kubectl logs -f deployment/analytics-worker
 ### Enrichment Worker HPA
 
 **Triggers**:
+
 - Queue depth > 10 jobs (custom metric from Prometheus)
 - CPU usage > 70%
 - Memory usage > 80%
 
 **Scaling Behavior**:
+
 - Min replicas: 2
 - Max replicas: 10
 - Scale up: Add 2 pods OR 50% more (whichever is higher)
@@ -116,21 +120,25 @@ kubectl logs -f deployment/analytics-worker
 ### Competitor Worker HPA
 
 **Triggers**:
+
 - Queue depth > 5 jobs
 - CPU usage > 70%
 
 **Scaling Behavior**:
+
 - Min replicas: 1
 - Max replicas: 5
 
 ### Analytics Worker HPA
 
 **Triggers**:
+
 - Queue depth > 10 jobs
 - CPU usage > 80%
 - Memory usage > 85%
 
 **Scaling Behavior**:
+
 - Min replicas: 1
 - Max replicas: 5
 
@@ -149,8 +157,8 @@ rules:
           namespace:
             resource: namespace
       name:
-        matches: "^(.*)$"
-        as: "bullmq_queue_waiting_jobs"
+        matches: '^(.*)$'
+        as: 'bullmq_queue_waiting_jobs'
       metricsQuery: 'avg_over_time(bullmq_queue_waiting_jobs{<<.LabelMatchers>>}[2m])'
 ```
 
@@ -164,16 +172,19 @@ helm upgrade prometheus-adapter prometheus-community/prometheus-adapter \
 ## Resource Requests & Limits
 
 ### Enrichment Worker
+
 - **Requests**: 512Mi RAM, 500m CPU
 - **Limits**: 1Gi RAM, 1000m CPU
 - **Rationale**: Enrichment is I/O-bound (API calls) but needs headroom for batch processing
 
 ### Competitor Worker
+
 - **Requests**: 256Mi RAM, 250m CPU
 - **Limits**: 512Mi RAM, 500m CPU
 - **Rationale**: Lightweight scraping with rate limiting
 
 ### Analytics Worker
+
 - **Requests**: 512Mi RAM, 500m CPU
 - **Limits**: 2Gi RAM, 2000m CPU
 - **Rationale**: CPU-intensive calculations, may need more memory for large datasets
@@ -227,12 +238,15 @@ kubectl port-forward svc/prometheus-grafana 3000:80
 **Problem**: HPA shows `<unknown>` for custom metrics
 
 **Solution**:
+
 1. Check Prometheus Adapter is running:
+
    ```bash
    kubectl get pods -n kube-system | grep prometheus-adapter
    ```
 
 2. Check custom metrics API:
+
    ```bash
    kubectl get --raw /apis/custom.metrics.k8s.io/v1beta1 | jq .
    ```
@@ -247,12 +261,15 @@ kubectl port-forward svc/prometheus-grafana 3000:80
 **Problem**: Jobs stuck in `waiting` state
 
 **Solution**:
+
 1. Check worker logs:
+
    ```bash
    kubectl logs -f deployment/enrichment-worker
    ```
 
 2. Check Redis connectivity:
+
    ```bash
    kubectl exec -it deployment/enrichment-worker -- sh
    redis-cli -u $REDIS_URL ping
@@ -268,11 +285,12 @@ kubectl port-forward svc/prometheus-grafana 3000:80
 **Problem**: Workers being OOMKilled
 
 **Solution**:
+
 1. Increase memory limits in deployment YAML
 2. Reduce worker concurrency:
    ```yaml
    - name: ENRICHMENT_WORKER_CONCURRENCY
-     value: "3" # Reduce from 5
+     value: '3' # Reduce from 5
    ```
 
 ## Cost Optimization
@@ -284,11 +302,11 @@ Use lower resource requests and limits:
 ```yaml
 resources:
   requests:
-    memory: "256Mi"
-    cpu: "250m"
+    memory: '256Mi'
+    cpu: '250m'
   limits:
-    memory: "512Mi"
-    cpu: "500m"
+    memory: '512Mi'
+    cpu: '500m'
 ```
 
 Set lower HPA thresholds:
@@ -318,10 +336,10 @@ spec:
                       - t3.medium # AWS spot instances
                       - e2-medium # GCP preemptible
       tolerations:
-        - key: "spot"
-          operator: "Equal"
-          value: "true"
-          effect: "NoSchedule"
+        - key: 'spot'
+          operator: 'Equal'
+          value: 'true'
+          effect: 'NoSchedule'
 ```
 
 ## Security

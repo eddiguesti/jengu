@@ -40,7 +40,7 @@ export const Dashboard = () => {
 
   // Filter out deleted/empty files and find first valid file with data
   const validFiles = uploadedFiles.filter(
-    (f) => f.status !== 'deleted' && (f.actualRows || f.rows || 0) > 0
+    f => f.status !== 'deleted' && (f.actualRows || f.rows || 0) > 0
   )
 
   const firstFileId = validFiles[0]?.id || ''
@@ -187,13 +187,15 @@ export const Dashboard = () => {
 
     // Create calendar entries for each date
     Object.entries(dataByDate).forEach(([dateStr, rows]) => {
-      const avgPriceForDate = rows.reduce((sum, r) => sum + parseFloat(r.price || r.rate || 0), 0) / rows.length
+      const avgPriceForDate =
+        rows.reduce((sum, r) => sum + parseFloat(r.price || r.rate || 0), 0) / rows.length
 
-      let avgOccupancyForDate = rows.reduce((sum, r) => {
-        let occ = parseFloat(r.occupancy || r.occupancy_rate || 0)
-        if (occ > 1 && occ <= 100) occ = occ / 100
-        return sum + occ
-      }, 0) / rows.length
+      let avgOccupancyForDate =
+        rows.reduce((sum, r) => {
+          let occ = parseFloat(r.occupancy || r.occupancy_rate || 0)
+          if (occ > 1 && occ <= 100) occ = occ / 100
+          return sum + occ
+        }, 0) / rows.length
 
       const date = new Date(dateStr)
       const dayOfWeek = date.getDay()
@@ -286,11 +288,7 @@ export const Dashboard = () => {
                     </p>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/pricing/calendar')}
-                >
+                <Button variant="ghost" size="sm" onClick={() => navigate('/pricing/calendar')}>
                   Full View →
                 </Button>
               </div>
@@ -299,7 +297,7 @@ export const Dashboard = () => {
               <PriceDemandCalendar
                 data={processedData.calendarData}
                 currency="€"
-                onDateClick={(date) => {
+                onDateClick={date => {
                   console.log('Selected date:', date)
                 }}
               />

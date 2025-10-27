@@ -20,10 +20,10 @@ spec:
       containers:
         - name: enrichment-worker
           image: jengu/backend:latest
-          command: ["node", "dist/workers/enrichmentWorker.js"]
+          command: ['node', 'dist/workers/enrichmentWorker.js']
           env:
             - name: NODE_ENV
-              value: "production"
+              value: 'production'
             - name: REDIS_URL
               valueFrom:
                 secretKeyRef:
@@ -40,7 +40,7 @@ spec:
                   name: jengu-secrets
                   key: supabase-service-key
             - name: ENRICHMENT_WORKER_CONCURRENCY
-              value: "5"
+              value: '5'
             - name: ANTHROPIC_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -59,20 +59,20 @@ spec:
                   key: calendarific-api-key
                   optional: true
             - name: ENABLE_AUTO_ANALYTICS
-              value: "true"
+              value: 'true'
           resources:
             requests:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: '512Mi'
+              cpu: '500m'
             limits:
-              memory: "1Gi"
-              cpu: "1000m"
+              memory: '1Gi'
+              cpu: '1000m'
           livenessProbe:
             exec:
               command:
                 - node
                 - -e
-                - "process.exit(0)"
+                - 'process.exit(0)'
             initialDelaySeconds: 30
             periodSeconds: 30
           readinessProbe:
@@ -80,7 +80,7 @@ spec:
               command:
                 - node
                 - -e
-                - "process.exit(0)"
+                - 'process.exit(0)'
             initialDelaySeconds: 10
             periodSeconds: 10
       restartPolicy: Always
@@ -108,7 +108,7 @@ spec:
               queue: enrichment
         target:
           type: AverageValue
-          averageValue: "10" # Scale up if avg waiting jobs > 10
+          averageValue: '10' # Scale up if avg waiting jobs > 10
     # Scale based on CPU usage
     - type: Resource
       resource:

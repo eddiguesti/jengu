@@ -20,10 +20,10 @@ spec:
       containers:
         - name: analytics-worker
           image: jengu/backend:latest
-          command: ["node", "dist/workers/analyticsWorker.js"]
+          command: ['node', 'dist/workers/analyticsWorker.js']
           env:
             - name: NODE_ENV
-              value: "production"
+              value: 'production'
             - name: REDIS_URL
               valueFrom:
                 secretKeyRef:
@@ -40,14 +40,14 @@ spec:
                   name: jengu-secrets
                   key: supabase-service-key
             - name: ANALYTICS_WORKER_CONCURRENCY
-              value: "3"
+              value: '3'
           resources:
             requests:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: '512Mi'
+              cpu: '500m'
             limits:
-              memory: "2Gi"
-              cpu: "2000m" # Analytics can be CPU-intensive
+              memory: '2Gi'
+              cpu: '2000m' # Analytics can be CPU-intensive
       restartPolicy: Always
 ---
 apiVersion: autoscaling/v2
@@ -72,7 +72,7 @@ spec:
               queue: analytics-heavy
         target:
           type: AverageValue
-          averageValue: "10"
+          averageValue: '10'
     - type: Resource
       resource:
         name: cpu

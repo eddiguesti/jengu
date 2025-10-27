@@ -13,6 +13,7 @@ I've created **5 working files** for you:
 ## 🚀 Quick Start (3 Steps)
 
 ### Step 1: Run Setup Script
+
 ```bash
 # Make setup script executable
 chmod +x setup-scraper.sh
@@ -22,12 +23,14 @@ chmod +x setup-scraper.sh
 ```
 
 This will:
+
 - Create project folder
 - Install all dependencies
 - Install Chromium browser
 - Set up the complete structure
 
 ### Step 2: Configure Your Credentials
+
 ```bash
 cd sanary-scraper
 nano .env
@@ -42,6 +45,7 @@ SUPABASE_SERVICE_KEY=your_service_key_here
 ```
 
 ### Step 3: Run the Scraper
+
 ```bash
 # Run the test
 npm run test
@@ -99,16 +103,19 @@ Total campsites found: 18
 ## 🔧 Troubleshooting
 
 ### If you see "No results found"
+
 - Check your internet connection
 - The platforms might have changed their HTML structure
 - Try running with `headless: false` in the browser config to see what's happening
 
 ### If Redis connection fails
+
 - Make sure your Redis URL is correct
 - Check that Redis is running
 - You can comment out Redis lines for testing
 
 ### If prices aren't found
+
 - This is normal in off-season
 - Some sites don't show prices without dates
 - The scraper will still get campsite names and locations
@@ -152,23 +159,24 @@ Once it's working, you can:
 
 ```typescript
 // In your existing Jengu system:
-import { SanaryCampingScraper } from './scrapers/SanaryCampingScraper';
+import { SanaryCampingScraper } from './scrapers/SanaryCampingScraper'
 
 // Use the data
-const scraper = new SanaryCampingScraper();
-const competitors = await scraper.scrapeAllCompetitors();
+const scraper = new SanaryCampingScraper()
+const competitors = await scraper.scrapeAllCompetitors()
 
 // Feed into your ML pricing model
 const optimalPrice = await calculatePrice({
   myPrice: 45,
   competitorPrices: competitors.map(c => c.price),
   marketAverage: avgPrice,
-});
+})
 ```
 
 ## 🆘 Need Help?
 
 If something doesn't work:
+
 1. Check the error message
 2. Verify your .env file has correct credentials
 3. Try running with fewer sources first

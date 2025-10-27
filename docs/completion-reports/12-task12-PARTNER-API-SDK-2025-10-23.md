@@ -20,6 +20,7 @@ Implemented complete partner API system with workspace-scoped API keys, rate lim
 **Tables Created:**
 
 #### `api_keys` Table
+
 - Workspace-scoped API keys with role-based access
 - Key identification: `name`, `description`, `key_prefix`, `key_hash` (SHA-256)
 - Permissions: `role` (read_only, read_write, admin), `scopes` array
@@ -28,11 +29,13 @@ Implemented complete partner API system with workspace-scoped API keys, rate lim
 - Status: `is_active`, `expires_at`, `last_used_at`
 
 **Available Roles:**
+
 - `read_only`: GET requests only (analytics, reports)
 - `read_write`: GET + POST/PUT (quote pricing, upload data)
 - `admin`: Full access including DELETE
 
 **Available Scopes:**
+
 - `pricing:read`, `pricing:write`
 - `analytics:read`, `analytics:write`
 - `properties:read`, `properties:write`, `properties:delete`
@@ -40,6 +43,7 @@ Implemented complete partner API system with workspace-scoped API keys, rate lim
 - `admin:*` (grants all permissions)
 
 #### `api_key_usage` Table
+
 - Tracks every API request for analytics and billing
 - Records: `endpoint`, `method`, `status_code`, `response_time_ms`
 - Context: `ip_address`, `user_agent`, `referer`
@@ -47,6 +51,7 @@ Implemented complete partner API system with workspace-scoped API keys, rate lim
 - Errors: `error_type`, `error_message`
 
 #### `api_rate_limits` Table
+
 - Tracks request counts per time window
 - Windows: `minute`, `hour`, `day`
 - Auto-cleanup of old records (7 days)
@@ -75,6 +80,7 @@ SELECT track_api_key_usage('key-uuid', '/api/pricing/quote', 'POST', 200, 45, '1
 **Location:** [`backend/middleware/authenticateApiKey.ts`](../../backend/middleware/authenticateApiKey.ts)
 
 **Features:**
+
 - Extracts API key from multiple header formats:
   - `Authorization: Bearer jen_live_...`
   - `Authorization: jen_live_...`
@@ -88,28 +94,20 @@ SELECT track_api_key_usage('key-uuid', '/api/pricing/quote', 'POST', 200, 45, '1
 **Usage:**
 
 ```typescript
-import { authenticateApiKey, authenticateFlexible } from './middleware/authenticateApiKey';
+import { authenticateApiKey, authenticateFlexible } from './middleware/authenticateApiKey'
 
 // Require specific scope
-app.get('/api/public/pricing/quote',
-  authenticateApiKey('pricing:read'),
-  handler
-);
+app.get('/api/public/pricing/quote', authenticateApiKey('pricing:read'), handler)
 
 // No specific scope (just valid key)
-app.get('/api/public/health',
-  authenticateApiKey(),
-  handler
-);
+app.get('/api/public/health', authenticateApiKey(), handler)
 
 // Accept either JWT or API key
-app.get('/api/analytics/demand-forecast',
-  authenticateFlexible('analytics:read'),
-  handler
-);
+app.get('/api/analytics/demand-forecast', authenticateFlexible('analytics:read'), handler)
 ```
 
 **Request Metadata:**
+
 ```typescript
 req.apiKey = {
   id: 'key-uuid',
@@ -119,9 +117,9 @@ req.apiKey = {
   quotas: {
     perMinute: 60,
     perHour: 1000,
-    perDay: 10000
-  }
-};
+    perDay: 10000,
+  },
+}
 ```
 
 ### 3. Rate Limiting Middleware ✅
@@ -129,6 +127,7 @@ req.apiKey = {
 **Location:** [`backend/middleware/rateLimitApiKey.ts`](../../backend/middleware/rateLimitApiKey.ts)
 
 **Features:**
+
 - Per-minute, per-hour, per-day quotas
 - 429 responses with `Retry-After` header
 - Rate limit headers on all responses:
@@ -141,14 +140,15 @@ req.apiKey = {
 **Usage:**
 
 ```typescript
-import rateLimitApiKey from './middleware/rateLimitApiKey';
+import rateLimitApiKey from './middleware/rateLimitApiKey'
 
 // Apply after authenticateApiKey
-app.use(authenticateApiKey());
-app.use(rateLimitApiKey());
+app.use(authenticateApiKey())
+app.use(rateLimitApiKey())
 ```
 
 **Rate Limit Response:**
+
 ```json
 {
   "error": "RATE_LIMIT_EXCEEDED",
@@ -160,6 +160,7 @@ app.use(rateLimitApiKey());
 ```
 
 **Headers:**
+
 ```
 HTTP/1.1 429 Too Many Requests
 X-RateLimit-Limit: 60
@@ -173,12 +174,14 @@ Retry-After: 45
 **Location:** [`backend/openapi.json`](../../backend/openapi.json)
 
 **Changes:**
+
 - Added `apiKeyAuth` security scheme
 - Configured for `X-API-Key` header
-- Description includes format (jen_live_...)
+- Description includes format (jen*live*...)
 - Available alongside JWT and cookie auth
 
 **Security Schemes:**
+
 ```json
 {
   "securitySchemes": {
@@ -209,6 +212,7 @@ Retry-After: 45
 **Location:** [`sdks/generate-sdks.sh`](../../sdks/generate-sdks.sh)
 
 **Features:**
+
 - Auto-generates TypeScript and Python SDKs from OpenAPI spec
 - Uses openapi-generator-cli
 - Configurable package names and versions
@@ -216,6 +220,7 @@ Retry-After: 45
 - Build verification
 
 **Usage:**
+
 ```bash
 # Generate both SDKs
 ./sdks/generate-sdks.sh
@@ -228,12 +233,14 @@ Retry-After: 45
 ```
 
 **Generated SDKs:**
+
 - **TypeScript**: `@jengu/sdk` - Axios-based client with TypeScript types
 - **Python**: `jengu-sdk` - Python client with type hints
 
 ### 6. SDK Configuration Files ✅
 
 **TypeScript Config:** [`sdks/typescript-config.json`](../../sdks/typescript-config.json)
+
 ```json
 {
   "npmName": "@jengu/sdk",
@@ -247,6 +254,7 @@ Retry-After: 45
 ```
 
 **Python Config:** [`sdks/python-config.json`](../../sdks/python-config.json)
+
 ```json
 {
   "packageName": "jengu_sdk",
@@ -309,6 +317,7 @@ Retry-After: 45
 ### API Key System
 
 **Generation:**
+
 ```sql
 -- Create API key for a user
 INSERT INTO api_keys ("userId", name, key_prefix, key_hash, role, scopes)
@@ -323,6 +332,7 @@ VALUES (
 ```
 
 **Authentication Formats:**
+
 ```bash
 # Option 1: X-API-Key header (recommended)
 curl -H "X-API-Key: jen_live_abc123..." https://api.jengu.com/api/public/pricing/quote
@@ -337,11 +347,13 @@ curl -H "Authorization: jen_live_abc123..." https://api.jengu.com/api/public/pri
 ### Rate Limiting
 
 **Quotas:**
+
 - Default: 60 req/min, 1000 req/hour, 10,000 req/day
 - Customizable per API key
 - Multiple window tracking (minute, hour, day)
 
 **Error Response:**
+
 ```json
 {
   "error": "RATE_LIMIT_EXCEEDED",
@@ -357,6 +369,7 @@ curl -H "Authorization: jen_live_abc123..." https://api.jengu.com/api/public/pri
 **Scope Format:** `resource:action`
 
 Examples:
+
 - `pricing:read` - Read pricing quotes
 - `pricing:write` - Generate pricing quotes
 - `analytics:read` - View analytics
@@ -364,17 +377,16 @@ Examples:
 - `admin:*` - Full access
 
 **Middleware Usage:**
+
 ```typescript
 // Require pricing:read scope
-app.get('/api/public/pricing/quote',
-  authenticateApiKey('pricing:read'),
-  handler
-);
+app.get('/api/public/pricing/quote', authenticateApiKey('pricing:read'), handler)
 ```
 
 ### Usage Tracking
 
 All API requests tracked with:
+
 - Endpoint and method
 - Response time (ms)
 - Status code
@@ -383,6 +395,7 @@ All API requests tracked with:
 - Error details
 
 **Query Usage:**
+
 ```sql
 -- Get usage stats for an API key
 SELECT
@@ -404,21 +417,23 @@ ORDER BY requests DESC;
 ### TypeScript SDK
 
 **Installation:**
+
 ```bash
 npm install @jengu/sdk
 ```
 
 **Usage:**
+
 ```typescript
-import { Configuration, PricingApi } from '@jengu/sdk';
+import { Configuration, PricingApi } from '@jengu/sdk'
 
 // Configure with API key
 const config = new Configuration({
   apiKey: 'jen_live_abc123xyz789...',
-  basePath: 'https://api.jengu.com'
-});
+  basePath: 'https://api.jengu.com',
+})
 
-const pricingApi = new PricingApi(config);
+const pricingApi = new PricingApi(config)
 
 // Get pricing quote
 const quote = await pricingApi.getPricingQuote({
@@ -427,25 +442,27 @@ const quote = await pricingApi.getPricingQuote({
   product: {
     type: 'standard',
     refundable: false,
-    los: 2
+    los: 2,
   },
   inventory: {
     capacity: 10,
-    remaining: 5
-  }
-});
+    remaining: 5,
+  },
+})
 
-console.log(`Recommended price: $${quote.data.price}`);
+console.log(`Recommended price: $${quote.data.price}`)
 ```
 
 ### Python SDK
 
 **Installation:**
+
 ```bash
 pip install jengu-sdk
 ```
 
 **Usage:**
+
 ```python
 from jengu_sdk import Configuration, ApiClient, PricingApi
 
@@ -482,20 +499,20 @@ with ApiClient(config) as api_client:
 
 ### Public Endpoints (API Key Required)
 
-| Endpoint | Method | Scope | Description |
-|----------|--------|-------|-------------|
-| `/api/public/pricing/quote` | POST | `pricing:read` | Get price recommendation |
-| `/api/public/analytics/summary` | GET | `analytics:read` | Get analytics summary |
-| `/api/public/analytics/demand-forecast` | GET | `analytics:read` | Demand forecasting |
-| `/api/public/properties/:id/statistics` | GET | `properties:read` | Property statistics |
+| Endpoint                                | Method | Scope             | Description              |
+| --------------------------------------- | ------ | ----------------- | ------------------------ |
+| `/api/public/pricing/quote`             | POST   | `pricing:read`    | Get price recommendation |
+| `/api/public/analytics/summary`         | GET    | `analytics:read`  | Get analytics summary    |
+| `/api/public/analytics/demand-forecast` | GET    | `analytics:read`  | Demand forecasting       |
+| `/api/public/properties/:id/statistics` | GET    | `properties:read` | Property statistics      |
 
 ### Rate Limits
 
 | Endpoint Category | Requests/Minute | Requests/Hour | Requests/Day |
-|-------------------|-----------------|---------------|--------------|
-| General | 60 | 1000 | 10,000 |
-| Pricing Quotes | 120 | 2000 | 20,000 |
-| Analytics | 30 | 500 | 5,000 |
+| ----------------- | --------------- | ------------- | ------------ |
+| General           | 60              | 1000          | 10,000       |
+| Pricing Quotes    | 120             | 2000          | 20,000       |
+| Analytics         | 30              | 500           | 5,000        |
 
 ---
 
@@ -504,6 +521,7 @@ with ApiClient(config) as api_client:
 ### API Key Management
 
 **DO:**
+
 - ✅ Rotate keys quarterly
 - ✅ Use separate keys for dev/staging/prod
 - ✅ Set expiration dates for temporary access
@@ -512,6 +530,7 @@ with ApiClient(config) as api_client:
 - ✅ Store keys in environment variables (never in code)
 
 **DON'T:**
+
 - ❌ Commit keys to version control
 - ❌ Share keys via email or chat
 - ❌ Use same key across multiple integrations
@@ -521,6 +540,7 @@ with ApiClient(config) as api_client:
 ### Key Storage
 
 **Environment Variables:**
+
 ```bash
 # .env
 JENGU_API_KEY=jen_live_abc123xyz789...
@@ -528,32 +548,34 @@ JENGU_API_URL=https://api.jengu.com
 ```
 
 **Code:**
+
 ```typescript
-const apiKey = process.env.JENGU_API_KEY;
+const apiKey = process.env.JENGU_API_KEY
 if (!apiKey) {
-  throw new Error('JENGU_API_KEY not set');
+  throw new Error('JENGU_API_KEY not set')
 }
 ```
 
 ### Rate Limit Handling
 
 **Retry Logic:**
+
 ```typescript
 async function callWithRetry(apiCall, maxRetries = 3) {
   for (let i = 0; i < maxRetries; i++) {
     try {
-      return await apiCall();
+      return await apiCall()
     } catch (error) {
       if (error.response?.status === 429) {
-        const retryAfter = parseInt(error.response.headers['retry-after'] || '60');
-        console.log(`Rate limited. Waiting ${retryAfter}s...`);
-        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+        const retryAfter = parseInt(error.response.headers['retry-after'] || '60')
+        console.log(`Rate limited. Waiting ${retryAfter}s...`)
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000))
       } else {
-        throw error;
+        throw error
       }
     }
   }
-  throw new Error('Max retries exceeded');
+  throw new Error('Max retries exceeded')
 }
 ```
 
@@ -595,12 +617,14 @@ RETURNING id, key_prefix;
 ### Test Endpoints
 
 **Health Check:**
+
 ```bash
 curl -H "X-API-Key: jen_test_abc123..." \
   https://api.jengu.com/api/public/health
 ```
 
 **Pricing Quote:**
+
 ```bash
 curl -X POST \
   -H "X-API-Key: jen_test_abc123..." \
@@ -610,6 +634,7 @@ curl -X POST \
 ```
 
 **Rate Limit Test:**
+
 ```bash
 # Exceed rate limit
 for i in {1..65}; do
@@ -626,6 +651,7 @@ done
 ### Usage Dashboard
 
 Query for usage analytics:
+
 ```sql
 -- Daily usage by API key
 SELECT
@@ -645,6 +671,7 @@ ORDER BY date DESC, requests DESC;
 ### Grafana Metrics
 
 Add to Prometheus/Grafana:
+
 - API key requests per second
 - Rate limit hit rate
 - Average response time by key
@@ -675,11 +702,13 @@ Task 12 is complete when:
 ### Immediate
 
 1. **Run Database Migration**
+
    ```bash
    psql -d your_database -f backend/migrations/add_api_keys_table.sql
    ```
 
 2. **Generate SDKs**
+
    ```bash
    chmod +x sdks/generate-sdks.sh
    ./sdks/generate-sdks.sh

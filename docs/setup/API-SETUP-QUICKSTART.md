@@ -9,12 +9,15 @@ This guide will help you set up all the API keys needed to run the Jengu pricing
 ## Priority Order (Do These First)
 
 ### 1. ⚠️ Supabase (CRITICAL - Already Configured)
+
 ✅ **Already have**: `SUPABASE_URL` in `.env.example`
+
 - URL: `https://geehtuuyyxhyissplfjb.supabase.co`
 - **Action**: Get your `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_KEY` from Supabase dashboard
 - **Where**: [Supabase Dashboard](https://supabase.com/dashboard/project/geehtuuyyxhyissplfjb/settings/api)
 
 ### 2. 🔥 Anthropic Claude (HIGH - For AI Insights)
+
 - **What**: AI-powered pricing recommendations and market insights
 - **Cost**: ~$20-50/month (pay-per-use)
 - **Sign up**: [console.anthropic.com](https://console.anthropic.com)
@@ -25,10 +28,12 @@ This guide will help you set up all the API keys needed to run the Jengu pricing
   4. Copy key to `backend/.env`: `ANTHROPIC_API_KEY=sk-ant-api03-...`
 
 ### 3. 🔥 Redis (HIGH - For Caching & Jobs)
+
 - **What**: Caching layer + background job queue
 - **Cost**: FREE (local) or $5-10/month (cloud)
 
 **Option A: Local (Development)**
+
 ```bash
 # macOS
 brew install redis
@@ -43,6 +48,7 @@ redis-cli ping
 ```
 
 **Option B: Redis Cloud (Production)**
+
 1. Visit [redis.com/try-free](https://redis.com/try-free)
 2. Create free database (30MB)
 3. Copy connection URL
@@ -53,6 +59,7 @@ redis-cli ping
 ## Medium Priority (Important Features)
 
 ### 4. 🟡 OpenWeather (Weather Data)
+
 - **What**: Current/forecast weather data
 - **Cost**: FREE tier (1,000 calls/day)
 - **Sign up**: [openweathermap.org/api](https://openweathermap.org/api)
@@ -63,6 +70,7 @@ redis-cli ping
   4. Add to `backend/.env`: `OPENWEATHER_API_KEY=your_key`
 
 ### 5. 🟡 SendGrid (Email Alerts)
+
 - **What**: Email delivery for smart alerts
 - **Cost**: FREE tier (100 emails/day)
 - **Sign up**: [sendgrid.com](https://sendgrid.com)
@@ -78,6 +86,7 @@ redis-cli ping
   4. Verify sender email in SendGrid dashboard
 
 ### 6. 🟡 Makcorps (Competitor Scraping)
+
 - **What**: Competitor hotel price data
 - **Cost**: $49-199/month
 - **Sign up**: [makcorps.com](https://makcorps.com)
@@ -92,6 +101,7 @@ redis-cli ping
 ## Optional (Enable Later)
 
 ### 7. 🟢 Sentry (Error Tracking)
+
 - **What**: Production error monitoring
 - **Cost**: FREE tier (5K errors/month)
 - **Sign up**: [sentry.io](https://sentry.io)
@@ -100,6 +110,7 @@ redis-cli ping
   2. Create 3 projects: `jengu-backend`, `jengu-frontend`, `jengu-pricing`
   3. Copy DSN for each
   4. Add to respective `.env` files:
+
      ```bash
      # backend/.env
      SENTRY_DSN=https://...@sentry.io/backend_id
@@ -112,6 +123,7 @@ redis-cli ping
      ```
 
 ### 8. 🟢 Twilio (SMS Alerts)
+
 - **What**: SMS notifications (optional)
 - **Cost**: $0.0075 per SMS (~$7.50 for 1,000)
 - **Sign up**: [twilio.com](https://twilio.com)
@@ -131,6 +143,7 @@ redis-cli ping
 ## Free APIs (No Signup Needed)
 
 ### ✅ Open-Meteo (Historical Weather)
+
 - **What**: Historical weather data
 - **Cost**: FREE
 - **No API key needed** - uses public API
@@ -218,6 +231,7 @@ SENTRY_DSN=<GET FROM SENTRY IF USING>
 After setting up APIs, verify everything works:
 
 ### 1. Check Backend Health
+
 ```bash
 cd backend
 pnpm run dev
@@ -237,12 +251,14 @@ curl http://localhost:3001/api/health
 ```
 
 ### 2. Check Redis
+
 ```bash
 redis-cli ping
 # Expected: PONG
 ```
 
 ### 3. Check Frontend
+
 ```bash
 cd frontend
 pnpm run dev
@@ -252,6 +268,7 @@ pnpm run dev
 ```
 
 ### 4. Check Pricing Service
+
 ```bash
 cd pricing-service
 python main.py
@@ -267,21 +284,25 @@ curl http://localhost:8000/health
 ## Troubleshooting
 
 ### "Supabase connection failed"
+
 - Go to [Supabase Dashboard](https://supabase.com/dashboard/project/geehtuuyyxhyissplfjb/settings/api)
 - Copy **anon key** and **service_role key**
 - Make sure URL is: `https://geehtuuyyxhyissplfjb.supabase.co`
 
 ### "Redis connection refused"
+
 - Check if Redis is running: `redis-cli ping`
 - If using Docker: `docker ps` (should see redis container)
 - If using Redis Cloud: Check connection URL and firewall settings
 
 ### "Anthropic API invalid key"
+
 - Verify key starts with `sk-ant-api03-`
 - Check you've added payment method in Anthropic dashboard
 - Wait a few minutes after creating key
 
 ### "OpenWeather API 401 Unauthorized"
+
 - Keys take ~10 minutes to activate after creation
 - Check key status in OpenWeather dashboard
 - Verify no typos in `.env` file
@@ -291,6 +312,7 @@ curl http://localhost:8000/health
 ## Cost Summary
 
 ### Minimum to Start (Development)
+
 - Supabase: **FREE**
 - Redis (local): **FREE**
 - Open-Meteo: **FREE**
@@ -298,6 +320,7 @@ curl http://localhost:8000/health
 - **Total: $20-50/month**
 
 ### Full Production Setup
+
 - Supabase: **$25/month** (or FREE)
 - Redis Cloud: **$5-10/month**
 - Anthropic: **$20-50/month**

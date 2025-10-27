@@ -9,6 +9,7 @@ All markdown documentation files have been organized into proper folders.
 ## Root Directory (Clean)
 
 **Files Remaining in Root:**
+
 ```
 /
 ├── CLAUDE.md           # AI assistant instructions (KEEP - required by Claude Code)
@@ -18,6 +19,7 @@ All markdown documentation files have been organized into proper folders.
 ```
 
 **Why These Stay in Root:**
+
 - `CLAUDE.md` - Required by Claude Code AI assistant at root level
 - `AGENTS.md` - AI agent configurations
 - `GEMINI.md` - Gemini AI assistant configuration
@@ -28,9 +30,11 @@ All markdown documentation files have been organized into proper folders.
 ## Documentation Structure (Organized)
 
 ### `/docs/setup/`
+
 **Purpose:** Setup and quickstart guides
 
 **Files:**
+
 - `API-SETUP-QUICKSTART.md` - API keys and environment setup guide
 
 **Moved From:** Root directory
@@ -38,9 +42,11 @@ All markdown documentation files have been organized into proper folders.
 ---
 
 ### `/docs/developer/`
+
 **Purpose:** Technical documentation for developers
 
 **Files:**
+
 - `ARCHITECTURE.md` - Detailed system architecture
 - `CODE_QUALITY.md` - Linting, formatting, type checking
 - `COMPETITOR_DATA.md` - Competitor scraping documentation
@@ -63,14 +69,17 @@ All markdown documentation files have been organized into proper folders.
 - **`TECHNICAL-ARCHITECTURE.md`** ← **MOVED HERE** - Main architecture overview
 
 **Moved From:**
+
 - `TECHNICAL-ARCHITECTURE.md` moved from root directory
 
 ---
 
 ### `/docs/cleanup/`
+
 **Purpose:** Codebase cleanup and maintenance reports
 
 **Files:**
+
 - **`CLEANUP-SUMMARY.md`** ← **MOVED HERE** - Previous cleanup notes
 - **`CODEBASE-CLEANUP-REPORT.md`** ← **MOVED HERE** - Comprehensive cleanup report
 
@@ -79,9 +88,11 @@ All markdown documentation files have been organized into proper folders.
 ---
 
 ### `/docs/verification/`
+
 **Purpose:** Data verification and confirmation documents
 
 **Files:**
+
 - **`REAL-DATA-CONFIRMATION.md`** ← **MOVED HERE** - Confirms all features use real data
 
 **Moved From:** Root directory
@@ -89,9 +100,11 @@ All markdown documentation files have been organized into proper folders.
 ---
 
 ### `/docs/` (Root Level)
+
 **Purpose:** High-level documentation and references
 
 **Files:**
+
 - `API-KEYS-REQUIRED.md` - List of required API keys
 - `COMPLETE-SYSTEM-REFERENCE.md` - Complete system documentation
 - `CTouvert-API-Request-Email.md` - API request correspondence
@@ -102,6 +115,7 @@ All markdown documentation files have been organized into proper folders.
 ---
 
 ### `/docs/archive/`
+
 **Purpose:** Historical documentation (may be outdated)
 
 **Contains:** 100+ archived documents from previous development phases
@@ -109,6 +123,7 @@ All markdown documentation files have been organized into proper folders.
 ---
 
 ### `/docs/guides/`
+
 **Purpose:** User and developer guides
 
 **Contains:** Step-by-step guides and tutorials
@@ -116,6 +131,7 @@ All markdown documentation files have been organized into proper folders.
 ---
 
 ### `/docs/project-summaries/`
+
 **Purpose:** Project status and progress summaries
 
 **Contains:** Historical project status reports
@@ -123,6 +139,7 @@ All markdown documentation files have been organized into proper folders.
 ---
 
 ### `/docs/completion-reports/`
+
 **Purpose:** Task completion reports
 
 **Contains:** Reports for completed development tasks
@@ -130,14 +147,17 @@ All markdown documentation files have been organized into proper folders.
 ---
 
 ### `/docs/audits/`
+
 **Purpose:** Code audits and quality reports
 
 **Contains:**
+
 - `2025-10-25-COMPREHENSIVE-AUDIT.md` - Latest comprehensive audit
 
 ---
 
 ### `/docs/sessions/`
+
 **Purpose:** Development session notes
 
 **Contains:** Notes from development sessions
@@ -145,6 +165,7 @@ All markdown documentation files have been organized into proper folders.
 ---
 
 ### `/docs/monitoring/`
+
 **Purpose:** Monitoring and observability documentation
 
 **Contains:** Prometheus, Sentry, logging documentation
@@ -154,16 +175,20 @@ All markdown documentation files have been organized into proper folders.
 ## Files Moved (Summary)
 
 ### From Root → `/docs/setup/`:
+
 - `API-SETUP-QUICKSTART.md`
 
 ### From Root → `/docs/developer/`:
+
 - `TECHNICAL-ARCHITECTURE.md`
 
 ### From Root → `/docs/cleanup/`:
+
 - `CLEANUP-SUMMARY.md`
 - `CODEBASE-CLEANUP-REPORT.md`
 
 ### From Root → `/docs/verification/`:
+
 - `REAL-DATA-CONFIRMATION.md`
 
 **Total Moved:** 5 files
@@ -173,6 +198,7 @@ All markdown documentation files have been organized into proper folders.
 ## Updated References
 
 ### Files with Updated Links:
+
 1. **`docs/COMPLETE-SYSTEM-REFERENCE.md`**
    - Updated link to `TECHNICAL-ARCHITECTURE.md` (now in `developer/`)
    - Updated file tree structure
@@ -185,6 +211,7 @@ All markdown documentation files have been organized into proper folders.
 ## Verification Commands
 
 ### Check Root Directory:
+
 ```bash
 ls -la *.md
 ```
@@ -192,6 +219,7 @@ ls -la *.md
 **Expected:** Only CLAUDE.md, AGENTS.md, GEMINI.md, README.md
 
 ### Check Documentation Folders:
+
 ```bash
 ls -la docs/setup/
 ls -la docs/developer/ | grep TECHNICAL
@@ -202,6 +230,7 @@ ls -la docs/verification/
 **Expected:** All moved files in their new locations
 
 ### Search for Broken Links:
+
 ```bash
 grep -r "API-SETUP-QUICKSTART.md" docs/ | grep -v "docs/setup"
 grep -r "TECHNICAL-ARCHITECTURE.md" docs/ | grep -v "docs/developer"
@@ -214,22 +243,26 @@ grep -r "TECHNICAL-ARCHITECTURE.md" docs/ | grep -v "docs/developer"
 ## Benefits of This Organization
 
 ### 1. **Cleaner Root Directory**
+
 - Only essential files remain in root
 - Easier to navigate project structure
 - Follows standard conventions (README.md, CLAUDE.md)
 
 ### 2. **Logical Grouping**
+
 - Setup guides together in `/docs/setup/`
 - Developer docs together in `/docs/developer/`
 - Cleanup reports together in `/docs/cleanup/`
 - Verification docs together in `/docs/verification/`
 
 ### 3. **Easier Discovery**
+
 - New developers know where to find docs
 - Clear separation by purpose
 - Consistent naming conventions
 
 ### 4. **Maintainability**
+
 - Easier to update related docs together
 - Clear ownership by category
 - Reduced clutter
@@ -239,11 +272,14 @@ grep -r "TECHNICAL-ARCHITECTURE.md" docs/ | grep -v "docs/developer"
 ## Next Steps (Optional)
 
 ### Consider Moving to Archive:
+
 If not actively used, these files could move to `/docs/archive/`:
+
 - Any outdated status reports
 - Superseded documentation
 
 ### Consider Creating:
+
 - `/docs/deployment/` - Deployment guides and configs
   - Could move `/k8s/` here as `/docs/deployment/kubernetes/`
 - `/docs/api/` - API-specific documentation
@@ -254,6 +290,7 @@ If not actively used, these files could move to `/docs/archive/`:
 ## Status
 
 ✅ **Organization Complete**
+
 - Root directory cleaned
 - All MD files in appropriate folders
 - References updated

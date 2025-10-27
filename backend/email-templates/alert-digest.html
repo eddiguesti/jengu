@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -6,8 +6,8 @@
     <title>Your Daily Alert Digest</title>
     <style>
       body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
-          Arial, sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         line-height: 1.6;
         color: #333;
         background-color: #f5f5f5;
@@ -281,12 +281,8 @@
           <p class="alert-message">{{message}}</p>
 
           <div class="alert-meta">
-            <span>
-              🏠 {{propertyName}}
-            </span>
-            <span>
-              🕐 {{createdAt}}
-            </span>
+            <span> 🏠 {{propertyName}} </span>
+            <span> 🕐 {{createdAt}} </span>
           </div>
 
           {{#actionUrl}}
@@ -295,9 +291,7 @@
           </div>
           {{/actionUrl}}
         </div>
-        {{/alerts}}
-
-        {{^alerts}}
+        {{/alerts}} {{^alerts}}
         <div class="no-alerts">
           <h2>✨ All Clear!</h2>
           <p>You have no new alerts at this time.</p>
@@ -310,7 +304,9 @@
         <!-- Additional Info -->
         <p style="font-size: 14px; color: #666; text-align: center">
           Need help managing your alerts?
-          <a href="{{baseUrl}}/settings/alerts" style="color: #667eea">Update your alert settings</a>
+          <a href="{{baseUrl}}/settings/alerts" style="color: #667eea"
+            >Update your alert settings</a
+          >
         </p>
       </div>
 
@@ -324,9 +320,7 @@
           <a href="{{baseUrl}}/settings/notifications">Manage notification preferences</a> |
           <a href="{{baseUrl}}/settings/alerts">Alert settings</a>
         </p>
-        <p style="margin-top: 15px; color: #999">
-          © {{year}} Jengu. All rights reserved.
-        </p>
+        <p style="margin-top: 15px; color: #999">© {{year}} Jengu. All rights reserved.</p>
       </div>
     </div>
   </body>

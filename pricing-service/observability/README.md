@@ -23,6 +23,7 @@ pip install -r requirements.txt
 ```
 
 This installs:
+
 - `sentry-sdk[fastapi]` - Error tracking
 - `prometheus-client` - Metrics collection
 
@@ -85,19 +86,19 @@ None! The service works without Sentry or Prometheus configured.
 
 ### Optional - Sentry
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SENTRY_DSN` | - | Sentry project DSN (enables error tracking) |
-| `ENVIRONMENT` | `development` | Environment name (dev, staging, prod) |
-| `RELEASE` | `1.0.0` | Release version for tracking |
-| `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | Transaction sampling rate (0.0-1.0) |
+| Variable                    | Default       | Description                                 |
+| --------------------------- | ------------- | ------------------------------------------- |
+| `SENTRY_DSN`                | -             | Sentry project DSN (enables error tracking) |
+| `ENVIRONMENT`               | `development` | Environment name (dev, staging, prod)       |
+| `RELEASE`                   | `1.0.0`       | Release version for tracking                |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0.1`         | Transaction sampling rate (0.0-1.0)         |
 
 ### Optional - General
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `8000` | Service port |
-| `LOG_LEVEL` | `INFO` | Logging level |
+| Variable    | Default | Description   |
+| ----------- | ------- | ------------- |
+| `PORT`      | `8000`  | Service port  |
+| `LOG_LEVEL` | `INFO`  | Logging level |
 
 ---
 
@@ -375,7 +376,7 @@ services:
   pricing-service:
     build: .
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       - SENTRY_DSN=${SENTRY_DSN}
       - ENVIRONMENT=development
@@ -384,7 +385,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     ports:
-      - "9090:9090"
+      - '9090:9090'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - ./observability/prometheus_alerts.yml:/etc/prometheus/alerts.yml
@@ -392,7 +393,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
@@ -401,7 +402,7 @@ services:
   alertmanager:
     image: prom/alertmanager:latest
     ports:
-      - "9093:9093"
+      - '9093:9093'
     volumes:
       - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
 
@@ -416,6 +417,7 @@ docker-compose up -d
 ```
 
 Access:
+
 - Pricing Service: http://localhost:8000
 - Metrics: http://localhost:8000/metrics
 - Prometheus: http://localhost:9090
@@ -433,6 +435,7 @@ Access:
 **Solution:**
 
 1. Check service is running:
+
    ```bash
    curl http://localhost:8000/health
    ```
@@ -450,11 +453,13 @@ Access:
 **Solution:**
 
 1. Verify `SENTRY_DSN` is set:
+
    ```bash
    echo $SENTRY_DSN
    ```
 
 2. Check service logs for initialization message:
+
    ```
    ✅ Sentry initialized (environment: development, release: dev)
    ```
@@ -490,19 +495,20 @@ Access:
 
 ## Files Reference
 
-| File | Description |
-|------|-------------|
-| `sentry_config.py` | Sentry initialization and configuration |
-| `prometheus_metrics.py` | Metrics definitions and helper functions |
-| `grafana_dashboard.json` | Pre-built Grafana dashboard |
-| `prometheus_alerts.yml` | Alert rules for Prometheus |
-| `README.md` | This file - quick start guide |
+| File                     | Description                              |
+| ------------------------ | ---------------------------------------- |
+| `sentry_config.py`       | Sentry initialization and configuration  |
+| `prometheus_metrics.py`  | Metrics definitions and helper functions |
+| `grafana_dashboard.json` | Pre-built Grafana dashboard              |
+| `prometheus_alerts.yml`  | Alert rules for Prometheus               |
+| `README.md`              | This file - quick start guide            |
 
 ---
 
 ## Support
 
 For questions or issues:
+
 - Check [OBSERVABILITY.md](../../docs/developer/OBSERVABILITY.md) for detailed documentation
 - Review Prometheus queries at http://localhost:9090
 - Search Sentry issues at https://sentry.io

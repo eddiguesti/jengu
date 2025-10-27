@@ -50,12 +50,14 @@ High-performance gRPC bridge for Node.js Backend ↔ FastAPI Pricing Service com
 ### 1. Install Dependencies
 
 **Backend (Node.js):**
+
 ```bash
 cd backend
 pnpm install @grpc/grpc-js @grpc/proto-loader
 ```
 
 **Pricing Service (Python):**
+
 ```bash
 cd pricing-service
 pip install grpcio grpcio-tools protobuf
@@ -64,6 +66,7 @@ pip install grpcio grpcio-tools protobuf
 ### 2. Generate gRPC Code
 
 **Python:**
+
 ```bash
 cd pricing-service
 chmod +x generate_grpc.sh
@@ -71,6 +74,7 @@ chmod +x generate_grpc.sh
 ```
 
 This generates:
+
 - `pricing_pb2.py` - Message classes
 - `pricing_pb2_grpc.py` - Service stubs
 
@@ -80,6 +84,7 @@ Code is loaded dynamically at runtime (no generation needed)
 ### 3. Configure Environment Variables
 
 **Backend (.env):**
+
 ```bash
 # Enable gRPC (set to false to use REST only)
 ENABLE_GRPC=true
@@ -92,6 +97,7 @@ PRICING_SERVICE_URL=http://localhost:8000
 ```
 
 **Pricing Service (.env):**
+
 ```bash
 # gRPC server port
 GRPC_PORT=50051
@@ -102,12 +108,14 @@ GRPC_PORT=50051
 **Option A: Run Both Services**
 
 Terminal 1 (Pricing Service with gRPC):
+
 ```bash
 cd pricing-service
 python grpc_server.py
 ```
 
 Terminal 2 (Backend):
+
 ```bash
 cd backend
 pnpm run dev
@@ -116,6 +124,7 @@ pnpm run dev
 **Option B: Keep REST Only**
 
 Set `ENABLE_GRPC=false` and just run FastAPI:
+
 ```bash
 cd pricing-service
 python main.py
@@ -167,6 +176,7 @@ service PricingService {
 ### Key Messages
 
 **PriceQuoteRequest:**
+
 - property_id
 - stay_date
 - product_type, refundable, los
@@ -175,6 +185,7 @@ service PricingService {
 - allowed_price_grid (optional)
 
 **PriceQuoteResponse:**
+
 - price
 - price_grid
 - conf_band (confidence interval)
@@ -199,11 +210,13 @@ Both methods return `_method` and `_latency` metadata:
 ### Log Messages
 
 **gRPC Success:**
+
 ```
 ✅ gRPC GetPriceQuote: 12ms
 ```
 
 **gRPC Failure + Fallback:**
+
 ```
 ⚠️  gRPC GetPriceQuote failed, falling back to REST: <error>
 ✅ REST fallback: 45ms
@@ -235,12 +248,12 @@ ENABLE_GRPC=true npm run load-test
 
 ### Expected Results
 
-| Metric | REST | gRPC | Improvement |
-|--------|------|------|-------------|
-| P50 Latency | 45ms | 25ms | 44% |
-| P95 Latency | 120ms | 70ms | 42% |
-| P99 Latency | 250ms | 150ms | 40% |
-| Throughput | 800 rps | 1200 rps | 50% |
+| Metric      | REST    | gRPC     | Improvement |
+| ----------- | ------- | -------- | ----------- |
+| P50 Latency | 45ms    | 25ms     | 44%         |
+| P95 Latency | 120ms   | 70ms     | 42%         |
+| P99 Latency | 250ms   | 150ms    | 40%         |
+| Throughput  | 800 rps | 1200 rps | 50%         |
 
 ## Troubleshooting
 
@@ -249,11 +262,13 @@ ENABLE_GRPC=true npm run load-test
 **Symptom:** `⚠️  gRPC GetPriceQuote failed, falling back to REST`
 
 **Causes:**
+
 1. gRPC server not running (`python grpc_server.py`)
 2. Wrong port in `PRICING_GRPC_HOST`
 3. Firewall blocking port 50051
 
 **Solution:**
+
 ```bash
 # Check if gRPC server is running
 lsof -i :50051
@@ -270,6 +285,7 @@ tail -f pricing-service/logs/grpc.log
 **Symptom:** `Module not found: pricing_pb2`
 
 **Solution:**
+
 ```bash
 cd pricing-service
 ./generate_grpc.sh
@@ -283,11 +299,13 @@ ls -la pricing_pb2.py pricing_pb2_grpc.py
 **Symptom:** `ImportError: cannot import name 'pricing_pb2'`
 
 **Solution:** Run the generate script which fixes imports:
+
 ```bash
 ./generate_grpc.sh
 ```
 
 Or manually fix:
+
 ```python
 # Change this:
 import pricing_pb2
@@ -301,10 +319,12 @@ from . import pricing_pb2
 **Symptom:** Always seeing `REST fallback` in logs
 
 **Causes:**
+
 1. `ENABLE_GRPC=false` in .env
 2. gRPC client failed to initialize
 
 **Solution:**
+
 ```bash
 # Check environment
 echo $ENABLE_GRPC  # Should be "true"
@@ -372,10 +392,7 @@ const sslCreds = grpc.credentials.createSsl(
   fs.readFileSync('client-cert.pem')
 )
 
-grpcClient = new pricingProto.PricingService(
-  GRPC_HOST,
-  sslCreds
-)
+grpcClient = new pricingProto.PricingService(GRPC_HOST, sslCreds)
 ```
 
 3. Update server:
@@ -435,6 +452,7 @@ futures.ThreadPoolExecutor(max_workers=20)
 ## Support
 
 For issues or questions:
+
 1. Check logs in `backend/logs/` and `pricing-service/logs/`
 2. Verify environment variables
 3. Test REST fallback works

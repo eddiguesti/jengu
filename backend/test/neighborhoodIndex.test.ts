@@ -4,7 +4,7 @@
  * Task 15: Competitor Graph & Neighborhood Index
  */
 
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { supabaseAdmin } from '../lib/supabase.js'
 import { CompetitorGraphService } from '../services/competitorGraphService.js'
 import { NeighborhoodIndexService } from '../services/neighborhoodIndexService.js'

@@ -47,14 +47,14 @@ Evaluates alert rules and determines if alerts should be triggered.
 **Example Usage:**
 
 ```typescript
-import { AlertEngine } from './services/alertEngine.js';
+import { AlertEngine } from './services/alertEngine.js'
 
 // Evaluate all active rules for a property
-const alerts = await AlertEngine.evaluatePropertyRules(propertyId);
+const alerts = await AlertEngine.evaluatePropertyRules(propertyId)
 
 // Create alert records
 for (const alert of alerts) {
-  await AlertEngine.createAlert(alert);
+  await AlertEngine.createAlert(alert)
 }
 ```
 
@@ -98,13 +98,13 @@ Sends email notifications using SendGrid.
 **Example Usage:**
 
 ```typescript
-import { sendDailyDigest, sendSingleAlert } from './services/alertDelivery.js';
+import { sendDailyDigest, sendSingleAlert } from './services/alertDelivery.js'
 
 // Send daily digest to user
-await sendDailyDigest(userId);
+await sendDailyDigest(userId)
 
 // Send single alert email
-await sendSingleAlert(alertId);
+await sendSingleAlert(alertId)
 ```
 
 ## Database Schema
@@ -115,20 +115,20 @@ await sendSingleAlert(alertId);
 
 Defines alert rules for properties.
 
-| Column                | Type      | Description                              |
-| --------------------- | --------- | ---------------------------------------- |
-| id                    | UUID      | Primary key                              |
-| userId                | UUID      | User who owns this rule                  |
-| propertyId            | UUID      | Property to monitor                      |
-| name                  | TEXT      | User-friendly rule name                  |
-| rule_type             | TEXT      | Type of alert (see types above)          |
-| conditions            | JSONB     | Rule-specific conditions                 |
-| severity              | TEXT      | low, medium, high, critical              |
-| priority              | INTEGER   | Priority for sorting (1-100)             |
-| is_active             | BOOLEAN   | Whether rule is enabled                  |
-| min_interval_hours    | INTEGER   | Minimum hours between alerts (throttling)|
-| last_triggered_at     | TIMESTAMP | Last time alert was triggered            |
-| trigger_count         | INTEGER   | Total times triggered                    |
+| Column             | Type      | Description                               |
+| ------------------ | --------- | ----------------------------------------- |
+| id                 | UUID      | Primary key                               |
+| userId             | UUID      | User who owns this rule                   |
+| propertyId         | UUID      | Property to monitor                       |
+| name               | TEXT      | User-friendly rule name                   |
+| rule_type          | TEXT      | Type of alert (see types above)           |
+| conditions         | JSONB     | Rule-specific conditions                  |
+| severity           | TEXT      | low, medium, high, critical               |
+| priority           | INTEGER   | Priority for sorting (1-100)              |
+| is_active          | BOOLEAN   | Whether rule is enabled                   |
+| min_interval_hours | INTEGER   | Minimum hours between alerts (throttling) |
+| last_triggered_at  | TIMESTAMP | Last time alert was triggered             |
+| trigger_count      | INTEGER   | Total times triggered                     |
 
 **Example Rule:**
 
@@ -149,50 +149,50 @@ Defines alert rules for properties.
 
 Stores triggered alerts.
 
-| Column              | Type      | Description                        |
-| ------------------- | --------- | ---------------------------------- |
-| id                  | UUID      | Primary key                        |
-| alert_rule_id       | UUID      | FK to alert_rules                  |
-| userId              | UUID      | User who owns this alert           |
-| propertyId          | UUID      | Property this alert is about       |
-| alert_type          | TEXT      | Type of alert                      |
-| severity            | TEXT      | low, medium, high, critical        |
-| priority            | INTEGER   | Priority for sorting               |
-| title               | TEXT      | Alert title                        |
-| message             | TEXT      | Alert message                      |
-| data                | JSONB     | Alert-specific data                |
-| action_url          | TEXT      | URL to take action                 |
-| status              | TEXT      | pending, sent, dismissed, snoozed  |
-| sent_at             | TIMESTAMP | When email was sent                |
-| dismissed_at        | TIMESTAMP | When user dismissed                |
-| snoozed_until       | TIMESTAMP | Snooze until this time             |
+| Column        | Type      | Description                       |
+| ------------- | --------- | --------------------------------- |
+| id            | UUID      | Primary key                       |
+| alert_rule_id | UUID      | FK to alert_rules                 |
+| userId        | UUID      | User who owns this alert          |
+| propertyId    | UUID      | Property this alert is about      |
+| alert_type    | TEXT      | Type of alert                     |
+| severity      | TEXT      | low, medium, high, critical       |
+| priority      | INTEGER   | Priority for sorting              |
+| title         | TEXT      | Alert title                       |
+| message       | TEXT      | Alert message                     |
+| data          | JSONB     | Alert-specific data               |
+| action_url    | TEXT      | URL to take action                |
+| status        | TEXT      | pending, sent, dismissed, snoozed |
+| sent_at       | TIMESTAMP | When email was sent               |
+| dismissed_at  | TIMESTAMP | When user dismissed               |
+| snoozed_until | TIMESTAMP | Snooze until this time            |
 
 #### `alert_settings`
 
 Per-user alert preferences.
 
-| Column              | Type      | Description                        |
-| ------------------- | --------- | ---------------------------------- |
-| userId              | UUID      | User (primary key)                 |
-| email_enabled       | BOOLEAN   | Enable email notifications         |
-| email_frequency     | TEXT      | immediate, daily, weekly           |
-| quiet_hours_start   | TIME      | Quiet hours start time (HH:MM)     |
-| quiet_hours_end     | TIME      | Quiet hours end time (HH:MM)       |
-| min_severity        | TEXT      | Only send alerts >= this severity  |
+| Column            | Type    | Description                       |
+| ----------------- | ------- | --------------------------------- |
+| userId            | UUID    | User (primary key)                |
+| email_enabled     | BOOLEAN | Enable email notifications        |
+| email_frequency   | TEXT    | immediate, daily, weekly          |
+| quiet_hours_start | TIME    | Quiet hours start time (HH:MM)    |
+| quiet_hours_end   | TIME    | Quiet hours end time (HH:MM)      |
+| min_severity      | TEXT    | Only send alerts >= this severity |
 
 #### `alert_evaluation_log`
 
 Logs all rule evaluations for debugging.
 
-| Column              | Type      | Description                        |
-| ------------------- | --------- | ---------------------------------- |
-| id                  | UUID      | Primary key                        |
-| alert_rule_id       | UUID      | FK to alert_rules                  |
-| triggered           | BOOLEAN   | Whether alert was triggered        |
-| reason              | TEXT      | Why triggered/not triggered        |
-| evaluation_data     | JSONB     | Evaluation context and results     |
-| evaluation_time_ms  | INTEGER   | Evaluation duration in ms          |
-| evaluated_at        | TIMESTAMP | When evaluation occurred           |
+| Column             | Type      | Description                    |
+| ------------------ | --------- | ------------------------------ |
+| id                 | UUID      | Primary key                    |
+| alert_rule_id      | UUID      | FK to alert_rules              |
+| triggered          | BOOLEAN   | Whether alert was triggered    |
+| reason             | TEXT      | Why triggered/not triggered    |
+| evaluation_data    | JSONB     | Evaluation context and results |
+| evaluation_time_ms | INTEGER   | Evaluation duration in ms      |
+| evaluated_at       | TIMESTAMP | When evaluation occurred       |
 
 ### Helper Functions
 
@@ -431,10 +431,10 @@ node backend/jobs/alertScheduler.js
 Add to `backend/server.ts`:
 
 ```typescript
-import { startAlertScheduler } from './jobs/alertScheduler.js';
+import { startAlertScheduler } from './jobs/alertScheduler.js'
 
 // After app initialization
-startAlertScheduler();
+startAlertScheduler()
 ```
 
 ### 5. Create Default Alert Rules

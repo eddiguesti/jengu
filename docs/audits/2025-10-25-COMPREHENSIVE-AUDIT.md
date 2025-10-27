@@ -1,4 +1,5 @@
 # COMPREHENSIVE CODE & ARCHITECTURE AUDIT
+
 ## Jengu Dynamic Pricing Platform
 
 **Audit Date**: October 25, 2025
@@ -11,6 +12,7 @@
 ## EXECUTIVE SUMMARY
 
 This comprehensive audit covers:
+
 1. **Code Quality** - TypeScript, patterns, best practices
 2. **Architecture** - Data flow, security, scalability
 3. **Dead Code** - Unused files, dependencies, and documentation
@@ -18,14 +20,14 @@ This comprehensive audit covers:
 
 ### Overall Health Score: **82/100** (Good, with improvement areas)
 
-| Category | Score | Status |
-|----------|-------|--------|
-| Backend Code Quality | 88/100 | ✅ Good |
-| Frontend Code Quality | 78/100 | ⚠️ Needs Work |
-| Architecture | 90/100 | ✅ Excellent |
-| Documentation | 70/100 | ⚠️ Needs Cleanup |
-| Test Coverage | 65/100 | ⚠️ Limited |
-| Dead Code Ratio | 11% | ⚠️ Moderate |
+| Category              | Score  | Status           |
+| --------------------- | ------ | ---------------- |
+| Backend Code Quality  | 88/100 | ✅ Good          |
+| Frontend Code Quality | 78/100 | ⚠️ Needs Work    |
+| Architecture          | 90/100 | ✅ Excellent     |
+| Documentation         | 70/100 | ⚠️ Needs Cleanup |
+| Test Coverage         | 65/100 | ⚠️ Limited       |
+| Dead Code Ratio       | 11%    | ⚠️ Moderate      |
 
 ---
 
@@ -38,6 +40,7 @@ This comprehensive audit covers:
 #### Critical Issues (16 errors)
 
 **A. Database Schema Out of Sync (15 errors)**
+
 - Multiple routes/workers query tables not in TypeScript types:
   - `bandit_actions` (bandit.ts, competitorWorker.ts)
   - `competitor_relationships` (neighborhoodIndexWorker.ts)
@@ -50,6 +53,7 @@ This comprehensive audit covers:
 **Fix**: Run `npx supabase gen types typescript --project-id <id> > types/database.types.ts`
 
 **B. Redis/IORedis Type Issues (3 errors)**
+
 - `lib/queue/connection.ts`: Cannot use namespace 'Redis' as type
 - `lib/queue/connection.ts`: Redis not constructable
 - Using wrong import pattern for IORedis
@@ -58,6 +62,7 @@ This comprehensive audit covers:
 **Fix**: Change `import Redis from 'ioredis'` → `import { Redis } from 'ioredis'`
 
 **C. BullMQ QueueScheduler Deprecated (2 errors)**
+
 - `workers/competitorCronWorker.ts` and `neighborhoodIndexWorker.ts`
 - Using removed `QueueScheduler` API (removed in BullMQ v5)
 
@@ -67,24 +72,29 @@ This comprehensive audit covers:
 #### Medium Priority Issues (23 errors)
 
 **D. Zod Validation Errors (6 errors)**
+
 ```typescript
 // routes/auth.ts, routes/pricing.ts
 error.errors // Should be: error.issues (Zod v4 API)
 ```
+
 **Impact**: MEDIUM - Error messages malformed
 **Fix**: Replace `.errors` with `.issues` (Zod v4 breaking change)
 
 **E. Pino Logger Type Mismatches (14 errors)**
+
 ```typescript
 // Various files
 logger.info('message', { data }) // Incorrect signature
 // Should be:
 logger.info({ data }, 'message')
 ```
+
 **Impact**: LOW - Logs work but TypeScript complains
 **Fix**: Swap argument order to match Pino API
 
 **F. Unused Variables (8 errors)**
+
 - `config/database.ts`: `POOL_SIZE`, `POOL_TIMEOUT` declared but unused
 - `lib/socket/server.ts`: `err` variables in catch blocks
 - `routes/competitor.ts`: `req` variable unused
@@ -99,28 +109,34 @@ logger.info({ data }, 'message')
 #### Critical Issues
 
 **A. Missing Module in pricingDashboard Feature (2 errors)**
+
 ```
 src/features/pricingDashboard/DashboardShell.tsx
 src/features/pricingDashboard/index.ts
   Cannot find module './state/useDashboardStore'
 ```
+
 **Impact**: HIGH - Feature directory incomplete
 **Cause**: Half-implemented feature, store file never created
 **Fix**: Either complete the feature or remove the directory
 
 **B. Unused Imports (3 errors)**
+
 ```
 src/components/insights/NeighborhoodIndexCard.tsx
   'Button', 'Legend', 'MapPin' imported but never used
 ```
+
 **Impact**: LOW - Bloats bundle slightly
 **Fix**: Remove unused imports
 
 **C. Type Mismatch in Button Component (1 error)**
+
 ```
 src/components/pricing/PricingSimulator.tsx:216
   Type '"secondary"' not in Button variant union
 ```
+
 **Impact**: MEDIUM - Component prop mismatch
 **Fix**: Update Button component or change to valid variant
 
@@ -128,29 +144,26 @@ src/components/pricing/PricingSimulator.tsx:216
 
 #### ✅ **Strengths**
 
-| Pattern | Backend | Frontend | Notes |
-|---------|---------|----------|-------|
-| TypeScript Strict Mode | ✅ Yes | ✅ Yes | Enforced project-wide |
-| Async/Await (no callbacks) | ✅ Yes | ✅ Yes | Consistent |
-| Error Handling | ✅ Good | ⚠️ Mixed | Backend has asyncHandler wrapper |
-| Separation of Concerns | ✅ Excellent | ✅ Good | Routes/Services/Middleware clear |
-| Type Safety | ⚠️ 47 errors | ⚠️ 6 errors | Needs fixes |
-| ESLint Compliance | ✅ Passes | ⚠️ Mixed | Settings.tsx has disable comment |
-| Prettier Formatting | ✅ Yes | ✅ Yes | Consistent |
+| Pattern                    | Backend      | Frontend    | Notes                            |
+| -------------------------- | ------------ | ----------- | -------------------------------- |
+| TypeScript Strict Mode     | ✅ Yes       | ✅ Yes      | Enforced project-wide            |
+| Async/Await (no callbacks) | ✅ Yes       | ✅ Yes      | Consistent                       |
+| Error Handling             | ✅ Good      | ⚠️ Mixed    | Backend has asyncHandler wrapper |
+| Separation of Concerns     | ✅ Excellent | ✅ Good     | Routes/Services/Middleware clear |
+| Type Safety                | ⚠️ 47 errors | ⚠️ 6 errors | Needs fixes                      |
+| ESLint Compliance          | ✅ Passes    | ⚠️ Mixed    | Settings.tsx has disable comment |
+| Prettier Formatting        | ✅ Yes       | ✅ Yes      | Consistent                       |
 
 #### ⚠️ **Issues Found**
 
 **Backend:**
+
 1. **Inconsistent logging** - Some files use `console.log`, others use Pino
 2. **No request validation** on 3 routes (metrics, health, auth)
 3. **Mixed error response formats** - Some return `{error}`, others `{message}`
 4. **Service dependencies** - `marketSentiment.ts` imports Anthropic API key in service layer (should be injected)
 
-**Frontend:**
-5. **Duplicate state management** - Both `store/` and `stores/` directories
-6. **Inconsistent API error handling** - Some components catch, some don't
-7. **No global error boundary** on several routes
-8. **Mixed chart libraries** - 3 libraries imported but only Recharts used
+**Frontend:** 5. **Duplicate state management** - Both `store/` and `stores/` directories 6. **Inconsistent API error handling** - Some components catch, some don't 7. **No global error boundary** on several routes 8. **Mixed chart libraries** - 3 libraries imported but only Recharts used
 
 ---
 
@@ -161,6 +174,7 @@ src/components/pricing/PricingSimulator.tsx:216
 #### Overall Assessment: ✅ **EXCELLENT (90/100)**
 
 **Strengths:**
+
 1. **Clean separation** - Routes → Services → Database
 2. **Middleware stack** - Request ID, logging, rate limiting, auth
 3. **Job queue architecture** - BullMQ with 3 workers (enrichment, competitor, analytics)
@@ -225,6 +239,7 @@ src/components/pricing/PricingSimulator.tsx:216
 #### Data Flow Patterns
 
 **Pattern 1: CSV Upload + Enrichment**
+
 ```
 Client → POST /api/files/upload
    ↓
@@ -249,6 +264,7 @@ Emit progress via WebSocket
 ```
 
 **Pattern 2: Analytics Request**
+
 ```
 Client → POST /api/analytics/analyze
    ↓
@@ -269,6 +285,7 @@ Return {results} synchronously
 #### Security Model
 
 **Authentication Flow:**
+
 1. Client authenticates via Supabase Auth (email/password or Google OAuth)
 2. Receives JWT token (stored in localStorage)
 3. axios client auto-attaches `Authorization: Bearer <token>` header
@@ -277,6 +294,7 @@ Return {results} synchronously
 6. Routes manually filter database queries by `userId`
 
 **Row-Level Security (RLS):**
+
 - **All tables** have RLS enabled in Supabase
 - **Backend** uses service role key (bypasses RLS)
 - **Manual filtering** enforced at application level (e.g., `.eq('userId', req.userId)`)
@@ -292,6 +310,7 @@ Return {results} synchronously
 #### Overall Assessment: ⚠️ **GOOD with Issues (78/100)**
 
 **Strengths:**
+
 1. **React 18** with lazy loading and Suspense
 2. **React Router v6** with nested routes
 3. **React Query** for server state caching
@@ -368,12 +387,14 @@ Return {results} synchronously
 #### State Management Pattern
 
 **Client State (Zustand):**
+
 - `useDataStore` - File management, enrichment status
 - `useBusinessStore` - Business profile, settings
 - `useNavigationStore` - Feature flags (Sidebar V1 vs V2)
 - `useDashboardStore` - Dashboard filters (unused)
 
 **Server State (React Query):**
+
 - `useFileData` - Fetch files list
 - `useAnalytics` - Fetch analytics results
 - `useBusinessSettings` - Fetch business profile
@@ -384,6 +405,7 @@ Return {results} synchronously
 #### Routing Strategy
 
 **Current IA (New):**
+
 ```
 / (Dashboard)
 /analytics
@@ -398,6 +420,7 @@ Return {results} synchronously
 ```
 
 **Legacy Redirects:**
+
 - `/data` → `/data-sources`
 - `/pricing-engine` → `/pricing/optimizer`
 - `/competitor-monitor` → `/pricing/competitors`
@@ -408,16 +431,17 @@ Return {results} synchronously
 
 ### 2.3 Scalability Analysis
 
-| Component | Current Limit | Bottleneck | Recommendation |
-|-----------|---------------|------------|----------------|
-| **CSV Upload** | ~10MB, streaming | Memory (if parsed wrong) | ✅ Good - using streaming |
-| **Database Writes** | 1000 rows/batch | Supabase RLS overhead | Consider bulk upsert |
-| **Enrichment** | 1 job/property | API rate limits (weather, holidays) | ✅ Good - cached |
-| **Analytics** | Synchronous | CPU-intensive (statistical models) | Move to worker |
-| **Competitor Scraping** | Serial, 1 target/time | Playwright browser memory | ✅ Good - worker-based |
-| **WebSocket** | All connected clients | Memory (event emitters) | Add Redis adapter |
+| Component               | Current Limit         | Bottleneck                          | Recommendation            |
+| ----------------------- | --------------------- | ----------------------------------- | ------------------------- |
+| **CSV Upload**          | ~10MB, streaming      | Memory (if parsed wrong)            | ✅ Good - using streaming |
+| **Database Writes**     | 1000 rows/batch       | Supabase RLS overhead               | Consider bulk upsert      |
+| **Enrichment**          | 1 job/property        | API rate limits (weather, holidays) | ✅ Good - cached          |
+| **Analytics**           | Synchronous           | CPU-intensive (statistical models)  | Move to worker            |
+| **Competitor Scraping** | Serial, 1 target/time | Playwright browser memory           | ✅ Good - worker-based    |
+| **WebSocket**           | All connected clients | Memory (event emitters)             | Add Redis adapter         |
 
 **Critical Path:**
+
 1. Analytics requests run synchronously (can take 10-30s)
 2. No timeout handling for long analytics jobs
 3. If multiple users request analytics simultaneously, server blocks
@@ -430,30 +454,30 @@ Return {results} synchronously
 
 ### 3.1 Backend Unused Files
 
-| File | Size | Status | Action |
-|------|------|--------|--------|
-| `middleware/authenticateApiKey.ts` | 2KB | ORPHANED | Remove (not imported anywhere) |
-| `utils/dateParser.ts` | 1KB | ORPHANED | Remove (not imported) |
-| `utils/validators.ts` | 1KB | ORPHANED | Remove (duplicate of Zod schemas) |
-| `workers/competitorCronWorker.ts` | 3KB | IMPLEMENTED NOT LOADED | Decide: activate or remove |
-| `workers/neighborhoodIndexWorker.ts` | 5KB | IMPLEMENTED NOT LOADED | Decide: activate or remove |
-| `integrations/pms/CTouvertClient.ts` | 8KB | ORPHANED | Archive (French PMS integration) |
+| File                                 | Size | Status                 | Action                            |
+| ------------------------------------ | ---- | ---------------------- | --------------------------------- |
+| `middleware/authenticateApiKey.ts`   | 2KB  | ORPHANED               | Remove (not imported anywhere)    |
+| `utils/dateParser.ts`                | 1KB  | ORPHANED               | Remove (not imported)             |
+| `utils/validators.ts`                | 1KB  | ORPHANED               | Remove (duplicate of Zod schemas) |
+| `workers/competitorCronWorker.ts`    | 3KB  | IMPLEMENTED NOT LOADED | Decide: activate or remove        |
+| `workers/neighborhoodIndexWorker.ts` | 5KB  | IMPLEMENTED NOT LOADED | Decide: activate or remove        |
+| `integrations/pms/CTouvertClient.ts` | 8KB  | ORPHANED               | Archive (French PMS integration)  |
 
 **Total Backend Dead Code**: ~20KB (5% of backend codebase)
 
 ### 3.2 Frontend Unused Files
 
-| File/Directory | Count | Status | Action |
-|----------------|-------|--------|--------|
-| `components/director/` | 7 charts | ORPHANED | Remove (director page replaced by Analytics) |
-| `components/insights/charts/` | 3 charts | ORPHANED | Remove (insights page replaced by Analytics) |
-| `components/optimize/charts/` | 3 charts | ORPHANED | Remove (never integrated) |
-| `features/pricingDashboard/` | 1 feature | INCOMPLETE | Remove or fix (missing useDashboardStore) |
-| `components/pricing/PricingSimulator.tsx` | 1 component | ORPHANED | Remove (not imported) |
-| `lib/query/hooks/` (duplicate hooks) | 4 files | DUPLICATE | Consolidate with hooks/queries/ |
-| `config/echartsTheme.ts` | 1 file | UNUSED | Remove (eCharts not used) |
-| `lib/chartConfig.ts` | 1 file | UNUSED | Remove (not imported) |
-| `components/layout/Sidebar.tsx` | 1 file | REPLACED | Remove (SidebarV2 is active) |
+| File/Directory                            | Count       | Status     | Action                                       |
+| ----------------------------------------- | ----------- | ---------- | -------------------------------------------- |
+| `components/director/`                    | 7 charts    | ORPHANED   | Remove (director page replaced by Analytics) |
+| `components/insights/charts/`             | 3 charts    | ORPHANED   | Remove (insights page replaced by Analytics) |
+| `components/optimize/charts/`             | 3 charts    | ORPHANED   | Remove (never integrated)                    |
+| `features/pricingDashboard/`              | 1 feature   | INCOMPLETE | Remove or fix (missing useDashboardStore)    |
+| `components/pricing/PricingSimulator.tsx` | 1 component | ORPHANED   | Remove (not imported)                        |
+| `lib/query/hooks/` (duplicate hooks)      | 4 files     | DUPLICATE  | Consolidate with hooks/queries/              |
+| `config/echartsTheme.ts`                  | 1 file      | UNUSED     | Remove (eCharts not used)                    |
+| `lib/chartConfig.ts`                      | 1 file      | UNUSED     | Remove (not imported)                        |
+| `components/layout/Sidebar.tsx`           | 1 file      | REPLACED   | Remove (SidebarV2 is active)                 |
 
 **Total Frontend Dead Code**: ~30 files (18% of frontend components)
 
@@ -476,6 +500,7 @@ Return {results} synchronously
 ### 3.4 Documentation Cleanup Needed
 
 **Root Directory:**
+
 - `TECHNICAL-ARCHITECTURE.md` (115KB) - Duplicate of `docs/developer/ARCHITECTURE.md`
 - `API-SETUP-QUICKSTART.md` - Duplicate of `docs/API-KEYS-REQUIRED.md`
 - `SYSTEM-STATUS.md` - Stale (dated 2025-10-23)
@@ -485,6 +510,7 @@ Return {results} synchronously
 - `CAMPSITE-SETUP-COMPLETE.md` - Unrelated scraper project
 
 **docs/tasks-todo/:**
+
 - Entire folder is from January 2025 (8 old tasks)
 - Contradicts current task system (18 tasks in completion-reports/)
 - Should be archived
@@ -498,11 +524,13 @@ Return {results} synchronously
 ### 4.1 CRITICAL ISSUES (Fix Immediately)
 
 #### Issue 1: Database Schema Out of Sync
+
 **Severity**: 🔴 **CRITICAL**
 **Impact**: Runtime errors when accessing new tables/columns
 **Affected Files**: 15 TypeScript errors across routes/workers
 
 **Fix:**
+
 ```bash
 # Regenerate database types from Supabase
 npx supabase gen types typescript --project-id <YOUR_PROJECT_ID> > backend/types/database.types.ts
@@ -513,11 +541,13 @@ supabase gen types typescript --local > backend/types/database.types.ts
 ```
 
 #### Issue 2: Incomplete pricingDashboard Feature
+
 **Severity**: 🔴 **CRITICAL**
 **Impact**: TypeScript errors, feature unusable
 **Affected Files**: `features/pricingDashboard/DashboardShell.tsx`, `index.ts`
 
 **Fix (Option 1 - Remove):**
+
 ```bash
 rm -rf frontend/src/features/pricingDashboard
 ```
@@ -526,11 +556,13 @@ rm -rf frontend/src/features/pricingDashboard
 Create missing `frontend/src/features/pricingDashboard/state/useDashboardStore.ts`
 
 #### Issue 3: BullMQ v5 Breaking Changes
+
 **Severity**: 🟡 **HIGH**
 **Impact**: Cron workers won't start (QueueScheduler removed)
 **Affected Files**: `workers/competitorCronWorker.ts`, `workers/neighborhoodIndexWorker.ts`
 
 **Fix**: Migrate to BullMQ v5 repeatable jobs:
+
 ```typescript
 // OLD (v4)
 import { QueueScheduler } from 'bullmq'
@@ -538,30 +570,30 @@ const scheduler = new QueueScheduler('competitor')
 
 // NEW (v5)
 await competitorQueue.add('scrape', data, {
-  repeat: { pattern: '0 */6 * * *' } // Every 6 hours
+  repeat: { pattern: '0 */6 * * *' }, // Every 6 hours
 })
 ```
 
 ### 4.2 HIGH PRIORITY ISSUES
 
-| Issue | Severity | Files Affected | Fix Effort |
-|-------|----------|----------------|------------|
-| Redis type errors | 🟡 HIGH | `lib/queue/connection.ts` | 10 min |
-| Zod `.errors` → `.issues` | 🟡 HIGH | `routes/auth.ts`, `routes/pricing.ts` | 5 min |
-| Remove unused chart libraries | 🟡 HIGH | 4 npm packages | 2 min |
-| Consolidate store directories | 🟡 HIGH | `store/` vs `stores/` | 30 min |
-| Remove duplicate Sidebar | 🟡 HIGH | `Sidebar.tsx` (old) | 5 min |
+| Issue                         | Severity | Files Affected                        | Fix Effort |
+| ----------------------------- | -------- | ------------------------------------- | ---------- |
+| Redis type errors             | 🟡 HIGH  | `lib/queue/connection.ts`             | 10 min     |
+| Zod `.errors` → `.issues`     | 🟡 HIGH  | `routes/auth.ts`, `routes/pricing.ts` | 5 min      |
+| Remove unused chart libraries | 🟡 HIGH  | 4 npm packages                        | 2 min      |
+| Consolidate store directories | 🟡 HIGH  | `store/` vs `stores/`                 | 30 min     |
+| Remove duplicate Sidebar      | 🟡 HIGH  | `Sidebar.tsx` (old)                   | 5 min      |
 
 ### 4.3 MEDIUM PRIORITY ISSUES
 
-| Issue | Impact | Fix Effort |
-|-------|--------|------------|
-| Move analytics to async worker | Performance | 4 hours |
-| Add userId filtering tests | Security | 2 hours |
-| Fix Pino logger signatures | Code quality | 1 hour |
-| Remove unused frontend charts | Bundle size | 30 min |
-| Remove unused middleware/utils | Code quality | 15 min |
-| Archive CTouvert integration | Maintenance | 5 min |
+| Issue                          | Impact       | Fix Effort |
+| ------------------------------ | ------------ | ---------- |
+| Move analytics to async worker | Performance  | 4 hours    |
+| Add userId filtering tests     | Security     | 2 hours    |
+| Fix Pino logger signatures     | Code quality | 1 hour     |
+| Remove unused frontend charts  | Bundle size  | 30 min     |
+| Remove unused middleware/utils | Code quality | 15 min     |
+| Archive CTouvert integration   | Maintenance  | 5 min      |
 
 ### 4.4 LOW PRIORITY (Tech Debt)
 
@@ -603,6 +635,7 @@ pnpm run type-check  # Should pass with 0 errors
 ### Phase 2: Remove Dead Code (Day 2) - **2 hours**
 
 **Backend Cleanup:**
+
 ```bash
 cd backend
 rm middleware/authenticateApiKey.ts
@@ -612,6 +645,7 @@ rm -rf integrations/  # Archive CTouvert
 ```
 
 **Frontend Cleanup:**
+
 ```bash
 cd frontend
 rm -rf src/components/director/
@@ -624,6 +658,7 @@ rm src/components/layout/Sidebar.tsx  # Keep SidebarV2 only
 ```
 
 **Dependency Cleanup:**
+
 ```bash
 cd frontend
 pnpm remove @ant-design/plots @antv/g2plot echarts echarts-for-react
@@ -632,6 +667,7 @@ pnpm remove @ant-design/plots @antv/g2plot echarts echarts-for-react
 ### Phase 3: Documentation Cleanup (Day 2) - **1 hour**
 
 **Root Directory:**
+
 ```bash
 # Move to archive
 mv TECHNICAL-ARCHITECTURE.md docs/archive/
@@ -646,6 +682,7 @@ mv CAMPSITE-SETUP-COMPLETE.md docs/archive/
 ```
 
 **Archive old tasks:**
+
 ```bash
 mv docs/tasks-todo docs/archive/tasks-old-2025-01
 ```
@@ -653,6 +690,7 @@ mv docs/tasks-todo docs/archive/tasks-old-2025-01
 ### Phase 4: Consolidate Duplicates (Day 3) - **3 hours**
 
 **A. Consolidate Store Directories**
+
 ```bash
 cd frontend/src
 # Move stores/ to store/
@@ -663,6 +701,7 @@ rmdir stores/
 ```
 
 **B. Consolidate Hooks**
+
 ```bash
 cd frontend/src
 # Review and merge lib/query/hooks/ into hooks/queries/
@@ -712,45 +751,47 @@ cd frontend && pnpm run build  # Success
 
 ### 6.1 Codebase Size
 
-| Category | Files | Lines | % of Total |
-|----------|-------|-------|------------|
-| **Backend** | 89 TS | ~12,000 | 55% |
-| **Frontend** | 67 TSX | ~10,000 | 45% |
-| **Total Code** | 156 | **~22,000** | 100% |
-| **Tests** | 12 | ~2,500 | 11% coverage |
-| **Documentation** | 100+ MD | ~50,000 | N/A |
+| Category          | Files   | Lines       | % of Total   |
+| ----------------- | ------- | ----------- | ------------ |
+| **Backend**       | 89 TS   | ~12,000     | 55%          |
+| **Frontend**      | 67 TSX  | ~10,000     | 45%          |
+| **Total Code**    | 156     | **~22,000** | 100%         |
+| **Tests**         | 12      | ~2,500      | 11% coverage |
+| **Documentation** | 100+ MD | ~50,000     | N/A          |
 
 ### 6.2 Dead Code Analysis
 
 | Category | Dead Files | Total Files | Dead Code % |
-|----------|------------|-------------|-------------|
-| Backend | 5 | 89 | 5.6% |
-| Frontend | 30 | 67 | **44.8%** |
-| Overall | 35 | 156 | **22.4%** |
+| -------- | ---------- | ----------- | ----------- |
+| Backend  | 5          | 89          | 5.6%        |
+| Frontend | 30         | 67          | **44.8%**   |
+| Overall  | 35         | 156         | **22.4%**   |
 
 **Note**: High frontend dead code ratio due to incomplete features and duplicate chart components.
 
 ### 6.3 Dependency Analysis
 
 **Backend:**
+
 - Production: 24 packages
 - Dev: 11 packages
 - **Unused**: 0
 
 **Frontend:**
+
 - Production: 18 packages
 - Dev: 8 packages
 - **Unused**: 4 (ant-design/plots, g2plot, echarts x2)
 
 ### 6.4 Test Coverage Estimate
 
-| Module | Coverage | Status |
-|--------|----------|--------|
-| Backend Routes | ~20% | ⚠️ Low |
-| Backend Services | ~40% | ⚠️ Medium |
-| Backend Middleware | ~60% | ✅ Good |
-| Frontend Components | ~5% | 🔴 Very Low |
-| Frontend Hooks | ~10% | 🔴 Very Low |
+| Module              | Coverage | Status      |
+| ------------------- | -------- | ----------- |
+| Backend Routes      | ~20%     | ⚠️ Low      |
+| Backend Services    | ~40%     | ⚠️ Medium   |
+| Backend Middleware  | ~60%     | ✅ Good     |
+| Frontend Components | ~5%      | 🔴 Very Low |
+| Frontend Hooks      | ~10%     | 🔴 Very Low |
 
 **Overall Test Coverage**: ~25% (goal: 80%)
 
@@ -761,12 +802,14 @@ cd frontend && pnpm run build  # Success
 ### 7.1 Authentication & Authorization
 
 ✅ **Strengths:**
+
 - Supabase Auth with JWT
 - Token auto-refresh via client library
 - Protected routes with auth guard
 - Google OAuth integration
 
 ⚠️ **Concerns:**
+
 1. **Manual userId filtering** - No automated enforcement
 2. **Service role bypass** - Backend uses service key (bypasses RLS)
 3. **No audit logging** - Database changes not logged
@@ -776,11 +819,13 @@ cd frontend && pnpm run build  # Success
 ### 7.2 Input Validation
 
 ✅ **Strengths:**
+
 - Zod schemas for route validation
 - CSV content validation (malicious content check)
 - File size limits (10MB upload, 10MB JSON body)
 
 ⚠️ **Concerns:**
+
 1. **No validation** on health, metrics, auth routes
 2. **SQL injection risk** - Some routes use string interpolation (pricing.ts)
 
@@ -789,11 +834,13 @@ cd frontend && pnpm run build  # Success
 ### 7.3 Rate Limiting
 
 ✅ **Strengths:**
+
 - General limiter (60 req/min per IP)
 - Upload-specific limiter (5 req/10min)
 - Analytics limiter (10 req/min)
 
 ⚠️ **Concerns:**
+
 1. **In-memory storage** - Resets on server restart
 2. **IP-based** - Can be bypassed via proxies
 3. **No distributed limiting** (multi-instance issue)
@@ -803,6 +850,7 @@ cd frontend && pnpm run build  # Success
 ### 7.4 External API Keys
 
 ⚠️ **Security Issues:**
+
 1. **Keys in service files** - Anthropic API key hardcoded in marketSentiment.ts
 2. **No key rotation** - Static keys in .env
 3. **No key expiry checks** - No monitoring
@@ -829,17 +877,18 @@ pnpm audit
 
 ### 8.1 Backend Performance
 
-| Endpoint | Avg Response Time | Notes |
-|----------|-------------------|-------|
-| GET /health | <10ms | ✅ Fast |
-| POST /api/files/upload | 200-500ms | ✅ Streaming, good |
-| POST /api/analytics/analyze | **10-30s** | ⚠️ Synchronous, slow |
-| GET /api/files | 100-300ms | ✅ Paginated |
-| POST /api/pricing/quote | 1-2s | ✅ Acceptable |
+| Endpoint                    | Avg Response Time | Notes                |
+| --------------------------- | ----------------- | -------------------- |
+| GET /health                 | <10ms             | ✅ Fast              |
+| POST /api/files/upload      | 200-500ms         | ✅ Streaming, good   |
+| POST /api/analytics/analyze | **10-30s**        | ⚠️ Synchronous, slow |
+| GET /api/files              | 100-300ms         | ✅ Paginated         |
+| POST /api/pricing/quote     | 1-2s              | ✅ Acceptable        |
 
 **Critical Path**: Analytics requests block event loop.
 
 **Recommendation**: Move to worker pattern:
+
 ```typescript
 // Current: Synchronous
 const results = await mlAnalytics.analyze(data) // 10-30s
@@ -852,6 +901,7 @@ return { jobId, status: 'processing' }
 ### 8.2 Frontend Performance
 
 **Bundle Size:**
+
 ```
 Production build:
   dist/assets/index-[hash].js   ~450KB (gzipped: ~120KB)
@@ -860,6 +910,7 @@ Production build:
 ```
 
 **Optimization Opportunities:**
+
 1. Remove unused chart libraries: **-50KB**
 2. Code split by route: Already done ✅
 3. Image optimization: No images in bundle ✅
@@ -870,6 +921,7 @@ Production build:
 ### 8.3 Database Performance
 
 **Query Analysis:**
+
 - Most queries use indexes (id, userId)
 - Enrichment batching (1000 rows) is efficient
 - **No N+1 query issues detected**

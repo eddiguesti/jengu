@@ -8,6 +8,7 @@
 This document describes the LightGBM-based machine learning pricing system that replaces rule-based multipliers with data-driven elasticity models for revenue optimization.
 
 The ML pricing system provides:
+
 - **Demand prediction** using LightGBM gradient boosting
 - **Elasticity-based pricing** that optimizes for revenue (price × conversion)
 - **Feature engineering** from enriched data (weather, seasonality, competitors, holidays)
@@ -61,18 +62,18 @@ Builds training datasets from enriched pricing data and competitor data.
 
 **Features Engineered** (60+ features):
 
-| Category | Features |
-|----------|----------|
-| **Temporal** | day_of_week, day_of_month, week_of_year, month, quarter, is_weekend, is_month_start, is_month_end |
-| **Seasonal** | season_Spring, season_Summer, season_Fall, season_Winter (one-hot encoded) |
-| **Weather** | temperature, precipitation, windSpeed, cloudCover, weatherCode, rain_on_weekend |
-| **Holidays** | is_holiday, has_holiday_name, holiday_weekend |
-| **Competitor** | comp_p10, comp_p50, comp_p90, comp_count, price_vs_comp_p50, price_vs_comp_p50_pct, is_budget, is_premium, is_market, comp_range |
-| **Occupancy** | occupancy_rate, occupancy_weekend |
-| **Product** | length_of_stay, is_refundable, is_short_stay, is_medium_stay, is_long_stay |
-| **Lead Time** | lead_time, is_last_minute, is_short_lead, is_medium_lead, is_long_lead |
-| **Price History** | price_lag_1, price_lag_7, price_lag_30, price_ma_7, price_ma_30, price_change_1d, price_volatility_7d |
-| **Interactions** | weekend_summer, weekend_winter, holiday_weekend, occupancy_weekend, last_minute_weekend |
+| Category          | Features                                                                                                                         |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Temporal**      | day_of_week, day_of_month, week_of_year, month, quarter, is_weekend, is_month_start, is_month_end                                |
+| **Seasonal**      | season_Spring, season_Summer, season_Fall, season_Winter (one-hot encoded)                                                       |
+| **Weather**       | temperature, precipitation, windSpeed, cloudCover, weatherCode, rain_on_weekend                                                  |
+| **Holidays**      | is_holiday, has_holiday_name, holiday_weekend                                                                                    |
+| **Competitor**    | comp_p10, comp_p50, comp_p90, comp_count, price_vs_comp_p50, price_vs_comp_p50_pct, is_budget, is_premium, is_market, comp_range |
+| **Occupancy**     | occupancy_rate, occupancy_weekend                                                                                                |
+| **Product**       | length_of_stay, is_refundable, is_short_stay, is_medium_stay, is_long_stay                                                       |
+| **Lead Time**     | lead_time, is_last_minute, is_short_lead, is_medium_lead, is_long_lead                                                           |
+| **Price History** | price_lag_1, price_lag_7, price_lag_30, price_ma_7, price_ma_30, price_change_1d, price_volatility_7d                            |
+| **Interactions**  | weekend_summer, weekend_winter, holiday_weekend, occupancy_weekend, last_minute_weekend                                          |
 
 **Usage**:
 
@@ -101,11 +102,13 @@ builder.save_dataset(df, 'training_data.csv')
 Trains LightGBM models with hyperparameter tuning and cross-validation.
 
 **Model Types**:
+
 - **Conversion** (binary classification): Predicts probability of booking
 - **ADR** (regression): Predicts Average Daily Rate
 - **RevPAR** (regression): Predicts Revenue Per Available Room
 
 **Default Hyperparameters**:
+
 ```python
 {
     'objective': 'binary',  # or 'regression'
@@ -124,6 +127,7 @@ Trains LightGBM models with hyperparameter tuning and cross-validation.
 ```
 
 **Training Metrics**:
+
 - **Binary Classification**: AUC, Log Loss, Accuracy, Precision, Recall, F1
 - **Regression**: MAE, RMSE, R², MAPE
 
@@ -153,6 +157,7 @@ python training/train_lightgbm.py \
 ```
 
 **Output**:
+
 - Model binary: `models/{property_id}_conversion_v{timestamp}.bin`
 - Metadata JSON: `models/{property_id}_conversion_v{timestamp}.json`
 - Latest symlink: `models/{property_id}_conversion_latest.bin`
@@ -164,6 +169,7 @@ python training/train_lightgbm.py \
 Manages trained models with versioning, lazy loading, and caching.
 
 **Features**:
+
 - Model version management
 - Lazy loading with in-memory caching
 - Checksum verification (MD5)
@@ -252,13 +258,13 @@ price = (comp_p50 or base_price) * elasticity_factor
 
 ```json
 {
-  "entity": {"userId": "user-uuid", "propertyId": "property-uuid"},
+  "entity": { "userId": "user-uuid", "propertyId": "property-uuid" },
   "stay_date": "2024-06-15",
   "quote_time": "2024-06-01T12:00:00Z",
-  "product": {"type": "standard", "refundable": false, "los": 1},
-  "inventory": {"capacity": 100, "remaining": 30},
+  "product": { "type": "standard", "refundable": false, "los": 1 },
+  "inventory": { "capacity": 100, "remaining": 30 },
   "market": {},
-  "context": {"season": "Summer", "day_of_week": 5},
+  "context": { "season": "Summer", "day_of_week": 5 },
   "toggles": {
     "use_ml": true,
     "use_competitors": true,
@@ -271,10 +277,10 @@ price = (comp_p50 or base_price) * elasticity_factor
 
 ```json
 {
-  "price": 205.50,
-  "price_grid": [185.00, 195.25, 205.50, 215.75, 226.00],
-  "conf_band": {"lower": 185.00, "upper": 226.00},
-  "expected": {"occ_now": 0.7, "occ_end_bucket": 0.88},
+  "price": 205.5,
+  "price_grid": [185.0, 195.25, 205.5, 215.75, 226.0],
+  "conf_band": { "lower": 185.0, "upper": 226.0 },
+  "expected": { "occ_now": 0.7, "occ_end_bucket": 0.88 },
   "reasons": [
     "ML elasticity model (conversion prob: 75.0%)",
     "Predicted demand: High",
@@ -284,13 +290,13 @@ price = (comp_p50 or base_price) * elasticity_factor
   ],
   "safety": {
     "pricing_method": "ml_elasticity",
-    "ml_conversion_prob": 0.7500,
-    "occupancy_rate": 0.700,
+    "ml_conversion_prob": 0.75,
+    "occupancy_rate": 0.7,
     "lead_days": 14,
     "competitor_data": {
-      "p10": 120.00,
-      "p50": 180.00,
-      "p90": 250.00,
+      "p10": 120.0,
+      "p50": 180.0,
+      "p90": 250.0,
       "count": 15,
       "source": "booking.com"
     },
@@ -306,6 +312,7 @@ price = (comp_p50 or base_price) * elasticity_factor
 Framework for comparing ML vs rule-based pricing with statistical significance testing.
 
 **Features**:
+
 - Consistent hash-based assignment (same user always gets same variant)
 - Randomization units: property, user, or session
 - Traffic allocation (e.g., 50% ML, 50% rule-based)
@@ -345,17 +352,17 @@ POST /ab/experiments/{experiment_id}/stop
     "count": 1000,
     "bookings": 650,
     "conversion_rate": 0.65,
-    "adr": 205.50,
+    "adr": 205.5,
     "revpar": 133.58,
-    "total_revenue": 133575.00
+    "total_revenue": 133575.0
   },
   "rule_based": {
     "count": 1000,
     "bookings": 600,
-    "conversion_rate": 0.60,
-    "adr": 198.00,
-    "revpar": 118.80,
-    "total_revenue": 118800.00
+    "conversion_rate": 0.6,
+    "adr": 198.0,
+    "revpar": 118.8,
+    "total_revenue": 118800.0
   },
   "lift": {
     "conversion_rate": +8.33,
@@ -377,6 +384,7 @@ POST /ab/experiments/{experiment_id}/stop
 Validates model performance on historical data.
 
 **Methodology**:
+
 1. Load historical pricing data
 2. Replay pricing decisions with ML and rule-based models
 3. Estimate counterfactual conversion using price elasticity
@@ -447,6 +455,7 @@ GET /model/metrics/{property_id}?model_type=conversion
 ```
 
 **Response**:
+
 ```json
 {
   "property_id": "property-uuid",
@@ -488,6 +497,7 @@ GET /model/registry
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -510,7 +520,7 @@ GET /model/registry
       "loaded_at": "2024-10-23T14:35:12Z",
       "checksum": "a1b2c3d4",
       "num_features": 62,
-      "metrics": {"auc": 0.8542}
+      "metrics": { "auc": 0.8542 }
     }
   }
 }
@@ -523,6 +533,7 @@ GET /model/list?property_id=property-uuid
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -534,7 +545,7 @@ GET /model/list?property_id=property-uuid
       "version": "v20241023_143022",
       "timestamp": "20241023_143022",
       "num_features": 62,
-      "metrics": {"auc": 0.8542},
+      "metrics": { "auc": 0.8542 },
       "file_path": "models/property-uuid_conversion_v20241023_143022.json"
     },
     {
@@ -543,7 +554,7 @@ GET /model/list?property_id=property-uuid
       "version": "v20241020_101520",
       "timestamp": "20241020_101520",
       "num_features": 60,
-      "metrics": {"auc": 0.8312},
+      "metrics": { "auc": 0.8312 },
       "file_path": "models/property-uuid_conversion_v20241020_101520.json"
     }
   ]
@@ -562,6 +573,7 @@ pip install -r requirements.txt
 ```
 
 **New dependencies**:
+
 - `lightgbm` - Gradient boosting framework
 - `scikit-learn` - ML utilities
 - `scipy` - Statistical tests
@@ -601,6 +613,7 @@ python main.py
 ```
 
 The service will:
+
 - Load models on startup
 - Log model checksums
 - Enable ML pricing path
@@ -627,6 +640,7 @@ curl http://localhost:8000/ab/experiments/{experiment_id}/results
 ```
 
 **Success Metrics**:
+
 - RevPAR lift > 5%
 - Conversion lift > 3%
 - P-value < 0.05 (statistically significant)
@@ -634,6 +648,7 @@ curl http://localhost:8000/ab/experiments/{experiment_id}/results
 ### 7. Gradual Rollout
 
 If A/B test is successful:
+
 1. Week 1: 10% ML traffic
 2. Week 2: 25% ML traffic
 3. Week 3: 50% ML traffic
@@ -647,6 +662,7 @@ If A/B test is successful:
 ### Model Performance Metrics
 
 Track via `/model/metrics/{property_id}`:
+
 - **AUC**: Area Under ROC Curve (> 0.80 is good)
 - **Log Loss**: Lower is better (< 0.50 is good)
 - **Accuracy**: Proportion of correct predictions (> 0.75 is good)
@@ -655,6 +671,7 @@ Track via `/model/metrics/{property_id}`:
 ### Business Metrics
 
 Track via A/B experiments:
+
 - **Conversion Rate**: Bookings / Quotes
 - **ADR**: Average Daily Rate
 - **RevPAR**: Revenue Per Available Room
@@ -663,12 +680,14 @@ Track via A/B experiments:
 ### Feature Importance
 
 Monitor top features via `/model/metrics/{property_id}`:
+
 - Should include: competitor prices, occupancy, lead time, seasonality
 - Watch for drift: feature importance should be stable over time
 
 ### Alerts
 
 Set up alerts for:
+
 - Model AUC drops below 0.75
 - Revenue lift becomes negative
 - Model prediction errors spike
@@ -687,6 +706,7 @@ Set up alerts for:
 ### Trigger Conditions
 
 Retrain if:
+
 1. Model age > 30 days
 2. AUC drops below 0.75
 3. Revenue lift becomes negative in A/B test
@@ -714,6 +734,7 @@ Retrain if:
 **Symptoms**: Pricing falls back to rule-based, logs show "Model not found"
 
 **Solution**:
+
 ```bash
 # Check if model exists
 ls -la pricing-service/models/
@@ -730,6 +751,7 @@ python training/train_lightgbm.py --property-id {uuid} ...
 **Symptoms**: Low conversion prediction accuracy
 
 **Solutions**:
+
 1. Increase training data size (need 1000+ samples minimum)
 2. Tune hyperparameters (increase num_boost_round, adjust learning_rate)
 3. Add more features (check data enrichment pipeline)
@@ -740,6 +762,7 @@ python training/train_lightgbm.py --property-id {uuid} ...
 **Symptoms**: ML pricing underperforms rule-based
 
 **Solutions**:
+
 1. Check if model is overfitting (high train AUC, low validation AUC)
 2. Validate feature engineering (check for data leakage)
 3. Review elasticity pricing logic (may be too aggressive/conservative)
@@ -750,6 +773,7 @@ python training/train_lightgbm.py --property-id {uuid} ...
 **Symptoms**: P-value > 0.05, lift ~0%
 
 **Solutions**:
+
 1. Increase sample size (run experiment longer)
 2. Check if ML and rule-based prices are too similar
 3. Increase traffic allocation to ML variant
@@ -840,15 +864,15 @@ python training/train_lightgbm.py --property-id {uuid} ...
 
 ### 📊 Acceptance Criteria Status
 
-| Criterion | Status | Notes |
-|-----------|--------|-------|
-| Backtest shows uplift vs baseline | ✅ | Backtesting script validates revenue lift |
-| Models load on service start | ✅ | Model registry with lazy loading and caching |
-| Checksum logged | ✅ | MD5 checksum verification on load |
-| Metrics endpoint (MAE/RMSE, feature importance) | ✅ | GET /model/metrics/{property_id} |
-| A/B testing framework | ✅ | Consistent hashing, traffic allocation, statistical tests |
-| Feature engineering from enriched data | ✅ | 60+ features including weather, comps, temporal, holidays |
-| LightGBM training per property | ✅ | Per-property models with versioning |
+| Criterion                                       | Status | Notes                                                     |
+| ----------------------------------------------- | ------ | --------------------------------------------------------- |
+| Backtest shows uplift vs baseline               | ✅     | Backtesting script validates revenue lift                 |
+| Models load on service start                    | ✅     | Model registry with lazy loading and caching              |
+| Checksum logged                                 | ✅     | MD5 checksum verification on load                         |
+| Metrics endpoint (MAE/RMSE, feature importance) | ✅     | GET /model/metrics/{property_id}                          |
+| A/B testing framework                           | ✅     | Consistent hashing, traffic allocation, statistical tests |
+| Feature engineering from enriched data          | ✅     | 60+ features including weather, comps, temporal, holidays |
+| LightGBM training per property                  | ✅     | Per-property models with versioning                       |
 
 ---
 

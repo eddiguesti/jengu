@@ -15,9 +15,11 @@ The weather icons now feature **smooth, contextual animations** with glowing eff
 ## Animated Weather Icons
 
 ### 🌞 Sun Icon
+
 **Animation:** Gentle pulsing glow with rotation
 **Colors:** Yellow-400 with golden glow
 **Effect:**
+
 - Scales: 1 → 1.1 → 1 (breathing effect)
 - Rotates: 0° → 10° → 0° (gentle turn)
 - Glow: `drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]`
@@ -29,9 +31,11 @@ The weather icons now feature **smooth, contextual animations** with glowing eff
 ---
 
 ### ☁️ Cloud Icon
+
 **Animation:** Gentle horizontal drift
 **Colors:** Gray-400 with subtle shadow
 **Effect:**
+
 - Moves: x: 0 → 2 → 0 (drifting left-right)
 - Glow: `drop-shadow-[0_0_3px_rgba(156,163,175,0.3)]`
 - Duration: 4s infinite loop
@@ -42,9 +46,11 @@ The weather icons now feature **smooth, contextual animations** with glowing eff
 ---
 
 ### 🌧️ Rain Icon
+
 **Animation:** Falling rain motion
 **Colors:** Blue-400 with bright blue glow
 **Effect:**
+
 - Moves: y: 0 → 2 → 0 (falling down)
 - Glow: `drop-shadow-[0_0_6px_rgba(96,165,250,0.5)]`
 - Duration: 1.5s infinite loop (faster than other icons)
@@ -55,9 +61,11 @@ The weather icons now feature **smooth, contextual animations** with glowing eff
 ---
 
 ### 🌦️ Drizzle Icon
+
 **Animation:** Gentle floating
 **Colors:** Blue-300 with soft blue glow
 **Effect:**
+
 - Moves: y: 0 → 1 → 0 (slow vertical float)
 - Glow: `drop-shadow-[0_0_4px_rgba(147,197,253,0.4)]`
 - Duration: 2s infinite loop
@@ -68,9 +76,11 @@ The weather icons now feature **smooth, contextual animations** with glowing eff
 ---
 
 ### ❄️ Snow Icon
+
 **Animation:** Floating snowfall with rotation
 **Colors:** Blue-200 with cool blue glow
 **Effect:**
+
 - Vertical: y: 0 → 3 → 0 (floating down)
 - Rotates: 0° → 5° → -5° → 0° (spinning)
 - Glow: `drop-shadow-[0_0_6px_rgba(219,234,254,0.6)]`
@@ -82,9 +92,11 @@ The weather icons now feature **smooth, contextual animations** with glowing eff
 ---
 
 ### ⛈️ Storm Icon
+
 **Animation:** Shake/flash effect
 **Colors:** Purple-400 with lightning glow
 **Effect:**
+
 - Shakes: x: -1 → 1 → -1 → 1 → 0 (horizontal shake)
 - Opacity: 1 → 0.8 → 1 → 0.8 → 1 (flashing)
 - Glow: `drop-shadow-[0_0_8px_rgba(192,132,252,0.6)]`
@@ -98,11 +110,13 @@ The weather icons now feature **smooth, contextual animations** with glowing eff
 ## 🏕️ Perfect Camping Day Tent
 
 ### Enhanced Tent Animation
+
 **What:** Green tent icon on perfect camping days (18-25°C, <2mm rain)
 **Location:** Top-left corner
 **Size:** w-4 h-4 (16px × 16px)
 
 **Animation:**
+
 - **Entrance:**
   - Initial: scale 0, rotate -10°
   - Appears with bouncy "pop in" effect
@@ -120,9 +134,11 @@ The weather icons now feature **smooth, contextual animations** with glowing eff
 ## Technical Implementation
 
 ### Icon Size
+
 All weather icons are now **16px × 16px** (w-4 h-4) - larger than the original 12px for better visibility and animation clarity.
 
 ### Entrance Animation
+
 Every weather icon has a smooth entrance when it first appears:
 
 ```typescript
@@ -148,15 +164,15 @@ Every weather icon has a smooth entrance when it first appears:
 
 Each icon has a **contextual glow** that matches its weather type:
 
-| Weather | Color | Glow Intensity | RGBA Value |
-|---------|-------|----------------|------------|
-| ☀️ Sun | Golden yellow | Strong (8px) | `rgba(250,204,21,0.6)` |
-| ⛈️ Storm | Purple lightning | Strong (8px) | `rgba(192,132,252,0.6)` |
-| 🏕️ Tent | Bright green | Strong (8px) | `rgba(74,222,128,0.7)` |
-| 🌧️ Rain | Blue | Medium (6px) | `rgba(96,165,250,0.5)` |
-| ❄️ Snow | Ice blue | Medium (6px) | `rgba(219,234,254,0.6)` |
-| 🌦️ Drizzle | Light blue | Soft (4px) | `rgba(147,197,253,0.4)` |
-| ☁️ Cloud | Gray | Subtle (3px) | `rgba(156,163,175,0.3)` |
+| Weather    | Color            | Glow Intensity | RGBA Value              |
+| ---------- | ---------------- | -------------- | ----------------------- |
+| ☀️ Sun     | Golden yellow    | Strong (8px)   | `rgba(250,204,21,0.6)`  |
+| ⛈️ Storm   | Purple lightning | Strong (8px)   | `rgba(192,132,252,0.6)` |
+| 🏕️ Tent    | Bright green     | Strong (8px)   | `rgba(74,222,128,0.7)`  |
+| 🌧️ Rain    | Blue             | Medium (6px)   | `rgba(96,165,250,0.5)`  |
+| ❄️ Snow    | Ice blue         | Medium (6px)   | `rgba(219,234,254,0.6)` |
+| 🌦️ Drizzle | Light blue       | Soft (4px)     | `rgba(147,197,253,0.4)` |
+| ☁️ Cloud   | Gray             | Subtle (3px)   | `rgba(156,163,175,0.3)` |
 
 ### Animation Speeds
 
@@ -208,12 +224,14 @@ const getWeatherIcon = (day: DayData) => {
 ## Performance Optimization
 
 ### Why Framer Motion?
+
 - Already imported in project
 - GPU-accelerated animations (60fps)
 - Automatic cleanup
 - Minimal bundle impact
 
 ### Animation Performance
+
 - Uses `transform` and `opacity` (GPU-accelerated)
 - Avoids layout thrashing
 - Infinite loops are efficient
@@ -224,12 +242,14 @@ const getWeatherIcon = (day: DayData) => {
 ## User Experience Benefits
 
 ### Visual Hierarchy
+
 1. **Tent icon** (top-left) - Most important (perfect day!)
 2. **Weather icon** (top-right) - Supporting info
 3. **Price** (center) - Primary data
 4. **Day number** (top-left/right) - Context
 
 ### Animation Personality
+
 - **Sun:** Warm, inviting, gentle
 - **Rain:** Dynamic, noticeable
 - **Storm:** Dramatic, attention-grabbing
@@ -238,6 +258,7 @@ const getWeatherIcon = (day: DayData) => {
 - **Tent:** Exciting, celebratory
 
 ### Accessibility
+
 - Animations are **subtle** (no seizure risk)
 - Icons have **title attributes** for screen readers
 - Glows improve **visibility** on different backgrounds
@@ -298,13 +319,16 @@ if (condition.includes('sun') || condition.includes('clear')) {
 ## Browser Compatibility
 
 ### Supported Browsers
+
 - ✅ Chrome/Edge 88+ (Chromium)
 - ✅ Firefox 78+
 - ✅ Safari 14+
 - ✅ Mobile browsers (iOS Safari, Chrome Mobile)
 
 ### Fallback Behavior
+
 If browser doesn't support animations:
+
 - Icons still display correctly
 - Just won't animate
 - Framer Motion handles gracefully
@@ -328,16 +352,19 @@ If browser doesn't support animations:
 ### What to Look For
 
 **Sun icon should:**
+
 - ✅ Pulse larger/smaller gently
 - ✅ Rotate slightly
 - ✅ Have golden glow
 
 **Rain icon should:**
+
 - ✅ Move up and down
 - ✅ Loop continuously
 - ✅ Have blue glow
 
 **Tent icon should:**
+
 - ✅ Pop in with bounce
 - ✅ Breathe gently
 - ✅ Have bright green glow
@@ -347,6 +374,7 @@ If browser doesn't support animations:
 ## Summary
 
 ### What Changed
+
 - ✅ All weather icons now **animated** with unique motions
 - ✅ Icons **glow** with contextual drop shadows
 - ✅ **Larger icons** (16px) for better visibility
@@ -355,6 +383,7 @@ If browser doesn't support animations:
 - ✅ **Performance optimized** with GPU-accelerated transforms
 
 ### Animation Principles Used
+
 1. **Contextual motion** - Each weather type has appropriate movement
 2. **Subtle effects** - Animations enhance, don't distract
 3. **Visual hierarchy** - Important elements animate more prominently
@@ -362,6 +391,7 @@ If browser doesn't support animations:
 5. **Delightful details** - Glows and entrance effects
 
 ### Files Modified
+
 - `frontend/src/components/pricing/PriceDemandCalendar.tsx`
 
 **Your calendar is now beautifully animated!** ✨🎨

@@ -142,7 +142,7 @@ registry.registerPath({
   path: '/api/files',
   tags: ['Files'],
   summary: 'List uploaded files',
-  description: "Get all files uploaded by the authenticated user, with row counts and preview data",
+  description: 'Get all files uploaded by the authenticated user, with row counts and preview data',
   security: [{ bearerAuth: [] }],
   responses: {
     200: {

@@ -68,27 +68,27 @@ export class CompetitorDataService {
   /**
    * Store competitor daily pricing data (upsert)
    */
-  async storeCompetitorData(data: CompetitorDailyData): Promise<{ success: boolean; error?: string }> {
+  async storeCompetitorData(
+    data: CompetitorDailyData
+  ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await this.supabase
-        .from('competitor_daily')
-        .upsert(
-          {
-            property_id: data.propertyId,
-            date: data.date,
-            price_p10: data.priceP10,
-            price_p50: data.priceP50,
-            price_p90: data.priceP90,
-            source: data.source,
-            competitor_count: data.competitorCount,
-            location: data.location,
-            search_params: data.searchParams,
-            scraped_at: new Date().toISOString(),
-          },
-          {
-            onConflict: 'property_id,date', // Update if already exists
-          }
-        )
+      const { error } = await this.supabase.from('competitor_daily').upsert(
+        {
+          property_id: data.propertyId,
+          date: data.date,
+          price_p10: data.priceP10,
+          price_p50: data.priceP50,
+          price_p90: data.priceP90,
+          source: data.source,
+          competitor_count: data.competitorCount,
+          location: data.location,
+          search_params: data.searchParams,
+          scraped_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'property_id,date', // Update if already exists
+        }
+      )
 
       if (error) {
         logger.error({ err: error }, '❌ Failed to store competitor data')
@@ -106,7 +106,9 @@ export class CompetitorDataService {
   /**
    * Store multiple days of competitor data
    */
-  async storeBulkCompetitorData(dataArray: CompetitorDailyData[]): Promise<{ success: boolean; inserted: number; error?: string }> {
+  async storeBulkCompetitorData(
+    dataArray: CompetitorDailyData[]
+  ): Promise<{ success: boolean; inserted: number; error?: string }> {
     try {
       const rows = dataArray.map(data => ({
         property_id: data.propertyId,
@@ -121,11 +123,9 @@ export class CompetitorDataService {
         scraped_at: new Date().toISOString(),
       }))
 
-      const { error, count } = await this.supabase
-        .from('competitor_daily')
-        .upsert(rows, {
-          onConflict: 'property_id,date',
-        })
+      const { error, count } = await this.supabase.from('competitor_daily').upsert(rows, {
+        onConflict: 'property_id,date',
+      })
 
       if (error) {
         logger.error({ err: error }, '❌ Failed to store bulk competitor data')
@@ -217,7 +217,9 @@ export class CompetitorDataService {
   /**
    * Create or update competitor scraping target
    */
-  async upsertCompetitorTarget(target: CompetitorTarget): Promise<{ success: boolean; targetId?: string; error?: string }> {
+  async upsertCompetitorTarget(
+    target: CompetitorTarget
+  ): Promise<{ success: boolean; targetId?: string; error?: string }> {
     try {
       const targetData = {
         property_id: target.propertyId,
@@ -269,8 +271,9 @@ export class CompetitorDataService {
    */
   async getNextScrapingTargets(limit: number = 10): Promise<CompetitorTarget[]> {
     try {
-      const { data, error } = await this.supabase
-        .rpc('get_next_scraping_targets', { p_limit: limit })
+      const { data, error } = await this.supabase.rpc('get_next_scraping_targets', {
+        p_limit: limit,
+      })
 
       if (error) {
         logger.error({ err: error }, '❌ Failed to get scraping targets')

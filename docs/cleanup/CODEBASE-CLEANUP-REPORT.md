@@ -9,7 +9,9 @@ Completed audit of entire codebase and removed unnecessary/orphaned files and di
 ## ✅ Files/Folders DELETED (Cleanup Complete)
 
 ### 1. Orphaned Directories with Malformed Names ❌
+
 These were created due to a path resolution bug - completely useless:
+
 - `c:Userseddgutravel-pricingbackendmiddleware/`
 - `c:Userseddgutravel-pricingbackendrepositories/`
 - `c:Userseddgutravel-pricingbackendroutes/`
@@ -18,13 +20,16 @@ These were created due to a path resolution bug - completely useless:
 **Status:** ✅ **DELETED**
 
 ### 2. Old Lint Output Files ❌
+
 Massive text files from old linting runs:
+
 - `lint-full.txt` (314KB)
 - `lint-output.txt` (312KB)
 
 **Status:** ✅ **DELETED**
 
 ### 3. Miscellaneous Test/Junk Files ❌
+
 - `nul` - Empty/corrupt file
 - `test-upload.csv` - Old test CSV in root
 
@@ -37,9 +42,11 @@ Massive text files from old linting runs:
 ### 1. **Duplicate Pricing Services** (Two Python Services)
 
 #### Option A: `pricing-service/` (Advanced ML Service)
+
 **Location:** `/pricing-service/`
 **Size:** ~53KB coverage data, Python dependencies
 **Purpose:** Advanced ML-powered pricing with:
+
 - Sentry monitoring
 - Prometheus metrics
 - Full pricing engine with confidence intervals
@@ -47,38 +54,46 @@ Massive text files from old linting runs:
 - Backtesting capabilities
 
 **Pros:**
+
 - More features
 - Production-ready monitoring
 - ML capabilities
 
 **Cons:**
+
 - More complex
 - Heavier dependencies
 - Not currently running
 
 #### Option B: `services/pricing/` (Simple MVP Service)
+
 **Location:** `/services/pricing/`
 **Size:** Lightweight
 **Purpose:** Simple rule-based pricing:
+
 - Basic FastAPI endpoints
 - Occupancy-aware pricing
 - Seasonal adjustments
 - Director toggles
 
 **Pros:**
+
 - Simpler
 - Faster to deploy
 - Easier to maintain
 
 **Cons:**
+
 - No ML features
 - No monitoring
 - Basic functionality only
 
 ### **Recommendation:**
+
 **KEEP `pricing-service/`** (the advanced one) and **DELETE `services/pricing/`**
 
 Reasons:
+
 1. `pricing-service/` has production monitoring (Sentry, Prometheus)
 2. More complete ML pipeline
 3. Better documentation
@@ -91,26 +106,32 @@ Reasons:
 ### 2. **Additional Root-Level Folders to Review**
 
 #### `/sdks/` Directory
+
 **Contains:** `generate-sdks.sh` script only
 **Purpose:** SDK generation (OpenAPI client generation)
 
 **Recommendation:**
+
 - **KEEP** if you plan to generate client SDKs
 - **DELETE** if not using (the script can live in `/scripts/` instead)
 
 #### `/shared/` Directory
+
 **Contains:** `src/types/` - empty TypeScript types directory
 **Purpose:** Shared types across services
 
 **Recommendation:**
+
 - **DELETE** - Currently empty, not being used
 - If needed later, recreate when you have actual shared types
 
 #### `/k8s/` Directory
+
 **Contains:** Kubernetes deployment configs
 **Purpose:** Kubernetes/container orchestration
 
 **Recommendation:**
+
 - **KEEP** if deploying to Kubernetes
 - **MOVE** to `/docs/deployment/k8s/` if just documentation
 - **DELETE** if not using Kubernetes
@@ -120,6 +141,7 @@ Reasons:
 ## ✅ Files/Folders to KEEP (Legitimate)
 
 ### Backend Structure ✅
+
 ```
 backend/
 ├── test/                    # ✅ Legitimate test files (10 test suites)
@@ -138,6 +160,7 @@ backend/
 ```
 
 ### Frontend Structure ✅
+
 ```
 frontend/
 ├── src/
@@ -152,6 +175,7 @@ frontend/
 ```
 
 ### Documentation Structure ✅
+
 ```
 docs/
 ├── developer/               # ✅ Technical docs (ARCHITECTURE.md, etc.)
@@ -165,6 +189,7 @@ docs/
 ```
 
 ### Root-Level Docs ✅
+
 ```
 /
 ├── CLAUDE.md                # ✅ AI assistant instructions
@@ -186,11 +211,13 @@ docs/
 ## 📊 Disk Space Saved
 
 **Before Cleanup:**
+
 - Orphaned directories: ~15KB (mostly empty)
 - Lint output files: ~627KB
 - Test files: ~1KB
 
 **After Cleanup:**
+
 - **Total saved: ~643KB**
 - Removed 7 unnecessary items
 
@@ -199,21 +226,25 @@ docs/
 ## 🎯 Recommended Next Actions
 
 ### Priority 1: Choose Pricing Service
+
 **Decision Required:** Keep one Python pricing service, delete the other.
 
 **Option A:** Keep `pricing-service/` (recommended)
+
 ```bash
 # Delete the simpler one
 rm -rf services/pricing
 ```
 
 **Option B:** Keep `services/pricing/`
+
 ```bash
 # Delete the advanced one
 rm -rf pricing-service
 ```
 
 ### Priority 2: Clean Up Empty/Unused Folders
+
 ```bash
 # Delete shared (currently empty)
 rm -rf shared
@@ -228,10 +259,12 @@ rm -rf k8s
 ```
 
 ### Priority 3: Consolidate Documentation
+
 **Current:** Multiple README files in different locations
 **Recommendation:** Ensure no duplicate/conflicting information
 
 Check these for duplicates:
+
 - `/README.md` (main)
 - `/backend/README.md`
 - `/frontend/README.md`
@@ -263,17 +296,20 @@ travel-pricing/
 ## ✅ Cleanup Completed
 
 ### What Was Deleted:
+
 1. ✅ 4 orphaned `c:Userseddgu...` directories
 2. ✅ 2 lint output files (~627KB)
 3. ✅ 2 test/junk files in root
 
 ### What Remains (Needs Your Decision):
+
 1. ⚠️ Choose which Python pricing service to keep
 2. ⚠️ Delete or move `/sdks/` directory
 3. ⚠️ Delete empty `/shared/` directory
 4. ⚠️ Move or delete `/k8s/` directory
 
 ### Current State:
+
 - **Codebase is cleaner** - removed obvious junk
 - **No functionality broken** - only removed orphaned/unused files
 - **Disk space saved** - ~643KB
@@ -284,6 +320,7 @@ travel-pricing/
 ## 🔍 Verification Commands
 
 ### Check for any remaining suspicious directories:
+
 ```bash
 # Find directories with unusual names
 find . -maxdepth 1 -type d -name "*:*"
@@ -293,6 +330,7 @@ find . -type f -size +1M | grep -v node_modules
 ```
 
 ### Verify nothing broke:
+
 ```bash
 # Type check
 pnpm run type-check

@@ -34,6 +34,7 @@
 ### Core Tables
 
 #### 1. `auth.users` (Supabase Auth - Managed)
+
 ```sql
 -- Managed by Supabase Auth, not directly modified
 id UUID PRIMARY KEY
@@ -46,6 +47,7 @@ last_sign_in_at TIMESTAMPTZ
 ```
 
 #### 2. `public.properties`
+
 ```sql
 CREATE TABLE public.properties (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -100,6 +102,7 @@ CREATE POLICY "Users can delete own properties"
 ```
 
 #### 3. `public.pricing_data` (Partitioned)
+
 ```sql
 CREATE TABLE public.pricing_data (
   id UUID DEFAULT gen_random_uuid(),
@@ -177,6 +180,7 @@ CREATE POLICY "Users can update own pricing data"
 ```
 
 #### 4. `public.business_settings`
+
 ```sql
 CREATE TABLE public.business_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -221,6 +225,7 @@ CREATE POLICY "Users can update own settings"
 ```
 
 #### 5. `public.weather_cache` (Task 3)
+
 ```sql
 CREATE TABLE public.weather_cache (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -265,6 +270,7 @@ CREATE POLICY "Service role can write weather cache"
 ```
 
 #### 6. `public.holiday_cache` (Task 3)
+
 ```sql
 CREATE TABLE public.holiday_cache (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -298,6 +304,7 @@ CREATE POLICY "Service role can write holiday cache"
 ```
 
 #### 7. `public.competitor_data` (Task 7)
+
 ```sql
 CREATE TABLE public.competitor_data (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -349,6 +356,7 @@ CREATE POLICY "Users can insert own competitor data"
 ```
 
 #### 8. `public.api_keys` (Task 2, 12)
+
 ```sql
 CREATE TABLE public.api_keys (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -393,6 +401,7 @@ CREATE POLICY "Users can manage own API keys"
 ```
 
 #### 9. `public.api_key_usage` (Task 12)
+
 ```sql
 CREATE TABLE public.api_key_usage (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -426,6 +435,7 @@ CREATE POLICY "Service role only"
 ```
 
 #### 10. `public.smart_alerts` (Task 13)
+
 ```sql
 CREATE TABLE public.smart_alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -477,6 +487,7 @@ CREATE POLICY "Users can update own alerts"
 ```
 
 #### 11. `public.alert_rules` (Task 13)
+
 ```sql
 CREATE TABLE public.alert_rules (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -522,6 +533,7 @@ CREATE POLICY "Users can manage own alert rules"
 ```
 
 #### 12. `public.competitor_hotels` (Task 15)
+
 ```sql
 CREATE TABLE public.competitor_hotels (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -554,6 +566,7 @@ CREATE INDEX idx_competitor_hotels_starRating
 ```
 
 #### 13. `public.competitor_relationships` (Task 15)
+
 ```sql
 CREATE TABLE public.competitor_relationships (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -584,6 +597,7 @@ CREATE INDEX idx_competitor_relationships_overall_similarity
 ```
 
 #### 14. `public.neighborhood_competitive_index` (Task 15)
+
 ```sql
 CREATE TABLE public.neighborhood_competitive_index (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -613,6 +627,7 @@ CREATE INDEX idx_neighborhood_index_overallIndex
 ```
 
 #### 15. `public.bandit_actions` (Task 18)
+
 ```sql
 CREATE TABLE public.bandit_actions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -646,6 +661,7 @@ CREATE INDEX idx_bandit_actions_armId
 ```
 
 #### 16. `public.bandit_rewards` (Task 18)
+
 ```sql
 CREATE TABLE public.bandit_rewards (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -674,6 +690,7 @@ CREATE INDEX idx_bandit_rewards_propertyId_timestamp
 ```
 
 #### 17. `public.bandit_config` (Task 18)
+
 ```sql
 CREATE TABLE public.bandit_config (
   propertyId UUID PRIMARY KEY REFERENCES public.properties(id) ON DELETE CASCADE,
@@ -706,6 +723,7 @@ CREATE INDEX idx_bandit_config_enabled
 ### Database Functions
 
 #### Helper Function: `get_property_stats`
+
 ```sql
 CREATE OR REPLACE FUNCTION get_property_stats(property_uuid UUID)
 RETURNS TABLE (
@@ -736,6 +754,7 @@ $$ LANGUAGE plpgsql STABLE;
 **Location**: `backend/migrations/*.sql`
 
 **Migration Files**:
+
 1. `add_enrichment_columns.sql` - Add enrichmentStatus, enrichedAt to properties
 2. `add_api_keys_table.sql` - Create api_keys, api_key_usage, api_rate_limits
 3. `add_pricing_engine_tables.sql` - Create pricing_readiness table
@@ -753,11 +772,13 @@ $$ LANGUAGE plpgsql STABLE;
 ### Authentication
 
 All authenticated endpoints require JWT token in header:
+
 ```
 Authorization: Bearer <token>
 ```
 
 Or httpOnly cookie (set by `/api/auth/login`):
+
 ```
 Cookie: access_token=<token>
 ```
@@ -785,9 +806,11 @@ Cookie: access_token=<token>
 ### 1. Authentication Endpoints
 
 #### POST `/api/auth/login`
+
 **Purpose**: Authenticate user with email/password
 
 **Request**:
+
 ```json
 {
   "email": "user@example.com",
@@ -796,6 +819,7 @@ Cookie: access_token=<token>
 ```
 
 **Response** (200):
+
 ```json
 {
   "user": {
@@ -813,6 +837,7 @@ Cookie: access_token=<token>
 ```
 
 **Cookies Set**:
+
 - `access_token` (httpOnly, 15 minutes)
 - `refresh_token` (httpOnly, 7 days, path=/api/auth)
 
@@ -821,18 +846,21 @@ Cookie: access_token=<token>
 ---
 
 #### POST `/api/auth/signup`
+
 **Purpose**: Create new user account
 
 **Request**:
+
 ```json
 {
   "email": "newuser@example.com",
   "password": "securePassword123",
-  "name": "John Doe"  // optional
+  "name": "John Doe" // optional
 }
 ```
 
 **Response** (201):
+
 ```json
 {
   "user": {
@@ -849,11 +877,13 @@ Cookie: access_token=<token>
 ---
 
 #### POST `/api/auth/logout`
+
 **Purpose**: Sign out user and clear cookies
 
 **Request**: Empty body
 
 **Response** (200):
+
 ```json
 {
   "message": "Logged out successfully"
@@ -865,11 +895,13 @@ Cookie: access_token=<token>
 ---
 
 #### POST `/api/auth/refresh`
+
 **Purpose**: Refresh access token using refresh token
 
 **Request**: Empty body (refresh_token from cookie)
 
 **Response** (200):
+
 ```json
 {
   "session": {
@@ -882,11 +914,13 @@ Cookie: access_token=<token>
 ---
 
 #### GET `/api/auth/me`
+
 **Purpose**: Get current user profile
 
 **Auth**: Required
 
 **Response** (200):
+
 ```json
 {
   "user": {
@@ -904,6 +938,7 @@ Cookie: access_token=<token>
 ### 2. File Management Endpoints
 
 #### POST `/api/files/upload`
+
 **Purpose**: Upload CSV file with pricing data
 
 **Auth**: Required
@@ -911,6 +946,7 @@ Cookie: access_token=<token>
 **Rate Limit**: 10 uploads per hour
 
 **Request**:
+
 ```
 FormData:
   file: <CSV file>
@@ -918,6 +954,7 @@ FormData:
 ```
 
 **CSV Expected Columns** (auto-detected):
+
 - date (required): YYYY-MM-DD
 - price (required): numeric
 - occupancy (optional): 0-1 or 0-100
@@ -926,6 +963,7 @@ FormData:
 - refundable (optional): boolean
 
 **Response** (200):
+
 ```json
 {
   "success": true,
@@ -939,14 +977,15 @@ FormData:
     "enrichmentStatus": "pending"
   },
   "preview": [
-    {"date": "2025-01-01", "price": 120.50, "occupancy": 0.85},
+    { "date": "2025-01-01", "price": 120.5, "occupancy": 0.85 }
     // ... first 10 rows
   ],
-  "jobId": "enrich-uuid-timestamp"  // if autoEnrich=true
+  "jobId": "enrich-uuid-timestamp" // if autoEnrich=true
 }
 ```
 
 **Error** (400):
+
 ```json
 {
   "error": "InvalidCSV",
@@ -957,11 +996,13 @@ FormData:
 ---
 
 #### GET `/api/files`
+
 **Purpose**: List all uploaded files
 
 **Auth**: Required
 
 **Response** (200):
+
 ```json
 {
   "files": [
@@ -988,24 +1029,27 @@ FormData:
 ---
 
 #### GET `/api/files/:fileId/data`
+
 **Purpose**: Get pricing data rows (paginated)
 
 **Auth**: Required
 
 **Query Params**:
+
 - `limit` (optional): Max rows (default 1000, max 10000)
 - `offset` (optional): Skip rows (default 0)
 
 **Response** (200):
+
 ```json
 {
   "data": [
     {
       "id": "row_uuid",
       "date": "2025-01-01",
-      "price": 120.50,
+      "price": 120.5,
       "occupancy": 0.85,
-      "revenue": 510.00,
+      "revenue": 510.0,
       "temperature": 5.2,
       "precipitation": 0.0,
       "dayOfWeek": 3,
@@ -1024,23 +1068,26 @@ FormData:
 ---
 
 #### POST `/api/files/:fileId/enrich`
+
 **Purpose**: Trigger enrichment job (weather, holidays, temporal features)
 
 **Auth**: Required
 **Timeout**: 10 minutes
 
 **Request**:
+
 ```json
 {
   "location": {
     "latitude": 48.8566,
     "longitude": 2.3522
   },
-  "countryCode": "FR"  // optional, for holidays
+  "countryCode": "FR" // optional, for holidays
 }
 ```
 
 **Response** (202):
+
 ```json
 {
   "success": true,
@@ -1055,11 +1102,13 @@ FormData:
 ---
 
 #### DELETE `/api/files/:fileId`
+
 **Purpose**: Delete file and all associated pricing data
 
 **Auth**: Required
 
 **Response** (200):
+
 ```json
 {
   "success": true,
@@ -1072,11 +1121,13 @@ FormData:
 ### 3. Analytics Endpoints
 
 #### POST `/api/analytics/summary`
+
 **Purpose**: Get statistical summary of pricing data
 
 **Auth**: Required
 
 **Request**:
+
 ```json
 {
   "propertyId": "uuid",
@@ -1088,6 +1139,7 @@ FormData:
 ```
 
 **Response** (200):
+
 ```json
 {
   "summary": {
@@ -1097,37 +1149,37 @@ FormData:
       "end": "2025-03-31"
     },
     "price": {
-      "mean": 125.50,
-      "median": 120.00,
-      "min": 80.00,
-      "max": 250.00,
-      "stdDev": 35.20
+      "mean": 125.5,
+      "median": 120.0,
+      "min": 80.0,
+      "max": 250.0,
+      "stdDev": 35.2
     },
     "occupancy": {
       "mean": 0.72,
       "median": 0.75,
       "min": 0.35,
-      "max": 1.00
+      "max": 1.0
     },
     "revenue": {
-      "total": 11295.00,
-      "mean": 125.50,
+      "total": 11295.0,
+      "mean": 125.5,
       "trend": "increasing"
     }
   },
   "trends": {
     "dayOfWeek": {
-      "Friday": 145.00,
-      "Saturday": 180.00,
-      "Sunday": 150.00,
-      "Monday": 105.00
+      "Friday": 145.0,
+      "Saturday": 180.0,
+      "Sunday": 150.0,
+      "Monday": 105.0
       // ...
     },
     "seasonality": {
-      "Winter": 115.00,
-      "Spring": 125.00,
-      "Summer": 165.00,
-      "Fall": 120.00
+      "Winter": 115.0,
+      "Spring": 125.0,
+      "Summer": 165.0,
+      "Fall": 120.0
     }
   }
 }
@@ -1136,11 +1188,13 @@ FormData:
 ---
 
 #### POST `/api/analytics/weather-impact`
+
 **Purpose**: Analyze correlation between weather and pricing/occupancy
 
 **Auth**: Required
 
 **Request**:
+
 ```json
 {
   "propertyId": "uuid"
@@ -1148,6 +1202,7 @@ FormData:
 ```
 
 **Response** (200):
+
 ```json
 {
   "correlations": {
@@ -1170,6 +1225,7 @@ FormData:
 ---
 
 #### POST `/api/analytics/ai-insights`
+
 **Purpose**: Generate natural language insights using Claude AI
 
 **Auth**: Required
@@ -1177,17 +1233,23 @@ FormData:
 **Rate Limit**: 10 requests per minute
 
 **Request**:
+
 ```json
 {
   "propertyId": "uuid",
   "analyticsData": {
-    "summary": { /* ... */ },
-    "trends": { /* ... */ }
+    "summary": {
+      /* ... */
+    },
+    "trends": {
+      /* ... */
+    }
   }
 }
 ```
 
 **Response** (200):
+
 ```json
 {
   "insights": "Your pricing data shows strong weekend demand with Saturday prices averaging €180, a 50% premium over weekday rates. The summer season (June-August) demonstrates the highest revenue potential at €165 average daily rate. Weather correlation analysis reveals occupancy increases 62% during sunny periods, suggesting weather-responsive pricing could capture an additional 10-15% revenue. Current occupancy trend of 72% indicates room for strategic rate increases during high-demand periods.",
@@ -1210,7 +1272,7 @@ FormData:
 
 ---
 
-*[Document continues with remaining 60+ endpoints...]*
+_[Document continues with remaining 60+ endpoints...]_
 
 ---
 
@@ -1707,6 +1769,6 @@ ENABLE_WEATHER_ADJUSTMENTS=true
 
 ---
 
-*[Document will continue with complete Data Flows, Integration Points, and Deployment Guide in follow-up response...]*
+_[Document will continue with complete Data Flows, Integration Points, and Deployment Guide in follow-up response...]_
 
 **Status**: This is Part 1 of the complete reference. Should I continue with the remaining sections?

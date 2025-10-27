@@ -99,9 +99,7 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": [
-              "healthy"
-            ],
+            "enum": ["healthy"],
             "example": "healthy"
           },
           "timestamp": {
@@ -116,20 +114,11 @@
           },
           "environment": {
             "type": "string",
-            "enum": [
-              "development",
-              "production",
-              "test"
-            ],
+            "enum": ["development", "production", "test"],
             "example": "development"
           }
         },
-        "required": [
-          "status",
-          "timestamp",
-          "uptime",
-          "environment"
-        ]
+        "required": ["status", "timestamp", "uptime", "environment"]
       },
       "FileMetadata": {
         "type": "object",
@@ -166,21 +155,12 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "complete",
-              "processing",
-              "error"
-            ],
+            "enum": ["complete", "processing", "error"],
             "example": "complete"
           },
           "enrichment_status": {
             "type": "string",
-            "enum": [
-              "none",
-              "pending",
-              "completed",
-              "failed"
-            ],
+            "enum": ["none", "pending", "completed", "failed"],
             "example": "completed"
           },
           "enriched_at": {
@@ -212,10 +192,7 @@
             "example": "Invalid input parameters"
           }
         },
-        "required": [
-          "error",
-          "message"
-        ]
+        "required": ["error", "message"]
       },
       "PricingData": {
         "type": "object",
@@ -262,12 +239,7 @@
           "season": {
             "type": "string",
             "nullable": true,
-            "enum": [
-              "Winter",
-              "Spring",
-              "Summer",
-              "Fall"
-            ]
+            "enum": ["Winter", "Spring", "Summer", "Fall"]
           },
           "isWeekend": {
             "type": "boolean",
@@ -303,9 +275,7 @@
         "properties": {
           "success": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           },
           "data": {
             "type": "array",
@@ -329,28 +299,17 @@
                 "type": "boolean"
               }
             },
-            "required": [
-              "offset",
-              "limit",
-              "total",
-              "hasMore"
-            ]
+            "required": ["offset", "limit", "total", "hasMore"]
           }
         },
-        "required": [
-          "success",
-          "data",
-          "pagination"
-        ]
+        "required": ["success", "data", "pagination"]
       },
       "FilesListResponse": {
         "type": "object",
         "properties": {
           "success": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           },
           "files": {
             "type": "array",
@@ -359,19 +318,14 @@
             }
           }
         },
-        "required": [
-          "success",
-          "files"
-        ]
+        "required": ["success", "files"]
       },
       "EnrichmentResponse": {
         "type": "object",
         "properties": {
           "success": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           },
           "message": {
             "type": "string"
@@ -389,18 +343,10 @@
                 "type": "number"
               }
             },
-            "required": [
-              "weatherEnriched",
-              "holidaysEnriched",
-              "temporalFeaturesAdded"
-            ]
+            "required": ["weatherEnriched", "holidaysEnriched", "temporalFeaturesAdded"]
           }
         },
-        "required": [
-          "success",
-          "message",
-          "results"
-        ]
+        "required": ["success", "message", "results"]
       },
       "EnrichmentRequest": {
         "type": "object",
@@ -421,10 +367,7 @@
             "maxLength": 2
           }
         },
-        "required": [
-          "latitude",
-          "longitude"
-        ]
+        "required": ["latitude", "longitude"]
       },
       "AnalyticsSummary": {
         "type": "object",
@@ -465,11 +408,7 @@
                 "type": "number"
               }
             },
-            "required": [
-              "start",
-              "end",
-              "days"
-            ]
+            "required": ["start", "end", "days"]
           }
         },
         "required": [
@@ -488,18 +427,13 @@
         "properties": {
           "success": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           },
           "data": {
             "$ref": "#/components/schemas/AnalyticsSummary"
           }
         },
-        "required": [
-          "success",
-          "data"
-        ]
+        "required": ["success", "data"]
       },
       "AnalyticsSummaryRequest": {
         "type": "object",
@@ -512,18 +446,14 @@
             "description": "Array of pricing data"
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "WeatherImpactResponse": {
         "type": "object",
         "properties": {
           "success": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           },
           "data": {
             "type": "object",
@@ -538,17 +468,10 @@
                 "type": "string"
               }
             },
-            "required": [
-              "correlation",
-              "impactScore",
-              "insights"
-            ]
+            "required": ["correlation", "impactScore", "insights"]
           }
         },
-        "required": [
-          "success",
-          "data"
-        ]
+        "required": ["success", "data"]
       },
       "WeatherImpactRequest": {
         "type": "object",
@@ -561,9 +484,7 @@
             "description": "Array of pricing data with weather"
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "DemandForecast": {
         "type": "object",
@@ -586,11 +507,7 @@
                   "maximum": 1
                 }
               },
-              "required": [
-                "date",
-                "predictedPrice",
-                "confidence"
-              ]
+              "required": ["date", "predictedPrice", "confidence"]
             }
           },
           "accuracy": {
@@ -600,29 +517,20 @@
             "type": "string"
           }
         },
-        "required": [
-          "forecasts",
-          "accuracy",
-          "model"
-        ]
+        "required": ["forecasts", "accuracy", "model"]
       },
       "DemandForecastResponse": {
         "type": "object",
         "properties": {
           "success": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           },
           "data": {
             "$ref": "#/components/schemas/DemandForecast"
           }
         },
-        "required": [
-          "success",
-          "data"
-        ]
+        "required": ["success", "data"]
       },
       "DemandForecastRequest": {
         "type": "object",
@@ -642,9 +550,7 @@
             "description": "Number of days to forecast"
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       }
     },
     "parameters": {}
@@ -652,9 +558,7 @@
   "paths": {
     "/health": {
       "get": {
-        "tags": [
-          "Health"
-        ],
+        "tags": ["Health"],
         "summary": "Health check",
         "description": "Returns server health status, uptime, and environment information",
         "responses": {
@@ -673,9 +577,7 @@
     },
     "/api/files/upload": {
       "post": {
-        "tags": [
-          "Files"
-        ],
+        "tags": ["Files"],
         "summary": "Upload CSV file",
         "description": "Upload a CSV file with pricing data. Supports automatic column mapping, validation, and background enrichment.",
         "security": [
@@ -696,9 +598,7 @@
                     "description": "CSV file containing pricing data"
                   }
                 },
-                "required": [
-                  "file"
-                ]
+                "required": ["file"]
               }
             }
           }
@@ -713,18 +613,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "file": {
                       "$ref": "#/components/schemas/FileMetadata"
                     }
                   },
-                  "required": [
-                    "success",
-                    "file"
-                  ]
+                  "required": ["success", "file"]
                 }
               }
             }
@@ -754,9 +649,7 @@
     },
     "/api/files/{fileId}/data": {
       "get": {
-        "tags": [
-          "Files"
-        ],
+        "tags": ["Files"],
         "summary": "Get file pricing data",
         "description": "Retrieve pricing data for a specific file with pagination support",
         "security": [
@@ -830,9 +723,7 @@
     },
     "/api/files": {
       "get": {
-        "tags": [
-          "Files"
-        ],
+        "tags": ["Files"],
         "summary": "List uploaded files",
         "description": "Get all files uploaded by the authenticated user, with row counts and preview data",
         "security": [
@@ -856,9 +747,7 @@
     },
     "/api/files/{fileId}": {
       "delete": {
-        "tags": [
-          "Files"
-        ],
+        "tags": ["Files"],
         "summary": "Delete file",
         "description": "Delete a file and all associated pricing data",
         "security": [
@@ -889,9 +778,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "message": {
                       "type": "string"
@@ -903,16 +790,10 @@
                           "type": "number"
                         }
                       },
-                      "required": [
-                        "pricingDataRows"
-                      ]
+                      "required": ["pricingDataRows"]
                     }
                   },
-                  "required": [
-                    "success",
-                    "message",
-                    "deleted"
-                  ]
+                  "required": ["success", "message", "deleted"]
                 }
               }
             }
@@ -932,9 +813,7 @@
     },
     "/api/files/{fileId}/enrich": {
       "post": {
-        "tags": [
-          "Files"
-        ],
+        "tags": ["Files"],
         "summary": "Enrich file with external data",
         "description": "Add weather, holiday, and temporal features to pricing data",
         "security": [
@@ -990,9 +869,7 @@
     },
     "/api/analytics/summary": {
       "post": {
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "summary": "Get comprehensive analytics summary",
         "description": "Analyzes pricing data and returns statistical summary, trends, and insights",
         "security": [
@@ -1035,9 +912,7 @@
     },
     "/api/analytics/weather-impact": {
       "post": {
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "summary": "Analyze weather impact on pricing",
         "description": "Correlates weather conditions with pricing patterns and occupancy",
         "security": [
@@ -1080,9 +955,7 @@
     },
     "/api/analytics/demand-forecast": {
       "post": {
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "summary": "Forecast future demand",
         "description": "Predicts future occupancy and pricing trends using historical data",
         "security": [
@@ -1125,9 +998,7 @@
     },
     "/api/analytics/feature-importance": {
       "post": {
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "summary": "Calculate feature importance",
         "description": "Identifies which factors (weather, day of week, etc.) most impact pricing",
         "security": [
@@ -1149,9 +1020,7 @@
                     "description": "Pricing data array"
                   }
                 },
-                "required": [
-                  "data"
-                ]
+                "required": ["data"]
               }
             }
           }
@@ -1166,17 +1035,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1186,10 +1051,7 @@
     },
     "/api/analytics/ai-insights": {
       "post": {
-        "tags": [
-          "Analytics",
-          "AI"
-        ],
+        "tags": ["Analytics", "AI"],
         "summary": "Get Claude-powered AI insights",
         "description": "Generates natural language insights and recommendations using Claude AI",
         "security": [
@@ -1216,9 +1078,7 @@
                     "description": "Pre-computed analytics"
                   }
                 },
-                "required": [
-                  "data"
-                ]
+                "required": ["data"]
               }
             }
           }
@@ -1233,9 +1093,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "object",
@@ -1247,15 +1105,10 @@
                           "type": "number"
                         }
                       },
-                      "required": [
-                        "insights"
-                      ]
+                      "required": ["insights"]
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }

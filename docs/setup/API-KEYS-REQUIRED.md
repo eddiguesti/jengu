@@ -8,20 +8,21 @@ Complete guide to all external API keys and configuration needed for full platfo
 
 ## Quick Reference
 
-| Service | Required For | Priority | Monthly Cost | Sign-up Link |
-|---------|--------------|----------|--------------|--------------|
-| **Supabase** | Database, Auth, Storage | ⚠️ CRITICAL | Free tier available | [supabase.com](https://supabase.com) |
-| **Anthropic Claude** | AI Insights & Recommendations | 🔥 HIGH | Pay-per-use (~$20-50) | [console.anthropic.com](https://console.anthropic.com) |
-| **Open-Meteo** | Historical Weather Data | 🔥 HIGH | FREE (no key needed) | No signup required |
-| **OpenWeather** | Current/Forecast Weather | 🟡 MEDIUM | Free tier: 1000 calls/day | [openweathermap.org/api](https://openweathermap.org/api) |
-| **SendGrid** | Email Alerts & Notifications | 🟡 MEDIUM | Free tier: 100 emails/day | [sendgrid.com](https://sendgrid.com) |
-| **Redis Cloud** | Caching & Job Queue | 🔥 HIGH | Free tier: 30MB | [redis.com/try-free](https://redis.com/try-free) |
-| **Sentry** | Error Tracking | 🟢 OPTIONAL | Free tier: 5K errors/month | [sentry.io](https://sentry.io) |
-| **Calendarific** | Holiday Data | 🟢 OPTIONAL | Disabled (needs migration) | [calendarific.com](https://calendarific.com) |
-| **Twilio** | SMS Alerts | 🟢 OPTIONAL | Pay-per-use | [twilio.com](https://twilio.com) |
-| **Makcorps** | Competitor Price Scraping | 🟡 MEDIUM | $49-199/month | [makcorps.com](https://makcorps.com) |
+| Service              | Required For                  | Priority    | Monthly Cost               | Sign-up Link                                             |
+| -------------------- | ----------------------------- | ----------- | -------------------------- | -------------------------------------------------------- |
+| **Supabase**         | Database, Auth, Storage       | ⚠️ CRITICAL | Free tier available        | [supabase.com](https://supabase.com)                     |
+| **Anthropic Claude** | AI Insights & Recommendations | 🔥 HIGH     | Pay-per-use (~$20-50)      | [console.anthropic.com](https://console.anthropic.com)   |
+| **Open-Meteo**       | Historical Weather Data       | 🔥 HIGH     | FREE (no key needed)       | No signup required                                       |
+| **OpenWeather**      | Current/Forecast Weather      | 🟡 MEDIUM   | Free tier: 1000 calls/day  | [openweathermap.org/api](https://openweathermap.org/api) |
+| **SendGrid**         | Email Alerts & Notifications  | 🟡 MEDIUM   | Free tier: 100 emails/day  | [sendgrid.com](https://sendgrid.com)                     |
+| **Redis Cloud**      | Caching & Job Queue           | 🔥 HIGH     | Free tier: 30MB            | [redis.com/try-free](https://redis.com/try-free)         |
+| **Sentry**           | Error Tracking                | 🟢 OPTIONAL | Free tier: 5K errors/month | [sentry.io](https://sentry.io)                           |
+| **Calendarific**     | Holiday Data                  | 🟢 OPTIONAL | Disabled (needs migration) | [calendarific.com](https://calendarific.com)             |
+| **Twilio**           | SMS Alerts                    | 🟢 OPTIONAL | Pay-per-use                | [twilio.com](https://twilio.com)                         |
+| **Makcorps**         | Competitor Price Scraping     | 🟡 MEDIUM   | $49-199/month              | [makcorps.com](https://makcorps.com)                     |
 
 **Priority Legend:**
+
 - ⚠️ **CRITICAL** - Platform will not work without this
 - 🔥 **HIGH** - Core features require this
 - 🟡 **MEDIUM** - Important features, but platform functions without it
@@ -158,6 +159,7 @@ BANDIT_EPSILON=0.1
 **Purpose**: PostgreSQL database, authentication, and row-level security
 
 **Setup Steps**:
+
 1. Go to [supabase.com](https://supabase.com) and create a new project
 2. Note your project URL and keys from Settings > API
 3. Run database migrations:
@@ -171,6 +173,7 @@ BANDIT_EPSILON=0.1
    ```
 
 **Free Tier Limits**:
+
 - 500MB database
 - 1GB file storage
 - 50,000 monthly active users
@@ -185,11 +188,13 @@ BANDIT_EPSILON=0.1
 **Purpose**: AI-powered market insights and pricing recommendations
 
 **Features Using This**:
+
 - `/api/insights` - Market sentiment analysis
 - `/api/analytics/insights/:id` - Property-specific recommendations
 - Natural language explanations for pricing decisions
 
 **Setup Steps**:
+
 1. Visit [console.anthropic.com](https://console.anthropic.com)
 2. Create an account and add payment method
 3. Generate an API key
@@ -198,6 +203,7 @@ BANDIT_EPSILON=0.1
 **Model Used**: Claude 3.5 Sonnet
 
 **Estimated Cost**:
+
 - Input: $3 per million tokens
 - Output: $15 per million tokens
 - Average: $20-50/month for moderate usage (100-200 insights/day)
@@ -211,6 +217,7 @@ BANDIT_EPSILON=0.1
 **Purpose**: Caching layer + BullMQ job queue for background workers
 
 **Used For**:
+
 - Weather data caching (10x speedup)
 - Holiday data caching
 - Background job queue (enrichment, competitor scraping, ML retraining)
@@ -219,6 +226,7 @@ BANDIT_EPSILON=0.1
 **Setup Options**:
 
 **Option A: Local Redis (Development)**
+
 ```bash
 # macOS
 brew install redis
@@ -233,6 +241,7 @@ docker run -d -p 6379:6379 redis:alpine
 ```
 
 **Option B: Redis Cloud (Production)**
+
 1. Visit [redis.com/try-free](https://redis.com/try-free)
 2. Create a free database (30MB)
 3. Copy connection URL: `redis://default:password@host:port`
@@ -243,6 +252,7 @@ docker run -d -p 6379:6379 redis:alpine
 **Estimated Cost**: Free tier sufficient, or $5-10/month for 250MB
 
 **Verification**:
+
 ```bash
 # Check Redis connection
 redis-cli ping
@@ -256,11 +266,13 @@ redis-cli ping
 **Purpose**: Current weather and 5-day forecast data
 
 **Used For**:
+
 - Real-time weather enrichment
 - Forecast-based pricing adjustments
 - Weather impact analysis
 
 **Setup Steps**:
+
 1. Visit [openweathermap.org/api](https://openweathermap.org/api)
 2. Sign up for free account
 3. Generate API key (takes ~10 minutes to activate)
@@ -279,11 +291,13 @@ redis-cli ping
 **Purpose**: Email delivery for smart alerts and notifications
 
 **Used For**:
+
 - Alert emails (price drops, revenue anomalies)
 - Daily digest emails
 - User notification preferences
 
 **Setup Steps**:
+
 1. Visit [sendgrid.com](https://sendgrid.com) and create account
 2. Go to Settings > API Keys > Create API Key
 3. Add to `backend/.env`:
@@ -307,16 +321,19 @@ redis-cli ping
 **Purpose**: Competitor hotel price scraping and market data
 
 **Used For**:
+
 - `/api/competitor-data/scrape` - Fetch competitor prices
 - Neighborhood competitive index calculation
 - Market positioning analysis
 
 **Setup Steps**:
+
 1. Visit [makcorps.com](https://makcorps.com) and create account
 2. Subscribe to Hotel API plan ($49-199/month)
 3. Add to `backend/.env`: `MAKCORPS_API_KEY=your_key_here`
 
 **API Endpoints Used**:
+
 - `GET /hotels/search` - Search hotels by city
 - `GET /hotels/{id}/pricing` - Get historical pricing
 
@@ -331,16 +348,19 @@ redis-cli ping
 **Purpose**: Error tracking and performance monitoring
 
 **Used For**:
+
 - Backend error tracking
 - Frontend error tracking
 - Pricing service error tracking
 - Performance metrics
 
 **Setup Steps**:
+
 1. Visit [sentry.io](https://sentry.io) and create account
 2. Create 3 projects: `jengu-backend`, `jengu-frontend`, `jengu-pricing`
 3. Copy DSN for each project
 4. Add to respective `.env` files:
+
    ```bash
    # Backend
    SENTRY_DSN=https://...@sentry.io/backend_project_id
@@ -363,10 +383,12 @@ redis-cli ping
 **Purpose**: SMS alerts for critical notifications
 
 **Used For**:
+
 - High-priority alerts (e.g., revenue drops >20%)
 - User-configured SMS preferences
 
 **Setup Steps**:
+
 1. Visit [twilio.com](https://twilio.com) and create account
 2. Get free trial phone number
 3. Note Account SID, Auth Token, and Phone Number
@@ -392,6 +414,7 @@ redis-cli ping
 **Status**: ⚠️ DISABLED - Requires Supabase migration from Prisma
 
 **Used For** (when enabled):
+
 - Holiday enrichment for pricing data
 - Holiday impact analysis
 - Seasonal demand forecasting
@@ -399,6 +422,7 @@ redis-cli ping
 **Current Issue**: Function `enrichWithHolidays()` uses Prisma, but app uses Supabase
 
 **To Enable**:
+
 1. Migrate `enrichWithHolidays()` in `backend/services/enrichmentService.ts` to Supabase
 2. Sign up at [calendarific.com](https://calendarific.com)
 3. Add to `backend/.env`:
@@ -416,6 +440,7 @@ redis-cli ping
 To get the platform running with core features:
 
 ### Backend `.env` (Minimum)
+
 ```bash
 # REQUIRED
 SUPABASE_URL=https://your-project.supabase.co
@@ -433,6 +458,7 @@ SENDGRID_API_KEY=SG.your_key
 ```
 
 ### Frontend `.env` (Minimum)
+
 ```bash
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key
@@ -440,6 +466,7 @@ VITE_API_URL=http://localhost:3001
 ```
 
 ### Pricing Service `.env` (Minimum)
+
 ```bash
 BACKEND_API_URL=http://localhost:3001
 PORT=8000
@@ -450,6 +477,7 @@ PORT=8000
 ## Cost Summary
 
 ### Development (Free)
+
 - Supabase: FREE
 - Redis: Local (FREE)
 - Open-Meteo: FREE
@@ -459,6 +487,7 @@ PORT=8000
 - **Total: $0/month**
 
 ### Production (Minimum)
+
 - Supabase: FREE or $25/month
 - Redis Cloud: $5-10/month
 - Anthropic Claude: $20-50/month (usage-based)
@@ -509,21 +538,25 @@ cd backend && node test-db.js
 ## Troubleshooting
 
 ### "Redis connection failed"
+
 - Check if Redis is running: `redis-cli ping`
 - Verify `REDIS_URL` in `.env`
 - For Redis Cloud, check firewall/IP whitelist
 
 ### "Supabase authentication failed"
+
 - Verify `SUPABASE_URL` and keys in `.env`
 - Check Supabase project status in dashboard
 - Ensure RLS policies are created: `node setup-database.js`
 
 ### "Anthropic API rate limit"
+
 - Check usage in [console.anthropic.com](https://console.anthropic.com)
 - Verify payment method is active
 - Consider caching AI insights
 
 ### "OpenWeather API invalid key"
+
 - Keys take ~10 minutes to activate after creation
 - Check key status in OpenWeather dashboard
 - Verify key is not restricted by IP/domain

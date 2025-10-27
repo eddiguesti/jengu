@@ -10,9 +10,7 @@ const HealthResponseSchema = z
     status: z.literal('healthy').openapi({ example: 'healthy' }),
     timestamp: z.string().datetime().openapi({ example: '2024-01-15T10:30:00.000Z' }),
     uptime: z.number().openapi({ example: 3600.5, description: 'Server uptime in seconds' }),
-    environment: z
-      .enum(['development', 'production', 'test'])
-      .openapi({ example: 'development' }),
+    environment: z.enum(['development', 'production', 'test']).openapi({ example: 'development' }),
   })
   .openapi('HealthResponse')
 

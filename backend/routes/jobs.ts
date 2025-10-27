@@ -39,14 +39,7 @@ registry.registerPath({
             success: z.literal(true),
             job: z.object({
               id: z.string(),
-              status: z.enum([
-                'waiting',
-                'active',
-                'completed',
-                'failed',
-                'delayed',
-                'not_found',
-              ]),
+              status: z.enum(['waiting', 'active', 'completed', 'failed', 'delayed', 'not_found']),
               progress: z.number().min(0).max(100),
               data: z.unknown().optional(),
               result: z.unknown().optional(),

@@ -79,7 +79,6 @@ async function setupTables() {
     console.log('  - RLS policies: User-level data isolation')
     console.log('  - Indexes: Optimized queries')
     console.log('  - Views: Helpful data aggregations\n')
-
   } catch (error) {
     console.error('❌ Setup failed:', error.message)
     process.exit(1)

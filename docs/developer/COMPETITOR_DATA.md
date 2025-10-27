@@ -32,6 +32,7 @@ The Competitor Data system provides market intelligence by scraping competitor h
 Stores daily competitor price bands (P10, P50, P90).
 
 **Columns**:
+
 - `id` (UUID) - Primary key
 - `property_id` (UUID) - Property reference
 - `date` (DATE) - Date for pricing
@@ -45,6 +46,7 @@ Stores daily competitor price bands (P10, P50, P90).
 - `created_at`, `updated_at`, `scraped_at` (TIMESTAMPTZ)
 
 **Constraints**:
+
 - Unique index on `(property_id, date)`
 - Check constraints on percentile ordering (P10 ≤ P50 ≤ P90)
 
@@ -53,6 +55,7 @@ Stores daily competitor price bands (P10, P50, P90).
 Defines which properties to scrape and their configuration.
 
 **Columns**:
+
 - `id` (UUID) - Primary key
 - `property_id` (UUID) - Property reference (unique)
 - `user_id` (UUID) - Owner
@@ -70,6 +73,7 @@ Defines which properties to scrape and their configuration.
 Tracks scraping history and errors.
 
 **Columns**:
+
 - `id` (UUID) - Primary key
 - `target_id` (UUID) - Target reference
 - `property_id` (UUID) - Property reference
@@ -97,6 +101,7 @@ psql $DATABASE_URL < prisma/competitor-daily-schema.sql
 **File**: [backend/services/competitorScraper.ts](backend/services/competitorScraper.ts)
 
 **Features**:
+
 - Headless browser automation via Playwright
 - robots.txt awareness (respects disallowed paths)
 - Proxy rotation support
@@ -104,6 +109,7 @@ psql $DATABASE_URL < prisma/competitor-daily-schema.sql
 - Configurable timeout
 
 **Supported Sources**:
+
 - ✅ Booking.com (implemented)
 - 🔄 Hotels.com (placeholder)
 - 🔄 Expedia (placeholder)
@@ -205,6 +211,7 @@ const targets = await competitorDataService.getNextScrapingTargets(10)
 Processes competitor scraping jobs from the queue.
 
 **Features**:
+
 - Playwright browser initialization per job
 - Property ownership verification
 - Automatic percentile calculation
@@ -212,6 +219,7 @@ Processes competitor scraping jobs from the queue.
 - Graceful browser cleanup (finally block)
 
 **Progress Tracking**:
+
 - 10%: Property verification
 - 20%: Browser initialization
 - 30%: Scraping started
@@ -235,6 +243,7 @@ Schedules daily competitor scraping for all enabled targets.
 **Schedule**: Daily at 2 AM (configurable)
 
 **Features**:
+
 - Fetches all enabled targets
 - Enqueues scraping jobs (7 days ahead, 1-night stay)
 - Updates next scrape time
@@ -269,6 +278,7 @@ Authorization: Bearer <token>
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -308,6 +318,7 @@ Content-Type: application/json
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -511,8 +522,8 @@ Request without competitor data (will auto-fetch):
 
 ```json
 {
-  "price": 195.50,
-  "price_grid": [175.95, 185.73, 195.50, 205.28, 215.05],
+  "price": 195.5,
+  "price_grid": [175.95, 185.73, 195.5, 205.28, 215.05],
   "conf_band": {
     "lower": 175.95,
     "upper": 215.05
@@ -530,15 +541,15 @@ Request without competitor data (will auto-fetch):
     "Based on 15 competitor properties (booking.com)"
   ],
   "safety": {
-    "base_price_used": 189.00,
-    "occupancy_rate": 0.700,
+    "base_price_used": 189.0,
+    "occupancy_rate": 0.7,
     "lead_days": 14,
     "season": "Summer",
     "day_of_week": 5,
     "competitor_data": {
-      "p10": 120.00,
-      "p50": 180.00,
-      "p90": 250.00,
+      "p10": 120.0,
+      "p50": 180.0,
+      "p90": 250.0,
       "count": 15,
       "source": "booking.com"
     }
@@ -563,11 +574,11 @@ COMPETITOR_DATA_TIMEOUT=5  # Timeout in seconds (default: 5)
 
 The pricing engine supports three positioning strategies based on competitor pricing:
 
-| Strategy | Target Price | Use Case |
-|----------|-------------|----------|
-| **Budget** | < P50 - 10% | Maximize occupancy, compete on price |
-| **Market** | P50 ± 10% | Balanced approach, match market |
-| **Premium** | > P50 + 10% | Maximize revenue, differentiated offering |
+| Strategy    | Target Price | Use Case                                  |
+| ----------- | ------------ | ----------------------------------------- |
+| **Budget**  | < P50 - 10%  | Maximize occupancy, compete on price      |
+| **Market**  | P50 ± 10%    | Balanced approach, match market           |
+| **Premium** | > P50 + 10%  | Maximize revenue, differentiated offering |
 
 Strategy is determined automatically based on final calculated price vs market median.
 
@@ -699,11 +710,12 @@ The scraper respects robots.txt by default:
 
 ```typescript
 const scraper = new CompetitorScraper({
-  respectRobotsTxt: true,  // Default: true
+  respectRobotsTxt: true, // Default: true
 })
 ```
 
 **How it works**:
+
 1. Fetches `https://domain.com/robots.txt`
 2. Checks for `User-agent: *`
 3. Checks `Disallow:` rules
@@ -713,7 +725,7 @@ const scraper = new CompetitorScraper({
 
 ```typescript
 const scraper = new CompetitorScraper({
-  respectRobotsTxt: false,  // Disable robots.txt checks
+  respectRobotsTxt: false, // Disable robots.txt checks
 })
 ```
 
@@ -722,12 +734,14 @@ const scraper = new CompetitorScraper({
 ### Issue: "No competitors found"
 
 **Causes**:
+
 1. Location coordinates incorrect
 2. No hotels in search radius
 3. Check-in date too far in future
 4. Site structure changed (scraper outdated)
 
 **Solutions**:
+
 1. Verify coordinates with Google Maps
 2. Increase `searchRadiusKm`
 3. Use nearer check-in dates (7-30 days ahead)
@@ -738,6 +752,7 @@ const scraper = new CompetitorScraper({
 **Cause**: Booking.com robots.txt blocks the path
 
 **Solutions**:
+
 1. Use alternative sources (Hotels.com, Expedia)
 2. Contact site for API access
 3. Use official APIs (MakCorps, etc.)
@@ -745,11 +760,13 @@ const scraper = new CompetitorScraper({
 ### Issue: Browser crashes or hangs
 
 **Causes**:
+
 1. Memory leak
 2. Timeout too short
 3. Proxy not responding
 
 **Solutions**:
+
 1. Restart worker regularly
 2. Increase timeout: `timeout: 120000` (2 minutes)
 3. Check proxy health, rotate to different proxy
@@ -813,7 +830,7 @@ try {
   await scraper.initialize()
   await scraper.scrapeBookingCom(params)
 } finally {
-  await scraper.close()  // Always cleanup
+  await scraper.close() // Always cleanup
 }
 ```
 
@@ -832,12 +849,12 @@ checkIn.setDate(checkIn.getDate() + 7)
 
 ## Performance
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Scrape duration (single date) | < 30s | ~20s |
-| Competitors found (avg) | 10-20 | ~15 |
-| Success rate | > 90% | ~95% |
-| robots.txt compliance | 100% | 100% |
+| Metric                        | Target | Current |
+| ----------------------------- | ------ | ------- |
+| Scrape duration (single date) | < 30s  | ~20s    |
+| Competitors found (avg)       | 10-20  | ~15     |
+| Success rate                  | > 90%  | ~95%    |
+| robots.txt compliance         | 100%   | 100%    |
 
 ## Security
 
@@ -880,15 +897,15 @@ checkIn.setDate(checkIn.getDate() + 7)
 
 ### 📊 Acceptance Criteria Status
 
-| Criterion | Status | Notes |
-|-----------|--------|-------|
-| Store daily competitor price bands (P10, P50, P90) | ✅ | Implemented in competitor_daily table |
-| Scrape Booking.com via Playwright | ✅ | Working with robots.txt compliance |
-| Workers process scraping jobs | ✅ | competitorWorker.ts with progress tracking |
-| Cron job schedules daily scraping | ✅ | 2 AM daily via competitorCronWorker.ts |
-| API endpoints for data access | ✅ | 6 endpoints implemented |
-| Pricing engine uses competitor data | ✅ | Auto-fetch with positioning reasoning |
-| Integration tests | ✅ | Full test suite in test/competitorScraper.test.ts |
+| Criterion                                          | Status | Notes                                             |
+| -------------------------------------------------- | ------ | ------------------------------------------------- |
+| Store daily competitor price bands (P10, P50, P90) | ✅     | Implemented in competitor_daily table             |
+| Scrape Booking.com via Playwright                  | ✅     | Working with robots.txt compliance                |
+| Workers process scraping jobs                      | ✅     | competitorWorker.ts with progress tracking        |
+| Cron job schedules daily scraping                  | ✅     | 2 AM daily via competitorCronWorker.ts            |
+| API endpoints for data access                      | ✅     | 6 endpoints implemented                           |
+| Pricing engine uses competitor data                | ✅     | Auto-fetch with positioning reasoning             |
+| Integration tests                                  | ✅     | Full test suite in test/competitorScraper.test.ts |
 
 ---
 

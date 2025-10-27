@@ -58,9 +58,9 @@ function App() {
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<Auth />} />
-            <Route path="/signup" element={<Auth />} />
+              {/* Public routes */}
+              <Route path="/login" element={<Auth />} />
+              <Route path="/signup" element={<Auth />} />
 
               {/* Protected routes */}
               <Route

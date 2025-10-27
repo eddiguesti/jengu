@@ -18,6 +18,7 @@ Implemented comprehensive observability stack for the pricing service with error
 **Location:** [`pricing-service/observability/sentry_config.py`](../../pricing-service/observability/sentry_config.py)
 
 **Features:**
+
 - FastAPI integration with automatic exception capture
 - Request ID tagging for end-to-end tracing
 - User and property context tagging
@@ -26,6 +27,7 @@ Implemented comprehensive observability stack for the pricing service with error
 - Configurable sampling rate for transactions
 
 **Key Functions:**
+
 ```python
 init_sentry(dsn, environment, release, traces_sample_rate)
 set_request_context(request_id, user_id, property_id, additional_tags)
@@ -41,6 +43,7 @@ start_transaction(name, op)
 **Metrics Exported:**
 
 #### API Metrics
+
 - `pricing_api_latency_seconds` - Request latency histogram by route
 - `pricing_score_latency_seconds` - /score endpoint latency by pricing method
 - `pricing_requests_total` - Request counter by status code
@@ -48,12 +51,14 @@ start_transaction(name, op)
 - `pricing_errors_total` - Error counter by type
 
 #### ML Model Metrics
+
 - `pricing_model_prediction_seconds` - Model prediction latency
 - `pricing_model_cache_hits_total` - Cache hits counter
 - `pricing_model_cache_misses_total` - Cache misses counter
 - `pricing_models_loaded` - Number of models loaded gauge
 
 #### Learning Loop Metrics
+
 - `pricing_outcomes_ingested_total` - Outcomes ingested counter
 - `pricing_outcomes_invalid_total` - Invalid outcomes counter
 - `pricing_retraining_duration_seconds` - Retraining duration histogram
@@ -61,18 +66,22 @@ start_transaction(name, op)
 - `pricing_drift_detected_total` - Drift detection events counter
 
 #### A/B Testing Metrics
+
 - `pricing_ab_assignments_total` - A/B test assignments counter
 - `pricing_ab_outcomes_total` - A/B test outcomes counter
 
 #### Competitor Data Metrics
+
 - `pricing_competitor_fetches_total` - Competitor data fetches counter
 - `pricing_competitor_staleness_seconds` - Data staleness gauge
 
 #### System Metrics
+
 - `pricing_service_info` - Service information
 - `pricing_uptime_seconds` - Service uptime gauge
 
 **Helper Functions:**
+
 ```python
 track_request(method, endpoint, status_code, duration)
 track_score_request(pricing_method, duration)
@@ -89,6 +98,7 @@ track_ab_outcome(experiment_id, variant, accepted)
 **Location:** [`main.py`](../../pricing-service/main.py) lines 87-153
 
 **Features:**
+
 - Generate or extract request IDs from headers
 - Track active requests per endpoint
 - Measure request latency
@@ -97,6 +107,7 @@ track_ab_outcome(experiment_id, variant, accepted)
 - Automatic error tracking
 
 **Request Flow:**
+
 1. Middleware extracts/generates request ID
 2. Increments active requests gauge
 3. Sets Sentry context
@@ -115,6 +126,7 @@ track_ab_outcome(experiment_id, variant, accepted)
 Exposes all Prometheus metrics in text format for scraping by Prometheus server.
 
 **Example:**
+
 ```bash
 curl http://localhost:8000/metrics
 ```
@@ -122,14 +134,17 @@ curl http://localhost:8000/metrics
 ### 5. Integrated Metrics Tracking ✅
 
 **/score Endpoint:**
+
 - Tracks specific `/score` latency by pricing method (ml_elasticity vs rule_based)
 - Lines 282, 320-322 in [`main.py`](../../pricing-service/main.py)
 
 **/learn Endpoint:**
+
 - Tracks outcomes ingestion by property
 - Lines 400-403 in [`main.py`](../../pricing-service/main.py)
 
 **/health Endpoint:**
+
 - Updates uptime metric
 - Lines 256-257 in [`main.py`](../../pricing-service/main.py)
 
@@ -159,6 +174,7 @@ curl http://localhost:8000/metrics
 18. **Competitor Data Staleness** - Data freshness
 
 **Built-in Alerts:**
+
 - /score p95 > 80ms for 5 minutes
 - Error rate > 0.1 errors/sec for 5 minutes
 
@@ -167,6 +183,7 @@ curl http://localhost:8000/metrics
 **Location:** [`pricing-service/observability/prometheus_alerts.yml`](../../pricing-service/observability/prometheus_alerts.yml)
 
 **Critical Alerts:**
+
 - `CriticalScoreLatency` - /score p95 > 80ms for 5m
 - `HighErrorRate` - Errors > 0.1/sec for 5m
 - `ServiceDown` - Service unreachable for 1m
@@ -174,6 +191,7 @@ curl http://localhost:8000/metrics
 - `RetrainingFailures` - Retraining failures detected
 
 **Warning Alerts:**
+
 - `HighAPILatency` - API p95 > 1s for 5m
 - `SlowScoreLatency` - /score p95 > 200ms for 5m
 - `IncreasedErrorRate` - Errors > 0.05/sec for 10m
@@ -192,12 +210,15 @@ curl http://localhost:8000/metrics
 ### 8. Documentation ✅
 
 **Main Documentation:**
+
 - [`docs/developer/OBSERVABILITY.md`](../../docs/developer/OBSERVABILITY.md) - Comprehensive guide (300+ lines)
 
 **Quick Start Guide:**
+
 - [`pricing-service/observability/README.md`](../../pricing-service/observability/README.md) - Setup and usage guide
 
 **Topics Covered:**
+
 - Sentry configuration and usage
 - Prometheus metrics reference
 - Grafana dashboard setup
@@ -270,6 +291,7 @@ python main.py
 ```
 
 Expected output:
+
 ```
 ⚠️  SENTRY_DSN not set, error tracking disabled
 🚀 Starting Jengu Pricing ML Service
@@ -331,6 +353,7 @@ rule_files:
 ```
 
 Mount alert rules:
+
 ```bash
 docker run -d -p 9090:9090 \
   -v ./prometheus.yml:/etc/prometheus/prometheus.yml \
@@ -345,6 +368,7 @@ docker run -d -p 3000:3000 grafana/grafana
 ```
 
 Import dashboard:
+
 1. Navigate to http://localhost:3000
 2. Add Prometheus data source
 3. Import `observability/grafana_dashboard.json`

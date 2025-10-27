@@ -33,12 +33,14 @@ registry.registerPath({
         'application/json': {
           schema: z.object({
             success: z.literal(true),
-            config: z.object({
-              enabled: z.boolean(),
-              trafficPercentage: z.number(),
-              policyType: z.string(),
-              epsilon: z.number(),
-            }).nullable(),
+            config: z
+              .object({
+                enabled: z.boolean(),
+                trafficPercentage: z.number(),
+                policyType: z.string(),
+                epsilon: z.number(),
+              })
+              .nullable(),
           }),
         },
       },

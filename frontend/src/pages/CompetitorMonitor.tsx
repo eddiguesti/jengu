@@ -90,7 +90,7 @@ export const CompetitorMonitor = () => {
 
     try {
       const response = await apiClient.post('/competitor/monitor/start', {
-        campsite
+        campsite,
       })
 
       if (response.data.success) {
@@ -133,9 +133,7 @@ export const CompetitorMonitor = () => {
             <div className="space-y-4">
               {/* Location Input */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-text">
-                  📍 Location
-                </label>
+                <label className="mb-2 block text-sm font-medium text-text">📍 Location</label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
@@ -143,7 +141,7 @@ export const CompetitorMonitor = () => {
                       type="text"
                       placeholder="e.g., Sanary-sur-Mer 83110, Paris 75001..."
                       value={location}
-                      onChange={(e) => setLocation(e.target.value)}
+                      onChange={e => setLocation(e.target.value)}
                       onKeyPress={handleKeyPress}
                       className="pl-10"
                     />
@@ -168,7 +166,8 @@ export const CompetitorMonitor = () => {
                   </Button>
                 </div>
                 <p className="mt-2 text-xs text-muted">
-                  💡 <strong>Include the 5-digit postal code</strong> for best results (e.g., "Sanary-sur-Mer 83110")
+                  💡 <strong>Include the 5-digit postal code</strong> for best results (e.g.,
+                  "Sanary-sur-Mer 83110")
                 </p>
               </div>
 
@@ -184,7 +183,7 @@ export const CompetitorMonitor = () => {
                   max="50"
                   step="5"
                   value={radiusKm}
-                  onChange={(e) => setRadiusKm(parseInt(e.target.value))}
+                  onChange={e => setRadiusKm(parseInt(e.target.value))}
                   className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-card accent-primary"
                 />
                 <div className="mt-1 flex justify-between text-xs text-muted">
@@ -346,7 +345,7 @@ const CampsiteCard: React.FC<CampsiteCardProps> = ({
   campsite,
   onStartMonitoring,
   isMonitoring = false,
-  isLoading = false
+  isLoading = false,
 }) => {
   return (
     <Card className="group overflow-hidden transition-all hover:shadow-lg">
@@ -357,7 +356,7 @@ const CampsiteCard: React.FC<CampsiteCardProps> = ({
             src={campsite.photoUrl}
             alt={campsite.name}
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
-            onError={(e) => {
+            onError={e => {
               e.currentTarget.src = 'https://via.placeholder.com/400x300?text=No+Image'
             }}
           />
@@ -385,8 +384,8 @@ const CampsiteCard: React.FC<CampsiteCardProps> = ({
       <Card.Body className="space-y-3">
         {/* Name */}
         <div>
-          <h3 className="text-lg font-bold text-text line-clamp-1">{campsite.name}</h3>
-          <p className="text-sm text-muted flex items-center gap-1 mt-1">
+          <h3 className="line-clamp-1 text-lg font-bold text-text">{campsite.name}</h3>
+          <p className="mt-1 flex items-center gap-1 text-sm text-muted">
             <MapPin className="h-3 w-3" />
             {campsite.town}
             {campsite.region && `, ${campsite.region}`}
@@ -419,9 +418,7 @@ const CampsiteCard: React.FC<CampsiteCardProps> = ({
         {/* Price */}
         {campsite.pricePreview && (
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-success">
-              €{campsite.pricePreview.amount}
-            </span>
+            <span className="text-2xl font-bold text-success">€{campsite.pricePreview.amount}</span>
             <span className="text-sm text-muted">/ {campsite.pricePreview.period}</span>
           </div>
         )}
@@ -430,10 +427,7 @@ const CampsiteCard: React.FC<CampsiteCardProps> = ({
         {campsite.amenities.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {campsite.amenities.slice(0, 3).map((amenity, i) => (
-              <span
-                key={i}
-                className="rounded-full bg-elevated px-2 py-1 text-xs text-muted"
-              >
+              <span key={i} className="rounded-full bg-elevated px-2 py-1 text-xs text-muted">
                 {amenity}
               </span>
             ))}
@@ -458,7 +452,7 @@ const CampsiteCard: React.FC<CampsiteCardProps> = ({
           View Details
         </Button>
         <Button
-          variant={isMonitoring ? "success" : "primary"}
+          variant={isMonitoring ? 'success' : 'primary'}
           size="sm"
           className="flex-1"
           onClick={() => onStartMonitoring?.(campsite)}

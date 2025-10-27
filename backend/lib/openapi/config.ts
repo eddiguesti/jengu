@@ -93,9 +93,6 @@ All endpoints return errors in this format:
       { name: 'Assistant', description: 'AI-powered pricing assistant' },
       { name: 'Settings', description: 'Business settings management' },
     ],
-    security: [
-      { bearerAuth: [] },
-      { cookieAuth: [] },
-    ],
+    security: [{ bearerAuth: [] }, { cookieAuth: [] }],
   })
 }

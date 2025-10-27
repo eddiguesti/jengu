@@ -1,4 +1,5 @@
 # Cleanup & Security Audit Report
+
 **Date**: 2025-10-23
 **Auditor**: Claude Code
 **Scope**: Full repository audit for code quality, security, and maintainability
@@ -14,6 +15,7 @@ The codebase is in good health with 15 completed tasks representing significant 
 ### Key Findings
 
 ✅ **Strengths:**
+
 - Well-organized monorepo structure
 - Comprehensive documentation
 - Good test coverage in completed features
@@ -22,6 +24,7 @@ The codebase is in good health with 15 completed tasks representing significant 
 - Rate limiting and security middleware in place
 
 ⚠️ **Areas for Improvement:**
+
 - 169 instances of `any` type usage (67 backend, 102 frontend)
 - Some outdated dependencies
 - Missing `.env.example` files
@@ -49,16 +52,17 @@ Total vulnerabilities: 3 (all in frontend transitive dependencies)
 
 #### Outdated Packages
 
-| Package | Current | Latest | Severity |
-|---------|---------|--------|----------|
-| @sentry/node | 10.20.0 | 10.21.0 | Low |
-| @sentry/profiling-node | 10.20.0 | 10.21.0 | Low |
-| @supabase/supabase-js | 2.75.0 | 2.76.1 | Low |
-| dotenv | 16.6.1 | 17.2.3 | Medium |
-| pino | 10.0.0 | 10.1.0 | Low |
-| @types/socket.io | 3.0.2 | Deprecated | High |
+| Package                | Current | Latest     | Severity |
+| ---------------------- | ------- | ---------- | -------- |
+| @sentry/node           | 10.20.0 | 10.21.0    | Low      |
+| @sentry/profiling-node | 10.20.0 | 10.21.0    | Low      |
+| @supabase/supabase-js  | 2.75.0  | 2.76.1     | Low      |
+| dotenv                 | 16.6.1  | 17.2.3     | Medium   |
+| pino                   | 10.0.0  | 10.1.0     | Low      |
+| @types/socket.io       | 3.0.2   | Deprecated | High     |
 
 **Recommendation**:
+
 ```bash
 pnpm update @sentry/node @sentry/profiling-node @supabase/supabase-js pnpm update dotenv pino
 pnpm remove @types/socket.io  # If not using socket.io types
@@ -95,16 +99,16 @@ pip-audit  # Run to check for vulnerabilities
 
 **Distribution by file:**
 
-| File | Count | Priority |
-|------|-------|----------|
-| services/enrichmentService.ts | 16 | High |
-| services/alertEngine.ts | 10 | High |
-| test/pricingSimulator.test.ts | 10 | Low (tests) |
-| services/marketSentiment.ts | 5 | Medium |
-| services/csvMapper.ts | 5 | Medium |
-| lib/grpc/pricingClient.ts | 4 | Medium |
-| services/alertDelivery.ts | 3 | Medium |
-| Other files | 14 | Low |
+| File                          | Count | Priority    |
+| ----------------------------- | ----- | ----------- |
+| services/enrichmentService.ts | 16    | High        |
+| services/alertEngine.ts       | 10    | High        |
+| test/pricingSimulator.test.ts | 10    | Low (tests) |
+| services/marketSentiment.ts   | 5     | Medium      |
+| services/csvMapper.ts         | 5     | Medium      |
+| lib/grpc/pricingClient.ts     | 4     | Medium      |
+| services/alertDelivery.ts     | 3     | Medium      |
+| Other files                   | 14    | Low         |
 
 **High Priority Fixes:**
 
@@ -124,14 +128,14 @@ pip-audit  # Run to check for vulnerabilities
 
 **Distribution:**
 
-| Area | Count | Priority |
-|------|-------|----------|
-| API services | 23 | High |
-| Chart components | 35 | Medium |
-| Pages | 21 | Medium |
-| Hooks | 5 | Low |
-| Store | 1 | Low |
-| Other | 17 | Low |
+| Area             | Count | Priority |
+| ---------------- | ----- | -------- |
+| API services     | 23    | High     |
+| Chart components | 35    | Medium   |
+| Pages            | 21    | Medium   |
+| Hooks            | 5     | Low      |
+| Store            | 1     | Low      |
+| Other            | 17    | Low      |
 
 **High Priority Fixes:**
 
@@ -162,6 +166,7 @@ pip-audit  # Run to check for vulnerabilities
 #### Backend Required Variables
 
 **Currently in use but not documented:**
+
 ```bash
 # Core
 PORT=3001
@@ -245,9 +250,11 @@ OUTCOMES_STORAGE_PATH=./data/outcomes
 ### Current State
 
 #### Backend (`/health`)
+
 **Status**: 🟡 **BASIC**
 
 Current response:
+
 ```json
 {
   "status": "ok",
@@ -256,6 +263,7 @@ Current response:
 ```
 
 **Missing:**
+
 - Database connectivity check
 - Pricing service connectivity check
 - Redis connectivity check (if using)
@@ -263,14 +271,17 @@ Current response:
 - Dependency versions
 
 #### Frontend
+
 **Status**: ❌ **MISSING**
 
 No health check endpoint.
 
 #### Pricing Service (`/health`)
+
 **Status**: 🟡 **BASIC**
 
 Current response:
+
 ```json
 {
   "status": "healthy"
@@ -278,6 +289,7 @@ Current response:
 ```
 
 **Missing:**
+
 - Model registry status
 - Supabase connectivity
 - gRPC server status
@@ -351,11 +363,13 @@ Current response:
 **Status**: 🟢 **GOOD** for new features
 
 Completed features have good test coverage:
+
 - Task 12: Partner API SDK (comprehensive tests)
 - Task 13: Smart Alerts (test suite created)
 - Task 14: Pricing Simulator (5 test cases)
 
 **Missing coverage:**
+
 - Legacy features (pre-Task 7)
 - Frontend components (no tests)
 - Integration tests between services
@@ -372,6 +386,7 @@ Completed features have good test coverage:
 - Enforced in code quality scripts ✅
 
 **Run:**
+
 ```bash
 pnpm run check-all  # Type check + lint + format check
 ```
@@ -400,6 +415,7 @@ pnpm run check-all  # Type check + lint + format check
 ✅ RLS policies on database tables
 
 **Recommendations:**
+
 - Add rate limiting per user (currently per IP)
 - Implement session management (track active sessions)
 
@@ -414,6 +430,7 @@ pnpm run check-all  # Type check + lint + format check
 ✅ SQL injection protection (parameterized queries)
 
 **Recommendations:**
+
 - Add request signing for partner API
 - Implement CSRF protection for state-changing operations
 
@@ -426,6 +443,7 @@ pnpm run check-all  # Type check + lint + format check
 ⚠️ Service role keys used in backend (necessary but risky)
 
 **Recommendations:**
+
 - Use secrets manager in production
 - Rotate API keys regularly
 - Add secret scanning to CI (detect accidental commits)
@@ -437,6 +455,7 @@ pnpm run check-all  # Type check + lint + format check
 Current vulnerabilities are in transitive dependencies (frontend build tools) with low severity.
 
 **Recommendations:**
+
 - Add `pnpm audit` to CI pipeline
 - Auto-create PRs for dependency updates (Dependabot/Renovate)
 - Add `pip-audit` for Python dependencies
@@ -456,6 +475,7 @@ Current vulnerabilities are in transitive dependencies (frontend build tools) wi
 ✅ BullMQ for async jobs (Task 6)
 
 **Recommendations:**
+
 - Add query result caching (Redis)
 - Implement database connection pooling
 - Add CDN for static assets
@@ -470,6 +490,7 @@ Current vulnerabilities are in transitive dependencies (frontend build tools) wi
 ✅ Lazy loading for components
 
 **Recommendations:**
+
 - Add bundle analysis
 - Implement virtual scrolling for large lists
 - Optimize images (WebP, lazy loading)
@@ -602,12 +623,14 @@ jobs:
 ### Critical
 
 1. **Add Secret Scanning to CI**
+
    ```yaml
    - name: Detect Secrets
      uses: trufflesecurity/trufflehog@main
    ```
 
 2. **Implement Rate Limiting Per User**
+
    ```typescript
    // Currently per IP, should also track per user
    rateLimitByUser(userId, 'pricing', maxRequests: 100, windowMs: 60000)
@@ -642,6 +665,7 @@ jobs:
 ### Backend
 
 1. **Add Query Result Caching**
+
    ```typescript
    // Cache frequently accessed data (property info, settings)
    const cached = await redis.get(`property:${id}`)
@@ -649,6 +673,7 @@ jobs:
    ```
 
 2. **Implement Connection Pooling**
+
    ```typescript
    // Supabase client with connection pooling
    const pool = new Pool({ max: 20, connectionTimeoutMillis: 5000 })
@@ -663,11 +688,13 @@ jobs:
 ### Frontend
 
 1. **Add Bundle Analysis**
+
    ```bash
    pnpm add -D rollup-plugin-visualizer
    ```
 
 2. **Implement Virtual Scrolling**
+
    ```typescript
    import { useVirtualizer } from '@tanstack/react-virtual'
    // For large data tables
@@ -685,6 +712,7 @@ jobs:
 ### Overall Assessment
 
 The codebase is in **good health** with strong foundations:
+
 - Modern architecture
 - Good security practices
 - Comprehensive documentation
@@ -693,18 +721,21 @@ The codebase is in **good health** with strong foundations:
 ### Priority Actions
 
 **This Week:**
+
 1. Update critical dependencies
 2. Create `.env.example` files
 3. Enhance health checks
 4. Add vulnerability scanning to CI
 
 **This Month:**
+
 1. Fix high-priority TypeScript `any` usage
 2. Add frontend test suite
 3. Implement secrets management
 4. Add automated dependency updates
 
 **This Quarter:**
+
 1. Eliminate all `any` types
 2. Achieve 80%+ test coverage
 3. Implement comprehensive CI/CD pipeline

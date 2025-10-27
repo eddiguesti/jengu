@@ -29,7 +29,7 @@ export const PricingCalendarDemo: React.FC = () => {
         (month === 11 && day === 25) || // Christmas
         (month === 0 && day === 1) || // New Year
         (month === 6 && day === 4) || // July 4th
-        (month === 10 && (day >= 23 && day <= 24)) // Thanksgiving
+        (month === 10 && day >= 23 && day <= 24) // Thanksgiving
 
       let holidayName = ''
       if (month === 11 && day === 25) holidayName = 'Christmas'
@@ -95,16 +95,16 @@ export const PricingCalendarDemo: React.FC = () => {
   // Calculate stats for selected date
   const selectedDayData = useMemo(() => {
     if (!selectedDate) return null
-    return sampleData.find((d) => d.date === selectedDate)
+    return sampleData.find(d => d.date === selectedDate)
   }, [selectedDate, sampleData])
 
   // Calculate overall stats
   const stats = useMemo(() => {
-    const futureDays = sampleData.filter((d) => !d.isPast)
+    const futureDays = sampleData.filter(d => !d.isPast)
     const avgPrice = futureDays.reduce((sum, d) => sum + d.price, 0) / futureDays.length
     const avgDemand = futureDays.reduce((sum, d) => sum + d.demand, 0) / futureDays.length
-    const maxPrice = Math.max(...futureDays.map((d) => d.price))
-    const minPrice = Math.min(...futureDays.map((d) => d.price))
+    const maxPrice = Math.max(...futureDays.map(d => d.price))
+    const minPrice = Math.min(...futureDays.map(d => d.price))
 
     return {
       avgPrice: Math.round(avgPrice),
@@ -117,11 +117,11 @@ export const PricingCalendarDemo: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <Calendar className="w-8 h-8 text-primary" />
+          <div className="mb-2 flex items-center gap-3">
+            <Calendar className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold text-text">Price + Demand Calendar</h1>
           </div>
           <p className="text-muted">
@@ -131,48 +131,48 @@ export const PricingCalendarDemo: React.FC = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <Card className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs text-muted mb-1">Avg Price (Next 90d)</p>
+                <p className="mb-1 text-xs text-muted">Avg Price (Next 90d)</p>
                 <p className="text-2xl font-bold text-text">€{stats.avgPrice}</p>
               </div>
-              <DollarSign className="w-5 h-5 text-primary" />
+              <DollarSign className="h-5 w-5 text-primary" />
             </div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs text-muted mb-1">Avg Demand</p>
+                <p className="mb-1 text-xs text-muted">Avg Demand</p>
                 <p className="text-2xl font-bold text-text">{stats.avgDemand}%</p>
               </div>
-              <TrendingUp className="w-5 h-5 text-success" />
+              <TrendingUp className="h-5 w-5 text-success" />
             </div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs text-muted mb-1">Price Range</p>
+                <p className="mb-1 text-xs text-muted">Price Range</p>
                 <p className="text-2xl font-bold text-text">
                   €{stats.minPrice}-{stats.maxPrice}
                 </p>
               </div>
-              <TrendingUp className="w-5 h-5 text-primary" />
+              <TrendingUp className="h-5 w-5 text-primary" />
             </div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs text-muted mb-1">Est. Revenue (90d)</p>
+                <p className="mb-1 text-xs text-muted">Est. Revenue (90d)</p>
                 <p className="text-2xl font-bold text-text">
                   €{(stats.totalRevenue / 1000).toFixed(1)}k
                 </p>
               </div>
-              <Users className="w-5 h-5 text-success" />
+              <Users className="h-5 w-5 text-success" />
             </div>
           </Card>
         </div>
@@ -190,8 +190,9 @@ export const PricingCalendarDemo: React.FC = () => {
         {/* Selected Date Details */}
         {selectedDayData && (
           <Card className="p-6">
-            <h3 className="text-lg font-semibold text-text mb-4">
-              Selected Date: {new Date(selectedDayData.date).toLocaleDateString('en-US', {
+            <h3 className="mb-4 text-lg font-semibold text-text">
+              Selected Date:{' '}
+              {new Date(selectedDayData.date).toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -202,10 +203,10 @@ export const PricingCalendarDemo: React.FC = () => {
               )}
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {/* Pricing */}
               <div>
-                <h4 className="text-sm font-medium text-muted mb-3">Pricing</h4>
+                <h4 className="mb-3 text-sm font-medium text-muted">Pricing</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted">Your Price:</span>
@@ -235,7 +236,7 @@ export const PricingCalendarDemo: React.FC = () => {
                     </span>
                   </div>
                   {selectedDayData.priceChange !== undefined && (
-                    <div className="flex justify-between pt-2 border-t border-border">
+                    <div className="flex justify-between border-t border-border pt-2">
                       <span className="text-muted">vs. Yesterday:</span>
                       <span
                         className={`font-semibold ${
@@ -256,7 +257,7 @@ export const PricingCalendarDemo: React.FC = () => {
 
               {/* Demand */}
               <div>
-                <h4 className="text-sm font-medium text-muted mb-3">Demand</h4>
+                <h4 className="mb-3 text-sm font-medium text-muted">Demand</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted">Demand Score:</span>
@@ -279,7 +280,7 @@ export const PricingCalendarDemo: React.FC = () => {
 
                   {/* Demand bar */}
                   <div className="pt-2">
-                    <div className="h-2 bg-card rounded-full overflow-hidden">
+                    <div className="h-2 overflow-hidden rounded-full bg-card">
                       <div
                         className="h-full rounded-full transition-all duration-300"
                         style={{
@@ -299,7 +300,7 @@ export const PricingCalendarDemo: React.FC = () => {
 
               {/* Context */}
               <div>
-                <h4 className="text-sm font-medium text-muted mb-3">Context</h4>
+                <h4 className="mb-3 text-sm font-medium text-muted">Context</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted">Day Type:</span>
@@ -332,9 +333,9 @@ export const PricingCalendarDemo: React.FC = () => {
         )}
 
         {/* Instructions */}
-        <Card className="p-6 bg-elevated border-primary border-opacity-20">
-          <h3 className="text-sm font-semibold text-text mb-2">How to Use</h3>
-          <ul className="text-sm text-muted space-y-1">
+        <Card className="border-primary border-opacity-20 bg-elevated p-6">
+          <h3 className="mb-2 text-sm font-semibold text-text">How to Use</h3>
+          <ul className="space-y-1 text-sm text-muted">
             <li>
               • <span className="font-medium">Hover</span> over any date to see detailed pricing
               breakdown

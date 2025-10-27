@@ -15,6 +15,7 @@ Implemented a comprehensive smart alerts system that proactively monitors key bu
 ### 1. Alert Engine (`backend/services/alertEngine.ts`)
 
 **Features:**
+
 - Rule-based evaluation engine
 - 9 alert types supported:
   - `competitor_price_spike` - Monitors competitor price increases
@@ -31,6 +32,7 @@ Implemented a comprehensive smart alerts system that proactively monitors key bu
 - De-duplication and throttling logic
 
 **Key Methods:**
+
 ```typescript
 AlertEngine.evaluateRule(rule, context)
 AlertEngine.evaluatePropertyRules(propertyId)
@@ -45,6 +47,7 @@ AlertEngine.buildEvaluationContext(propertyId)
 ### 2. Alert Scheduler (`backend/jobs/alertScheduler.ts`)
 
 **Features:**
+
 - Nightly batch evaluation (default: 2:00 AM)
 - Configurable via environment variables
 - Batch processing to prevent database overload
@@ -54,6 +57,7 @@ AlertEngine.buildEvaluationContext(propertyId)
 - Manual trigger support for testing
 
 **Configuration:**
+
 ```bash
 ALERT_CRON_SCHEDULE=0 2 * * *  # Daily at 2 AM
 ALERT_BATCH_SIZE=10            # Process 10 properties in parallel
@@ -61,10 +65,11 @@ ENABLE_EMAIL_DIGEST=true       # Enable email digests
 ```
 
 **Key Functions:**
+
 ```typescript
-startAlertScheduler()  // Start cron job
-stopAlertScheduler()   // Stop cron job
-manualTrigger()        // Trigger evaluation manually
+startAlertScheduler() // Start cron job
+stopAlertScheduler() // Stop cron job
+manualTrigger() // Trigger evaluation manually
 ```
 
 **Lines of Code**: ~270 lines
@@ -76,6 +81,7 @@ manualTrigger()        // Trigger evaluation manually
 #### Daily Digest (`backend/email-templates/alert-digest.html`)
 
 **Features:**
+
 - Responsive HTML email template
 - Gradient header matching severity
 - Summary statistics (critical/high/medium/low counts)
@@ -84,6 +90,7 @@ manualTrigger()        // Trigger evaluation manually
 - Footer with settings links
 
 **Template Variables:**
+
 - `{{totalAlerts}}`, `{{propertiesCount}}`
 - `{{criticalCount}}`, `{{highCount}}`, `{{mediumCount}}`, `{{lowCount}}`
 - `{{#alerts}}...{{/alerts}}` loop with `{{title}}`, `{{message}}`, `{{severity}}`, etc.
@@ -93,6 +100,7 @@ manualTrigger()        // Trigger evaluation manually
 #### Single Alert (`backend/email-templates/single-alert.html`)
 
 **Features:**
+
 - Immediate notification template
 - Severity-based color schemes
 - Key metrics data grid
@@ -100,6 +108,7 @@ manualTrigger()        // Trigger evaluation manually
 - Snooze/dismiss links
 
 **Template Variables:**
+
 - `{{severity}}`, `{{title}}`, `{{message}}`
 - `{{propertyName}}`, `{{triggeredAt}}`
 - `{{#data}}...{{/data}}` for key metrics
@@ -112,6 +121,7 @@ manualTrigger()        // Trigger evaluation manually
 ### 4. Alert Delivery Service (`backend/services/alertDelivery.ts`)
 
 **Features:**
+
 - SendGrid email integration
 - Template rendering with Mustache
 - Daily digest emails (batch)
@@ -122,6 +132,7 @@ manualTrigger()        // Trigger evaluation manually
 - Contextual recommendations based on alert type
 
 **Key Functions:**
+
 ```typescript
 sendSingleAlert(alertId)
 sendDailyDigest(userId)
@@ -129,6 +140,7 @@ processEmailQueue()
 ```
 
 **Configuration:**
+
 ```bash
 SENDGRID_API_KEY=your_key
 ALERT_FROM_EMAIL=alerts@jengu.app
@@ -145,6 +157,7 @@ BASE_URL=https://app.jengu.com
 **Endpoints Implemented:**
 
 #### Alert History
+
 - `GET /api/alerts` - List user's recent alerts (with filters)
 - `GET /api/alerts/:id` - Get alert details
 - `POST /api/alerts/:id/dismiss` - Dismiss an alert
@@ -152,19 +165,23 @@ BASE_URL=https://app.jengu.com
 - `DELETE /api/alerts/:id` - Delete an alert
 
 #### Alert Rules
+
 - `GET /api/alerts/rules` - List user's alert rules
 - `POST /api/alerts/rules` - Create alert rule
 - `PUT /api/alerts/rules/:id` - Update alert rule
 - `DELETE /api/alerts/rules/:id` - Delete alert rule
 
 #### Alert Settings
+
 - `GET /api/alerts/settings` - Get user's alert preferences
 - `PUT /api/alerts/settings` - Update user's alert preferences
 
 #### Utility
+
 - `POST /api/alerts/test/:propertyId` - Manual evaluation trigger
 
 **Features:**
+
 - Full authentication with `authenticateUser` middleware
 - Query parameter filtering (status, severity, propertyId)
 - Pagination support
@@ -246,6 +263,7 @@ BASE_URL=https://app.jengu.com
 ### Server Integration
 
 Updated `backend/server.ts`:
+
 ```typescript
 import alertsRouter from './routes/alerts.js'
 app.use('/api/alerts', alertsRouter)
@@ -309,36 +327,43 @@ SELECT is_in_quiet_hours('user-id-here');
 ## Key Features Delivered
 
 ### ✅ Proactive Monitoring
+
 - Automatically evaluates business metrics nightly
 - Detects anomalies and opportunities
 - No manual monitoring required
 
 ### ✅ Smart Throttling
+
 - Prevents alert fatigue with `min_interval_hours`
 - Respects user quiet hours
 - Batches alerts into daily digests
 
 ### ✅ Contextual Intelligence
+
 - Uses historical baselines for comparison
 - Provides recommendations based on alert type
 - Includes actionable insights and metrics
 
 ### ✅ Flexible Configuration
+
 - User-customizable alert rules
 - Per-user notification preferences
 - Property-specific monitoring
 
 ### ✅ Professional Email Delivery
+
 - Beautiful, responsive HTML templates
 - Severity-based color coding
 - One-click action buttons
 
 ### ✅ Comprehensive API
+
 - Full CRUD for alert rules
 - Alert history management
 - Settings customization
 
 ### ✅ Production-Ready
+
 - Error handling and retry logic
 - Performance monitoring
 - Evaluation logging for debugging
@@ -371,6 +396,7 @@ SELECT is_in_quiet_hours('user-id-here');
 ### Evaluation Context
 
 For each property, the engine builds a comprehensive context:
+
 - **Current data**: Last 7 days of pricing/occupancy
 - **Historical data**: Last 30 days for baseline calculations
 - **Competitor data**: Recent competitor pricing trends
@@ -390,21 +416,25 @@ Created (pending) → Evaluated → Triggered → Queued → Sent
 ## Performance Characteristics
 
 ### Batch Evaluation
+
 - Properties processed in batches (default: 10)
 - Prevents database overload
 - Configurable batch size
 
 ### Efficient Queries
+
 - Indexes on key columns (userId, propertyId, status)
 - Filtered queries to minimize data transfer
 - Pagination support for large result sets
 
 ### Email Delivery
+
 - Queue-based processing
 - Async sending (doesn't block evaluation)
 - Retry logic for failed deliveries
 
 ### Logging
+
 - Comprehensive evaluation logging
 - Performance tracking (evaluation_time_ms)
 - Debugging context preserved
@@ -414,16 +444,19 @@ Created (pending) → Evaluated → Triggered → Queued → Sent
 ## Security Considerations
 
 ### Authentication
+
 - All endpoints require JWT authentication
 - User ownership verification for all resources
 - No cross-user data leakage
 
 ### Data Privacy
+
 - Alerts only visible to owning user
 - Email queue respects user preferences
 - Quiet hours enforced at database level
 
 ### Rate Limiting
+
 - General rate limiting applies to all endpoints
 - Batch processing prevents DoS on database
 - Throttling prevents alert spam
@@ -481,23 +514,29 @@ The following were identified but not implemented in this task:
 ## Files Created
 
 ### Backend Services
+
 1. `backend/services/alertEngine.ts` (650 lines)
 2. `backend/services/alertDelivery.ts` (580 lines)
 
 ### Backend Jobs
+
 3. `backend/jobs/alertScheduler.ts` (270 lines)
 
 ### Backend Routes
+
 4. `backend/routes/alerts.ts` (530 lines)
 
 ### Email Templates
+
 5. `backend/email-templates/alert-digest.html` (370 lines)
 6. `backend/email-templates/single-alert.html` (350 lines)
 
 ### Database
+
 7. `backend/migrations/add_smart_alerts_tables.sql` (550 lines)
 
 ### Documentation
+
 8. `docs/developer/SMART_ALERTS.md` (600 lines)
 9. `docs/tasks-todo/task13-SMART-ALERTS-COMPLETED.md` (this file)
 

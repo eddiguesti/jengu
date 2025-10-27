@@ -188,11 +188,7 @@ export async function getJobStatus(
 export async function closeQueues(): Promise<void> {
   logger.info('🔌 Closing BullMQ queues...')
 
-  await Promise.all([
-    enrichmentQueue.close(),
-    competitorQueue.close(),
-    analyticsQueue.close(),
-  ])
+  await Promise.all([enrichmentQueue.close(), competitorQueue.close(), analyticsQueue.close()])
 
   logger.info('✅ All queues closed')
 }

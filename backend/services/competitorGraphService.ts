@@ -65,7 +65,9 @@ export class CompetitorGraphService {
   /**
    * Store or update competitor hotel
    */
-  async upsertCompetitorHotel(hotel: CompetitorHotel): Promise<{ success: boolean; hotelId?: string; error?: string }> {
+  async upsertCompetitorHotel(
+    hotel: CompetitorHotel
+  ): Promise<{ success: boolean; hotelId?: string; error?: string }> {
     try {
       const hotelData = {
         name: hotel.name,
@@ -108,7 +110,11 @@ export class CompetitorGraphService {
           .single()
       } else {
         // Insert new
-        result = await this.supabase.from('competitor_hotels').insert(hotelData).select('id').single()
+        result = await this.supabase
+          .from('competitor_hotels')
+          .insert(hotelData)
+          .select('id')
+          .single()
       }
 
       if (result.error) {
@@ -146,9 +152,7 @@ export class CompetitorGraphService {
       const maxCompetitors = options.maxCompetitors || 50
       const weights = options.weights || DEFAULT_WEIGHTS
 
-      logger.info(
-        `🔗 Building competitor graph for property ${propertyId} within ${maxDistance}km`
-      )
+      logger.info(`🔗 Building competitor graph for property ${propertyId} within ${maxDistance}km`)
 
       // Get nearby competitor hotels
       const nearbyHotels = await this.findNearbyHotels(
@@ -234,7 +238,9 @@ export class CompetitorGraphService {
       await this.supabase.from('competitor_relationships').delete().eq('property_id', propertyId)
 
       // Insert new relationships
-      const { error } = await this.supabase.from('competitor_relationships').insert(relationshipRows)
+      const { error } = await this.supabase
+        .from('competitor_relationships')
+        .insert(relationshipRows)
 
       if (error) {
         logger.error({ err: error }, '❌ Failed to store competitor relationships')
@@ -312,7 +318,12 @@ export class CompetitorGraphService {
   /**
    * Calculate Haversine distance between two points (in km)
    */
-  private calculateHaversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  private calculateHaversineDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number {
     const R = 6371 // Earth's radius in km
     const dLat = ((lat2 - lat1) * Math.PI) / 180
     const dLon = ((lon2 - lon1) * Math.PI) / 180

@@ -157,7 +157,10 @@ export class NeighborhoodIndexService {
         positioningScore * DEFAULT_INDEX_WEIGHTS.positioning
 
       // Determine market position
-      const marketPosition = this.determineMarketPosition(pricePercentile, propertyAttributes?.starRating)
+      const marketPosition = this.determineMarketPosition(
+        pricePercentile,
+        propertyAttributes?.starRating
+      )
 
       // Identify competitive advantages and weaknesses
       const { advantages, weaknesses } = this.identifyCompetitiveFactors(
@@ -193,9 +196,7 @@ export class NeighborhoodIndexService {
           pricePercentile !== undefined ? Math.round(pricePercentile * 100) / 100 : undefined,
         competitorsAnalyzed: relationships.length,
         avgCompetitorRating:
-          avgCompetitorRating !== undefined
-            ? Math.round(avgCompetitorRating * 10) / 10
-            : undefined,
+          avgCompetitorRating !== undefined ? Math.round(avgCompetitorRating * 10) / 10 : undefined,
         propertyRating: propertyAttributes?.reviewScore,
         indexChange1d,
         indexChange7d,
@@ -232,7 +233,8 @@ export class NeighborhoodIndexService {
       return 50 // Neutral score if no data
     }
 
-    const avgCompetitorPrice = competitorPrices.reduce((sum, p) => sum + p, 0) / competitorPrices.length
+    const avgCompetitorPrice =
+      competitorPrices.reduce((sum, p) => sum + p, 0) / competitorPrices.length
 
     // Calculate relative price position
     // If our price is lower, score is higher (more competitive)
@@ -481,10 +483,7 @@ export class NeighborhoodIndexService {
   /**
    * Get neighborhood index trend
    */
-  async getIndexTrend(
-    propertyId: string,
-    days: number = 30
-  ): Promise<NeighborhoodIndex[]> {
+  async getIndexTrend(propertyId: string, days: number = 30): Promise<NeighborhoodIndex[]> {
     try {
       const { data, error } = await this.supabase
         .from('neighborhood_competitive_index')

@@ -4,7 +4,7 @@ on:
   schedule:
     # Run every Sunday at 2 AM UTC
     - cron: '0 2 * * 0'
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch: # Allow manual trigger
     inputs:
       property_id:
         description: 'Property ID to retrain (leave empty for all)'
@@ -81,7 +81,7 @@ jobs:
 
     strategy:
       matrix:
-        model_type: [conversion]  # Add 'adr', 'revpar' as needed
+        model_type: [conversion] # Add 'adr', 'revpar' as needed
 
     steps:
       - name: Checkout code

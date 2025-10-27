@@ -17,6 +17,7 @@ Implemented a comprehensive "What-if" pricing simulator that allows users to pre
 **Endpoint**: `POST /api/pricing/simulate`
 
 **Features:**
+
 - Generates 7 pricing variants (-15%, -10%, -5%, baseline, +5%, +10%, +15%)
 - Calculates confidence intervals for each variant
 - Projects occupancy and RevPAR impacts
@@ -24,6 +25,7 @@ Implemented a comprehensive "What-if" pricing simulator that allows users to pre
 - Reuses existing pricing service integration
 
 **Request Body:**
+
 ```typescript
 {
   propertyId: string
@@ -39,6 +41,7 @@ Implemented a comprehensive "What-if" pricing simulator that allows users to pre
 ```
 
 **Response:**
+
 ```typescript
 {
   variants: [
@@ -71,6 +74,7 @@ Implemented a comprehensive "What-if" pricing simulator that allows users to pre
 ```
 
 **Key Logic:**
+
 - Uses elasticity assumption: -0.5 (i.e., -10% price = +5% occupancy)
 - Calculates RevPAR delta based on price and projected occupancy
 - Calls existing `/score` endpoint for each variant
@@ -85,11 +89,13 @@ Implemented a comprehensive "What-if" pricing simulator that allows users to pre
 **Features:**
 
 #### Interactive UI
+
 - "Run Simulation" button to trigger analysis
 - Loading states with spinner
 - Error handling with user-friendly messages
 
 #### Variant Grid Display
+
 - Responsive grid layout (1-4 columns based on screen size)
 - Color-coded cards:
   - Green: Lower prices (discount variants)
@@ -98,6 +104,7 @@ Implemented a comprehensive "What-if" pricing simulator that allows users to pre
 - Animated card entrance (staggered)
 
 #### Variant Details
+
 - Price with confidence interval band
 - Occupancy projection with delta
 - RevPAR projection with delta
@@ -105,16 +112,19 @@ Implemented a comprehensive "What-if" pricing simulator that allows users to pre
 - Impact summary ("Revenue increase projected")
 
 #### Selection & Apply
+
 - Click any variant to select
 - Selected variant highlighted with purple ring
 - Detailed reasoning displayed for selected variant
 - `onApplyVariant` callback for parent integration
 
 #### Baseline Info Panel
+
 - Current price, occupancy, and RevPAR displayed prominently
 - Always visible for comparison
 
 **Styling:**
+
 - Dark mode support
 - Framer Motion animations
 - Tailwind CSS
@@ -158,29 +168,34 @@ Implemented a comprehensive "What-if" pricing simulator that allows users to pre
 ## Key Features Delivered
 
 ### ✅ Comprehensive Variant Analysis
+
 - 7 pricing points spanning ±15% range
 - Balanced view of aggressive and conservative strategies
 - Baseline for comparison
 
 ### ✅ Intelligent Projections
+
 - Confidence intervals for each price point
 - Occupancy impact based on price elasticity
 - RevPAR calculations for revenue optimization
 - Delta percentages for easy comparison
 
 ### ✅ User-Friendly Interface
+
 - Visual color coding for quick understanding
 - Animated interactions for engagement
 - Clear metrics and indicators
 - Responsive grid layout
 
 ### ✅ Actionable Insights
+
 - Reasoning for each variant
 - Impact summaries (revenue increase/decrease)
 - Selection mechanism for applying choices
 - Metadata tracking
 
 ### ✅ Production-Ready
+
 - Full authentication integration
 - Error handling and validation
 - Dark mode support
@@ -203,15 +218,15 @@ router.post('/simulate', authenticateUser, validate(pricingQuoteSchema), asyncHa
 **Component**: `frontend/src/components/pricing/PricingSimulator.tsx`
 
 **Usage Example:**
+
 ```tsx
 import { PricingSimulator } from '../components/pricing/PricingSimulator'
-
-<PricingSimulator
+;<PricingSimulator
   propertyId="property-123"
   stayDate="2025-12-25"
   product={{ type: 'standard', refundable: true, los: 1 }}
   toggles={{ strategy: 'balanced', use_ml: true }}
-  onApplyVariant={(variant) => {
+  onApplyVariant={variant => {
     console.log('Selected variant:', variant.price)
     // Apply variant to booking flow
   }}
@@ -295,7 +310,7 @@ import { PricingSimulator } from '../components/pricing/PricingSimulator'
         "occ_delta": 0,
         "revpar_delta": 0,
         "projected_occ": 70.0,
-        "projected_revpar": 70.00
+        "projected_revpar": 70.0
       },
       "reasons": [
         "Price adjusted 0% from baseline",
@@ -324,7 +339,7 @@ import { PricingSimulator } from '../components/pricing/PricingSimulator'
   "baseline": {
     "price": 100,
     "occ": 70,
-    "revpar": 70.00
+    "revpar": 70.0
   }
 }
 ```
@@ -411,15 +426,19 @@ The following could be added in future iterations:
 ## Files Created
 
 ### Backend
+
 1. `backend/routes/pricing.ts` - Added `/simulate` endpoint (~170 lines)
 
 ### Frontend
+
 2. `frontend/src/components/pricing/PricingSimulator.tsx` (~450 lines)
 
 ### Tests
+
 3. `backend/test/pricingSimulator.test.ts` (~220 lines)
 
 ### Documentation
+
 4. `docs/tasks-done/task14-SIMULATION-SANDBOX-COMPLETED.md` (this file)
 
 **Total Lines of Code: ~840 lines**
@@ -456,7 +475,7 @@ curl -X POST http://localhost:3001/api/pricing/simulate \
 import { PricingSimulator } from '@/components/pricing/PricingSimulator'
 
 function PricingPage() {
-  const handleApplyVariant = (variant) => {
+  const handleApplyVariant = variant => {
     // Update pricing quote with selected variant
     console.log(`Applying ${variant.label}: $${variant.price}`)
   }

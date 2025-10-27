@@ -115,16 +115,11 @@ async function computeNeighborhoodIndexes(): Promise<void> {
           )
           successCount++
         } else {
-          logger.warn(
-            `⚠️  Failed to compute index for property ${propertyId}: ${result.error}`
-          )
+          logger.warn(`⚠️  Failed to compute index for property ${propertyId}: ${result.error}`)
           failCount++
         }
       } catch (error) {
-        logger.error(
-          { err: error },
-          `❌ Exception computing index for property ${propertyId}`
-        )
+        logger.error({ err: error }, `❌ Exception computing index for property ${propertyId}`)
         failCount++
       }
     }

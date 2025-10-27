@@ -100,11 +100,14 @@ router.get(
 
       // Calculate price statistics
       const prices = campsites.filter((c: any) => c.price).map((c: any) => c.price)
-      const stats = prices.length > 0 ? {
-        min: Math.min(...prices),
-        max: Math.max(...prices),
-        avg: prices.reduce((a: number, b: number) => a + b, 0) / prices.length,
-      } : null
+      const stats =
+        prices.length > 0
+          ? {
+              min: Math.min(...prices),
+              max: Math.max(...prices),
+              avg: prices.reduce((a: number, b: number) => a + b, 0) / prices.length,
+            }
+          : null
 
       res.json({
         success: true,
@@ -158,7 +161,11 @@ router.post(
       })
     } catch (error: any) {
       console.error('❌ Error discovering campsites:', error)
-      return sendError(res, 'SCRAPER_ERROR', error.message || 'Failed to discover competitor campsites')
+      return sendError(
+        res,
+        'SCRAPER_ERROR',
+        error.message || 'Failed to discover competitor campsites'
+      )
     }
   })
 )

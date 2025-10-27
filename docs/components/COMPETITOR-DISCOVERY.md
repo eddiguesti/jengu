@@ -31,7 +31,12 @@ class CampingAndCoScraper {
   async getCampsiteDetails(campsiteUrl: string): Promise<CampsiteResult>
 
   // Get pricing data for a campsite over a date range
-  async getPricing(campsiteUrl: string, startDate: Date, endDate: Date, occupancy: number = 4): Promise<PricingData[]>
+  async getPricing(
+    campsiteUrl: string,
+    startDate: Date,
+    endDate: Date,
+    occupancy: number = 4
+  ): Promise<PricingData[]>
 }
 ```
 
@@ -39,35 +44,35 @@ class CampingAndCoScraper {
 
 ```typescript
 interface CampsiteResult {
-  id: string                  // Extracted from URL
-  name: string                // Campsite name
-  url: string                 // Full URL to campsite page
-  photoUrl: string            // Primary photo
-  photos: string[]            // All photos (15+ high-res images)
-  distance: number            // Distance in km
-  distanceText: string        // Human-readable distance
-  address: string             // Full address
-  town: string                // City name
-  region: string              // Region name
+  id: string // Extracted from URL
+  name: string // Campsite name
+  url: string // Full URL to campsite page
+  photoUrl: string // Primary photo
+  photos: string[] // All photos (15+ high-res images)
+  distance: number // Distance in km
+  distanceText: string // Human-readable distance
+  address: string // Full address
+  town: string // City name
+  region: string // Region name
   coordinates: {
     latitude: number
     longitude: number
   }
-  rating: number              // 0-5 star rating
-  reviewCount: number         // Number of reviews
-  amenities: string[]         // List of amenities
-  description: string         // Full description
+  rating: number // 0-5 star rating
+  reviewCount: number // Number of reviews
+  amenities: string[] // List of amenities
+  description: string // Full description
   pricePreview?: {
-    amount: number            // Price in euros
-    period: string            // e.g., "7 nuits"
+    amount: number // Price in euros
+    period: string // e.g., "7 nuits"
   }
 }
 
 interface PricingData {
-  date: string                // YYYY-MM-DD
-  occupancy: number           // Number of people
-  price: number               // Price in euros
-  originalPrice?: number      // Original price (if discounted)
+  date: string // YYYY-MM-DD
+  occupancy: number // Number of people
+  price: number // Price in euros
+  originalPrice?: number // Original price (if discounted)
   availability: 'available' | 'limited' | 'unavailable'
 }
 ```
@@ -75,16 +80,19 @@ interface PricingData {
 #### 2. **API Endpoints** (`backend/routes/competitor.ts`)
 
 **POST /api/competitor/discover**
+
 - Search for campsites near a location
 - Body: `{ location: string, radiusKm: number }`
 - Returns: Array of `CampsiteResult`
 
 **POST /api/competitor/details**
+
 - Get detailed information about a specific campsite
 - Body: `{ url: string }`
 - Returns: `CampsiteResult` with full details
 
 **POST /api/competitor/pricing**
+
 - Get pricing data for a campsite over a date range
 - Body: `{ url: string, startDate: string, endDate: string, occupancy: number }`
 - Returns: Array of `PricingData`
@@ -98,6 +106,7 @@ interface PricingData {
 Beautiful, modern UI for discovering and viewing competitor campsites.
 
 **Features:**
+
 - 📍 Location search with postal code support
 - 📏 Adjustable search radius (5-50 km)
 - 🏕️ Beautiful campsite cards with photos
@@ -106,6 +115,7 @@ Beautiful, modern UI for discovering and viewing competitor campsites.
 - 🔗 Direct links to camping-and-co.com
 
 **UI Components:**
+
 - Search input with MapPin icon
 - Radius slider (5-50 km)
 - Grid of animated campsite cards
@@ -121,11 +131,13 @@ Beautiful, modern UI for discovering and viewing competitor campsites.
 camping-and-co.com requires **5-digit French postal codes** in URLs for most locations.
 
 **Working URL Format:**
+
 ```
 https://fr.camping-and-co.com/location-camping-{city-slug}-{postal-code}
 ```
 
 **Examples:**
+
 - ✅ `/location-camping-sanary-sur-mer-83110` - **200 OK**
 - ❌ `/location-camping-sanary-sur-mer` - **404 Not Found**
 
@@ -134,7 +146,8 @@ https://fr.camping-and-co.com/location-camping-{city-slug}-{postal-code}
 The scraper converts French city names to URL-friendly slugs:
 
 ```typescript
-const locationSlug = cityName.toLowerCase()
+const locationSlug = cityName
+  .toLowerCase()
   .replace(/[àâä]/g, 'a')
   .replace(/[éèêë]/g, 'e')
   .replace(/[îï]/g, 'i')
@@ -146,6 +159,7 @@ const locationSlug = cityName.toLowerCase()
 ```
 
 **Examples:**
+
 - "Sanary-sur-Mer" → "sanary-sur-mer"
 - "Sainte-Maxime" → "sainte-maxime"
 - "Èze" → "eze"
@@ -166,11 +180,13 @@ The scraper tries multiple URL patterns in order of specificity:
 ### 1. **Search for Competitors**
 
 Navigate to the Competitor Monitor page:
+
 ```
 http://localhost:5173/competitor
 ```
 
 Enter a French location **with postal code**:
+
 ```
 Sanary-sur-Mer 83110
 Paris 75001
@@ -182,6 +198,7 @@ Adjust the search radius (5-50 km) and click **Discover**.
 ### 2. **View Results**
 
 The system displays:
+
 - **Photo** - Primary campsite image
 - **Name** - Campsite name
 - **Location** - Town and region
@@ -202,12 +219,14 @@ The system displays:
 ### Scraping Strategy
 
 **Why Cheerio?**
+
 - Lightweight HTML parsing
 - jQuery-like syntax
 - Works with server-side rendering
 - No browser automation needed
 
 **Data Extraction:**
+
 1. Fetch HTML from camping-and-co.com
 2. Parse with Cheerio
 3. Extract campsite listings from HTML structure
@@ -215,6 +234,7 @@ The system displays:
 5. Parse coordinates, photos, pricing from JavaScript objects
 
 **Example Extraction:**
+
 ```typescript
 const $ = cheerio.load(response.data)
 
@@ -254,6 +274,7 @@ const cityName = location.replace(/\b\d{5}\b/, '').trim()
 ```
 
 **Examples:**
+
 - "Sanary-sur-Mer 83110" → `cityName: "Sanary-sur-Mer"`, `postalCode: "83110"`
 - "Paris 75001" → `cityName: "Paris"`, `postalCode: "75001"`
 - "Nice" → `cityName: "Nice"`, `postalCode: ""`
@@ -378,12 +399,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 If user searches without postal code, the scraper tries fallback URLs but may fail.
 
 **User-Facing Error:**
+
 ```
 Could not find results for location: Sanary-sur-Mer
 ```
 
 **Solution:**
 The UI now includes a prominent hint:
+
 ```
 💡 Include the 5-digit postal code for best results (e.g., "Sanary-sur-Mer 83110")
 ```
@@ -511,7 +534,7 @@ await competitorQueue.add(
 
 const competitorWorker = new Worker(
   'competitor-pricing',
-  async (job) => {
+  async job => {
     // Get all monitored competitors
     const { data: competitors } = await supabase
       .from('competitors')
@@ -610,11 +633,13 @@ export const CompetitorAnalytics = () => {
 ### Manual Testing
 
 1. **Go to Competitor Monitor page:**
+
    ```
    http://localhost:5173/competitor
    ```
 
 2. **Search for Sanary-sur-Mer with postal code:**
+
    ```
    Sanary-sur-Mer 83110
    ```
@@ -635,6 +660,7 @@ export const CompetitorAnalytics = () => {
 ### API Testing with cURL
 
 **Discover Campsites:**
+
 ```bash
 curl -X POST http://localhost:3001/api/competitor/discover \
   -H "Content-Type: application/json" \
@@ -645,6 +671,7 @@ curl -X POST http://localhost:3001/api/competitor/discover \
 ```
 
 **Get Campsite Details:**
+
 ```bash
 curl -X POST http://localhost:3001/api/competitor/details \
   -H "Content-Type: application/json" \
@@ -654,6 +681,7 @@ curl -X POST http://localhost:3001/api/competitor/details \
 ```
 
 **Get Pricing:**
+
 ```bash
 curl -X POST http://localhost:3001/api/competitor/pricing \
   -H "Content-Type: application/json" \
@@ -674,6 +702,7 @@ curl -X POST http://localhost:3001/api/competitor/pricing \
 camping-and-co.com may rate-limit requests. To avoid being blocked:
 
 1. **Add delays between requests:**
+
    ```typescript
    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -684,6 +713,7 @@ camping-and-co.com may rate-limit requests. To avoid being blocked:
    ```
 
 2. **Use realistic User-Agent headers:**
+
    ```typescript
    headers: {
      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -770,14 +800,17 @@ Always attribute data to camping-and-co.com:
 ### Files Modified
 
 **Backend:**
+
 - ✅ `backend/scrapers/CampingAndCoScraper.ts` (NEW)
 - ✅ `backend/routes/competitor.ts` (MODIFIED - added /discover, /details, /pricing)
 - ✅ `backend/package.json` (MODIFIED - added cheerio dependency)
 
 **Frontend:**
+
 - ✅ `frontend/src/pages/CompetitorMonitor.tsx` (COMPLETELY REWRITTEN)
 
 **Documentation:**
+
 - ✅ `docs/components/COMPETITOR-DISCOVERY.md` (NEW - this file)
 
 ---

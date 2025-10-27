@@ -57,11 +57,11 @@ export default {
       },
       fontSize: {
         '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
-        'xs': ['0.75rem', { lineHeight: '1rem' }],
-        'sm': ['0.875rem', { lineHeight: '1.25rem' }],
-        'base': ['1rem', { lineHeight: '1.5rem' }],
-        'lg': ['1.125rem', { lineHeight: '1.75rem' }],
-        'xl': ['1.25rem', { lineHeight: '1.75rem' }],
+        xs: ['0.75rem', { lineHeight: '1rem' }],
+        sm: ['0.875rem', { lineHeight: '1.25rem' }],
+        base: ['1rem', { lineHeight: '1.5rem' }],
+        lg: ['1.125rem', { lineHeight: '1.75rem' }],
+        xl: ['1.25rem', { lineHeight: '1.75rem' }],
         '2xl': ['1.5rem', { lineHeight: '2rem' }],
         '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
         '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
@@ -87,9 +87,9 @@ export default {
         'lg-dark': '0 12px 32px rgba(0, 0, 0, 0.5)',
         'xl-dark': '0 24px 48px rgba(0, 0, 0, 0.6)',
         // Theme-aware (uses CSS variables)
-        'card': 'var(--shadow-card)',
+        card: 'var(--shadow-card)',
         'card-hover': 'var(--shadow-card-hover)',
-        'elevated': 'var(--shadow-elevated)',
+        elevated: 'var(--shadow-elevated)',
       },
       animation: {
         // Existing animations

@@ -13,6 +13,7 @@
 Small weather icons appear in the **top-right corner** of each calendar day showing future weather conditions:
 
 **Icon Types:**
+
 - ☀️ **Sun** - Clear/sunny weather (yellow)
 - ☁️ **Cloud** - Cloudy conditions (gray)
 - 🌧️ **CloudRain** - Rainy weather (blue)
@@ -21,6 +22,7 @@ Small weather icons appear in the **top-right corner** of each calendar day show
 - ❄️ **Snowflake** - Snow (light blue)
 
 **Display Logic:**
+
 - Icons only show for **future dates** (not past)
 - Based on `weatherCondition` field from enrichment
 - Small 3x3 icons that don't clutter the calendar
@@ -32,11 +34,13 @@ Small weather icons appear in the **top-right corner** of each calendar day show
 A **green tent icon** appears on days with ideal camping conditions:
 
 **Criteria for Perfect Day:**
+
 - Temperature: 18-25°C
 - Precipitation: < 2mm
 - Not a past date
 
 **Visual:**
+
 - 🏕️ **Tent icon** in top-left corner
 - Green color (#10B981)
 - Drop shadow for visibility
@@ -49,6 +53,7 @@ A **green tent icon** appears on days with ideal camping conditions:
 When hovering over a calendar day, the tooltip now shows:
 
 **Weather Section (new):**
+
 ```
 Temperature: 22.3°C 🏕️ (tent icon if perfect)
 Rain: 0.5mm
@@ -56,6 +61,7 @@ Conditions: ☀️ Clear sky
 ```
 
 **Complete Tooltip Now Shows:**
+
 - Date (with holiday if applicable)
 - Price
 - Demand %
@@ -71,19 +77,32 @@ Conditions: ☀️ Clear sky
 ## Implementation Details
 
 ### File Modified
+
 **Path:** `frontend/src/components/pricing/PriceDemandCalendar.tsx`
 
 ### Changes Made
 
 #### 1. Added Weather Icon Imports
+
 ```typescript
 import {
-  ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus,
-  Sun, Cloud, CloudRain, CloudDrizzle, Snowflake, CloudLightning, Tent  // NEW
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Sun,
+  Cloud,
+  CloudRain,
+  CloudDrizzle,
+  Snowflake,
+  CloudLightning,
+  Tent, // NEW
 } from 'lucide-react'
 ```
 
 #### 2. Extended DayData Interface
+
 ```typescript
 export interface DayData {
   // ... existing fields
@@ -98,6 +117,7 @@ export interface DayData {
 #### 3. Added Helper Functions
 
 **Get Weather Icon:**
+
 ```typescript
 const getWeatherIcon = (day: DayData) => {
   const condition = day.weatherCondition?.toLowerCase() || ''
@@ -112,58 +132,62 @@ const getWeatherIcon = (day: DayData) => {
 ```
 
 **Check Perfect Camping Day:**
+
 ```typescript
 const isPerfectCampingDay = (day: DayData): boolean => {
   if (day.isPast) return false
   if (!day.temperature || !day.precipitation) return false
 
-  return (
-    day.temperature >= 18 &&
-    day.temperature <= 25 &&
-    day.precipitation < 2
-  )
+  return day.temperature >= 18 && day.temperature <= 25 && day.precipitation < 2
 }
 ```
 
 #### 4. Added Visual Indicators to Calendar Day
 
 ```tsx
-{/* Weather icon (top-right for future dates) */}
-{!day.isPast && getWeatherIcon(day) && (
-  <div className="absolute top-1 right-1">
-    {getWeatherIcon(day)}
-  </div>
-)}
+{
+  /* Weather icon (top-right for future dates) */
+}
+{
+  !day.isPast && getWeatherIcon(day) && (
+    <div className="absolute top-1 right-1">{getWeatherIcon(day)}</div>
+  )
+}
 
-{/* Perfect camping day indicator (tent icon) */}
-{isPerfectCampingDay(day) && (
-  <div className="absolute top-1 left-1 z-10">
-    <Tent className="w-3 h-3 text-green-400 drop-shadow-md"
-          title="Perfect camping conditions!" />
-  </div>
-)}
+{
+  /* Perfect camping day indicator (tent icon) */
+}
+{
+  isPerfectCampingDay(day) && (
+    <div className="absolute top-1 left-1 z-10">
+      <Tent className="h-3 w-3 text-green-400 drop-shadow-md" title="Perfect camping conditions!" />
+    </div>
+  )
+}
 ```
 
 #### 5. Enhanced Tooltip with Weather Data
 
 ```tsx
-{/* Weather information */}
-{(hoveredDay.temperature !== undefined || hoveredDay.weatherCondition) && (
-  <div className="border-t border-border pt-1.5 mt-1.5 space-y-1">
-    {hoveredDay.temperature !== undefined && (
-      <div className="flex justify-between items-center">
-        <span className="text-muted">Temperature:</span>
-        <span className="font-semibold text-text flex items-center gap-1">
-          {hoveredDay.temperature.toFixed(1)}°C
-          {isPerfectCampingDay(hoveredDay) && (
-            <Tent className="w-3 h-3 text-green-400" />
-          )}
-        </span>
-      </div>
-    )}
-    {/* Precipitation and conditions... */}
-  </div>
-)}
+{
+  /* Weather information */
+}
+{
+  ;(hoveredDay.temperature !== undefined || hoveredDay.weatherCondition) && (
+    <div className="border-border mt-1.5 space-y-1 border-t pt-1.5">
+      {hoveredDay.temperature !== undefined && (
+        <div className="flex items-center justify-between">
+          <span className="text-muted">Temperature:</span>
+          <span className="text-text flex items-center gap-1 font-semibold">
+            {hoveredDay.temperature.toFixed(1)}°C
+            {isPerfectCampingDay(hoveredDay) && <Tent className="h-3 w-3 text-green-400" />}
+          </span>
+        </div>
+      )}
+      {/* Precipitation and conditions... */}
+    </div>
+  )
+}
 ```
 
 ---
@@ -180,6 +204,7 @@ const isPerfectCampingDay = (day: DayData): boolean => {
    - `sunshineHours`
 
 3. **Calendar Component** receives data via props:
+
 ```typescript
 <PriceDemandCalendar
   data={processedData.calendarData}
@@ -199,12 +224,13 @@ const isPerfectCampingDay = (day: DayData): boolean => {
 ## Usage Examples
 
 ### In Dashboard
+
 ```tsx
 // Dashboard.tsx already uses this component
 <PriceDemandCalendar
   data={processedData.calendarData}
   currency="€"
-  onDateClick={(date) => {
+  onDateClick={date => {
     console.log('Selected date:', date)
   }}
 />
@@ -220,11 +246,11 @@ const calendarData = [
     price: 150,
     demand: 0.85,
     occupancy: 0.82,
-    temperature: 24.5,        // From enrichment
-    precipitation: 0.2,       // From enrichment
-    weatherCondition: 'Clear sky',  // From enrichment
+    temperature: 24.5, // From enrichment
+    precipitation: 0.2, // From enrichment
+    weatherCondition: 'Clear sky', // From enrichment
     isWeekend: false,
-    isPast: false
+    isPast: false,
   },
   // ... more days
 ]
@@ -247,6 +273,7 @@ const calendarData = [
 ```
 
 ### Perfect Camping Day
+
 ```
 ┌─────────────────┐
 │ 🏕️  22      ☀️ │  ← Tent icon = Perfect conditions!
@@ -258,6 +285,7 @@ const calendarData = [
 ```
 
 ### Rainy Day
+
 ```
 ┌─────────────────┐
 │    18      🌧️ │  ← Rain icon (no tent)
@@ -273,12 +301,14 @@ const calendarData = [
 ## Testing
 
 ### View the Calendar
+
 1. Go to **http://localhost:5173/**
 2. Dashboard shows calendar with your enriched data
 3. Future dates show weather icons
 4. Perfect camping days show tent icon
 
 ### Test with Enriched Data
+
 1. Upload CSV file
 2. Click **"Start Enrichment"** on Data page
 3. Wait for enrichment to complete
@@ -288,11 +318,13 @@ const calendarData = [
 ### What You Should See
 
 **If data is enriched:**
+
 - ✅ Weather icons on future dates
 - ✅ Tent icons on perfect camping days (18-25°C, <2mm rain)
 - ✅ Tooltip shows temperature, rain, conditions
 
 **If data is NOT enriched:**
+
 - Calendar still works normally
 - Just won't show weather icons
 - Prices and demand still display
@@ -313,9 +345,9 @@ const isPerfectCampingDay = (day: DayData): boolean => {
   if (!day.temperature || !day.precipitation) return false
 
   return (
-    day.temperature >= 20 &&  // Changed from 18
-    day.temperature <= 28 &&  // Changed from 25
-    day.precipitation < 5     // Changed from 2
+    day.temperature >= 20 && // Changed from 18
+    day.temperature <= 28 && // Changed from 25
+    day.precipitation < 5 // Changed from 2
   )
 }
 ```
@@ -350,12 +382,14 @@ Modify the Tailwind classes:
 ## Benefits
 
 ### For Users
+
 - ✅ **Instant visual weather forecast** on calendar
 - ✅ **Identify perfect camping days** at a glance
 - ✅ **Make pricing decisions** based on weather
 - ✅ **See correlations** between weather and bookings
 
 ### For Pricing Strategy
+
 - **Perfect days** (tent icon) = Consider 20-30% price premium
 - **Rainy days** (rain icon) = May need discounts
 - **Sunny weekends** = Peak demand, premium pricing
@@ -366,6 +400,7 @@ Modify the Tailwind classes:
 ## Future Enhancements
 
 ### Potential Additions
+
 1. **Wind speed indicators** - Show wind icon on windy days
 2. **Temperature color coding** - Red border for hot, blue for cold
 3. **Multi-day weather view** - Show week trend
@@ -377,6 +412,7 @@ Modify the Tailwind classes:
 ## Summary
 
 **What works NOW:**
+
 - ✅ Weather icons on all future dates
 - ✅ Tent icon for perfect camping days (18-25°C, <2mm rain)
 - ✅ Detailed weather in tooltip (temp, rain, conditions)
@@ -384,6 +420,7 @@ Modify the Tailwind classes:
 - ✅ No configuration needed
 
 **No changes required:**
+
 - Uses existing enrichment data
 - Works with current dashboard
 - Backward compatible (works without weather data too)

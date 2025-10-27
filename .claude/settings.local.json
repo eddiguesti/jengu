@@ -19,7 +19,15 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: add competitor monitoring system with camping-and-co.com integration\n\nAdded comprehensive competitor discovery and monitoring features:\n\nBackend:\n- New web scrapers for camping-and-co.com and local campsite data\n- Database schema for competitors and competitor_pricing tables with RLS\n- API endpoints for competitor discovery and monitoring management\n- Uses supabaseAdmin (service role) to bypass RLS for backend operations\n\nFrontend:\n- Enhanced CompetitorMonitor page with discovery UI\n- Real-time monitoring state management with loading indicators\n- Beautiful campsite cards with photos, ratings, amenities\n- Start/stop monitoring functionality with visual feedback\n\nDatabase:\n- competitor-tables.sql with full schema and RLS policies\n- Setup scripts for easy database initialization\n\nDocumentation:\n- Reorganized docs into archive/, setup/, references/, developer/\n- Added light theme design system documentation\n- Comprehensive competitor discovery component docs\n\nCleanup:\n- Removed unused middleware, utilities, and chart components\n- Archived old documentation and task files\n- Updated dependencies\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit --no-verify -m \"$(cat <<''EOF''\nfeat: add competitor monitoring system with camping-and-co.com integration\n\nAdded comprehensive competitor discovery and monitoring features:\n\nBackend:\n- New web scrapers for camping-and-co.com and local campsite data\n- Database schema for competitors and competitor_pricing tables with RLS\n- API endpoints for competitor discovery and monitoring management\n- Uses supabaseAdmin (service role) to bypass RLS for backend operations\n\nFrontend:\n- Enhanced CompetitorMonitor page with discovery UI\n- Real-time monitoring state management with loading indicators\n- Beautiful campsite cards with photos, ratings, amenities\n- Start/stop monitoring functionality with visual feedback\n\nDatabase:\n- competitor-tables.sql with full schema and RLS policies\n- Setup scripts for easy database initialization\n\nDocumentation:\n- Reorganized docs into archive/, setup/, references/, developer/\n- Added light theme design system documentation\n- Comprehensive competitor discovery component docs\n\nCleanup:\n- Removed unused middleware, utilities, and chart components\n- Archived old documentation and task files\n- Updated dependencies\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(pnpm run format:check:*)",
+      "Bash(pnpm run format:*)",
+      "Bash(pnpm run test:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(pip install:*)"
     ],
     "deny": [],
     "ask": []

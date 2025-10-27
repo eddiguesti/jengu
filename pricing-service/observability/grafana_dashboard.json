@@ -20,10 +20,7 @@
             "refId": "A"
           }
         ],
-        "yaxes": [
-          { "format": "reqps", "label": "Requests/sec" },
-          { "format": "short" }
-        ],
+        "yaxes": [{ "format": "reqps", "label": "Requests/sec" }, { "format": "short" }],
         "legend": { "show": true, "values": true, "current": true }
       },
       {
@@ -48,10 +45,7 @@
             "refId": "C"
           }
         ],
-        "yaxes": [
-          { "format": "s", "label": "Latency" },
-          { "format": "short" }
-        ],
+        "yaxes": [{ "format": "s", "label": "Latency" }, { "format": "short" }],
         "alert": {
           "name": "/score p95 latency alert",
           "conditions": [
@@ -92,10 +86,7 @@
             "refId": "A"
           }
         ],
-        "yaxes": [
-          { "format": "errps", "label": "Errors/sec" },
-          { "format": "short" }
-        ],
+        "yaxes": [{ "format": "errps", "label": "Errors/sec" }, { "format": "short" }],
         "alert": {
           "name": "High error rate alert",
           "conditions": [
@@ -127,10 +118,7 @@
             "refId": "A"
           }
         ],
-        "yaxes": [
-          { "format": "short", "label": "Active Requests" },
-          { "format": "short" }
-        ]
+        "yaxes": [{ "format": "short", "label": "Active Requests" }, { "format": "short" }]
       },
       {
         "id": 5,
@@ -160,10 +148,7 @@
             "refId": "A"
           }
         ],
-        "yaxes": [
-          { "format": "s", "label": "p95 Latency" },
-          { "format": "short" }
-        ]
+        "yaxes": [{ "format": "s", "label": "p95 Latency" }, { "format": "short" }]
       },
       {
         "id": 7,
@@ -177,10 +162,7 @@
             "refId": "A"
           }
         ],
-        "yaxes": [
-          { "format": "s", "label": "Prediction Latency" },
-          { "format": "short" }
-        ]
+        "yaxes": [{ "format": "s", "label": "Prediction Latency" }, { "format": "short" }]
       },
       {
         "id": 8,
@@ -211,10 +193,7 @@
             "refId": "A"
           }
         ],
-        "yaxes": [
-          { "format": "short", "label": "Count" },
-          { "format": "short" }
-        ]
+        "yaxes": [{ "format": "short", "label": "Count" }, { "format": "short" }]
       },
       {
         "id": 10,
@@ -228,10 +207,7 @@
             "refId": "A"
           }
         ],
-        "yaxes": [
-          { "format": "ops", "label": "Outcomes/sec" },
-          { "format": "short" }
-        ]
+        "yaxes": [{ "format": "ops", "label": "Outcomes/sec" }, { "format": "short" }]
       },
       {
         "id": 11,
@@ -245,10 +221,7 @@
             "refId": "A"
           }
         ],
-        "yaxes": [
-          { "format": "ops", "label": "Invalid/sec" },
-          { "format": "short" }
-        ]
+        "yaxes": [{ "format": "ops", "label": "Invalid/sec" }, { "format": "short" }]
       },
       {
         "id": 12,
@@ -262,10 +235,7 @@
             "refId": "A"
           }
         ],
-        "yaxes": [
-          { "format": "ops", "label": "Retraining Events" },
-          { "format": "short" }
-        ]
+        "yaxes": [{ "format": "ops", "label": "Retraining Events" }, { "format": "short" }]
       },
       {
         "id": 13,
@@ -279,10 +249,7 @@
             "refId": "A"
           }
         ],
-        "yaxes": [
-          { "format": "s", "label": "Duration" },
-          { "format": "short" }
-        ]
+        "yaxes": [{ "format": "s", "label": "Duration" }, { "format": "short" }]
       },
       {
         "id": 14,
@@ -296,10 +263,7 @@
             "refId": "A"
           }
         ],
-        "yaxes": [
-          { "format": "ops", "label": "Drift Events" },
-          { "format": "short" }
-        ]
+        "yaxes": [{ "format": "ops", "label": "Drift Events" }, { "format": "short" }]
       },
       {
         "id": 15,
@@ -313,10 +277,7 @@
             "refId": "A"
           }
         ],
-        "yaxes": [
-          { "format": "ops", "label": "Assignments/sec" },
-          { "format": "short" }
-        ]
+        "yaxes": [{ "format": "ops", "label": "Assignments/sec" }, { "format": "short" }]
       },
       {
         "id": 16,
@@ -364,10 +325,7 @@
             "refId": "A"
           }
         ],
-        "yaxes": [
-          { "format": "s", "label": "Staleness" },
-          { "format": "short" }
-        ]
+        "yaxes": [{ "format": "s", "label": "Staleness" }, { "format": "short" }]
       }
     ]
   }

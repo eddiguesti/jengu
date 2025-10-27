@@ -16,6 +16,7 @@ Comprehensive audit of the entire Jengu codebase (backend, frontend, pricing-ser
 ### Backend
 
 **Files Deleted** (6 files, ~38KB):
+
 - ✅ `services/alertDelivery.ts` - Complete but never imported
 - ✅ `middleware/rateLimit.ts` - Duplicate of rateLimiters.ts
 - ✅ `middleware/rateLimitApiKey.ts` - Defined but never used
@@ -24,12 +25,15 @@ Comprehensive audit of the entire Jengu codebase (backend, frontend, pricing-ser
 - ✅ `repositories/` - Entire folder (4 files) - Abandoned pattern
 
 **Functions Removed**:
+
 - ✅ `mlAnalytics.ts::linearRegression()` - Marked `@deprecated`, 27 lines
 
 **Critical Fix**:
+
 - ✅ Fixed `routes/alerts.ts` import: Changed from non-existent `middleware/authenticateUser.js` to `lib/supabase.js`
 
 **Functions Identified for Future Cleanup** (not removed yet):
+
 - `enrichmentService.ts::enrichWithTemporalFeatures()` - 78 lines, complete but unused
 - `enrichmentService.ts::enrichWithHolidays()` - 120 lines, complete but unused (requires Supabase migration)
 - `marketSentiment.ts` - 5 helper functions never called externally
@@ -39,6 +43,7 @@ Comprehensive audit of the entire Jengu codebase (backend, frontend, pricing-ser
 ### Frontend
 
 **Files Deleted** (9 files, ~15KB):
+
 - ✅ `pages/Login.tsx` - Superseded by Auth.tsx
 - ✅ `pages/SignUp.tsx` - Superseded by Auth.tsx
 - ✅ `pages/Model.tsx` - Not registered in router
@@ -51,6 +56,7 @@ Comprehensive audit of the entire Jengu codebase (backend, frontend, pricing-ser
 - ✅ `features/pricingDashboard/state/useDashboardStore.ts` - Duplicate store
 
 **Files to Review for Future Cleanup**:
+
 - `features/pricingDashboard/` - Entire folder may be legacy (12 files)
 - `components/layout/Sidebar.tsx` - Keep for now (navigation migration in progress)
 
@@ -59,15 +65,18 @@ Comprehensive audit of the entire Jengu codebase (backend, frontend, pricing-ser
 ### Pricing Service (Python)
 
 **Files Deleted** (3 files, ~650 lines):
+
 - ✅ `grpc_server.py` - Incomplete stub with non-existent proto files (213 lines)
 - ✅ `generate_grpc.sh` - Script for unused gRPC generation
 - ✅ `ab_testing/offline_evaluation.py` - Complete but never called (431 lines)
 
 **Import Cleanup Needed** (not done yet):
+
 - `pricing_engine.py` - Remove unused `requests` import
 - `training/retrain_weekly.py` - Consolidate duplicate `json` imports
 
 **Files to Review**:
+
 - `learning/drift_detection.py` - Complete but not exposed as API endpoint (366 lines)
 - Should either add `/api/drift/{property_id}` endpoint or document as CLI-only
 
@@ -78,6 +87,7 @@ Comprehensive audit of the entire Jengu codebase (backend, frontend, pricing-ser
 ### Backend Audit
 
 **Unused Services Analysis**:
+
 ```
 ✅ DELETED: alertDelivery.ts (14.2 KB)
    - Functions: sendSingleAlert(), sendDailyDigest(), processEmailQueue()
@@ -107,16 +117,18 @@ Comprehensive audit of the entire Jengu codebase (backend, frontend, pricing-ser
 ```
 
 **Critical Bug Fixed**:
+
 ```typescript
 // File: backend/routes/alerts.ts, Line 24
 // BEFORE (broken):
-import { authenticateUser } from '../middleware/authenticateUser.js';
+import { authenticateUser } from '../middleware/authenticateUser.js'
 
 // AFTER (fixed):
-import { authenticateUser } from '../lib/supabase.js';
+import { authenticateUser } from '../lib/supabase.js'
 ```
 
 **Functions Removed**:
+
 ```typescript
 // File: backend/services/mlAnalytics.ts
 // Removed deprecated function (lines 74-100):
@@ -124,7 +136,10 @@ import { authenticateUser } from '../lib/supabase.js';
  * Simple linear regression
  * @deprecated Not currently used but kept for potential future use
  */
-function linearRegression(x: number[], y: number[]): { slope: number; intercept: number; r2: number }
+function linearRegression(
+  x: number[],
+  y: number[]
+): { slope: number; intercept: number; r2: number }
 ```
 
 ---
@@ -132,6 +147,7 @@ function linearRegression(x: number[], y: number[]): { slope: number; intercept:
 ### Frontend Audit
 
 **Duplicate Stores**:
+
 ```
 PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
   - Used in 8+ components
@@ -143,6 +159,7 @@ PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
 ```
 
 **Unused Pages**:
+
 ```
 ✅ DELETED: pages/Login.tsx
   - Functionality handled by Auth.tsx
@@ -166,6 +183,7 @@ PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
 ```
 
 **Unused API Services**:
+
 ```
 ✅ DELETED: lib/api/services/holidays.ts
   - No imports found
@@ -185,6 +203,7 @@ PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
 ### Pricing Service Audit
 
 **Incomplete/Stub Implementations**:
+
 ```
 ✅ DELETED: grpc_server.py (213 lines)
   - Status: INCOMPLETE STUB
@@ -203,6 +222,7 @@ PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
 ```
 
 **Modules to Review**:
+
 ```
 ⚠️ REVIEW: learning/drift_detection.py (366 lines)
   - Status: Complete but not exposed as API endpoint
@@ -212,6 +232,7 @@ PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
 ```
 
 **Duplicate Functionality**:
+
 ```
 ⚠️ REFACTOR RECOMMENDED (not done in this audit):
   - Feature engineering duplicated in:
@@ -226,20 +247,24 @@ PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
 ## Impact Assessment
 
 ### Code Reduction
+
 - **Backend**: Removed ~38KB (6 files + 1 function)
 - **Frontend**: Removed ~15KB (9 files)
 - **Pricing Service**: Removed ~650 lines (3 files)
 - **Total Reduction**: ~800 lines of dead code (3.2% of codebase)
 
 ### Bug Fixes
+
 - **Critical**: Fixed broken import in `routes/alerts.ts` that would cause runtime error
 
 ### Maintainability Improvements
+
 - Removed duplicate implementations (rate limiters, query clients, dashboard stores)
 - Removed incomplete stubs (gRPC, repositories pattern)
 - Removed orphaned/unregistered code (job schedulers, unused services)
 
 ### Breaking Changes
+
 - **None** - All deleted code was unused or superseded
 
 ---
@@ -247,6 +272,7 @@ PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
 ## Files NOT Deleted (Intentionally Kept)
 
 ### Backend
+
 ```
 ✅ KEEP: services/enrichmentService.ts::enrichWithTemporalFeatures()
   - Complete 78-line implementation
@@ -267,6 +293,7 @@ PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
 ```
 
 ### Frontend
+
 ```
 ✅ KEEP: components/layout/Sidebar.tsx
   - Legacy sidebar component
@@ -281,6 +308,7 @@ PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
 ```
 
 ### Pricing Service
+
 ```
 ✅ KEEP: learning/drift_detection.py
   - Complete implementation with CLI
@@ -303,6 +331,7 @@ PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
 ## Recommendations for Future Cleanup
 
 ### High Priority
+
 1. **Extract shared feature engineering** (4-6 hours)
    - Create `pricing-service/features.py`
    - Refactor `dataset_builder.py` and `pricing_engine.py` to use shared module
@@ -315,6 +344,7 @@ PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
    - Saves ~200 lines
 
 ### Medium Priority
+
 3. **Audit features/pricingDashboard/** (2 hours)
    - Deep dive into chart components
    - Identify truly unused charts
@@ -326,6 +356,7 @@ PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
    - Make drift detection accessible via API
 
 ### Low Priority
+
 5. **Consolidate navigation** (1 hour)
    - After SidebarV2 rollout complete
    - Delete old Sidebar.tsx
@@ -342,6 +373,7 @@ PRIMARY (KEPT): frontend/src/stores/useDashboardStore.ts
 After this cleanup, test the following:
 
 ### Backend
+
 ```bash
 # 1. Type check
 cd backend
@@ -359,6 +391,7 @@ curl -X GET http://localhost:3001/api/alerts \
 ```
 
 ### Frontend
+
 ```bash
 # 1. Type check + build
 cd frontend
@@ -378,6 +411,7 @@ pnpm run dev
 ```
 
 ### Pricing Service
+
 ```bash
 # 1. Start server
 cd pricing-service
@@ -397,12 +431,14 @@ curl -X POST http://localhost:8000/score \
 ## Metrics
 
 ### Code Quality
+
 - **Dead Code Removed**: 3.2% of codebase
 - **Critical Bugs Fixed**: 1
 - **Duplicate Code Eliminated**: 3 instances
 - **Import Errors Fixed**: 1
 
 ### File Changes
+
 - **Files Deleted**: 16 total
   - Backend: 6 files
   - Frontend: 9 files
@@ -410,6 +446,7 @@ curl -X POST http://localhost:8000/score \
 - **Files Modified**: 2 (alerts.ts, mlAnalytics.ts)
 
 ### Lines of Code
+
 - **Before Cleanup**: ~25,800 lines
 - **After Cleanup**: ~25,000 lines
 - **Reduction**: 800 lines (3.2%)
@@ -421,6 +458,7 @@ curl -X POST http://localhost:8000/score \
 This audit successfully identified and removed ~800 lines of unused code (3.2% of codebase) while fixing 1 critical import bug. The codebase is now cleaner and more maintainable.
 
 **Key Achievements**:
+
 - ✅ Removed all completely unused files
 - ✅ Fixed critical import error in alerts.ts
 - ✅ Eliminated duplicate implementations
@@ -428,6 +466,7 @@ This audit successfully identified and removed ~800 lines of unused code (3.2% o
 - ✅ No breaking changes introduced
 
 **Next Steps**:
+
 1. Test all changes thoroughly (see Testing Recommendations)
 2. Consider future cleanup recommendations (feature engineering, drift detection API)
 3. Monitor for any issues in production

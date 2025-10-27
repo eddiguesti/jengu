@@ -8,6 +8,7 @@
 This document describes the learning loop system that closes the feedback cycle by ingesting booking outcomes and automatically retraining models based on real-world performance.
 
 The learning loop provides:
+
 - **/learn endpoint** for ingesting booking outcomes
 - **Outcomes storage** per property with deduplication
 - **Weekly retraining** workflow with performance comparison
@@ -61,6 +62,7 @@ The learning loop provides:
 **File**: [pricing-service/main.py](../../pricing-service/main.py) (lines 204-281)
 
 **Features**:
+
 - Accepts batch of booking outcomes
 - Validates required fields
 - Persists to parquet storage per property
@@ -118,12 +120,14 @@ Content-Type: application/json
 ```
 
 **Required Fields**:
+
 - `property_id` (string): Property UUID
 - `timestamp` (string): ISO timestamp of quote
 - `quoted_price` (float): Price shown to customer
 - `accepted` (boolean): Whether booking was completed
 
 **Optional Fields**:
+
 - `final_price` (float): Actual price paid (if different from quoted)
 - `time_to_book` (float): Hours between quote and booking
 - `comp_p10`, `comp_p50`, `comp_p90` (float): Competitor snapshot
@@ -136,6 +140,7 @@ Content-Type: application/json
 **Storage Format**: Apache Parquet (columnar, compressed)
 
 **Features**:
+
 - Validates outcomes before storage
 - Deduplicates by (timestamp, quoted_price)
 - Stores per property: `data/outcomes/{property_id}_outcomes.parquet`
@@ -206,8 +211,8 @@ GET /learn/outcomes/properties
       "max": "2024-10-23T14:30:00Z"
     },
     "acceptance_rate": 0.6234,
-    "avg_quoted_price": 198.50,
-    "avg_final_price": 195.30,
+    "avg_quoted_price": 198.5,
+    "avg_final_price": 195.3,
     "file_size_mb": 2.4,
     "data_quality": {
       "missing_final_price": 0,
@@ -216,7 +221,7 @@ GET /learn/outcomes/properties
     },
     "recent_activity": {
       "last_7_days": 156,
-      "acceptance_rate_7d": 0.6410
+      "acceptance_rate_7d": 0.641
     }
   }
 }
@@ -227,6 +232,7 @@ GET /learn/outcomes/properties
 **File**: [pricing-service/training/retrain_weekly.py](../../pricing-service/training/retrain_weekly.py)
 
 **Workflow**:
+
 1. Check if retraining should occur (new outcomes threshold)
 2. Prepare training data from stored outcomes
 3. Train new model with LightGBM
@@ -235,11 +241,13 @@ GET /learn/outcomes/properties
 6. Log results and version
 
 **Retraining Criteria**:
+
 - Minimum 1000 total outcomes
 - Minimum 100 new outcomes in last 7 days
 - Can be overridden with `--force` flag
 
 **Model Comparison**:
+
 - **Conversion models**: Compare AUC
   - Deploy if new AUC > previous AUC - 0.01
 - **Regression models**: Compare RMSE
@@ -311,6 +319,7 @@ Failed: 0
    - PSI > 0.2: Significant drift
 
 **Drift Decision Logic**:
+
 - Calculate KS test and PSI for each feature
 - Mark feature as drifted if either test indicates drift
 - Trigger early retraining if >25% of features drifted
@@ -358,6 +367,7 @@ Feature details:
 ```
 
 **Exit Codes**:
+
 - 0: No drift detected
 - 1: Drift detected, recommend retraining
 
@@ -423,6 +433,7 @@ gh workflow run weekly-retrain.yml \
 ```
 
 **Notifications** (configure in GitHub Secrets):
+
 - `SLACK_WEBHOOK_URL`: Slack webhook for notifications
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`: For S3 deployment
 - `KUBE_CONFIG`: For Kubernetes deployment
@@ -530,16 +541,16 @@ const outcome = {
     temperature: 18.5,
     occupancy_rate: 0.75,
     lead_time: 14,
-    length_of_stay: 2
-  }
-};
+    length_of_stay: 2,
+  },
+}
 
 // Send to pricing service
 await fetch('http://localhost:8000/learn', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ batch: [outcome] })
-});
+  body: JSON.stringify({ batch: [outcome] }),
+})
 ```
 
 ### 3. Set Up Weekly Retraining
@@ -660,6 +671,7 @@ curl http://localhost:8000/learn/outcomes/{property-uuid}/stats
 ### Alerts
 
 Set up alerts for:
+
 - Retraining failures
 - Model performance regression
 - Significant drift (>50% of features)
@@ -675,6 +687,7 @@ Set up alerts for:
 **Symptoms**: Outcomes not being stored
 
 **Solutions**:
+
 1. Check logs: `tail -f pricing-service/logs/app.log`
 2. Verify outcomes format (required fields present)
 3. Check disk space: `df -h`
@@ -685,6 +698,7 @@ Set up alerts for:
 **Symptoms**: "Skipping retrain: Insufficient new outcomes"
 
 **Solutions**:
+
 1. Lower thresholds: `--min-new-outcomes 50 --min-total-outcomes 500`
 2. Force retrain: `--force` flag
 3. Check outcomes ingestion: `GET /learn/outcomes/{property-id}/stats`
@@ -695,6 +709,7 @@ Set up alerts for:
 **Symptoms**: "New model not deployed (performance regression)"
 
 **Solutions**:
+
 1. Check training data quality (missing features, imbalanced classes)
 2. Increase training data size (wait for more outcomes)
 3. Tune hyperparameters (`training/train_lightgbm.py`)
@@ -705,6 +720,7 @@ Set up alerts for:
 **Symptoms**: Drift alerts but high AUC
 
 **Solutions**:
+
 1. Adjust drift thresholds (increase PSI threshold to 0.25)
 2. Drift may be benign (seasonal shift)
 3. Review drifted features (non-critical features OK to drift)
@@ -726,12 +742,12 @@ Set up alerts for:
 
 ### 📊 Acceptance Criteria Status
 
-| Criterion | Status | Implementation |
-|-----------|--------|----------------|
-| New bookings appear in dataset | ✅ | /learn endpoint stores to parquet |
-| Weekly retrain increments version | ✅ | retrain_weekly.py with versioning |
-| Drift detector logs when breached | ✅ | drift_detection.py with KS/PSI |
-| Dashboard shows metrics trend | ✅ | /dashboard/overview and /dashboard/model-performance |
+| Criterion                         | Status | Implementation                                       |
+| --------------------------------- | ------ | ---------------------------------------------------- |
+| New bookings appear in dataset    | ✅     | /learn endpoint stores to parquet                    |
+| Weekly retrain increments version | ✅     | retrain_weekly.py with versioning                    |
+| Drift detector logs when breached | ✅     | drift_detection.py with KS/PSI                       |
+| Dashboard shows metrics trend     | ✅     | /dashboard/overview and /dashboard/model-performance |
 
 ---
 

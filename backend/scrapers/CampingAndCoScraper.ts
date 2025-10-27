@@ -59,7 +59,8 @@ export class CampingAndCoScraper {
 
       // Convert location to URL-friendly format
       // e.g., "Sanary-sur-Mer" -> "sanary-sur-mer"
-      const locationSlug = cityName.toLowerCase()
+      const locationSlug = cityName
+        .toLowerCase()
         .replace(/[àâä]/g, 'a')
         .replace(/[éèêë]/g, 'e')
         .replace(/[îï]/g, 'i')
@@ -94,7 +95,7 @@ export class CampingAndCoScraper {
           response = await axios.get(url, {
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+              Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
               'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
             },
             timeout: 15000,
@@ -144,7 +145,9 @@ export class CampingAndCoScraper {
           const $listing = $(element)
 
           // Extract campsite name (clean version without distance)
-          const nameElement = $listing.find('.campsite-card__campsite-name, h2, h3, [class*="name"]').first()
+          const nameElement = $listing
+            .find('.campsite-card__campsite-name, h2, h3, [class*="name"]')
+            .first()
           let name = nameElement.text().trim()
 
           // Remove distance from name (e.g., "Camping Name\n3.2 Km" -> "Camping Name")
@@ -166,26 +169,35 @@ export class CampingAndCoScraper {
 
           // Fallback to any img with image.camping-and-co.com URL
           if (!photoUrl || photoUrl.includes('blank.svg')) {
-            const campsiteImg = $listing.find('img[data-src*="image.camping"], img[src*="image.camping"]').first()
+            const campsiteImg = $listing
+              .find('img[data-src*="image.camping"], img[src*="image.camping"]')
+              .first()
             photoUrl = campsiteImg.attr('data-src') || campsiteImg.attr('src') || ''
           }
 
           const fullPhotoUrl = photoUrl.startsWith('http') ? photoUrl : `${this.baseUrl}${photoUrl}`
 
           // Extract distance
-          const distanceElement = $listing.find('.campsite-card__campsite-name__wrapper-distance, [class*="distance"]')
+          const distanceElement = $listing.find(
+            '.campsite-card__campsite-name__wrapper-distance, [class*="distance"]'
+          )
           const distanceText = distanceElement.text().trim()
           const distanceMatch = distanceText.match(/([\d,.]+)\s*km/i)
           const distance = distanceMatch ? parseFloat(distanceMatch[1].replace(',', '.')) : 0
 
           // Extract rating from class (e.g., "rating-4" means 4 stars)
-          const ratingElement = $listing.find('.campsite-card__campsite-rating, [class*="rating-"]').first()
+          const ratingElement = $listing
+            .find('.campsite-card__campsite-rating, [class*="rating-"]')
+            .first()
           const ratingClass = ratingElement.attr('class') || ''
           const ratingMatch = ratingClass.match(/rating-(\d+)/)
           const rating = ratingMatch ? parseInt(ratingMatch[1], 10) : 0
 
           // Extract location from nearby elements
-          const location = $listing.find('[class*="location"], .location, .town, .address').text().trim()
+          const location = $listing
+            .find('[class*="location"], .location, .town, .address')
+            .text()
+            .trim()
 
           // Extract price preview
           const priceText = $listing.find('[class*="price"], .price').first().text().trim()
@@ -204,16 +216,18 @@ export class CampingAndCoScraper {
               distanceText,
               address: location,
               town: location.split(',')[0]?.trim() || location || 'Unknown',
-              region: location.split(',')[1]?.trim() || 'Provence-Alpes-Côte d\'Azur',
+              region: location.split(',')[1]?.trim() || "Provence-Alpes-Côte d'Azur",
               coordinates: { latitude: 0, longitude: 0 }, // Will fetch from detail page
               rating,
               reviewCount: 0,
               amenities: [],
               description: '',
-              pricePreview: priceAmount ? {
-                amount: priceAmount,
-                period: '7 nuits'
-              } : undefined
+              pricePreview: priceAmount
+                ? {
+                    amount: priceAmount,
+                    period: '7 nuits',
+                  }
+                : undefined,
             })
           }
         } catch (err) {
@@ -227,7 +241,6 @@ export class CampingAndCoScraper {
       console.log(`✅ Found ${filtered.length} campsites within ${radiusKm}km`)
 
       return filtered
-
     } catch (error: any) {
       console.error('❌ Error scraping camping-and-co.com:', error.message)
       throw error
@@ -244,7 +257,7 @@ export class CampingAndCoScraper {
       const response = await axios.get(campsiteUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
         },
         timeout: 15000,
@@ -295,8 +308,10 @@ export class CampingAndCoScraper {
 
       // Extract data from HTML if JSON not found
       const name = campsiteData.name || $('h1').first().text().trim()
-      const description = campsiteData.description || $('.description, [class*="description"]').first().text().trim()
-      const address = campsiteData.address || $('[class*="address"], .address').first().text().trim()
+      const description =
+        campsiteData.description || $('.description, [class*="description"]').first().text().trim()
+      const address =
+        campsiteData.address || $('[class*="address"], .address').first().text().trim()
 
       // Extract coordinates
       const latitude = parseFloat(campsiteData.latitude || campsiteData.lat || 0)
@@ -305,10 +320,12 @@ export class CampingAndCoScraper {
       // Extract photos
       let photos: string[] = []
       if (campsiteData.fullPhotosData && Array.isArray(campsiteData.fullPhotosData)) {
-        photos = campsiteData.fullPhotosData.map((photo: any) => {
-          if (typeof photo === 'string') return photo
-          return photo.url || photo.src || ''
-        }).filter((url: string) => url)
+        photos = campsiteData.fullPhotosData
+          .map((photo: any) => {
+            if (typeof photo === 'string') return photo
+            return photo.url || photo.src || ''
+          })
+          .filter((url: string) => url)
       }
 
       // Fallback to img tags
@@ -355,7 +372,6 @@ export class CampingAndCoScraper {
         amenities,
         description,
       }
-
     } catch (error: any) {
       console.error('❌ Error fetching campsite details:', error.message)
       throw error
@@ -365,7 +381,12 @@ export class CampingAndCoScraper {
   /**
    * Get pricing data for a campsite
    */
-  async getPricing(campsiteUrl: string, startDate: Date, endDate: Date, occupancy: number = 4): Promise<PricingData[]> {
+  async getPricing(
+    campsiteUrl: string,
+    startDate: Date,
+    endDate: Date,
+    occupancy: number = 4
+  ): Promise<PricingData[]> {
     try {
       console.log(`💰 Fetching pricing for: ${campsiteUrl}`)
 
@@ -392,7 +413,9 @@ export class CampingAndCoScraper {
                 date: entry.date,
                 occupancy: entry.occupancy || occupancy,
                 price: parseFloat(entry.price_final) / 100, // Convert cents to euros
-                originalPrice: entry.price_final_premium ? parseFloat(entry.price_final_premium) / 100 : undefined,
+                originalPrice: entry.price_final_premium
+                  ? parseFloat(entry.price_final_premium) / 100
+                  : undefined,
                 availability: entry.available ? 'available' : 'unavailable',
               })
             }
@@ -405,7 +428,6 @@ export class CampingAndCoScraper {
       console.log(`✅ Found ${pricingData.length} pricing data points`)
 
       return pricingData
-
     } catch (error: any) {
       console.error('❌ Error fetching pricing:', error.message)
       throw error

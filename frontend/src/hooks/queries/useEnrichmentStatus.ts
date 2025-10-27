@@ -14,7 +14,7 @@ export function useEnrichmentStatus(propertyId: string, enabled = true) {
       if (error?.response?.status === 404) return false
       return failureCount < 3
     },
-    refetchInterval: (query) => {
+    refetchInterval: query => {
       // Poll every 2 seconds if pending/running, stop if complete/error
       const data = query.state.data
       if (!data) return 2000

@@ -25,7 +25,10 @@ registry.registerPath({
   request: {
     params: z.object({
       propertyId: z.string().uuid(),
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).openapi({ example: '2024-06-15' }),
+      date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .openapi({ example: '2024-06-15' }),
     }),
   },
   responses: {
@@ -35,15 +38,17 @@ registry.registerPath({
         'application/json': {
           schema: z.object({
             success: z.literal(true),
-            data: z.object({
-              propertyId: z.string().uuid(),
-              date: z.string(),
-              priceP10: z.number(),
-              priceP50: z.number(),
-              priceP90: z.number(),
-              competitorCount: z.number(),
-              source: z.string(),
-            }).nullable(),
+            data: z
+              .object({
+                propertyId: z.string().uuid(),
+                date: z.string(),
+                priceP10: z.number(),
+                priceP50: z.number(),
+                priceP90: z.number(),
+                competitorCount: z.number(),
+                source: z.string(),
+              })
+              .nullable(),
           }),
         },
       },
@@ -64,8 +69,14 @@ registry.registerPath({
       propertyId: z.string().uuid(),
     }),
     query: z.object({
-      startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).openapi({ example: '2024-06-01' }),
-      endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).openapi({ example: '2024-06-30' }),
+      startDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .openapi({ example: '2024-06-01' }),
+      endDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .openapi({ example: '2024-06-30' }),
     }),
   },
   responses: {
@@ -75,13 +86,15 @@ registry.registerPath({
         'application/json': {
           schema: z.object({
             success: z.literal(true),
-            data: z.array(z.object({
-              date: z.string(),
-              priceP10: z.number(),
-              priceP50: z.number(),
-              priceP90: z.number(),
-              competitorCount: z.number(),
-            })),
+            data: z.array(
+              z.object({
+                date: z.string(),
+                priceP10: z.number(),
+                priceP50: z.number(),
+                priceP90: z.number(),
+                competitorCount: z.number(),
+              })
+            ),
           }),
         },
       },

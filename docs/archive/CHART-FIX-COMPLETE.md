@@ -1,9 +1,11 @@
 # Chart Loading Issue - FIXED ✅
 
 ## Problem Solved
+
 You reported: **"some charts arewnt loading"**
 
 ## Root Cause
+
 The Dashboard was trying to load data from the **first file** in your uploaded files list. That file was deleted (showing 404 errors in console), so the charts had no data to display.
 
 ## Solution Applied
@@ -11,22 +13,24 @@ The Dashboard was trying to load data from the **first file** in your uploaded f
 ### Changed File: [frontend/src/pages/Dashboard.tsx](frontend/src/pages/Dashboard.tsx#L42-L46)
 
 **Before:**
+
 ```typescript
 const { data: uploadedFiles = [] } = useUploadedFiles()
-const firstFileId = uploadedFiles[0]?.id || ''  // ❌ Blindly uses first file
+const firstFileId = uploadedFiles[0]?.id || '' // ❌ Blindly uses first file
 const { data: fileData = [] } = useFileData(firstFileId, 10000)
 ```
 
 **After:**
+
 ```typescript
 const { data: uploadedFiles = [] } = useUploadedFiles()
 
 // ✅ Filter out deleted/empty files
 const validFiles = uploadedFiles.filter(
-  (f) => f.status !== 'deleted' && (f.actualRows || f.rows || 0) > 0
+  f => f.status !== 'deleted' && (f.actualRows || f.rows || 0) > 0
 )
 
-const firstFileId = validFiles[0]?.id || ''  // ✅ Uses first VALID file
+const firstFileId = validFiles[0]?.id || '' // ✅ Uses first VALID file
 const { data: fileData = [], isLoading, error } = useFileData(firstFileId, 10000)
 
 // ✅ Log errors for debugging
@@ -51,11 +55,13 @@ if (error) {
 ## Test It Now
 
 ### Option 1: If You Already Have Valid Data
+
 1. Go to http://localhost:5173/
 2. Dashboard should now show charts automatically
 3. If you see charts → **FIXED!** ✅
 
 ### Option 2: Upload Fresh Data
+
 If you still don't see charts (maybe all files were deleted):
 
 1. Go to http://localhost:5173/tools/data
@@ -70,24 +76,29 @@ If you still don't see charts (maybe all files were deleted):
 When working correctly, the Dashboard shows:
 
 ### 1. Price & Demand Calendar
+
 - Interactive heatmap showing pricing patterns
 - Click dates to see details
 
 ### 2. KPI Cards (Top Row)
+
 - Total Records count
 - Average Price (€)
 - Occupancy Rate (%)
 - ML Predictions status
 
 ### 3. Revenue Performance Chart
+
 - Monthly revenue (last 6 months)
 - Area chart with yellow gradient
 
 ### 4. Weekly Occupancy Chart
+
 - Average occupancy by day of week
 - Bar chart (Mon-Sun)
 
 ### 5. Price Trend Chart
+
 - Daily price changes (last 30 days)
 - Line chart in green
 
@@ -109,10 +120,12 @@ pnpm run type-check  # Should pass (Dashboard.tsx has no errors now)
 ```
 
 ### Browser Console
+
 - ❌ Before: `404 /api/files/d17533b0-2c66-46ec-bc71-77fcb8c83eb7`
 - ✅ After: No 404 errors (or ignored if file is actually deleted)
 
 ### Dashboard UI
+
 - ❌ Before: Empty state or "Add Data to See Your Complete Dashboard"
 - ✅ After: Charts, KPIs, and calendar all showing with real data
 
@@ -133,6 +146,7 @@ pnpm run type-check  # Should pass (Dashboard.tsx has no errors now)
 **Your charts should work now!** 🎉
 
 If you still have issues:
+
 1. Check browser console for errors
 2. Verify you have uploaded data with rows
 3. Check that enrichment completed successfully (green badge)
@@ -141,6 +155,7 @@ If you still have issues:
 ---
 
 **Next Steps:**
+
 1. Test the Dashboard - charts should appear now
 2. If still broken, check console and share error messages
 3. If working, test other pages (Pricing Engine, Assistant)

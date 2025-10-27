@@ -1,5 +1,18 @@
 import React, { useState, useCallback, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Sun, Cloud, CloudRain, CloudDrizzle, Snowflake, CloudLightning, Tent } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Sun,
+  Cloud,
+  CloudRain,
+  CloudDrizzle,
+  Snowflake,
+  CloudLightning,
+  Tent,
+} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export interface DayData {
@@ -45,7 +58,7 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
 
   // Calculate min/max prices from data if not provided
   const priceRange = useMemo(() => {
-    const prices = data.map((d) => d.price).filter((p) => p > 0)
+    const prices = data.map(d => d.price).filter(p => p > 0)
     return {
       min: minPrice ?? Math.min(...prices),
       max: maxPrice ?? Math.max(...prices),
@@ -111,7 +124,9 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
             ease: 'easeInOut',
           }}
         >
-          <Sun className={`${iconSize} text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]`} />
+          <Sun
+            className={`${iconSize} text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]`}
+          />
         </motion.div>
       )
     }
@@ -128,7 +143,9 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
             ease: 'easeInOut',
           }}
         >
-          <CloudRain className={`${iconSize} text-blue-400 drop-shadow-[0_0_6px_rgba(96,165,250,0.5)]`} />
+          <CloudRain
+            className={`${iconSize} text-blue-400 drop-shadow-[0_0_6px_rgba(96,165,250,0.5)]`}
+          />
         </motion.div>
       )
     }
@@ -145,7 +162,9 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
             ease: 'easeInOut',
           }}
         >
-          <CloudDrizzle className={`${iconSize} text-blue-300 drop-shadow-[0_0_4px_rgba(147,197,253,0.4)]`} />
+          <CloudDrizzle
+            className={`${iconSize} text-blue-300 drop-shadow-[0_0_4px_rgba(147,197,253,0.4)]`}
+          />
         </motion.div>
       )
     }
@@ -163,7 +182,9 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
             ease: 'easeInOut',
           }}
         >
-          <Snowflake className={`${iconSize} text-blue-200 drop-shadow-[0_0_6px_rgba(219,234,254,0.6)]`} />
+          <Snowflake
+            className={`${iconSize} text-blue-200 drop-shadow-[0_0_6px_rgba(219,234,254,0.6)]`}
+          />
         </motion.div>
       )
     }
@@ -181,7 +202,9 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
             repeatDelay: 2,
           }}
         >
-          <CloudLightning className={`${iconSize} text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.6)]`} />
+          <CloudLightning
+            className={`${iconSize} text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.6)]`}
+          />
         </motion.div>
       )
     }
@@ -198,7 +221,9 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
             ease: 'easeInOut',
           }}
         >
-          <Cloud className={`${iconSize} text-gray-400 drop-shadow-[0_0_3px_rgba(156,163,175,0.3)]`} />
+          <Cloud
+            className={`${iconSize} text-gray-400 drop-shadow-[0_0_3px_rgba(156,163,175,0.3)]`}
+          />
         </motion.div>
       )
     }
@@ -214,7 +239,9 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
           ease: 'easeInOut',
         }}
       >
-        <Cloud className={`${iconSize} text-gray-400 drop-shadow-[0_0_3px_rgba(156,163,175,0.3)]`} />
+        <Cloud
+          className={`${iconSize} text-gray-400 drop-shadow-[0_0_3px_rgba(156,163,175,0.3)]`}
+        />
       </motion.div>
     )
   }
@@ -224,11 +251,7 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
     if (day.isPast) return false
     if (day.temperature === undefined || day.precipitation === undefined) return false
 
-    return (
-      day.temperature >= 18 &&
-      day.temperature <= 25 &&
-      day.precipitation < 2
-    )
+    return day.temperature >= 18 && day.temperature <= 25 && day.precipitation < 2
   }
 
   // Generate calendar days
@@ -251,7 +274,7 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
     // Add days of month
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-      const dayData = data.find((d) => d.date === dateStr)
+      const dayData = data.find(d => d.date === dateStr)
 
       if (dayData) {
         days.push(dayData)
@@ -283,20 +306,17 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
   }, [currentDate, onMonthChange])
 
   // Handle date hover
-  const handleMouseEnter = useCallback(
-    (day: DayData, event: React.MouseEvent<HTMLDivElement>) => {
-      if (!day || day.price === 0) return
-      setHoveredDate(day.date)
+  const handleMouseEnter = useCallback((day: DayData, event: React.MouseEvent<HTMLDivElement>) => {
+    if (!day || day.price === 0) return
+    setHoveredDate(day.date)
 
-      // Calculate tooltip position
-      const rect = event.currentTarget.getBoundingClientRect()
-      setTooltipPosition({
-        x: rect.left + rect.width / 2,
-        y: rect.top - 10,
-      })
-    },
-    []
-  )
+    // Calculate tooltip position
+    const rect = event.currentTarget.getBoundingClientRect()
+    setTooltipPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10,
+    })
+  }, [])
 
   const handleMouseLeave = useCallback(() => {
     setHoveredDate(null)
@@ -316,22 +336,22 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
   )
 
   const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-  const hoveredDay = data.find((d) => d.date === hoveredDate)
+  const hoveredDay = data.find(d => d.date === hoveredDate)
 
   return (
     <div className={`relative ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold text-text">{monthName}</h3>
           <div className="flex items-center gap-1 text-xs text-muted">
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-sm bg-gradient-to-r from-blue-100 to-blue-400" />
+              <div className="h-3 w-3 rounded-sm bg-gradient-to-r from-blue-100 to-blue-400" />
               <span>Low demand</span>
             </div>
             <span className="mx-1">→</span>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-sm bg-gradient-to-r from-orange-400 to-red-500" />
+              <div className="h-3 w-3 rounded-sm bg-gradient-to-r from-orange-400 to-red-500" />
               <span>High demand</span>
             </div>
           </div>
@@ -340,25 +360,25 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
         <div className="flex items-center gap-1">
           <button
             onClick={previousMonth}
-            className="p-1.5 rounded-lg hover:bg-elevated transition-colors"
+            className="rounded-lg p-1.5 transition-colors hover:bg-elevated"
             aria-label="Previous month"
           >
-            <ChevronLeft className="w-4 h-4 text-text" />
+            <ChevronLeft className="h-4 w-4 text-text" />
           </button>
           <button
             onClick={nextMonth}
-            className="p-1.5 rounded-lg hover:bg-elevated transition-colors"
+            className="rounded-lg p-1.5 transition-colors hover:bg-elevated"
             aria-label="Next month"
           >
-            <ChevronRight className="w-4 h-4 text-text" />
+            <ChevronRight className="h-4 w-4 text-text" />
           </button>
         </div>
       </div>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-          <div key={day} className="text-center text-xs font-medium text-muted py-2">
+      <div className="mb-2 grid grid-cols-7 gap-1">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} className="py-2 text-center text-xs font-medium text-muted">
             {day}
           </div>
         ))}
@@ -371,30 +391,23 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
             return <div key={`empty-${index}`} className="aspect-square" />
           }
 
-          const isToday =
-            day.date === new Date().toISOString().split('T')[0]
+          const isToday = day.date === new Date().toISOString().split('T')[0]
           const isEmpty = day.price === 0
           const isHovered = hoveredDate === day.date
 
           return (
             <motion.div
               key={day.date}
-              className={`
-                relative aspect-square rounded-lg overflow-hidden cursor-pointer
-                transition-all duration-200
-                ${isEmpty ? 'opacity-30 cursor-not-allowed' : ''}
-                ${isHovered ? 'ring-2 ring-primary ring-opacity-50 scale-105 z-10' : ''}
-                ${isToday ? 'ring-2 ring-blue-400' : ''}
-              `}
+              className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg transition-all duration-200 ${isEmpty ? 'cursor-not-allowed opacity-30' : ''} ${isHovered ? 'z-10 scale-105 ring-2 ring-primary ring-opacity-50' : ''} ${isToday ? 'ring-2 ring-blue-400' : ''} `}
               style={{
                 backgroundColor: getDemandColor(day.demand, day.isPast || false),
                 borderColor: getBorderColor(day),
                 borderWidth: day.isHoliday || day.isWeekend ? '2px' : '0',
               }}
-              onMouseEnter={(e) => handleMouseEnter(day, e)}
+              onMouseEnter={e => handleMouseEnter(day, e)}
               onMouseLeave={handleMouseLeave}
               onClick={() => !isEmpty && onDateClick?.(day.date)}
-              onKeyDown={(e) => handleKeyDown(e, day)}
+              onKeyDown={e => handleKeyDown(e, day)}
               tabIndex={isEmpty ? -1 : 0}
               role="button"
               aria-label={`${day.date}, ${formatPrice(day.price)}, ${Math.round(day.demand * 100)}% demand`}
@@ -402,21 +415,21 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
               whileTap={isEmpty ? {} : { scale: 0.98 }}
             >
               {/* Day number */}
-              <div className="absolute top-1 left-1 text-xs font-medium text-muted">
+              <div className="absolute left-1 top-1 text-xs font-medium text-muted">
                 {new Date(day.date).getDate()}
               </div>
 
               {/* Holiday indicator */}
               {day.isHoliday && (
-                <div className="absolute top-1 right-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-success" />
+                <div className="absolute right-1 top-1">
+                  <div className="h-1.5 w-1.5 rounded-full bg-success" />
                 </div>
               )}
 
               {/* Weather icon (top-right for future dates) */}
               {!day.isPast && getWeatherIcon(day) && (
                 <motion.div
-                  className="absolute top-1 right-1"
+                  className="absolute right-1 top-1"
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{
@@ -432,7 +445,7 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
               {/* Perfect camping day indicator (tent icon) */}
               {isPerfectCampingDay(day) && (
                 <motion.div
-                  className="absolute top-1 left-1 z-10"
+                  className="absolute left-1 top-1 z-10"
                   initial={{ scale: 0, rotate: -10 }}
                   animate={{
                     scale: [1, 1.15, 1],
@@ -449,7 +462,10 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
                     },
                   }}
                 >
-                  <Tent className="w-4 h-4 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.7)]" title="Perfect camping conditions!" />
+                  <Tent
+                    className="h-4 w-4 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.7)]"
+                    title="Perfect camping conditions!"
+                  />
                 </motion.div>
               )}
 
@@ -463,13 +479,13 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
 
                   {/* Price change indicator */}
                   {day.priceChange !== undefined && Math.abs(day.priceChange) > 2 && (
-                    <div className="flex items-center gap-0.5 text-xs mt-0.5">
+                    <div className="mt-0.5 flex items-center gap-0.5 text-xs">
                       {day.priceChange > 0 ? (
-                        <TrendingUp className="w-3 h-3 text-success" />
+                        <TrendingUp className="h-3 w-3 text-success" />
                       ) : day.priceChange < 0 ? (
-                        <TrendingDown className="w-3 h-3 text-error" />
+                        <TrendingDown className="h-3 w-3 text-error" />
                       ) : (
-                        <Minus className="w-3 h-3 text-muted" />
+                        <Minus className="h-3 w-3 text-muted" />
                       )}
                       <span
                         className={`font-medium ${
@@ -504,16 +520,16 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 5 }}
             transition={{ duration: 0.15 }}
-            className="fixed z-50 pointer-events-none"
+            className="pointer-events-none fixed z-50"
             style={{
               left: `${tooltipPosition.x}px`,
               top: `${tooltipPosition.y}px`,
               transform: 'translate(-50%, -100%)',
             }}
           >
-            <div className="bg-elevated border border-border rounded-lg shadow-elevated p-3 min-w-[200px]">
+            <div className="min-w-[200px] rounded-lg border border-border bg-elevated p-3 shadow-elevated">
               {/* Date */}
-              <div className="text-sm font-semibold text-text mb-2">
+              <div className="mb-2 text-sm font-semibold text-text">
                 {new Date(hoveredDay.date).toLocaleDateString('en-US', {
                   weekday: 'short',
                   month: 'short',
@@ -570,14 +586,14 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
 
                 {/* Weather information */}
                 {(hoveredDay.temperature !== undefined || hoveredDay.weatherCondition) && (
-                  <div className="border-t border-border pt-1.5 mt-1.5 space-y-1">
+                  <div className="mt-1.5 space-y-1 border-t border-border pt-1.5">
                     {hoveredDay.temperature !== undefined && (
-                      <div className="flex justify-between items-center">
+                      <div className="flex items-center justify-between">
                         <span className="text-muted">Temperature:</span>
-                        <span className="font-semibold text-text flex items-center gap-1">
+                        <span className="flex items-center gap-1 font-semibold text-text">
                           {hoveredDay.temperature.toFixed(1)}°C
                           {isPerfectCampingDay(hoveredDay) && (
-                            <Tent className="w-3 h-3 text-green-400" title="Perfect camping!" />
+                            <Tent className="h-3 w-3 text-green-400" title="Perfect camping!" />
                           )}
                         </span>
                       </div>
@@ -591,9 +607,9 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
                       </div>
                     )}
                     {hoveredDay.weatherCondition && (
-                      <div className="flex justify-between items-center">
+                      <div className="flex items-center justify-between">
                         <span className="text-muted">Conditions:</span>
-                        <span className="font-semibold text-text flex items-center gap-1">
+                        <span className="flex items-center gap-1 font-semibold text-text">
                           {getWeatherIcon(hoveredDay)}
                           {hoveredDay.weatherCondition}
                         </span>
@@ -604,7 +620,7 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
 
                 {/* Competitor price */}
                 {hoveredDay.competitorPrice && (
-                  <div className="flex justify-between border-t border-border pt-1.5 mt-1.5">
+                  <div className="mt-1.5 flex justify-between border-t border-border pt-1.5">
                     <span className="text-muted">Competitor avg:</span>
                     <span className="font-semibold text-text">
                       {formatPrice(hoveredDay.competitorPrice)}
@@ -614,8 +630,8 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
               </div>
 
               {/* Demand bar */}
-              <div className="mt-2 pt-2 border-t border-border">
-                <div className="h-1.5 bg-card rounded-full overflow-hidden">
+              <div className="mt-2 border-t border-border pt-2">
+                <div className="h-1.5 overflow-hidden rounded-full bg-card">
                   <motion.div
                     className="h-full rounded-full"
                     style={{
@@ -640,15 +656,15 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
       {/* Legend */}
       <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded border-2 border-success" />
+          <div className="h-4 w-4 rounded border-2 border-success" />
           <span>Holiday</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded border-2 border-primary" />
+          <div className="h-4 w-4 rounded border-2 border-primary" />
           <span>Weekend</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded ring-2 ring-blue-400" />
+          <div className="h-4 w-4 rounded ring-2 ring-blue-400" />
           <span>Today</span>
         </div>
         <div className="flex items-center gap-2">

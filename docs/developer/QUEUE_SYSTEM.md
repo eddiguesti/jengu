@@ -33,6 +33,7 @@ The Jengu backend uses Redis + BullMQ for async job processing to prevent blocki
 **Purpose**: Add weather, holidays, and temporal features to pricing data
 
 **Job Data**:
+
 ```typescript
 interface EnrichmentJobData {
   propertyId: string
@@ -47,12 +48,14 @@ interface EnrichmentJobData {
 ```
 
 **Configuration**:
+
 - Concurrency: 3 workers (configurable via `ENRICHMENT_WORKER_CONCURRENCY`)
 - Retry attempts: 5 (external API calls can fail)
 - Backoff: Exponential starting at 5 seconds
 - Rate limit: 10 jobs/minute
 
 **Endpoints**:
+
 - Enqueue: `POST /api/files/:id/enrich`
 - Status: `GET /api/jobs/:jobId`
 
@@ -61,6 +64,7 @@ interface EnrichmentJobData {
 **Purpose**: Scrape competitor pricing data
 
 **Job Data**:
+
 ```typescript
 interface CompetitorJobData {
   propertyId: string
@@ -73,6 +77,7 @@ interface CompetitorJobData {
 ```
 
 **Configuration**:
+
 - Concurrency: 2 workers (configurable via `COMPETITOR_WORKER_CONCURRENCY`)
 - Retry attempts: 3
 - Backoff: Exponential starting at 5 seconds
@@ -82,6 +87,7 @@ interface CompetitorJobData {
 **Purpose**: Process computationally expensive analytics tasks
 
 **Job Data**:
+
 ```typescript
 interface AnalyticsJobData {
   propertyId: string
@@ -93,6 +99,7 @@ interface AnalyticsJobData {
 ```
 
 **Configuration**:
+
 - Concurrency: 2 workers (configurable via `ANALYTICS_WORKER_CONCURRENCY`)
 - Retry attempts: 2 (fewer retries for deterministic failures)
 - Backoff: Exponential starting at 5 seconds
@@ -102,9 +109,11 @@ interface AnalyticsJobData {
 ### Job Management
 
 #### GET /api/jobs/:jobId
+
 Get status and progress of a specific job
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -120,6 +129,7 @@ Get status and progress of a specific job
 ```
 
 **Status values**:
+
 - `waiting` - Job is queued, waiting to be processed
 - `active` - Job is currently being processed
 - `completed` - Job finished successfully
@@ -128,14 +138,17 @@ Get status and progress of a specific job
 - `not_found` - Job ID doesn't exist
 
 #### GET /api/jobs
+
 List all jobs for the authenticated user
 
 **Query Parameters**:
+
 - `queue` - Filter by queue name (`enrichment`, `competitor`, `analytics-heavy`)
 - `status` - Filter by job status
 - `limit` - Number of jobs to return (max 100, default 20)
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -153,9 +166,11 @@ List all jobs for the authenticated user
 ```
 
 #### GET /api/jobs/dlq/list
+
 View Dead Letter Queue (failed jobs)
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -174,9 +189,11 @@ View Dead Letter Queue (failed jobs)
 ```
 
 #### POST /api/jobs/:jobId/retry
+
 Retry a failed job
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -188,9 +205,11 @@ Retry a failed job
 ## Monitoring & Metrics
 
 ### GET /metrics
+
 Prometheus-compatible metrics endpoint
 
 **Metrics exposed**:
+
 - `bullmq_queue_waiting_jobs` - Jobs waiting in queue
 - `bullmq_queue_active_jobs` - Jobs currently processing
 - `bullmq_queue_completed_jobs` - Total completed jobs
@@ -198,6 +217,7 @@ Prometheus-compatible metrics endpoint
 - `bullmq_queue_delayed_jobs` - Jobs delayed by rate limiting
 
 **Example output**:
+
 ```prometheus
 # HELP bullmq_queue_waiting_jobs Number of jobs waiting in queue
 # TYPE bullmq_queue_waiting_jobs gauge
@@ -208,9 +228,11 @@ bullmq_queue_failed_jobs{queue="enrichment"} 7
 ```
 
 ### GET /metrics/json
+
 JSON format metrics for custom dashboards
 
 **Response**:
+
 ```json
 {
   "timestamp": "2024-12-18T10:30:00.000Z",
@@ -233,11 +255,13 @@ JSON format metrics for custom dashboards
 ### 1. Install Redis
 
 **Option A: Local Redis (Docker)**
+
 ```bash
 docker run -d -p 6379:6379 redis:7-alpine
 ```
 
 **Option B: Upstash Redis (Free cloud)**
+
 1. Sign up at [https://upstash.com/](https://upstash.com/)
 2. Create a Redis database
 3. Copy the connection URL
@@ -245,6 +269,7 @@ docker run -d -p 6379:6379 redis:7-alpine
 ### 2. Configure Environment Variables
 
 Add to `backend/.env`:
+
 ```bash
 # Redis connection
 REDIS_URL=redis://localhost:6379
@@ -282,7 +307,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
@@ -290,7 +315,7 @@ services:
   api:
     build: ./backend
     ports:
-      - "3001:3001"
+      - '3001:3001'
     environment:
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=production
@@ -299,14 +324,14 @@ services:
 
   enrichment-worker:
     build: ./backend
-    command: ["node", "dist/workers/enrichmentWorker.js"]
+    command: ['node', 'dist/workers/enrichmentWorker.js']
     environment:
       - REDIS_URL=redis://redis:6379
       - ENRICHMENT_WORKER_CONCURRENCY=5
     depends_on:
       - redis
     deploy:
-      replicas: 2  # Scale workers horizontally
+      replicas: 2 # Scale workers horizontally
 
 volumes:
   redis-data:
@@ -315,6 +340,7 @@ volumes:
 ### Environment Variables
 
 **Production recommendations**:
+
 ```bash
 # Use Redis with persistence
 REDIS_URL=redis://:password@production-redis:6379
@@ -328,6 +354,7 @@ ANALYTICS_WORKER_CONCURRENCY=3
 ### Redis Configuration
 
 **Recommended Redis settings**:
+
 ```redis
 # Enable AOF persistence
 appendonly yes
@@ -350,6 +377,7 @@ maxclients 10000
 See `docs/monitoring/grafana-queue-dashboard.json` for a pre-built dashboard.
 
 **Panels included**:
+
 - Queue depth over time (line chart)
 - Active jobs (gauge)
 - Job completion rate (counter)
@@ -474,7 +502,7 @@ For real-time updates without polling, consider Socket.IO:
 
 ```typescript
 // Server-side (future)
-io.on('connection', (socket) => {
+io.on('connection', socket => {
   enrichmentWorker.on('progress', (job, progress) => {
     socket.emit('job:progress', { jobId: job.id, progress })
   })
@@ -493,6 +521,7 @@ socket.on('job:progress', ({ jobId, progress }) => {
 **Symptoms**: Jobs stuck in `waiting` state
 
 **Causes & Solutions**:
+
 1. Worker not running → Start worker with `npx tsx workers/enrichmentWorker.ts`
 2. Redis not accessible → Check `REDIS_URL` and Redis server status
 3. Worker crashed → Check worker logs for errors
@@ -502,6 +531,7 @@ socket.on('job:progress', ({ jobId, progress }) => {
 **Symptoms**: All jobs go to `failed` without retries
 
 **Causes & Solutions**:
+
 1. Invalid job data → Validate input before enqueuing
 2. Missing env vars → Check API keys and config
 3. Database permissions → Verify Supabase service role key
@@ -511,6 +541,7 @@ socket.on('job:progress', ({ jobId, progress }) => {
 **Symptoms**: Redis OOM errors, jobs disappearing
 
 **Solutions**:
+
 1. Set `maxmemory` and `maxmemory-policy` in Redis
 2. Reduce job retention TTL (currently 24h for completed, 7d for failed)
 3. Scale Redis vertically or use Redis Cluster
@@ -520,11 +551,13 @@ socket.on('job:progress', ({ jobId, progress }) => {
 **Symptoms**: `/api/jobs/:id` takes >1s
 
 **Causes**:
+
 1. Too many jobs in queue → Increase workers or pagination
 2. Redis slow queries → Check Redis `SLOWLOG`
 3. Database query slow → Add indexes on properties table
 
 **Solutions**:
+
 - Cache job status in memory (with Redis expiry)
 - Use WebSockets instead of polling
 - Paginate job list queries
@@ -587,13 +620,13 @@ process.on('SIGTERM', async () => {
 
 ## Performance Targets
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Enqueue latency | < 150ms | ~50ms |
-| Job processing (enrichment) | < 2 minutes | ~90s |
-| Queue depth (normal load) | < 50 | ~10 |
-| Failed job rate | < 5% | ~2% |
-| Worker CPU usage | < 60% | ~30% |
+| Metric                      | Target      | Current |
+| --------------------------- | ----------- | ------- |
+| Enqueue latency             | < 150ms     | ~50ms   |
+| Job processing (enrichment) | < 2 minutes | ~90s    |
+| Queue depth (normal load)   | < 50        | ~10     |
+| Failed job rate             | < 5%        | ~2%     |
+| Worker CPU usage            | < 60%       | ~30%    |
 
 ## Future Enhancements
 

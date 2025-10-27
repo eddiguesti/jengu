@@ -61,10 +61,7 @@ async function scheduleDailyScrapingJobs(): Promise<void> {
         nextScrape.setDate(nextScrape.getDate() + 1)
         await competitorDataService.updateNextScrapeTime(target.id!, nextScrape)
       } catch (error) {
-        logger.error(
-          { err: error },
-          `❌ Failed to enqueue job for target ${target.id}: ${error}`
-        )
+        logger.error({ err: error }, `❌ Failed to enqueue job for target ${target.id}: ${error}`)
       }
     }
 

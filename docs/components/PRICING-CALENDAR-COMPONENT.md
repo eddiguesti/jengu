@@ -43,26 +43,26 @@ frontend/src/
 
 ```typescript
 interface DayData {
-  date: string                // YYYY-MM-DD format
-  price: number               // Price in currency
-  demand: number              // 0-1 scale (0 = no demand, 1 = max demand)
-  occupancy?: number          // 0-1 scale (optional)
-  isHoliday?: boolean         // Holiday indicator
-  isWeekend?: boolean         // Weekend indicator
-  isPast?: boolean            // Past date indicator
-  holidayName?: string        // Holiday name (e.g., "Christmas")
-  priceChange?: number        // % change from previous day
-  competitorPrice?: number    // Competitor average price
+  date: string // YYYY-MM-DD format
+  price: number // Price in currency
+  demand: number // 0-1 scale (0 = no demand, 1 = max demand)
+  occupancy?: number // 0-1 scale (optional)
+  isHoliday?: boolean // Holiday indicator
+  isWeekend?: boolean // Weekend indicator
+  isPast?: boolean // Past date indicator
+  holidayName?: string // Holiday name (e.g., "Christmas")
+  priceChange?: number // % change from previous day
+  competitorPrice?: number // Competitor average price
 }
 
 interface PriceDemandCalendarProps {
-  data: DayData[]             // Array of day data
-  currency?: string           // Currency symbol (default: '€')
+  data: DayData[] // Array of day data
+  currency?: string // Currency symbol (default: '€')
   onDateClick?: (date: string) => void
   onMonthChange?: (year: number, month: number) => void
-  minPrice?: number           // Min price for range calculation
-  maxPrice?: number           // Max price for range calculation
-  className?: string          // Additional CSS classes
+  minPrice?: number // Min price for range calculation
+  maxPrice?: number // Max price for range calculation
+  className?: string // Additional CSS classes
 }
 ```
 
@@ -74,14 +74,14 @@ interface PriceDemandCalendarProps {
 
 The component uses a 6-level cool-to-warm gradient to represent demand intensity:
 
-| Demand Level | Color | RGBA | Meaning |
-|-------------|-------|------|---------|
-| 0-20% | Light Blue | `rgba(219, 234, 254, 0.3)` | Very low demand |
-| 20-40% | Blue | `rgba(147, 197, 253, 0.4)` | Low demand |
-| 40-60% | Medium Blue | `rgba(96, 165, 250, 0.5)` | Moderate demand |
-| 60-70% | Amber | `rgba(251, 191, 36, 0.4)` | High demand |
-| 70-85% | Orange | `rgba(251, 146, 60, 0.5)` | Very high demand |
-| 85-100% | Red | `rgba(239, 68, 68, 0.6)` | **Hot date** - Maximum demand |
+| Demand Level | Color       | RGBA                       | Meaning                       |
+| ------------ | ----------- | -------------------------- | ----------------------------- |
+| 0-20%        | Light Blue  | `rgba(219, 234, 254, 0.3)` | Very low demand               |
+| 20-40%       | Blue        | `rgba(147, 197, 253, 0.4)` | Low demand                    |
+| 40-60%       | Medium Blue | `rgba(96, 165, 250, 0.5)`  | Moderate demand               |
+| 60-70%       | Amber       | `rgba(251, 191, 36, 0.4)`  | High demand                   |
+| 70-85%       | Orange      | `rgba(251, 146, 60, 0.5)`  | Very high demand              |
+| 85-100%      | Red         | `rgba(239, 68, 68, 0.6)`   | **Hot date** - Maximum demand |
 
 Past dates are shown with gray background: `rgba(156, 163, 175, 0.1)`
 
@@ -130,6 +130,7 @@ When hovering over a date, a tooltip appears showing:
 - **Demand Bar** - Visual demand gradient bar
 
 Tooltip positioning:
+
 - Fixed position above the hovered date
 - Centered horizontally
 - 10px offset from top of cell
@@ -160,18 +161,20 @@ Tooltip positioning:
 Price changes > 2% show trend arrows:
 
 ```tsx
-{day.priceChange !== undefined && Math.abs(day.priceChange) > 2 && (
-  <div className="flex items-center gap-0.5 text-xs mt-0.5">
-    {day.priceChange > 0 ? (
-      <TrendingUp className="w-3 h-3 text-success" />
-    ) : day.priceChange < 0 ? (
-      <TrendingDown className="w-3 h-3 text-error" />
-    ) : (
-      <Minus className="w-3 h-3 text-muted" />
-    )}
-    <span className="font-medium">{Math.abs(day.priceChange).toFixed(0)}%</span>
-  </div>
-)}
+{
+  day.priceChange !== undefined && Math.abs(day.priceChange) > 2 && (
+    <div className="mt-0.5 flex items-center gap-0.5 text-xs">
+      {day.priceChange > 0 ? (
+        <TrendingUp className="text-success h-3 w-3" />
+      ) : day.priceChange < 0 ? (
+        <TrendingDown className="text-error h-3 w-3" />
+      ) : (
+        <Minus className="text-muted h-3 w-3" />
+      )}
+      <span className="font-medium">{Math.abs(day.priceChange).toFixed(0)}%</span>
+    </div>
+  )
+}
 ```
 
 ---
@@ -191,14 +194,15 @@ The `PricingCalendarDemo.tsx` page includes:
   - Past dates: Lower demand (-30%)
 
 - **Dynamic pricing algorithm**:
+
   ```typescript
   const basePrice = 120
-  const demandMultiplier = 1 + demand * 1.5  // Up to 2.5x
+  const demandMultiplier = 1 + demand * 1.5 // Up to 2.5x
   const weekendMultiplier = isWeekend ? 1.2 : 1
   const holidayMultiplier = isHoliday ? 1.5 : 1
 
   let price = basePrice * demandMultiplier * weekendMultiplier * holidayMultiplier
-  price += (Math.random() - 0.5) * 20  // Add randomness
+  price += (Math.random() - 0.5) * 20 // Add randomness
   ```
 
 - **Competitor pricing**: 85-105% of your price
@@ -207,6 +211,7 @@ The `PricingCalendarDemo.tsx` page includes:
 ### Stats Cards
 
 Four summary cards showing:
+
 1. **Average Price** (next 90 days)
 2. **Average Demand** (%)
 3. **Price Range** (min-max)
@@ -217,18 +222,21 @@ Four summary cards showing:
 When a date is selected, shows detailed breakdown:
 
 **Pricing Section**:
+
 - Your Price
 - Competitor Average
 - Price Advantage (%)
 - vs. Yesterday (% change)
 
 **Demand Section**:
+
 - Demand Score (%)
 - Expected Occupancy (%)
 - Estimated Revenue (€)
 - Visual demand bar
 
 **Context Section**:
+
 - Day Type (Weekend/Weekday)
 - Holiday name (if applicable)
 - Pricing Recommendation:
@@ -239,6 +247,7 @@ When a date is selected, shows detailed breakdown:
 ### Instructions Card
 
 User guide explaining:
+
 - Hover for detailed breakdown
 - Click to select dates
 - Month navigation
@@ -305,11 +314,7 @@ The demo page is accessible at: `/pricing/calendar`
 To add it to navigation, update your sidebar:
 
 ```tsx
-<NavItem
-  icon={Calendar}
-  label="Pricing Calendar"
-  href="/pricing/calendar"
-/>
+<NavItem icon={Calendar} label="Pricing Calendar" href="/pricing/calendar" />
 ```
 
 ---
@@ -321,7 +326,7 @@ To add it to navigation, update your sidebar:
 ```typescript
 // Price range calculated once per data change
 const priceRange = useMemo(() => {
-  const prices = data.map((d) => d.price).filter((p) => p > 0)
+  const prices = data.map(d => d.price).filter(p => p > 0)
   return {
     min: minPrice ?? Math.min(...prices),
     max: maxPrice ?? Math.max(...prices),
@@ -365,7 +370,7 @@ const handleMouseLeave = useCallback(() => {
 ```tsx
 <PriceDemandCalendar
   data={data}
-  currency="$"  // USD instead of Euro
+  currency="$" // USD instead of Euro
 />
 ```
 
@@ -374,18 +379,15 @@ const handleMouseLeave = useCallback(() => {
 ```tsx
 <PriceDemandCalendar
   data={data}
-  minPrice={50}   // Force minimum price
-  maxPrice={500}  // Force maximum price
+  minPrice={50} // Force minimum price
+  maxPrice={500} // Force maximum price
 />
 ```
 
 ### Add Custom Styling
 
 ```tsx
-<PriceDemandCalendar
-  data={data}
-  className="shadow-xl rounded-xl"
-/>
+<PriceDemandCalendar data={data} className="rounded-xl shadow-xl" />
 ```
 
 ### Modify Colors
@@ -504,6 +506,7 @@ Potential improvements:
 ## Screenshots & Examples
 
 Visit `/pricing/calendar` to see the live demo with:
+
 - 90 days of realistic sample data
 - All features enabled
 - Interactive tooltips

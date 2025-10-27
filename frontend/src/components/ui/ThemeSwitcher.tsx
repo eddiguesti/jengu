@@ -13,15 +13,7 @@ export function ThemeSwitcher({ className = '', showLabel = false }: ThemeSwitch
   return (
     <button
       onClick={toggleTheme}
-      className={`
-        group relative flex items-center gap-2 rounded-lg px-3 py-2
-        bg-surface hover:bg-surface-hover
-        border border-border hover:border-border-hover
-        shadow-sm hover:shadow-md-light dark:hover:shadow-md-dark
-        transition-all duration-fast ease-smooth
-        focus-ring
-        ${className}
-      `}
+      className={`ease-smooth focus-ring group relative flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 shadow-sm transition-all duration-fast hover:border-border-hover hover:bg-surface-hover hover:shadow-md-light dark:hover:shadow-md-dark ${className} `}
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
@@ -62,13 +54,7 @@ export function ThemeSwitcher({ className = '', showLabel = false }: ThemeSwitch
       )}
 
       {/* Hover effect - subtle glow */}
-      <div
-        className="
-          pointer-events-none absolute inset-0 rounded-lg opacity-0
-          bg-primary/5 transition-opacity duration-fast
-          group-hover:opacity-100
-        "
-      />
+      <div className="pointer-events-none absolute inset-0 rounded-lg bg-primary/5 opacity-0 transition-opacity duration-fast group-hover:opacity-100" />
     </button>
   )
 }
@@ -80,23 +66,13 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
   return (
     <button
       onClick={toggleTheme}
-      className={`
-        relative inline-flex h-8 w-14 items-center rounded-full
-        transition-colors duration-300 ease-smooth
-        focus-ring
-        ${theme === 'dark' ? 'bg-primary/20' : 'bg-primary/10'}
-        ${className}
-      `}
+      className={`ease-smooth focus-ring relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-300 ${theme === 'dark' ? 'bg-primary/20' : 'bg-primary/10'} ${className} `}
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
       {/* Sliding indicator */}
       <motion.div
         layout
-        className={`
-          flex h-6 w-6 items-center justify-center rounded-full
-          bg-primary shadow-md
-          ${theme === 'dark' ? 'ml-7' : 'ml-1'}
-        `}
+        className={`flex h-6 w-6 items-center justify-center rounded-full bg-primary shadow-md ${theme === 'dark' ? 'ml-7' : 'ml-1'} `}
         transition={{
           type: 'spring',
           stiffness: 500,
@@ -137,12 +113,7 @@ export function ThemeSegmentedControl({ className = '' }: { className?: string }
 
   return (
     <div
-      className={`
-        relative flex items-center gap-1 rounded-lg p-1
-        bg-surface border border-border
-        shadow-sm
-        ${className}
-      `}
+      className={`relative flex items-center gap-1 rounded-lg border border-border bg-surface p-1 shadow-sm ${className} `}
       role="radiogroup"
       aria-label="Theme selection"
     >
@@ -164,16 +135,9 @@ export function ThemeSegmentedControl({ className = '' }: { className?: string }
       {/* Light button */}
       <button
         onClick={() => setTheme('light')}
-        className={`
-          relative z-10 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5
-          transition-colors duration-fast
-          focus-ring
-          ${
-            theme === 'light'
-              ? 'text-primary'
-              : 'text-text-tertiary hover:text-text-secondary'
-          }
-        `}
+        className={`focus-ring relative z-10 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 transition-colors duration-fast ${
+          theme === 'light' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
+        } `}
         role="radio"
         aria-checked={theme === 'light'}
       >
@@ -184,16 +148,9 @@ export function ThemeSegmentedControl({ className = '' }: { className?: string }
       {/* Dark button */}
       <button
         onClick={() => setTheme('dark')}
-        className={`
-          relative z-10 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5
-          transition-colors duration-fast
-          focus-ring
-          ${
-            theme === 'dark'
-              ? 'text-primary'
-              : 'text-text-tertiary hover:text-text-secondary'
-          }
-        `}
+        className={`focus-ring relative z-10 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 transition-colors duration-fast ${
+          theme === 'dark' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
+        } `}
         role="radio"
         aria-checked={theme === 'dark'}
       >

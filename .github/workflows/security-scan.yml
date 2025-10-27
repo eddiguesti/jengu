@@ -82,7 +82,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for better detection
+          fetch-depth: 0 # Full history for better detection
 
       - name: TruffleHog Secret Scan
         uses: trufflesecurity/trufflehog@main
@@ -120,4 +120,4 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:${{matrix.language}}"
+          category: '/language:${{matrix.language}}'

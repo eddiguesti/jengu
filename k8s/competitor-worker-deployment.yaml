@@ -20,10 +20,10 @@ spec:
       containers:
         - name: competitor-worker
           image: jengu/backend:latest
-          command: ["node", "dist/workers/competitorWorker.js"]
+          command: ['node', 'dist/workers/competitorWorker.js']
           env:
             - name: NODE_ENV
-              value: "production"
+              value: 'production'
             - name: REDIS_URL
               valueFrom:
                 secretKeyRef:
@@ -40,7 +40,7 @@ spec:
                   name: jengu-secrets
                   key: supabase-service-key
             - name: COMPETITOR_WORKER_CONCURRENCY
-              value: "3"
+              value: '3'
             - name: MAKCORPS_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -55,11 +55,11 @@ spec:
                   optional: true
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: '256Mi'
+              cpu: '250m'
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: '512Mi'
+              cpu: '500m'
       restartPolicy: Always
 ---
 apiVersion: autoscaling/v2
@@ -84,7 +84,7 @@ spec:
               queue: competitor
         target:
           type: AverageValue
-          averageValue: "5"
+          averageValue: '5'
     - type: Resource
       resource:
         name: cpu

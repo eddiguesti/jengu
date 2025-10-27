@@ -15,49 +15,49 @@
  *   - Quiet hours support
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const SUPABASE_URL = process.env.SUPABASE_URL!
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
 // ============================================================================
 // Types
 // ============================================================================
 
 interface AlertRule {
-  id: string;
-  userId: string;
-  propertyId: string;
-  name: string;
-  rule_type: string;
-  conditions: any;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  priority: number;
-  min_interval_hours: number;
+  id: string
+  userId: string
+  propertyId: string
+  name: string
+  rule_type: string
+  conditions: any
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  priority: number
+  min_interval_hours: number
 }
 
 interface Alert {
-  alertRuleId: string;
-  userId: string;
-  propertyId: string;
-  alertType: string;
-  severity: string;
-  priority: number;
-  title: string;
-  message: string;
-  data: any;
-  actionUrl?: string;
+  alertRuleId: string
+  userId: string
+  propertyId: string
+  alertType: string
+  severity: string
+  priority: number
+  title: string
+  message: string
+  data: any
+  actionUrl?: string
 }
 
 interface EvaluationContext {
-  property: any;
-  currentData: any;
-  historicalData: any;
-  competitorData?: any;
-  weatherData?: any;
-  holidayData?: any;
+  property: any
+  currentData: any
+  historicalData: any
+  competitorData?: any
+  weatherData?: any
+  holidayData?: any
 }
 
 // ============================================================================
@@ -72,20 +72,20 @@ class AlertRuleEvaluator {
     rule: AlertRule,
     context: EvaluationContext
   ): Promise<Alert | null> {
-    const { threshold, timeframe = '7d' } = rule.conditions;
+    const { threshold, timeframe = '7d' } = rule.conditions
 
     if (!context.competitorData) {
-      return null;
+      return null
     }
 
-    const currentMedian = context.competitorData.current_median;
-    const baselineMedian = context.competitorData.baseline_median;
+    const currentMedian = context.competitorData.current_median
+    const baselineMedian = context.competitorData.baseline_median
 
     if (!currentMedian || !baselineMedian) {
-      return null;
+      return null
     }
 
-    const changePercent = ((currentMedian - baselineMedian) / baselineMedian) * 100;
+    const changePercent = ((currentMedian - baselineMedian) / baselineMedian) * 100
 
     if (changePercent >= threshold) {
       return {
@@ -105,10 +105,10 @@ class AlertRuleEvaluator {
           timeframe,
         },
         actionUrl: `/properties/${rule.propertyId}/pricing`,
-      };
+      }
     }
 
-    return null;
+    return null
   }
 
   /**
@@ -118,20 +118,20 @@ class AlertRuleEvaluator {
     rule: AlertRule,
     context: EvaluationContext
   ): Promise<Alert | null> {
-    const { threshold, timeframe = '7d' } = rule.conditions;
+    const { threshold, timeframe = '7d' } = rule.conditions
 
     if (!context.competitorData) {
-      return null;
+      return null
     }
 
-    const currentMedian = context.competitorData.current_median;
-    const baselineMedian = context.competitorData.baseline_median;
+    const currentMedian = context.competitorData.current_median
+    const baselineMedian = context.competitorData.baseline_median
 
     if (!currentMedian || !baselineMedian) {
-      return null;
+      return null
     }
 
-    const changePercent = ((currentMedian - baselineMedian) / baselineMedian) * 100;
+    const changePercent = ((currentMedian - baselineMedian) / baselineMedian) * 100
 
     if (changePercent <= -threshold) {
       return {
@@ -151,10 +151,10 @@ class AlertRuleEvaluator {
           timeframe,
         },
         actionUrl: `/properties/${rule.propertyId}/pricing`,
-      };
+      }
     }
 
-    return null;
+    return null
   }
 
   /**
@@ -164,10 +164,10 @@ class AlertRuleEvaluator {
     rule: AlertRule,
     context: EvaluationContext
   ): Promise<Alert | null> {
-    const { threshold } = rule.conditions;
+    const { threshold } = rule.conditions
 
-    const occupancy = context.currentData?.occupancy || 0;
-    const occupancyPercent = occupancy * 100;
+    const occupancy = context.currentData?.occupancy || 0
+    const occupancyPercent = occupancy * 100
 
     if (occupancyPercent < threshold) {
       return {
@@ -184,10 +184,10 @@ class AlertRuleEvaluator {
           threshold,
         },
         actionUrl: `/properties/${rule.propertyId}/dashboard`,
-      };
+      }
     }
 
-    return null;
+    return null
   }
 
   /**
@@ -197,10 +197,10 @@ class AlertRuleEvaluator {
     rule: AlertRule,
     context: EvaluationContext
   ): Promise<Alert | null> {
-    const { threshold } = rule.conditions;
+    const { threshold } = rule.conditions
 
-    const occupancy = context.currentData?.occupancy || 0;
-    const occupancyPercent = occupancy * 100;
+    const occupancy = context.currentData?.occupancy || 0
+    const occupancyPercent = occupancy * 100
 
     if (occupancyPercent >= threshold) {
       return {
@@ -217,10 +217,10 @@ class AlertRuleEvaluator {
           threshold,
         },
         actionUrl: `/properties/${rule.propertyId}/pricing`,
-      };
+      }
     }
 
-    return null;
+    return null
   }
 
   /**
@@ -230,16 +230,17 @@ class AlertRuleEvaluator {
     rule: AlertRule,
     context: EvaluationContext
   ): Promise<Alert | null> {
-    const { threshold, timeframe = '7d' } = rule.conditions;
+    const { threshold, timeframe = '7d' } = rule.conditions
 
-    const currentBookingRate = context.currentData?.booking_rate || 0;
-    const historicalBookingRate = context.historicalData?.avg_booking_rate || 0;
+    const currentBookingRate = context.currentData?.booking_rate || 0
+    const historicalBookingRate = context.historicalData?.avg_booking_rate || 0
 
     if (historicalBookingRate === 0) {
-      return null;
+      return null
     }
 
-    const changePercent = ((currentBookingRate - historicalBookingRate) / historicalBookingRate) * 100;
+    const changePercent =
+      ((currentBookingRate - historicalBookingRate) / historicalBookingRate) * 100
 
     if (changePercent >= threshold) {
       return {
@@ -259,10 +260,10 @@ class AlertRuleEvaluator {
           timeframe,
         },
         actionUrl: `/properties/${rule.propertyId}/pricing`,
-      };
+      }
     }
 
-    return null;
+    return null
   }
 
   /**
@@ -272,16 +273,17 @@ class AlertRuleEvaluator {
     rule: AlertRule,
     context: EvaluationContext
   ): Promise<Alert | null> {
-    const { threshold, timeframe = '7d' } = rule.conditions;
+    const { threshold, timeframe = '7d' } = rule.conditions
 
-    const currentBookingRate = context.currentData?.booking_rate || 0;
-    const historicalBookingRate = context.historicalData?.avg_booking_rate || 0;
+    const currentBookingRate = context.currentData?.booking_rate || 0
+    const historicalBookingRate = context.historicalData?.avg_booking_rate || 0
 
     if (historicalBookingRate === 0) {
-      return null;
+      return null
     }
 
-    const changePercent = ((currentBookingRate - historicalBookingRate) / historicalBookingRate) * 100;
+    const changePercent =
+      ((currentBookingRate - historicalBookingRate) / historicalBookingRate) * 100
 
     if (changePercent <= -threshold) {
       return {
@@ -301,10 +303,10 @@ class AlertRuleEvaluator {
           timeframe,
         },
         actionUrl: `/properties/${rule.propertyId}/pricing`,
-      };
+      }
     }
 
-    return null;
+    return null
   }
 
   /**
@@ -314,19 +316,18 @@ class AlertRuleEvaluator {
     rule: AlertRule,
     context: EvaluationContext
   ): Promise<Alert | null> {
-    const { event_types, severity_min = 'moderate' } = rule.conditions;
+    const { event_types, severity_min = 'moderate' } = rule.conditions
 
     if (!context.weatherData || !context.weatherData.upcoming_events) {
-      return null;
+      return null
     }
 
     const severeEvents = context.weatherData.upcoming_events.filter(
-      (event: any) =>
-        event_types.includes(event.type) && event.severity >= severity_min
-    );
+      (event: any) => event_types.includes(event.type) && event.severity >= severity_min
+    )
 
     if (severeEvents.length > 0) {
-      const event = severeEvents[0];
+      const event = severeEvents[0]
 
       return {
         alertRuleId: rule.id,
@@ -344,10 +345,10 @@ class AlertRuleEvaluator {
           event_severity: event.severity,
         },
         actionUrl: `/properties/${rule.propertyId}/dashboard`,
-      };
+      }
     }
 
-    return null;
+    return null
   }
 
   /**
@@ -357,10 +358,10 @@ class AlertRuleEvaluator {
     rule: AlertRule,
     context: EvaluationContext
   ): Promise<Alert | null> {
-    const { days_before = 7, holiday_types = ['national', 'regional'] } = rule.conditions;
+    const { days_before = 7, holiday_types = ['national', 'regional'] } = rule.conditions
 
     if (!context.holidayData || !context.holidayData.upcoming_holidays) {
-      return null;
+      return null
     }
 
     const upcomingHolidays = context.holidayData.upcoming_holidays.filter(
@@ -368,10 +369,10 @@ class AlertRuleEvaluator {
         holiday_types.includes(holiday.type) &&
         holiday.days_until <= days_before &&
         holiday.days_until >= 0
-    );
+    )
 
     if (upcomingHolidays.length > 0) {
-      const holiday = upcomingHolidays[0];
+      const holiday = upcomingHolidays[0]
 
       return {
         alertRuleId: rule.id,
@@ -389,10 +390,10 @@ class AlertRuleEvaluator {
           holiday_type: holiday.type,
         },
         actionUrl: `/properties/${rule.propertyId}/pricing`,
-      };
+      }
     }
 
-    return null;
+    return null
   }
 
   /**
@@ -402,20 +403,20 @@ class AlertRuleEvaluator {
     rule: AlertRule,
     context: EvaluationContext
   ): Promise<Alert | null> {
-    const { min_opportunity_percent = 10 } = rule.conditions;
+    const { min_opportunity_percent = 10 } = rule.conditions
 
     // This would integrate with ML pricing engine recommendations
-    const recommendedPrice = context.currentData?.recommended_price;
-    const currentPrice = context.currentData?.current_price;
+    const recommendedPrice = context.currentData?.recommended_price
+    const currentPrice = context.currentData?.current_price
 
     if (!recommendedPrice || !currentPrice) {
-      return null;
+      return null
     }
 
-    const opportunityPercent = ((recommendedPrice - currentPrice) / currentPrice) * 100;
+    const opportunityPercent = ((recommendedPrice - currentPrice) / currentPrice) * 100
 
     if (Math.abs(opportunityPercent) >= min_opportunity_percent) {
-      const action = opportunityPercent > 0 ? 'increase' : 'decrease';
+      const action = opportunityPercent > 0 ? 'increase' : 'decrease'
 
       return {
         alertRuleId: rule.id,
@@ -433,10 +434,10 @@ class AlertRuleEvaluator {
           action,
         },
         actionUrl: `/properties/${rule.propertyId}/pricing?suggested=${recommendedPrice}`,
-      };
+      }
     }
 
-    return null;
+    return null
   }
 }
 
@@ -448,59 +449,56 @@ export class AlertEngine {
   /**
    * Evaluate a single alert rule
    */
-  static async evaluateRule(
-    rule: AlertRule,
-    context: EvaluationContext
-  ): Promise<Alert | null> {
-    const startTime = Date.now();
+  static async evaluateRule(rule: AlertRule, context: EvaluationContext): Promise<Alert | null> {
+    const startTime = Date.now()
 
     try {
       // Check if rule should be throttled
       const { data: throttleCheck } = await supabase.rpc('should_throttle_alert', {
         p_alert_rule_id: rule.id,
-      });
+      })
 
       if (throttleCheck) {
-        console.log(`⏸️  Rule ${rule.name} throttled (too soon since last trigger)`);
-        return null;
+        console.log(`⏸️  Rule ${rule.name} throttled (too soon since last trigger)`)
+        return null
       }
 
       // Evaluate based on rule type
-      let alert: Alert | null = null;
+      let alert: Alert | null = null
 
       switch (rule.rule_type) {
         case 'competitor_price_spike':
-          alert = await AlertRuleEvaluator.evaluateCompetitorPriceSpike(rule, context);
-          break;
+          alert = await AlertRuleEvaluator.evaluateCompetitorPriceSpike(rule, context)
+          break
         case 'competitor_price_drop':
-          alert = await AlertRuleEvaluator.evaluateCompetitorPriceDrop(rule, context);
-          break;
+          alert = await AlertRuleEvaluator.evaluateCompetitorPriceDrop(rule, context)
+          break
         case 'occupancy_low':
-          alert = await AlertRuleEvaluator.evaluateOccupancyLow(rule, context);
-          break;
+          alert = await AlertRuleEvaluator.evaluateOccupancyLow(rule, context)
+          break
         case 'occupancy_high':
-          alert = await AlertRuleEvaluator.evaluateOccupancyHigh(rule, context);
-          break;
+          alert = await AlertRuleEvaluator.evaluateOccupancyHigh(rule, context)
+          break
         case 'demand_surge':
-          alert = await AlertRuleEvaluator.evaluateDemandSurge(rule, context);
-          break;
+          alert = await AlertRuleEvaluator.evaluateDemandSurge(rule, context)
+          break
         case 'demand_decline':
-          alert = await AlertRuleEvaluator.evaluateDemandDecline(rule, context);
-          break;
+          alert = await AlertRuleEvaluator.evaluateDemandDecline(rule, context)
+          break
         case 'weather_event':
-          alert = await AlertRuleEvaluator.evaluateWeatherEvent(rule, context);
-          break;
+          alert = await AlertRuleEvaluator.evaluateWeatherEvent(rule, context)
+          break
         case 'holiday_upcoming':
-          alert = await AlertRuleEvaluator.evaluateHolidayUpcoming(rule, context);
-          break;
+          alert = await AlertRuleEvaluator.evaluateHolidayUpcoming(rule, context)
+          break
         case 'price_optimization':
-          alert = await AlertRuleEvaluator.evaluatePriceOptimization(rule, context);
-          break;
+          alert = await AlertRuleEvaluator.evaluatePriceOptimization(rule, context)
+          break
         default:
-          console.warn(`Unknown rule type: ${rule.rule_type}`);
+          console.warn(`Unknown rule type: ${rule.rule_type}`)
       }
 
-      const evaluationTime = Date.now() - startTime;
+      const evaluationTime = Date.now() - startTime
 
       // Log evaluation
       await supabase.from('alert_evaluation_log').insert({
@@ -509,16 +507,16 @@ export class AlertEngine {
         reason: alert ? 'Conditions met' : 'Conditions not met',
         evaluation_data: { context, alert },
         evaluation_time_ms: evaluationTime,
-      });
+      })
 
       if (alert) {
-        console.log(`✅ Alert triggered: ${alert.title} (${evaluationTime}ms)`);
+        console.log(`✅ Alert triggered: ${alert.title} (${evaluationTime}ms)`)
       }
 
-      return alert;
+      return alert
     } catch (error) {
-      console.error(`Error evaluating rule ${rule.name}:`, error);
-      return null;
+      console.error(`Error evaluating rule ${rule.name}:`, error)
+      return null
     }
   }
 
@@ -531,27 +529,27 @@ export class AlertEngine {
       .from('alert_rules')
       .select('*')
       .eq('propertyId', propertyId)
-      .eq('is_active', true);
+      .eq('is_active', true)
 
     if (error || !rules) {
-      console.error('Error fetching alert rules:', error);
-      return [];
+      console.error('Error fetching alert rules:', error)
+      return []
     }
 
     // Build evaluation context
-    const context = await this.buildEvaluationContext(propertyId);
+    const context = await this.buildEvaluationContext(propertyId)
 
     // Evaluate all rules
-    const alerts: Alert[] = [];
+    const alerts: Alert[] = []
 
     for (const rule of rules) {
-      const alert = await this.evaluateRule(rule, context);
+      const alert = await this.evaluateRule(rule, context)
       if (alert) {
-        alerts.push(alert);
+        alerts.push(alert)
       }
     }
 
-    return alerts;
+    return alerts
   }
 
   /**
@@ -563,7 +561,7 @@ export class AlertEngine {
       .from('properties')
       .select('*')
       .eq('id', propertyId)
-      .single();
+      .single()
 
     // Fetch current pricing data (last 7 days)
     const { data: currentData } = await supabase
@@ -572,7 +570,7 @@ export class AlertEngine {
       .eq('propertyId', propertyId)
       .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       .order('date', { ascending: false })
-      .limit(7);
+      .limit(7)
 
     // Fetch historical data (last 30 days for baseline)
     const { data: historicalData } = await supabase
@@ -580,7 +578,7 @@ export class AlertEngine {
       .select('*')
       .eq('propertyId', propertyId)
       .gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-      .order('date', { ascending: false });
+      .order('date', { ascending: false })
 
     // Fetch competitor data (if available)
     const { data: competitorData } = await supabase
@@ -588,14 +586,15 @@ export class AlertEngine {
       .select('*')
       .eq('property_id', propertyId)
       .order('scraped_at', { ascending: false })
-      .limit(14);
+      .limit(14)
 
     return {
       property,
       currentData: currentData?.[0] || {},
       historicalData: {
         avg_booking_rate:
-          historicalData?.reduce((sum, d) => sum + (d.bookings || 0), 0) / (historicalData?.length || 1),
+          historicalData?.reduce((sum, d) => sum + (d.bookings || 0), 0) /
+          (historicalData?.length || 1),
       },
       competitorData: competitorData
         ? {
@@ -606,7 +605,7 @@ export class AlertEngine {
           }
         : undefined,
       // TODO: Add weather and holiday data
-    };
+    }
   }
 
   /**
@@ -629,11 +628,11 @@ export class AlertEngine {
         status: 'pending',
       })
       .select('id')
-      .single();
+      .single()
 
     if (error) {
-      console.error('Error creating alert:', error);
-      return null;
+      console.error('Error creating alert:', error)
+      return null
     }
 
     // Update rule last_triggered_at and trigger_count
@@ -643,10 +642,10 @@ export class AlertEngine {
         last_triggered_at: new Date().toISOString(),
         trigger_count: supabase.raw('trigger_count + 1'),
       })
-      .eq('id', alert.alertRuleId);
+      .eq('id', alert.alertRuleId)
 
-    return data?.id;
+    return data?.id
   }
 }
 
-export default AlertEngine;
+export default AlertEngine

@@ -7,6 +7,7 @@
 **Location:** `backend/scrapers/SanaryCampingScraper.ts`
 
 **Features:**
+
 - Scrapes 3 campsite platforms:
   - vacances-campings.fr
   - camping.fr
@@ -18,11 +19,13 @@
 - Location grouping
 
 **API Endpoint:**
+
 ```
 GET http://localhost:3001/api/competitor/sanary-campsites
 ```
 
 **Response Format:**
+
 ```json
 {
   "success": true,
@@ -46,6 +49,7 @@ GET http://localhost:3001/api/competitor/sanary-campsites
 ```
 
 **How to Test:**
+
 ```bash
 # Option 1: Via curl (from command line)
 curl http://localhost:3001/api/competitor/sanary-campsites
@@ -58,10 +62,12 @@ curl http://localhost:3001/api/competitor/sanary-campsites
 ```
 
 **Files Created:**
+
 - `backend/scrapers/SanaryCampingScraper.ts` - Main scraper logic
 - `backend/routes/competitor.ts` - Updated with new endpoint (line 70-122)
 
 **Installed:**
+
 - ✅ Playwright Chromium browser (148.9 MB)
 - ✅ FFMPEG for media processing
 - ✅ Chromium Headless Shell
@@ -75,6 +81,7 @@ curl http://localhost:3001/api/competitor/sanary-campsites
 **Status:** 🟡 **Skeleton created - waiting for API credentials**
 
 **Features (When API access granted):**
+
 - ✅ Bidirectional sync (2-way as requested)
 - ✅ Pull bookings, availability, pricing from CTouvert
 - ✅ Push optimized prices back to CTouvert
@@ -82,6 +89,7 @@ curl http://localhost:3001/api/competitor/sanary-campsites
 - ✅ Error handling and retry logic
 
 **Methods Ready:**
+
 ```typescript
 // Fetch data FROM CTouvert
 getBookings(startDate, endDate)
@@ -107,6 +115,7 @@ I've created two French email templates for you to request API access from CTouv
 Just copy/paste one, add your details, and send to CTouvert support.
 
 **What We Need from CTouvert:**
+
 1. API endpoint URL
 2. API key or credentials
 3. Property ID
@@ -115,6 +124,7 @@ Just copy/paste one, add your details, and send to CTouvert support.
 
 **Once You Get API Access:**
 Tell me and I'll:
+
 1. Complete the implementation
 2. Create API routes
 3. Add frontend UI for manual syncs
@@ -128,6 +138,7 @@ Tell me and I'll:
 **First Client:** Sanary-sur-Mer (83110), France
 
 **Competitor Coverage:**
+
 - Sanary-sur-Mer direct
 - 30km coastal radius
 - Major platforms (vacances-campings.fr, camping.fr)
@@ -138,6 +149,7 @@ Tell me and I'll:
 ## 📊 Calendar Moved to Top
 
 The **Price & Demand Calendar** is now the first thing users see on the Dashboard:
+
 - ✅ Shows dates
 - ✅ Shows prices with color coding
 - ✅ Demand visualization (blue to red gradient)
@@ -149,10 +161,13 @@ The **Price & Demand Calendar** is now the first thing users see on the Dashboar
 ## 🚀 Next Steps
 
 ### Immediate (You Can Do Now):
+
 1. **Test the scraper:**
+
    ```bash
    curl http://localhost:3001/api/competitor/sanary-campsites
    ```
+
    This will take 20-30 seconds on first run
 
 2. **Send CTouvert email:**
@@ -168,12 +183,14 @@ The **Price & Demand Calendar** is now the first thing users see on the Dashboar
    - Change any terminology (e.g., "rooms" → "pitches/mobil-homes")?
 
 ### When You Get CTouvert API:
+
 1. Share the API documentation with me
 2. I'll complete the CTouvertClient integration
 3. Add sync UI to frontend
 4. Set up automated syncs
 
 ### Frontend Integration (Coming):
+
 - Add "Scrape Competitors" button to Competitor Monitor page
 - Display scraped campsite data in a table
 - Show price comparison charts
@@ -186,11 +203,13 @@ The **Price & Demand Calendar** is now the first thing users see on the Dashboar
 **Environment Variables Needed:**
 
 Already in `.env`:
+
 ```bash
 REDIS_URL=your_redis_url  # For caching scraped data
 ```
 
 When you get CTouvert access, add:
+
 ```bash
 CTOUVERT_API_URL=https://api.ctouvert.fr/v1
 CTOUVERT_API_KEY=your_api_key_here

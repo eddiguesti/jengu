@@ -119,11 +119,9 @@ export class BanditService {
         reset_q_values_frequency: config.resetQValuesFrequency,
       }
 
-      const { error } = await this.supabase
-        .from('bandit_config')
-        .upsert(configData, {
-          onConflict: 'property_id',
-        })
+      const { error } = await this.supabase.from('bandit_config').upsert(configData, {
+        onConflict: 'property_id',
+      })
 
       if (error) {
         logger.error({ err: error }, '❌ Failed to upsert bandit config')
@@ -141,7 +139,9 @@ export class BanditService {
   /**
    * Log bandit action (arm selection)
    */
-  async logAction(action: BanditAction): Promise<{ success: boolean; actionId?: string; error?: string }> {
+  async logAction(
+    action: BanditAction
+  ): Promise<{ success: boolean; actionId?: string; error?: string }> {
     try {
       const actionData = {
         property_id: action.propertyId,
@@ -214,7 +214,9 @@ export class BanditService {
         return { success: false, error: error.message }
       }
 
-      logger.info(`💰 Logged bandit reward: ${reward.armId}, booking=${reward.bookingMade}, reward=${reward.reward}`)
+      logger.info(
+        `💰 Logged bandit reward: ${reward.armId}, booking=${reward.bookingMade}, reward=${reward.reward}`
+      )
       return { success: true }
     } catch (error) {
       logger.error({ err: error }, '❌ Exception logging bandit reward')

@@ -67,9 +67,10 @@ async function processCompetitorJob(job: Job<CompetitorJobData>) {
     logger.info(`🏨 Scraping competitors for ${location}...`)
 
     // Parse location (could be string or coordinates)
-    const locationData = typeof location === 'string'
-      ? { city: location, latitude: 0, longitude: 0 } // TODO: Geocode
-      : { latitude: location.latitude, longitude: location.longitude }
+    const locationData =
+      typeof location === 'string'
+        ? { city: location, latitude: 0, longitude: 0 } // TODO: Geocode
+        : { latitude: location.latitude, longitude: location.longitude }
 
     // Scrape competitors
     const scrapeResult = await scraper.scrapeBookingCom({

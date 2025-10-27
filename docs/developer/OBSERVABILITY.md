@@ -96,6 +96,7 @@ with start_transaction(name='/score', op='http.server') as transaction:
 View errors and performance at: https://sentry.io/organizations/your-org/projects/
 
 Key views:
+
 - **Issues**: Grouped errors with frequency and impact
 - **Performance**: Transaction traces showing bottlenecks
 - **Releases**: Track errors by deployment version
@@ -103,6 +104,7 @@ Key views:
 ### Error Filtering
 
 Errors filtered by `before_send` hook:
+
 - Health check errors (not actionable)
 - 404 errors (expected)
 - Validation errors with low impact
@@ -110,6 +112,7 @@ Errors filtered by `before_send` hook:
 ### Request Tagging
 
 Every Sentry event is tagged with:
+
 - `request_id`: Unique request identifier
 - `user_id`: User making the request
 - `property_id`: Property being priced
@@ -126,53 +129,53 @@ Location: [`pricing-service/observability/prometheus_metrics.py`](../../pricing-
 
 #### API Metrics
 
-| Metric | Type | Labels | Description |
-|--------|------|--------|-------------|
-| `pricing_api_latency_seconds` | Histogram | `method`, `endpoint`, `status_code` | API request latency |
-| `pricing_score_latency_seconds` | Histogram | `pricing_method` | `/score` endpoint latency |
-| `pricing_requests_total` | Counter | `method`, `endpoint`, `status_code` | Total requests |
-| `pricing_active_requests` | Gauge | `endpoint` | Active concurrent requests |
-| `pricing_errors_total` | Counter | `endpoint`, `error_type` | Total errors |
+| Metric                          | Type      | Labels                              | Description                |
+| ------------------------------- | --------- | ----------------------------------- | -------------------------- |
+| `pricing_api_latency_seconds`   | Histogram | `method`, `endpoint`, `status_code` | API request latency        |
+| `pricing_score_latency_seconds` | Histogram | `pricing_method`                    | `/score` endpoint latency  |
+| `pricing_requests_total`        | Counter   | `method`, `endpoint`, `status_code` | Total requests             |
+| `pricing_active_requests`       | Gauge     | `endpoint`                          | Active concurrent requests |
+| `pricing_errors_total`          | Counter   | `endpoint`, `error_type`            | Total errors               |
 
 #### ML Model Metrics
 
-| Metric | Type | Labels | Description |
-|--------|------|--------|-------------|
+| Metric                             | Type      | Labels                      | Description              |
+| ---------------------------------- | --------- | --------------------------- | ------------------------ |
 | `pricing_model_prediction_seconds` | Histogram | `property_id`, `model_type` | Model prediction latency |
-| `pricing_model_cache_hits_total` | Counter | - | Model cache hits |
-| `pricing_model_cache_misses_total` | Counter | - | Model cache misses |
-| `pricing_models_loaded` | Gauge | - | Number of models loaded |
+| `pricing_model_cache_hits_total`   | Counter   | -                           | Model cache hits         |
+| `pricing_model_cache_misses_total` | Counter   | -                           | Model cache misses       |
+| `pricing_models_loaded`            | Gauge     | -                           | Number of models loaded  |
 
 #### Learning Loop Metrics
 
-| Metric | Type | Labels | Description |
-|--------|------|--------|-------------|
-| `pricing_outcomes_ingested_total` | Counter | `property_id` | Outcomes ingested |
-| `pricing_outcomes_invalid_total` | Counter | `property_id`, `reason` | Invalid outcomes |
-| `pricing_retraining_duration_seconds` | Histogram | `property_id`, `model_type` | Retraining duration |
-| `pricing_retraining_total` | Counter | `property_id`, `model_type`, `status` | Retraining events |
-| `pricing_drift_detected_total` | Counter | `property_id`, `trigger_retrain` | Drift detections |
+| Metric                                | Type      | Labels                                | Description         |
+| ------------------------------------- | --------- | ------------------------------------- | ------------------- |
+| `pricing_outcomes_ingested_total`     | Counter   | `property_id`                         | Outcomes ingested   |
+| `pricing_outcomes_invalid_total`      | Counter   | `property_id`, `reason`               | Invalid outcomes    |
+| `pricing_retraining_duration_seconds` | Histogram | `property_id`, `model_type`           | Retraining duration |
+| `pricing_retraining_total`            | Counter   | `property_id`, `model_type`, `status` | Retraining events   |
+| `pricing_drift_detected_total`        | Counter   | `property_id`, `trigger_retrain`      | Drift detections    |
 
 #### A/B Testing Metrics
 
-| Metric | Type | Labels | Description |
-|--------|------|--------|-------------|
-| `pricing_ab_assignments_total` | Counter | `experiment_id`, `variant` | A/B test assignments |
-| `pricing_ab_outcomes_total` | Counter | `experiment_id`, `variant`, `accepted` | A/B test outcomes |
+| Metric                         | Type    | Labels                                 | Description          |
+| ------------------------------ | ------- | -------------------------------------- | -------------------- |
+| `pricing_ab_assignments_total` | Counter | `experiment_id`, `variant`             | A/B test assignments |
+| `pricing_ab_outcomes_total`    | Counter | `experiment_id`, `variant`, `accepted` | A/B test outcomes    |
 
 #### Competitor Data Metrics
 
-| Metric | Type | Labels | Description |
-|--------|------|--------|-------------|
-| `pricing_competitor_fetches_total` | Counter | `property_id`, `status` | Competitor data fetches |
-| `pricing_competitor_staleness_seconds` | Gauge | `property_id` | Competitor data staleness |
+| Metric                                 | Type    | Labels                  | Description               |
+| -------------------------------------- | ------- | ----------------------- | ------------------------- |
+| `pricing_competitor_fetches_total`     | Counter | `property_id`, `status` | Competitor data fetches   |
+| `pricing_competitor_staleness_seconds` | Gauge   | `property_id`           | Competitor data staleness |
 
 #### System Metrics
 
-| Metric | Type | Labels | Description |
-|--------|------|--------|-------------|
-| `pricing_service_info` | Info | `version`, `environment`, `service` | Service information |
-| `pricing_uptime_seconds` | Gauge | - | Service uptime |
+| Metric                   | Type  | Labels                              | Description         |
+| ------------------------ | ----- | ----------------------------------- | ------------------- |
+| `pricing_service_info`   | Info  | `version`, `environment`, `service` | Service information |
+| `pricing_uptime_seconds` | Gauge | -                                   | Service uptime      |
 
 ### Metrics Endpoint
 
@@ -227,73 +230,91 @@ Pre-built dashboard: [`pricing-service/observability/grafana_dashboard.json`](..
 Import this dashboard into Grafana to get instant visibility into:
 
 #### 1. **API Request Rate**
+
 - Total requests/sec by endpoint and status code
 - Identify traffic patterns and spikes
 
 #### 2. **/score Latency (p50, p95, p99)**
+
 - Critical path monitoring
 - Alert threshold at p95 > 80ms
 
 #### 3. **Error Rate**
+
 - Errors/sec by endpoint and type
 - Alert threshold at 0.1 errors/sec
 
 #### 4. **Active Requests**
+
 - Concurrent request load
 - Detect slow processing or traffic spikes
 
 #### 5. **Service Uptime**
+
 - Uptime duration in days/hours/minutes
 
 #### 6. **API Latency by Route (p95)**
+
 - Latency breakdown for all endpoints
 - Identify slow routes
 
 #### 7. **Model Prediction Latency (p95)**
+
 - ML model inference performance
 - Track by model type and property
 
 #### 8. **Model Cache Hit Rate**
+
 - Cache efficiency (hits / (hits + misses))
 - Low hit rate indicates cache issues
 
 #### 9. **Models Loaded**
+
 - Number of ML models in memory
 - Track memory usage
 
 #### 10. **Outcomes Ingested (rate)**
+
 - Learning loop health
 - Track by property
 
 #### 11. **Invalid Outcomes**
+
 - Data quality monitoring
 - Identify properties with bad data
 
 #### 12. **Model Retraining Events**
+
 - Retraining frequency by status
 - Track deployed vs failed retrains
 
 #### 13. **Retraining Duration (p95)**
+
 - Retraining performance
 - Alert on long retrains
 
 #### 14. **Drift Detection Events**
+
 - Drift frequency by property
 - Track retrain triggers
 
 #### 15. **A/B Test Assignments**
+
 - Traffic split between variants
 - Verify balanced assignment
 
 #### 16. **A/B Test Conversion Rate**
+
 - Conversion rate by variant
 - Compare ML vs rule-based
 
 #### 17. **Competitor Data Fetch Success Rate**
+
 - Scraper health
 - Track fetch failures
 
 #### 18. **Competitor Data Staleness**
+
 - Data freshness by property
 - Alert on stale data (>24 hours)
 
@@ -315,32 +336,32 @@ Location: [`pricing-service/observability/prometheus_alerts.yml`](../../pricing-
 
 #### Critical Alerts (Immediate Action)
 
-| Alert | Condition | Threshold | Duration | Description |
-|-------|-----------|-----------|----------|-------------|
-| **CriticalScoreLatency** | /score p95 > 80ms | 0.08s | 5m | Critical user-facing latency |
-| **HighErrorRate** | Errors/sec > 0.1 | 0.1 | 5m | High error rate impacting users |
-| **ServiceDown** | Service unreachable | N/A | 1m | Service is down |
-| **NoModelsLoaded** | No models loaded | 0 | 5m | Service cannot make predictions |
-| **RetrainingFailures** | Retraining failures | > 0 | 5m | Model retraining is failing |
+| Alert                    | Condition           | Threshold | Duration | Description                     |
+| ------------------------ | ------------------- | --------- | -------- | ------------------------------- |
+| **CriticalScoreLatency** | /score p95 > 80ms   | 0.08s     | 5m       | Critical user-facing latency    |
+| **HighErrorRate**        | Errors/sec > 0.1    | 0.1       | 5m       | High error rate impacting users |
+| **ServiceDown**          | Service unreachable | N/A       | 1m       | Service is down                 |
+| **NoModelsLoaded**       | No models loaded    | 0         | 5m       | Service cannot make predictions |
+| **RetrainingFailures**   | Retraining failures | > 0       | 5m       | Model retraining is failing     |
 
 #### Warning Alerts (Investigate)
 
-| Alert | Condition | Threshold | Duration | Description |
-|-------|-----------|-----------|----------|-------------|
-| **HighAPILatency** | API p95 > 1s | 1.0s | 5m | General API slowness |
-| **SlowScoreLatency** | /score p95 > 200ms | 0.2s | 5m | /score slower than expected |
-| **IncreasedErrorRate** | Errors/sec > 0.05 | 0.05 | 10m | Elevated error rate |
-| **SlowModelPrediction** | Model p95 > 100ms | 0.1s | 5m | ML inference slowness |
-| **LowModelCacheHitRate** | Cache hit rate < 70% | 0.7 | 10m | Cache inefficiency |
-| **HighInvalidOutcomesRate** | Invalid outcomes > 10% | 0.1 | 10m | Data quality issues |
-| **LongRetrainingDuration** | Retraining > 30 min | 1800s | 5m | Retraining taking too long |
-| **FrequentDriftDetection** | Drift rate > 0.1/hour | 0.1 | 10m | Excessive drift triggering retrains |
-| **ABTestImbalance** | Traffic imbalance > 20% | 0.2 | 30m | A/B test traffic not balanced |
-| **LowABTestConversionRate** | Conversion < 5% | 0.05 | 1h | Unusually low conversion |
-| **CompetitorDataFetchFailures** | Failures > 0.1/sec | 0.1 | 10m | Scraper failing |
-| **StaleCompetitorData** | Staleness > 24 hours | 86400s | 1h | Competitor data outdated |
-| **HighActiveRequests** | Active requests > 100 | 100 | 5m | High concurrent load |
-| **HighMemoryUsage** | Memory > 4GB | 4GB | 10m | Memory leak or high load |
+| Alert                           | Condition               | Threshold | Duration | Description                         |
+| ------------------------------- | ----------------------- | --------- | -------- | ----------------------------------- |
+| **HighAPILatency**              | API p95 > 1s            | 1.0s      | 5m       | General API slowness                |
+| **SlowScoreLatency**            | /score p95 > 200ms      | 0.2s      | 5m       | /score slower than expected         |
+| **IncreasedErrorRate**          | Errors/sec > 0.05       | 0.05      | 10m      | Elevated error rate                 |
+| **SlowModelPrediction**         | Model p95 > 100ms       | 0.1s      | 5m       | ML inference slowness               |
+| **LowModelCacheHitRate**        | Cache hit rate < 70%    | 0.7       | 10m      | Cache inefficiency                  |
+| **HighInvalidOutcomesRate**     | Invalid outcomes > 10%  | 0.1       | 10m      | Data quality issues                 |
+| **LongRetrainingDuration**      | Retraining > 30 min     | 1800s     | 5m       | Retraining taking too long          |
+| **FrequentDriftDetection**      | Drift rate > 0.1/hour   | 0.1       | 10m      | Excessive drift triggering retrains |
+| **ABTestImbalance**             | Traffic imbalance > 20% | 0.2       | 30m      | A/B test traffic not balanced       |
+| **LowABTestConversionRate**     | Conversion < 5%         | 0.05      | 1h       | Unusually low conversion            |
+| **CompetitorDataFetchFailures** | Failures > 0.1/sec      | 0.1       | 10m      | Scraper failing                     |
+| **StaleCompetitorData**         | Staleness > 24 hours    | 86400s    | 1h       | Competitor data outdated            |
+| **HighActiveRequests**          | Active requests > 100   | 100       | 5m       | High concurrent load                |
+| **HighMemoryUsage**             | Memory > 4GB            | 4GB       | 10m      | Memory leak or high load            |
 
 ### Configuring Alertmanager
 
@@ -404,6 +425,7 @@ Every request is assigned a unique `request_id` for end-to-end tracing:
 ### Tracing a Request
 
 1. Make API request, capture `X-Request-ID` from response:
+
    ```bash
    curl -v http://localhost:8000/score -H "Content-Type: application/json" -d '{...}'
    # Response header: X-Request-ID: abc-123-def-456
@@ -414,6 +436,7 @@ Every request is assigned a unique `request_id` for end-to-end tracing:
    - View all errors and transactions for this request
 
 3. Search logs:
+
    ```bash
    grep "abc-123-def-456" pricing-service.log
    ```
@@ -469,7 +492,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     ports:
-      - "9090:9090"
+      - '9090:9090'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - ./pricing-service/observability/prometheus_alerts.yml:/etc/prometheus/alerts.yml
@@ -479,7 +502,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
@@ -488,7 +511,7 @@ services:
   alertmanager:
     image: prom/alertmanager:latest
     ports:
-      - "9093:9093"
+      - '9093:9093'
     volumes:
       - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
 
@@ -525,6 +548,7 @@ docker-compose up -d
 ```
 
 Access:
+
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3000 (admin/admin)
 - Alertmanager: http://localhost:9093
@@ -537,6 +561,7 @@ Access:
 
 1. Create Sentry project at https://sentry.io
 2. Set environment variables:
+
    ```bash
    SENTRY_DSN=https://your-dsn@sentry.io/project-id
    ENVIRONMENT=production
@@ -550,6 +575,7 @@ Access:
 
 1. Deploy Prometheus server
 2. Configure scrape targets:
+
    ```yaml
    scrape_configs:
      - job_name: 'pricing-service'
@@ -623,6 +649,7 @@ For production HA setup:
 ### Metrics not showing in Prometheus
 
 1. Check metrics endpoint is accessible:
+
    ```bash
    curl http://localhost:8000/metrics
    ```
@@ -639,6 +666,7 @@ For production HA setup:
 ### Sentry not capturing errors
 
 1. Check `SENTRY_DSN` is set:
+
    ```bash
    echo $SENTRY_DSN
    ```

@@ -201,34 +201,37 @@ export class CompetitorScraper {
 
       // Extract competitor data
       const competitors = await page.$$eval('[data-testid="property-card"]', cards => {
-        return cards.slice(0, 20).map(card => {
-          try {
-            const nameEl = card.querySelector('[data-testid="title"]')
-            const priceEl = card.querySelector('[data-testid="price-and-discounted-price"]')
-            const ratingEl = card.querySelector('[data-testid="review-score"]')
-            const distanceEl = card.querySelector('[data-testid="distance"]')
-            const linkEl = card.querySelector('a')
+        return cards
+          .slice(0, 20)
+          .map(card => {
+            try {
+              const nameEl = card.querySelector('[data-testid="title"]')
+              const priceEl = card.querySelector('[data-testid="price-and-discounted-price"]')
+              const ratingEl = card.querySelector('[data-testid="review-score"]')
+              const distanceEl = card.querySelector('[data-testid="distance"]')
+              const linkEl = card.querySelector('a')
 
-            const priceText = priceEl?.textContent?.trim() || ''
-            const priceMatch = priceText.match(/[\d,]+/)
-            const price = priceMatch ? parseFloat(priceMatch[0].replace(/,/g, '')) : 0
+              const priceText = priceEl?.textContent?.trim() || ''
+              const priceMatch = priceText.match(/[\d,]+/)
+              const price = priceMatch ? parseFloat(priceMatch[0].replace(/,/g, '')) : 0
 
-            return {
-              name: nameEl?.textContent?.trim() || 'Unknown',
-              price,
-              currency: 'USD', // TODO: Detect from page
-              url: linkEl?.href || '',
-              rating: ratingEl ? parseFloat(ratingEl.textContent || '0') : undefined,
-              distance: distanceEl
-                ? parseFloat(distanceEl.textContent?.match(/[\d.]+/)?.[0] || '0')
-                : undefined,
-              roomType: 'standard',
-              availability: price > 0,
+              return {
+                name: nameEl?.textContent?.trim() || 'Unknown',
+                price,
+                currency: 'USD', // TODO: Detect from page
+                url: linkEl?.href || '',
+                rating: ratingEl ? parseFloat(ratingEl.textContent || '0') : undefined,
+                distance: distanceEl
+                  ? parseFloat(distanceEl.textContent?.match(/[\d.]+/)?.[0] || '0')
+                  : undefined,
+                roomType: 'standard',
+                availability: price > 0,
+              }
+            } catch (err) {
+              return null
             }
-          } catch (err) {
-            return null
-          }
-        }).filter((item): item is NonNullable<typeof item> => item !== null && item.price > 0)
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null && item.price > 0)
       })
 
       await page.close()

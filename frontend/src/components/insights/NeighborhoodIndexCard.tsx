@@ -73,7 +73,9 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
       }
 
       // Fetch 30-day trend
-      const trendResponse = await apiClient.get(`/api/neighborhood-index/${propertyId}/trend?days=30`)
+      const trendResponse = await apiClient.get(
+        `/api/neighborhood-index/${propertyId}/trend?days=30`
+      )
       if (trendResponse.data.success) {
         setTrendData(trendResponse.data.trend)
       }
@@ -90,7 +92,7 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
       <Card variant="default" className={className}>
         <Card.Body>
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
           </div>
         </Card.Body>
       </Card>
@@ -101,12 +103,10 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
     return (
       <Card variant="default" className={className}>
         <Card.Body>
-          <div className="text-center py-8">
-            <Target className="h-12 w-12 text-muted mx-auto mb-4" />
-            <p className="text-muted">
-              {error || 'No competitive index data available'}
-            </p>
-            <p className="text-xs text-muted mt-2">
+          <div className="py-8 text-center">
+            <Target className="mx-auto mb-4 h-12 w-12 text-muted" />
+            <p className="text-muted">{error || 'No competitive index data available'}</p>
+            <p className="mt-2 text-xs text-muted">
               Build competitor graph to enable competitive analysis
             </p>
           </div>
@@ -199,16 +199,18 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
               </p>
             </div>
             <div className="text-right">
-              <p className="text-4xl font-bold text-primary">{latestIndex.overallIndex.toFixed(1)}</p>
+              <p className="text-4xl font-bold text-primary">
+                {latestIndex.overallIndex.toFixed(1)}
+              </p>
               <p className={`text-sm font-medium ${indexRating.color}`}>{indexRating.label}</p>
             </div>
           </div>
         </Card.Header>
         <Card.Body>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* Radar Chart */}
             <div>
-              <h3 className="text-sm font-medium text-text mb-4">Competitive Profile</h3>
+              <h3 className="mb-4 text-sm font-medium text-text">Competitive Profile</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <RadarChart data={radarData}>
                   <PolarGrid stroke="#2A2A2A" />
@@ -236,7 +238,7 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
             <div className="space-y-4">
               {/* Market Position */}
               <div>
-                <p className="text-xs text-muted mb-2">Market Position</p>
+                <p className="mb-2 text-xs text-muted">Market Position</p>
                 <Badge
                   variant="default"
                   className={getMarketPositionColor(latestIndex.marketPosition)}
@@ -248,45 +250,45 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
               {/* Component Scores */}
               <div className="space-y-3">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="mb-1 flex items-center justify-between">
                     <span className="text-xs text-muted">Price Competitiveness</span>
                     <span className="text-sm font-medium text-text">
                       {latestIndex.priceCompetitivenessScore.toFixed(1)}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-800 rounded-full h-2">
+                  <div className="h-2 w-full rounded-full bg-gray-800">
                     <div
-                      className="bg-primary h-2 rounded-full"
+                      className="h-2 rounded-full bg-primary"
                       style={{ width: `${latestIndex.priceCompetitivenessScore}%` }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="mb-1 flex items-center justify-between">
                     <span className="text-xs text-muted">Value Score</span>
                     <span className="text-sm font-medium text-text">
                       {latestIndex.valueScore.toFixed(1)}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-800 rounded-full h-2">
+                  <div className="h-2 w-full rounded-full bg-gray-800">
                     <div
-                      className="bg-blue-400 h-2 rounded-full"
+                      className="h-2 rounded-full bg-blue-400"
                       style={{ width: `${latestIndex.valueScore}%` }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="mb-1 flex items-center justify-between">
                     <span className="text-xs text-muted">Positioning Score</span>
                     <span className="text-sm font-medium text-text">
                       {latestIndex.positioningScore.toFixed(1)}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-800 rounded-full h-2">
+                  <div className="h-2 w-full rounded-full bg-gray-800">
                     <div
-                      className="bg-purple-400 h-2 rounded-full"
+                      className="h-2 rounded-full bg-purple-400"
                       style={{ width: `${latestIndex.positioningScore}%` }}
                     />
                   </div>
@@ -296,30 +298,36 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
               {/* Trend Indicators */}
               <div className="grid grid-cols-3 gap-2 pt-2">
                 <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 text-xs text-muted mb-1">
+                  <div className="mb-1 flex items-center justify-center gap-1 text-xs text-muted">
                     {getTrendIcon(latestIndex.indexChange1d)}
                     <span>1D</span>
                   </div>
                   <span className="text-sm font-medium text-text">
-                    {latestIndex.indexChange1d ? `${latestIndex.indexChange1d > 0 ? '+' : ''}${latestIndex.indexChange1d.toFixed(1)}` : '--'}
+                    {latestIndex.indexChange1d
+                      ? `${latestIndex.indexChange1d > 0 ? '+' : ''}${latestIndex.indexChange1d.toFixed(1)}`
+                      : '--'}
                   </span>
                 </div>
                 <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 text-xs text-muted mb-1">
+                  <div className="mb-1 flex items-center justify-center gap-1 text-xs text-muted">
                     {getTrendIcon(latestIndex.indexChange7d)}
                     <span>7D</span>
                   </div>
                   <span className="text-sm font-medium text-text">
-                    {latestIndex.indexChange7d ? `${latestIndex.indexChange7d > 0 ? '+' : ''}${latestIndex.indexChange7d.toFixed(1)}` : '--'}
+                    {latestIndex.indexChange7d
+                      ? `${latestIndex.indexChange7d > 0 ? '+' : ''}${latestIndex.indexChange7d.toFixed(1)}`
+                      : '--'}
                   </span>
                 </div>
                 <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 text-xs text-muted mb-1">
+                  <div className="mb-1 flex items-center justify-center gap-1 text-xs text-muted">
                     {getTrendIcon(latestIndex.indexChange30d)}
                     <span>30D</span>
                   </div>
                   <span className="text-sm font-medium text-text">
-                    {latestIndex.indexChange30d ? `${latestIndex.indexChange30d > 0 ? '+' : ''}${latestIndex.indexChange30d.toFixed(1)}` : '--'}
+                    {latestIndex.indexChange30d
+                      ? `${latestIndex.indexChange30d > 0 ? '+' : ''}${latestIndex.indexChange30d.toFixed(1)}`
+                      : '--'}
                   </span>
                 </div>
               </div>
@@ -342,7 +350,9 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
                   dataKey="date"
                   stroke="#9CA3AF"
                   tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  tickFormatter={value =>
+                    new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                  }
                 />
                 <YAxis stroke="#9CA3AF" domain={[0, 100]} />
                 <Tooltip
@@ -351,7 +361,7 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
                     border: '1px solid #2A2A2A',
                     borderRadius: '8px',
                   }}
-                  labelFormatter={(label) => `Date: ${label}`}
+                  labelFormatter={label => `Date: ${label}`}
                 />
                 <Line
                   type="monotone"
@@ -368,12 +378,12 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
       )}
 
       {/* Competitive Factors */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Advantages */}
         {latestIndex.competitiveAdvantage.length > 0 && (
           <Card variant="default">
             <Card.Header>
-              <h3 className="text-lg font-semibold text-text text-green-400">
+              <h3 className="text-lg font-semibold text-green-400 text-text">
                 ✓ Competitive Advantages
               </h3>
             </Card.Header>
@@ -381,7 +391,7 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
               <ul className="space-y-2">
                 {latestIndex.competitiveAdvantage.map((advantage, index) => (
                   <li key={index} className="flex items-center gap-2 text-sm text-text">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                    <div className="h-1.5 w-1.5 rounded-full bg-green-400" />
                     {formatFactor(advantage)}
                   </li>
                 ))}
@@ -394,7 +404,7 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
         {latestIndex.competitiveWeakness.length > 0 && (
           <Card variant="default">
             <Card.Header>
-              <h3 className="text-lg font-semibold text-text text-orange-400">
+              <h3 className="text-lg font-semibold text-orange-400 text-text">
                 ⚠ Areas for Improvement
               </h3>
             </Card.Header>
@@ -402,7 +412,7 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
               <ul className="space-y-2">
                 {latestIndex.competitiveWeakness.map((weakness, index) => (
                   <li key={index} className="flex items-center gap-2 text-sm text-text">
-                    <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                    <div className="h-1.5 w-1.5 rounded-full bg-orange-400" />
                     {formatFactor(weakness)}
                   </li>
                 ))}
@@ -419,22 +429,22 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
             <h3 className="text-lg font-semibold text-text">Price Positioning</h3>
           </Card.Header>
           <Card.Body>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <div>
-                <p className="text-xs text-muted mb-1">Your Price</p>
+                <p className="mb-1 text-xs text-muted">Your Price</p>
                 <p className="text-2xl font-bold text-primary">
                   ${latestIndex.propertyPrice.toFixed(0)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted mb-1">Neighborhood Median</p>
+                <p className="mb-1 text-xs text-muted">Neighborhood Median</p>
                 <p className="text-2xl font-bold text-text">
                   ${latestIndex.neighborhoodMedianPrice.toFixed(0)}
                 </p>
               </div>
               {latestIndex.pricePercentile !== undefined && (
                 <div>
-                  <p className="text-xs text-muted mb-1">Price Percentile</p>
+                  <p className="mb-1 text-xs text-muted">Price Percentile</p>
                   <p className="text-2xl font-bold text-text">
                     {latestIndex.pricePercentile.toFixed(0)}%
                   </p>
@@ -442,9 +452,9 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
               )}
               {latestIndex.propertyRating && latestIndex.avgCompetitorRating && (
                 <div>
-                  <p className="text-xs text-muted mb-1">Rating vs Avg</p>
+                  <p className="mb-1 text-xs text-muted">Rating vs Avg</p>
                   <div className="flex items-center gap-2">
-                    <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     <p className="text-2xl font-bold text-text">
                       {latestIndex.propertyRating.toFixed(1)}
                     </p>

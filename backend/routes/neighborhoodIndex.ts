@@ -98,7 +98,8 @@ registry.registerPath({
   path: '/api/neighborhood-index/{propertyId}/compute',
   tags: ['Neighborhood Index'],
   summary: 'Compute neighborhood index',
-  description: 'Triggers computation of neighborhood competitive index for a property on a specific date',
+  description:
+    'Triggers computation of neighborhood competitive index for a property on a specific date',
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
@@ -108,7 +109,10 @@ registry.registerPath({
       content: {
         'application/json': {
           schema: z.object({
-            date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).openapi({ example: '2024-06-15' }),
+            date: z
+              .string()
+              .regex(/^\d{4}-\d{2}-\d{2}$/)
+              .openapi({ example: '2024-06-15' }),
             propertyPrice: z.number().positive().optional(),
             propertyAttributes: z
               .object({

@@ -3,7 +3,7 @@
  * Tests the /api/pricing/simulate endpoint
  */
 
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import express, { Express } from 'express'
 import request from 'supertest'
 import pricingRouter from '../routes/pricing.js'
@@ -81,12 +81,10 @@ describe('Pricing Simulator API', () => {
     })
 
     it('should return 400 for missing required fields', async () => {
-      const response = await request(app)
-        .post('/api/pricing/simulate')
-        .send({
-          // Missing propertyId and other required fields
-          stayDate: '2025-12-25',
-        })
+      const response = await request(app).post('/api/pricing/simulate').send({
+        // Missing propertyId and other required fields
+        stayDate: '2025-12-25',
+      })
 
       expect(response.status).toBe(400)
     })
