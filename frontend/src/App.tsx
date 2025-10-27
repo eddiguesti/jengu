@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Layout } from './components/layout/Layout'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { queryClient } from './lib/query/queryClient'
@@ -59,9 +58,9 @@ function App() {
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<Auth />} />
-              <Route path="/signup" element={<Auth />} />
+            {/* Public routes */}
+            <Route path="/login" element={<Auth />} />
+            <Route path="/signup" element={<Auth />} />
 
               {/* Protected routes */}
               <Route
@@ -125,8 +124,6 @@ function App() {
           </Suspense>
         </BrowserRouter>
       </AuthProvider>
-      {/* React Query Devtools - only in development */}
-      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   )
 }

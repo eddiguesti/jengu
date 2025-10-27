@@ -6,7 +6,7 @@
 import { useEffect, useRef } from 'react'
 import { clsx } from 'clsx'
 import { Loader2, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
-import { useEnrichmentStatus } from '../../lib/query/hooks'
+import { useEnrichmentStatus } from '../../hooks/queries/useEnrichmentStatus'
 
 interface EnrichmentProgressProps {
   propertyId: string
@@ -30,11 +30,11 @@ export function EnrichmentProgress({
 
     previousStatusRef.current = status.status
 
-    if (status.status === 'completed' && onComplete) {
+    if (status.status === 'complete' && onComplete) {
       onComplete()
     }
 
-    if (status.status === 'failed' && onError) {
+    if (status.status === 'error' && onError) {
       onError('Enrichment failed')
     }
   }, [status?.status, onComplete, onError])
@@ -43,9 +43,9 @@ export function EnrichmentProgress({
     return null
   }
 
-  const isInProgress = status?.status === 'pending'
-  const isCompleted = status?.status === 'completed'
-  const isFailed = status?.status === 'failed'
+  const isInProgress = status?.status === 'pending' || status?.status === 'running'
+  const isCompleted = status?.status === 'complete'
+  const isFailed = status?.status === 'error'
 
   return (
     <>

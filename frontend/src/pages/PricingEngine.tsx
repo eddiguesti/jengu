@@ -1150,11 +1150,10 @@ export const PricingEngine: React.FC = () => {
           <Card.Body className="flex items-start gap-4">
             <Database className="mt-1 h-6 w-6 flex-shrink-0 text-blue-500" />
             <div>
-              <h3 className="mb-2 text-lg font-semibold text-text">Using Simulated Data</h3>
+              <h3 className="mb-2 text-lg font-semibold text-text">No Historical Data Available</h3>
               <p className="mb-3 text-muted">
-                The pricing engine is currently using simulated data for demonstration. Upload your
-                historical booking data to get personalized recommendations based on your actual
-                performance.
+                Upload your historical booking data (CSV) to get AI-powered pricing recommendations
+                based on your actual property performance, seasonality, and market conditions.
               </p>
               <Button variant="primary" size="sm" onClick={() => navigate('/data')}>
                 <Database className="mr-2 h-4 w-4" />

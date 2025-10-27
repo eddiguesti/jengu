@@ -730,6 +730,7 @@ router.get(
 
         return {
           ...property,
+          enrichment_status: property.enrichmentstatus || 'none', // Map database field to API field
           actualRows: count || 0,
           preview: previewData || [],
         }

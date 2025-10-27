@@ -35,3 +35,10 @@ export const getEnrichmentStatus = async (jobId: string): Promise<EnrichmentStat
 export const cancelEnrichment = async (jobId: string): Promise<void> => {
   await apiClient.post(`/enrichment/cancel/${jobId}`)
 }
+
+// Export as enrichmentApi object for consistency
+export const enrichmentApi = {
+  start: startEnrichment,
+  getStatus: getEnrichmentStatus,
+  cancel: cancelEnrichment,
+}

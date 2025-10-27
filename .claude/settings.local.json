@@ -1,13 +1,23 @@
 {
   "permissions": {
     "allow": [
-      "Bash(for f in routes/*.ts)",
-      "Bash(done)",
-      "Bash(pnpm run type-check:*)",
+      "Bash(pnpm list:*)",
+      "Bash(del /f \"backend\\middleware\\authenticateApiKey.ts\")",
+      "Bash(del /f \"backend\\utils\\dateParser.ts\")",
+      "Bash(del /f \"backend\\utils\\validators.ts\")",
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(dir:*)",
+      "Bash(for dir in docs/*/)",
+      "Read(//c/Users/eddgu/Downloads/**)",
+      "Bash(pnpm run dev)",
+      "Bash(pnpm add:*)",
+      "Bash(curl:*)",
+      "Bash(node setup-competitor-tables.js:*)",
+      "Bash(node:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(pnpm run dev:*)",
-      "Bash(timeout /t 10 /nobreak)",
       "Bash(taskkill:*)",
       "Bash(git add:*)"
     ],

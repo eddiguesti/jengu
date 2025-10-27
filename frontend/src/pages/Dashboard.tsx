@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -37,8 +37,19 @@ export const Dashboard = () => {
 
   // Fetch files list and data using React Query
   const { data: uploadedFiles = [] } = useUploadedFiles()
-  const firstFileId = uploadedFiles[0]?.id || ''
-  const { data: fileData = [], isLoading } = useFileData(firstFileId, 10000)
+
+  // Filter out deleted/empty files and find first valid file with data
+  const validFiles = uploadedFiles.filter(
+    (f) => f.status !== 'deleted' && (f.actualRows || f.rows || 0) > 0
+  )
+
+  const firstFileId = validFiles[0]?.id || ''
+  const { data: fileData = [], isLoading, error } = useFileData(firstFileId, 10000)
+
+  // Log error for debugging
+  if (error) {
+    console.warn('Failed to load file data:', error)
+  }
 
   const hasData = fileData.length > 0
 
@@ -192,6 +203,12 @@ export const Dashboard = () => {
       // Simple demand calculation based on occupancy
       const demand = Math.min(1, avgOccupancyForDate * 1.2)
 
+      // Get weather data from the first row (all rows for same date should have same weather)
+      const firstRow = rows[0]
+      const temperature = firstRow.temperature ? parseFloat(firstRow.temperature) : undefined
+      const precipitation = firstRow.precipitation ? parseFloat(firstRow.precipitation) : undefined
+      const weatherCondition = firstRow.weather_condition || firstRow.weatherCondition
+
       calendarData.push({
         date: dateStr,
         price: Math.round(avgPriceForDate),
@@ -200,6 +217,10 @@ export const Dashboard = () => {
         isWeekend,
         isPast,
         isHoliday: false, // Could be enriched from holiday data
+        // Weather data from enrichment
+        temperature,
+        precipitation,
+        weatherCondition,
       })
     })
 
@@ -213,8 +234,6 @@ export const Dashboard = () => {
       calendarData,
     }
   }, [fileData])
-
-  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   return (
     <motion.div
@@ -245,6 +264,49 @@ export const Dashboard = () => {
           </Badge>
         )}
       </div>
+
+      {/* Price & Demand Calendar - Moved to top */}
+      {hasData && processedData.calendarData && processedData.calendarData.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card variant="default">
+            <Card.Header>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-primary/10 p-2">
+                    <Calendar className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-text">Price & Demand Calendar</h2>
+                    <p className="mt-1 text-sm text-muted">
+                      Interactive calendar showing pricing and demand patterns from your data
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/pricing/calendar')}
+                >
+                  Full View →
+                </Button>
+              </div>
+            </Card.Header>
+            <Card.Body>
+              <PriceDemandCalendar
+                data={processedData.calendarData}
+                currency="€"
+                onDateClick={(date) => {
+                  console.log('Selected date:', date)
+                }}
+              />
+            </Card.Body>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Quick Action Cards */}
       {hasData && (
@@ -634,50 +696,6 @@ export const Dashboard = () => {
             </ResponsiveContainer>
           </Card.Body>
         </Card>
-      )}
-
-      {/* Pricing Calendar - Real Data */}
-      {hasData && processedData.calendarData && processedData.calendarData.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Card variant="default">
-            <Card.Header>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-xl bg-primary/10 p-2">
-                    <Calendar className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-text">Price & Demand Calendar</h2>
-                    <p className="mt-1 text-sm text-muted">
-                      Interactive calendar showing pricing and demand patterns from your data
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/pricing/calendar')}
-                >
-                  Full View →
-                </Button>
-              </div>
-            </Card.Header>
-            <Card.Body>
-              <PriceDemandCalendar
-                data={processedData.calendarData}
-                currency="€"
-                onDateClick={(date) => {
-                  setSelectedDate(date)
-                  console.log('Selected date:', date)
-                }}
-              />
-            </Card.Body>
-          </Card>
-        </motion.div>
       )}
 
       {/* Quick Actions - Always show */}

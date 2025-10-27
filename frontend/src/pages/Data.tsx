@@ -660,14 +660,35 @@ export const Data = () => {
                           >
                             {file.status}
                           </Badge>
-                          {/* Show enrichment status if file is from the store (has enrichment data) */}
-                          {uploadedFiles.find(f => f.id === file.uniqueId)?.enrichment_status ===
-                            'completed' && (
-                            <Badge variant="success" className="flex items-center gap-1">
-                              <Sparkles className="h-3 w-3" />
-                              Enriched
-                            </Badge>
-                          )}
+                          {/* Show enrichment status badge */}
+                          {(() => {
+                            const enrichmentStatus = uploadedFiles.find(
+                              f => f.id === file.uniqueId
+                            )?.enrichment_status
+                            if (enrichmentStatus === 'completed') {
+                              return (
+                                <Badge variant="success" className="flex items-center gap-1">
+                                  <Sparkles className="h-3 w-3" />
+                                  Enriched
+                                </Badge>
+                              )
+                            } else if (enrichmentStatus === 'pending') {
+                              return (
+                                <Badge variant="primary" className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3 animate-pulse" />
+                                  Enriching...
+                                </Badge>
+                              )
+                            } else if (enrichmentStatus === 'failed') {
+                              return (
+                                <Badge variant="error" className="flex items-center gap-1">
+                                  <AlertCircle className="h-3 w-3" />
+                                  Failed
+                                </Badge>
+                              )
+                            }
+                            return null
+                          })()}
                         </div>
                         <button
                           onClick={() => removeFile(file.uniqueId || file.name)}
@@ -687,7 +708,23 @@ export const Data = () => {
               <Card variant="default">
                 <Card.Header>
                   <h2 className="text-xl font-semibold text-text">Data Preview</h2>
-                  <p className="mt-1 text-sm text-muted">First 5 rows</p>
+                  <p className="mt-1 text-sm text-muted">
+                    First 5 rows
+                    {(() => {
+                      const firstFile = files.find(f => f.uniqueId)
+                      const enrichmentStatus = uploadedFiles.find(
+                        f => f.id === firstFile?.uniqueId
+                      )?.enrichment_status
+                      if (enrichmentStatus === 'completed') {
+                        return (
+                          <span className="ml-2 text-success">
+                            • Enriched columns highlighted in green
+                          </span>
+                        )
+                      }
+                      return null
+                    })()}
+                  </p>
                 </Card.Header>
                 <Card.Body>
                   <div className="overflow-x-auto">
@@ -695,11 +732,46 @@ export const Data = () => {
                       <Table.Header>
                         <Table.Row>
                           {files.find(f => f.preview)?.preview?.[0] &&
-                            Object.keys(files.find(f => f.preview)!.preview![0]).map(column => (
-                              <Table.HeaderCell key={column}>
-                                {column.charAt(0).toUpperCase() + column.slice(1)}
-                              </Table.HeaderCell>
-                            ))}
+                            Object.keys(files.find(f => f.preview)!.preview![0]).map(column => {
+                              // Enriched columns to highlight
+                              const enrichedColumns = [
+                                'temperature',
+                                'precipitation',
+                                'weathercondition',
+                                'sunshinehours',
+                                'isholiday',
+                                'holidayname',
+                                'dayofweek',
+                                'month',
+                                'season',
+                                'isweekend',
+                              ]
+                              const isEnriched = enrichedColumns.includes(
+                                column.toLowerCase().replace(/_/g, '')
+                              )
+                              const firstFile = files.find(f => f.uniqueId)
+                              const enrichmentStatus = uploadedFiles.find(
+                                f => f.id === firstFile?.uniqueId
+                              )?.enrichment_status
+
+                              return (
+                                <Table.HeaderCell
+                                  key={column}
+                                  className={clsx(
+                                    isEnriched && enrichmentStatus === 'completed'
+                                      ? 'bg-green-50 text-green-900'
+                                      : ''
+                                  )}
+                                >
+                                  <div className="flex items-center gap-1">
+                                    {column.charAt(0).toUpperCase() + column.slice(1)}
+                                    {isEnriched && enrichmentStatus === 'completed' && (
+                                      <Sparkles className="h-3 w-3 text-green-600" />
+                                    )}
+                                  </div>
+                                </Table.HeaderCell>
+                              )
+                            })}
                         </Table.Row>
                       </Table.Header>
                       <Table.Body>
@@ -717,10 +789,37 @@ export const Data = () => {
                                   // eslint-disable-next-line @typescript-eslint/no-base-to-string
                                   displayValue = String(value)
                                 }
+
+                                // Check if column is enriched
+                                const enrichedColumns = [
+                                  'temperature',
+                                  'precipitation',
+                                  'weathercondition',
+                                  'sunshinehours',
+                                  'isholiday',
+                                  'holidayname',
+                                  'dayofweek',
+                                  'month',
+                                  'season',
+                                  'isweekend',
+                                ]
+                                const isEnriched = enrichedColumns.includes(
+                                  key.toLowerCase().replace(/_/g, '')
+                                )
+                                const firstFile = files.find(f => f.uniqueId)
+                                const enrichmentStatus = uploadedFiles.find(
+                                  f => f.id === firstFile?.uniqueId
+                                )?.enrichment_status
+
                                 return (
                                   <Table.Cell
                                     key={key}
-                                    className={key === 'date' ? 'font-medium' : ''}
+                                    className={clsx(
+                                      key === 'date' ? 'font-medium' : '',
+                                      isEnriched && enrichmentStatus === 'completed'
+                                        ? 'bg-green-50 text-green-900'
+                                        : ''
+                                    )}
                                   >
                                     {displayValue}
                                   </Table.Cell>

@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Card, Badge, Button } from '../ui'
+import { Card, Badge } from '../ui'
 import {
   LineChart,
   Line,
@@ -13,7 +13,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   RadarChart,
   PolarGrid,
@@ -21,7 +20,7 @@ import {
   PolarRadiusAxis,
   Radar,
 } from 'recharts'
-import { Target, TrendingUp, TrendingDown, Minus, MapPin, Star } from 'lucide-react'
+import { Target, TrendingUp, TrendingDown, Minus, Star } from 'lucide-react'
 import apiClient from '../../lib/api/client'
 
 interface NeighborhoodIndex {

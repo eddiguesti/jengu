@@ -3,14 +3,113 @@
 @tailwind utilities;
 
 @layer base {
+  /* ============================================
+     THEME DESIGN TOKENS
+     Light & Dark mode CSS variables
+     ============================================ */
+
+  :root,
+  .light {
+    /* Light Theme - "Daylight" Mode */
+    /* Primary brand color - Blue for trust & action */
+    --color-primary: 0 102 255; /* #0066FF */
+    --color-primary-hover: 0 82 204; /* #0052CC */
+    --color-primary-light: 230 240 255; /* #E6F0FF */
+    --color-primary-dark: 0 61 153; /* #003D99 */
+
+    /* Base surfaces - Warm neutrals with breathing room */
+    --color-background: 250 250 250; /* #FAFAFA - Main canvas */
+    --color-surface: 255 255 255; /* #FFFFFF - Cards */
+    --color-surface-hover: 245 245 247; /* #F5F5F7 - Hover states */
+    --color-elevated: 255 255 255; /* #FFFFFF - Modals, popovers */
+    --color-elevated-hover: 248 249 250; /* #F8F9FA */
+
+    /* Text hierarchy - Almost black to soft gray */
+    --color-text: 26 26 26; /* #1A1A1A - Primary text */
+    --color-text-secondary: 74 74 74; /* #4A4A4A - Body text */
+    --color-text-tertiary: 110 110 110; /* #6E6E6E - Captions */
+    --color-text-muted: 158 158 158; /* #9E9E9E - Disabled */
+
+    /* Borders & dividers - Subtle separation */
+    --color-border: 229 231 235; /* #E5E7EB */
+    --color-border-hover: 209 213 219; /* #D1D5DB */
+    --color-divider: 243 244 246; /* #F3F4F6 */
+
+    /* Semantic colors - Vibrant but balanced */
+    --color-success: 0 135 90; /* #00875A - Green */
+    --color-success-light: 227 252 239; /* #E3FCEF */
+    --color-warning: 255 139 0; /* #FF8B00 - Orange */
+    --color-warning-light: 255 244 229; /* #FFF4E5 */
+    --color-error: 222 53 11; /* #DE350B - Red */
+    --color-error-light: 255 235 230; /* #FFEBE6 */
+    --color-info: 7 71 166; /* #0747A6 - Deep blue */
+    --color-info-light: 222 235 255; /* #DEEBFF */
+
+    /* Shadows - Soft, layered depth */
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.04);
+    --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 8px rgba(0, 0, 0, 0.06);
+    --shadow-elevated: 0 8px 16px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .dark {
+    /* Dark Theme - Existing premium dark mode */
+    /* Primary brand color - Neon yellow accent */
+    --color-primary: 235 255 87; /* #EBFF57 */
+    --color-primary-hover: 220 240 70; /* Slightly dimmer */
+    --color-primary-light: 50 50 20; /* Dark background for badges */
+    --color-primary-dark: 235 255 87; /* Same as primary in dark mode */
+
+    /* Base surfaces - Deep blacks with elevation */
+    --color-background: 10 10 10; /* #0A0A0A - Deep canvas */
+    --color-surface: 26 26 26; /* #1A1A1A - Cards */
+    --color-surface-hover: 36 36 36; /* #242424 - Hover states */
+    --color-elevated: 36 36 36; /* #242424 - Modals */
+    --color-elevated-hover: 46 46 46; /* #2E2E2E */
+
+    /* Text hierarchy - Bright to dim */
+    --color-text: 250 250 250; /* #FAFAFA - Primary text */
+    --color-text-secondary: 200 200 200; /* #C8C8C8 - Body text */
+    --color-text-tertiary: 156 163 175; /* #9CA3AF - Captions */
+    --color-text-muted: 115 115 115; /* #737373 - Disabled */
+
+    /* Borders & dividers - Subtle in dark mode */
+    --color-border: 42 42 42; /* #2A2A2A */
+    --color-border-hover: 60 60 60; /* #3C3C3C */
+    --color-divider: 30 30 30; /* #1E1E1E */
+
+    /* Semantic colors - Vibrant for dark backgrounds */
+    --color-success: 16 185 129; /* #10B981 - Brighter green */
+    --color-success-light: 20 50 35; /* Dark green background */
+    --color-warning: 245 158 11; /* #F59E0B - Warm orange */
+    --color-warning-light: 50 40 20; /* Dark orange background */
+    --color-error: 239 68 68; /* #EF4444 - Bright red */
+    --color-error-light: 50 20 20; /* Dark red background */
+    --color-info: 59 130 246; /* #3B82F6 - Bright blue */
+    --color-info-light: 20 30 50; /* Dark blue background */
+
+    /* Shadows - Deeper for dark mode */
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-elevated: 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  /* ============================================
+     BASE STYLES
+     ============================================ */
+
   * {
     @apply border-border;
   }
 
   body {
     @apply bg-background text-text antialiased;
+    background-color: rgb(var(--color-background)) !important;
+    color: rgb(var(--color-text)) !important;
+    transition: background-color 300ms cubic-bezier(0.45, 0, 0.15, 1),
+                color 300ms cubic-bezier(0.45, 0, 0.15, 1);
   }
 
+  /* Typography - Premium hierarchy */
   h1,
   h2,
   h3,
@@ -18,6 +117,38 @@
   h5,
   h6 {
     @apply font-semibold tracking-tight;
+    color: rgb(var(--color-text));
+  }
+
+  h1 {
+    @apply text-4xl;
+    letter-spacing: -0.02em;
+  }
+
+  h2 {
+    @apply text-3xl;
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    @apply text-2xl;
+  }
+
+  /* Focus states - Accessible & beautiful */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+    transition: box-shadow 200ms cubic-bezier(0.45, 0, 0.15, 1);
+  }
+
+  /* Selection - Theme-aware */
+  ::selection {
+    background-color: rgb(var(--color-primary-light));
+    color: rgb(var(--color-primary-dark));
+  }
+
+  .dark ::selection {
+    background-color: rgba(var(--color-primary), 0.3);
+    color: rgb(var(--color-text));
   }
 
   /* Respect user's motion preferences for accessibility */
@@ -51,41 +182,41 @@
     display: none;
   }
 
-  /* Custom Range Slider Styling */
+  /* Custom Range Slider Styling - Theme-aware */
   input[type='range'].slider-thumb {
     @apply appearance-none;
   }
 
   input[type='range'].slider-thumb::-webkit-slider-thumb {
     @apply h-5 w-5 cursor-pointer appearance-none rounded-full transition-all duration-200;
-    background: #ebff57;
-    box-shadow: 0 2px 8px rgba(235, 255, 87, 0.4);
+    background: rgb(var(--color-primary));
+    box-shadow: 0 2px 8px rgba(var(--color-primary), 0.4);
   }
 
   input[type='range'].slider-thumb::-webkit-slider-thumb:hover {
     @apply scale-110;
-    box-shadow: 0 4px 12px rgba(235, 255, 87, 0.6);
+    box-shadow: 0 4px 12px rgba(var(--color-primary), 0.6);
   }
 
   input[type='range'].slider-thumb::-moz-range-thumb {
     @apply h-5 w-5 cursor-pointer rounded-full border-0 transition-all duration-200;
-    background: #ebff57;
-    box-shadow: 0 2px 8px rgba(235, 255, 87, 0.4);
+    background: rgb(var(--color-primary));
+    box-shadow: 0 2px 8px rgba(var(--color-primary), 0.4);
   }
 
   input[type='range'].slider-thumb::-moz-range-thumb:hover {
     @apply scale-110;
-    box-shadow: 0 4px 12px rgba(235, 255, 87, 0.6);
+    box-shadow: 0 4px 12px rgba(var(--color-primary), 0.6);
   }
 
   input[type='range'].slider-thumb::-webkit-slider-runnable-track {
     @apply h-2 rounded-lg;
     background: linear-gradient(
       to right,
-      #ebff57 0%,
-      #ebff57 var(--range-progress, 0%),
-      #2a2a2a var(--range-progress, 0%),
-      #2a2a2a 100%
+      rgb(var(--color-primary)) 0%,
+      rgb(var(--color-primary)) var(--range-progress, 0%),
+      rgb(var(--color-border)) var(--range-progress, 0%),
+      rgb(var(--color-border)) 100%
     );
   }
 
@@ -93,10 +224,105 @@
     @apply h-2 rounded-lg;
     background: linear-gradient(
       to right,
-      #ebff57 0%,
-      #ebff57 var(--range-progress, 0%),
-      #2a2a2a var(--range-progress, 0%),
-      #2a2a2a 100%
+      rgb(var(--color-primary)) 0%,
+      rgb(var(--color-primary)) var(--range-progress, 0%),
+      rgb(var(--color-border)) var(--range-progress, 0%),
+      rgb(var(--color-border)) 100%
     );
+  }
+
+  /* ============================================
+     COMPONENT UTILITIES - Premium interactions
+     ============================================ */
+
+  /* Card hover lift effect */
+  .card-hover {
+    @apply transition-all duration-fast ease-smooth;
+    @apply hover:translate-y-[-2px] hover:shadow-card-hover;
+  }
+
+  /* Button bounce effect */
+  .button-bounce:active {
+    @apply animate-bounce-soft;
+  }
+
+  /* Smooth border transitions */
+  .border-smooth {
+    @apply transition-colors duration-fast ease-smooth;
+  }
+
+  /* Focus ring - consistent across components */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Glassmorphism effect for modals/overlays */
+  .glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .glass-light {
+    background-color: rgba(var(--color-surface), 0.8);
+  }
+
+  .dark .glass-dark {
+    background-color: rgba(var(--color-surface), 0.6);
+  }
+
+  /* Smooth scrolling with custom scrollbar */
+  .scrollbar-custom {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--color-border)) transparent;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    background: rgb(var(--color-border));
+    border-radius: 100px;
+    transition: background 200ms;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--color-border-hover));
+  }
+
+  /* Text gradient - premium effect */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      135deg,
+      rgb(var(--color-primary)),
+      rgb(var(--color-info))
+    );
+  }
+
+  /* Shimmer loading effect */
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .shimmer {
+    animation: shimmer 2s infinite linear;
+    background: linear-gradient(
+      90deg,
+      rgb(var(--color-surface)) 0%,
+      rgb(var(--color-surface-hover)) 50%,
+      rgb(var(--color-surface)) 100%
+    );
+    background-size: 1000px 100%;
   }
 }

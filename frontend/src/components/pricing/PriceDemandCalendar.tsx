@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Sun, Cloud, CloudRain, CloudDrizzle, Snowflake, CloudLightning, Tent } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export interface DayData {
@@ -13,6 +13,11 @@ export interface DayData {
   holidayName?: string
   priceChange?: number // % change from previous day
   competitorPrice?: number
+  // Weather data (from enrichment)
+  temperature?: number
+  precipitation?: number
+  weatherCondition?: string
+  sunshineHours?: number
 }
 
 interface PriceDemandCalendarProps {
@@ -83,6 +88,147 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
       return `${currency}${(price / 1000).toFixed(1)}k`
     }
     return `${currency}${Math.round(price)}`
+  }
+
+  // Get weather icon based on condition with animations
+  const getWeatherIcon = (day: DayData) => {
+    if (!day.weatherCondition && day.temperature === undefined) return null
+
+    const condition = day.weatherCondition?.toLowerCase() || ''
+    const iconSize = 'w-4 h-4'
+
+    // Sun - gentle pulsing glow
+    if (condition.includes('sun') || condition.includes('clear')) {
+      return (
+        <motion.div
+          animate={{
+            scale: [1, 1.1, 1],
+            rotate: [0, 10, 0],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        >
+          <Sun className={`${iconSize} text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]`} />
+        </motion.div>
+      )
+    }
+    // Rain - falling animation
+    else if (condition.includes('rain') && !condition.includes('drizzle')) {
+      return (
+        <motion.div
+          animate={{
+            y: [0, 2, 0],
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        >
+          <CloudRain className={`${iconSize} text-blue-400 drop-shadow-[0_0_6px_rgba(96,165,250,0.5)]`} />
+        </motion.div>
+      )
+    }
+    // Drizzle - gentle floating
+    else if (condition.includes('drizzle')) {
+      return (
+        <motion.div
+          animate={{
+            y: [0, 1, 0],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        >
+          <CloudDrizzle className={`${iconSize} text-blue-300 drop-shadow-[0_0_4px_rgba(147,197,253,0.4)]`} />
+        </motion.div>
+      )
+    }
+    // Snow - gentle floating down
+    else if (condition.includes('snow')) {
+      return (
+        <motion.div
+          animate={{
+            y: [0, 3, 0],
+            rotate: [0, 5, -5, 0],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        >
+          <Snowflake className={`${iconSize} text-blue-200 drop-shadow-[0_0_6px_rgba(219,234,254,0.6)]`} />
+        </motion.div>
+      )
+    }
+    // Storm - shake effect
+    else if (condition.includes('storm') || condition.includes('thunder')) {
+      return (
+        <motion.div
+          animate={{
+            x: [-1, 1, -1, 1, 0],
+            opacity: [1, 0.8, 1, 0.8, 1],
+          }}
+          transition={{
+            duration: 0.5,
+            repeat: Infinity,
+            repeatDelay: 2,
+          }}
+        >
+          <CloudLightning className={`${iconSize} text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.6)]`} />
+        </motion.div>
+      )
+    }
+    // Cloud - gentle drift
+    else if (condition.includes('cloud')) {
+      return (
+        <motion.div
+          animate={{
+            x: [0, 2, 0],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        >
+          <Cloud className={`${iconSize} text-gray-400 drop-shadow-[0_0_3px_rgba(156,163,175,0.3)]`} />
+        </motion.div>
+      )
+    }
+
+    return (
+      <motion.div
+        animate={{
+          x: [0, 2, 0],
+        }}
+        transition={{
+          duration: 4,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      >
+        <Cloud className={`${iconSize} text-gray-400 drop-shadow-[0_0_3px_rgba(156,163,175,0.3)]`} />
+      </motion.div>
+    )
+  }
+
+  // Check if day is perfect for camping (18-25°C, <2mm rain)
+  const isPerfectCampingDay = (day: DayData): boolean => {
+    if (day.isPast) return false
+    if (day.temperature === undefined || day.precipitation === undefined) return false
+
+    return (
+      day.temperature >= 18 &&
+      day.temperature <= 25 &&
+      day.precipitation < 2
+    )
   }
 
   // Generate calendar days
@@ -267,6 +413,46 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
                 </div>
               )}
 
+              {/* Weather icon (top-right for future dates) */}
+              {!day.isPast && getWeatherIcon(day) && (
+                <motion.div
+                  className="absolute top-1 right-1"
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{
+                    delay: 0.1,
+                    duration: 0.3,
+                    ease: 'backOut',
+                  }}
+                >
+                  {getWeatherIcon(day)}
+                </motion.div>
+              )}
+
+              {/* Perfect camping day indicator (tent icon) */}
+              {isPerfectCampingDay(day) && (
+                <motion.div
+                  className="absolute top-1 left-1 z-10"
+                  initial={{ scale: 0, rotate: -10 }}
+                  animate={{
+                    scale: [1, 1.15, 1],
+                    rotate: 0,
+                  }}
+                  transition={{
+                    scale: {
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    },
+                    rotate: {
+                      duration: 0.3,
+                    },
+                  }}
+                >
+                  <Tent className="w-4 h-4 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.7)]" title="Perfect camping conditions!" />
+                </motion.div>
+              )}
+
               {/* Price */}
               {!isEmpty && (
                 <div
@@ -379,6 +565,40 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
                       {hoveredDay.priceChange > 0 ? '+' : ''}
                       {hoveredDay.priceChange.toFixed(1)}%
                     </span>
+                  </div>
+                )}
+
+                {/* Weather information */}
+                {(hoveredDay.temperature !== undefined || hoveredDay.weatherCondition) && (
+                  <div className="border-t border-border pt-1.5 mt-1.5 space-y-1">
+                    {hoveredDay.temperature !== undefined && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted">Temperature:</span>
+                        <span className="font-semibold text-text flex items-center gap-1">
+                          {hoveredDay.temperature.toFixed(1)}°C
+                          {isPerfectCampingDay(hoveredDay) && (
+                            <Tent className="w-3 h-3 text-green-400" title="Perfect camping!" />
+                          )}
+                        </span>
+                      </div>
+                    )}
+                    {hoveredDay.precipitation !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted">Rain:</span>
+                        <span className="font-semibold text-text">
+                          {hoveredDay.precipitation.toFixed(1)}mm
+                        </span>
+                      </div>
+                    )}
+                    {hoveredDay.weatherCondition && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted">Conditions:</span>
+                        <span className="font-semibold text-text flex items-center gap-1">
+                          {getWeatherIcon(hoveredDay)}
+                          {hoveredDay.weatherCondition}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
 
