@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { authenticateUser, supabaseAdmin } from '../lib/supabase.js'
 import { asyncHandler, sendError } from '../utils/errorHandler.js'
-import { enqueueEnrichment } from '../lib/queue/queues.js'
+import { enqueueEnrichment, getJobStatus, enrichmentQueue } from '../lib/queue/queues.js'
 import { z } from 'zod'
 
 const router = Router()
@@ -72,17 +72,20 @@ router.post(
       }
 
       // Enqueue enrichment job
-      const job = await enqueueEnrichment({
+      const jobId = await enqueueEnrichment({
         propertyId: data_id,
         userId: userId!,
-        features: features,
+        location: {
+          latitude: 0, // TODO: Get from property data
+          longitude: 0,
+        },
       })
 
-      console.log(`✅ Enrichment job enqueued: ${job.id}`)
+      console.log(`✅ Enrichment job enqueued: ${jobId}`)
 
       res.json({
         success: true,
-        job_id: job.id,
+        job_id: jobId,
         message: `Enrichment started for ${rowCount.toLocaleString()} records`,
       })
     } catch (error: any) {
@@ -118,38 +121,29 @@ router.get(
     console.log(`📊 Checking enrichment status for job: ${jobId}`)
 
     try {
-      // Import Queue dynamically to avoid circular dependencies
-      const { Queue } = await import('bullmq')
-      const { redis } = await import('../lib/queue/connection.js')
+      const jobStatus = await getJobStatus('enrichment', jobId)
 
-      const enrichmentQueue = new Queue('enrichment', { connection: redis })
-      const job = await enrichmentQueue.getJob(jobId)
-
-      if (!job) {
+      if (jobStatus.status === 'not_found') {
         console.log(`⚠️  Job not found: ${jobId}`)
         return sendError(res, 'NOT_FOUND', 'Enrichment job not found')
       }
 
-      // Get job state
-      const state = await job.getState()
-      const progress = job.progress as any
-      const data = job.data
-
       // Map BullMQ state to our status format
       let status: 'pending' | 'running' | 'complete' | 'error'
-      if (state === 'completed') {
+      if (jobStatus.status === 'completed') {
         status = 'complete'
-      } else if (state === 'failed') {
+      } else if (jobStatus.status === 'failed') {
         status = 'error'
-      } else if (state === 'active') {
+      } else if (jobStatus.status === 'active') {
         status = 'running'
       } else {
         status = 'pending'
       }
 
       // Extract progress info
+      const progress = jobStatus.progress as any
       const progressPercent = typeof progress === 'number' ? progress : 0
-      const currentFeature = progress?.currentFeature || data?.features?.[0] || undefined
+      const currentFeature = progress?.currentFeature || jobStatus.data?.features?.[0] || undefined
       const completedFeatures = progress?.completedFeatures || []
 
       res.json({
@@ -160,7 +154,7 @@ router.get(
           status === 'complete'
             ? 'Enrichment completed successfully'
             : status === 'error'
-              ? `Enrichment failed: ${job.failedReason || 'Unknown error'}`
+              ? `Enrichment failed: ${jobStatus.failedReason || 'Unknown error'}`
               : status === 'running'
                 ? `Processing ${currentFeature}...`
                 : 'Enrichment queued',
@@ -196,11 +190,6 @@ router.post(
     console.log(`🛑 Cancelling enrichment job: ${jobId}`)
 
     try {
-      // Import Queue dynamically
-      const { Queue } = await import('bullmq')
-      const { redis } = await import('../lib/queue/connection.js')
-
-      const enrichmentQueue = new Queue('enrichment', { connection: redis })
       const job = await enrichmentQueue.getJob(jobId)
 
       if (!job) {
