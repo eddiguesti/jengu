@@ -33,6 +33,7 @@ import competitorDataRouter from './routes/competitorData.js'
 import alertsRouter from './routes/alerts.js'
 import neighborhoodIndexRouter from './routes/neighborhoodIndex.js'
 import banditRouter from './routes/bandit.js'
+import enrichmentRouter from './routes/enrichment.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -85,6 +86,7 @@ app.use('/api/competitor-data', competitorDataRouter)
 app.use('/api/alerts', alertsRouter)
 app.use('/api/neighborhood-index', neighborhoodIndexRouter)
 app.use('/api/bandit', banditRouter)
+app.use('/api/enrichment', enrichmentRouter)
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {

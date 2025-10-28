@@ -27,7 +27,8 @@
       "Bash(pnpm run format:*)",
       "Bash(pnpm run test:*)",
       "Bash(python -m pytest:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
