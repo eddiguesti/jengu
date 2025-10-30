@@ -11,7 +11,19 @@ import { enrichmentQueue, competitorQueue, analyticsQueue } from '../queue/queue
 export function setupWebSocketServer(httpServer: HTTPServer): SocketIOServer {
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: process.env.FRONTEND_URL || ['http://localhost:5173', 'http://localhost:5174'],
+      origin: (origin, callback) => {
+        // In development, always allow both common Vite ports
+        // In production, use FRONTEND_URL from env
+        const allowedOrigins = process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL
+          ? [process.env.FRONTEND_URL]
+          : ['http://localhost:5173', 'http://localhost:5174']
+
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true)
+        } else {
+          callback(new Error('Not allowed by CORS'))
+        }
+      },
       credentials: true,
     },
     transports: ['websocket', 'polling'],
