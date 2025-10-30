@@ -31,7 +31,7 @@ export const PricingCalendarDemo: React.FC = () => {
     }
 
     // Only fetch if we have data and haven't fetched for this file yet
-    if (fileData.length > 0 && forecastData.length === 0 && !forecastError) {
+    if (fileData.length > 0 && forecastData.length === 0 && !forecastError && !isLoading) {
       console.log('📊 Fetching demand forecast for', fileData.length, 'rows')
 
       void forecastDemand({ data: fileData, daysAhead: 90 })
@@ -46,7 +46,8 @@ export const PricingCalendarDemo: React.FC = () => {
           setForecastError(error instanceof Error ? error.message : 'Unknown error')
         })
     }
-  }, [firstFileId, fileData, forecastData.length, forecastError])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstFileId, fileData.length, forecastData.length, forecastError, isLoading])
 
   // Process real data + forecast for calendar
   const calendarData = useMemo(() => {
