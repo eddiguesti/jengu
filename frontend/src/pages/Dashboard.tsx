@@ -54,15 +54,16 @@ export const Dashboard = () => {
   const hasData = fileData.length > 0
 
   // Debug logging
-  console.log('📊 Dashboard Data Debug:', {
-    fileCount: uploadedFiles.length,
-    validFileCount: validFiles.length,
-    firstFileId,
-    dataLength: fileData.length,
-    isLoading,
-    hasError: !!error,
-    sampleRow: fileData[0],
-  })
+  console.log('📊 Dashboard Data Debug:')
+  console.log('  - File count:', uploadedFiles.length)
+  console.log('  - Valid files:', validFiles.length)
+  console.log('  - First file ID:', firstFileId)
+  console.log('  - Data rows loaded:', fileData.length)
+  console.log('  - Is loading:', isLoading)
+  console.log('  - Has error:', !!error)
+  if (fileData.length > 0) {
+    console.log('  - Sample row:', fileData[0])
+  }
 
   // Process real data from Supabase for charts and statistics
   const processedData = useMemo(() => {
@@ -247,15 +248,17 @@ export const Dashboard = () => {
       calendarData,
     }
 
-    console.log('📈 Processed Dashboard Data:', {
-      totalRecords: result.totalRecords,
-      avgPrice: result.avgPrice,
-      avgOccupancy: result.avgOccupancy,
-      revenueDataPoints: result.revenueData.length,
-      occupancyDataPoints: result.occupancyByDay.length,
-      priceTimeSeriesPoints: result.priceTimeSeries.length,
-      calendarDataPoints: result.calendarData.length,
-    })
+    console.log('📈 Processed Dashboard Data:')
+    console.log('  - Total records:', result.totalRecords)
+    console.log('  - Avg price:', result.avgPrice)
+    console.log('  - Avg occupancy:', result.avgOccupancy)
+    console.log('  - Revenue data points:', result.revenueData.length)
+    console.log('  - Occupancy data points:', result.occupancyByDay.length)
+    console.log('  - Price time series points:', result.priceTimeSeries.length)
+    console.log('  - Calendar data points:', result.calendarData.length)
+    if (result.revenueData.length > 0) {
+      console.log('  - Sample revenue data:', result.revenueData[0])
+    }
 
     return result
   }, [fileData])

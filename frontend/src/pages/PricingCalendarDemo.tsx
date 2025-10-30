@@ -2,86 +2,55 @@ import React, { useState, useMemo } from 'react'
 import { PriceDemandCalendar } from '../components/pricing/PriceDemandCalendar'
 import { Calendar, TrendingUp, DollarSign, Users } from 'lucide-react'
 import { Card } from '../components/ui/Card'
+import { useUploadedFiles, useFileData } from '../hooks/queries/useFileData'
+import type { DayData } from '../components/pricing/PriceDemandCalendar'
 
 export const PricingCalendarDemo: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
-  // Generate sample data for 3 months
-  const sampleData = useMemo(() => {
-    const data: any[] = []
-    const startDate = new Date()
-    startDate.setDate(1) // Start of current month
+  // Fetch real data from API
+  const { data: uploadedFiles = [] } = useUploadedFiles()
+  const validFiles = uploadedFiles.filter(
+    f => f.status !== 'deleted' && (f.actualRows || f.rows || 0) > 0
+  )
+  const firstFileId = validFiles[0]?.id || ''
+  const { data: fileData = [], isLoading } = useFileData(firstFileId, 10000)
 
-    // Generate data for 90 days (3 months)
-    for (let i = 0; i < 90; i++) {
-      const date = new Date(startDate)
-      date.setDate(date.getDate() + i)
-
-      const dateStr = date.toISOString().split('T')[0]
-      const dayOfWeek = date.getDay()
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-      const isPast = date < new Date()
-
-      // Simulate holiday (Christmas, New Year's, etc.)
-      const month = date.getMonth()
-      const day = date.getDate()
-      const isHoliday =
-        (month === 11 && day === 25) || // Christmas
-        (month === 0 && day === 1) || // New Year
-        (month === 6 && day === 4) || // July 4th
-        (month === 10 && day >= 23 && day <= 24) // Thanksgiving
-
-      let holidayName = ''
-      if (month === 11 && day === 25) holidayName = 'Christmas'
-      if (month === 0 && day === 1) holidayName = "New Year's Day"
-      if (month === 6 && day === 4) holidayName = 'Independence Day'
-      if (month === 10 && day >= 23 && day <= 24) holidayName = 'Thanksgiving'
-
-      // Simulate demand (higher on weekends, holidays, summer)
-      let demand = 0.3 + Math.random() * 0.3 // Base: 30-60%
-
-      if (isWeekend) demand += 0.2 // Weekend boost
-      if (isHoliday) demand += 0.3 // Holiday boost
-      if (month >= 5 && month <= 8) demand += 0.15 // Summer boost
-      if (isPast) demand = Math.max(0.2, demand - 0.3) // Lower for past dates
-
-      demand = Math.min(1, demand) // Cap at 100%
-
-      // Price based on demand (base €100-250)
-      const basePrice = 120
-      const demandMultiplier = 1 + demand * 1.5 // Up to 2.5x for high demand
-      const weekendMultiplier = isWeekend ? 1.2 : 1
-      const holidayMultiplier = isHoliday ? 1.5 : 1
-
-      let price = basePrice * demandMultiplier * weekendMultiplier * holidayMultiplier
-      price += (Math.random() - 0.5) * 20 // Add some randomness
-
-      // Calculate price change (vs yesterday)
-      let priceChange = undefined
-      if (i > 0 && !isPast) {
-        const yesterdayPrice = data[i - 1]?.price || price
-        priceChange = ((price - yesterdayPrice) / yesterdayPrice) * 100
-      }
-
-      // Competitor price (slightly lower on average)
-      const competitorPrice = price * (0.85 + Math.random() * 0.2)
-
-      data.push({
-        date: dateStr,
-        price: Math.round(price),
-        demand,
-        occupancy: demand * (0.8 + Math.random() * 0.2), // Occupancy ~80-100% of demand
-        isWeekend,
-        isHoliday,
-        isPast,
-        holidayName,
-        priceChange,
-        competitorPrice: Math.round(competitorPrice),
-      })
+  // Process real data for calendar
+  const calendarData = useMemo(() => {
+    if (!fileData || fileData.length === 0) {
+      return []
     }
 
-    return data
-  }, [])
+    console.log('📅 Calendar: Processing', fileData.length, 'rows')
+
+    return fileData.map((row: any) => {
+      const date = new Date(row.date)
+      const dateStr = date.toISOString().split('T')[0]
+      const isWeekend = row.isWeekend ?? (date.getDay() === 0 || date.getDay() === 6)
+      const isPast = date < new Date()
+
+      // Calculate demand from occupancy (0-1 scale)
+      let demand = parseFloat(row.occupancy || 0)
+      if (demand > 1) demand = demand / 100 // Convert percentage to decimal
+
+      return {
+        date: dateStr,
+        price: parseFloat(row.price || 0),
+        demand,
+        occupancy: demand,
+        isWeekend,
+        isHoliday: row.isHoliday || false,
+        isPast,
+        holidayName: row.holidayName || undefined,
+        // Weather data from enrichment
+        temperature: row.temperature,
+        precipitation: row.precipitation,
+        weatherCondition: row.weatherCondition,
+        sunshineHours: row.sunshineHours,
+      } as DayData
+    })
+  }, [fileData])
 
   const handleDateClick = (date: string) => {
     setSelectedDate(date)
@@ -95,25 +64,36 @@ export const PricingCalendarDemo: React.FC = () => {
   // Calculate stats for selected date
   const selectedDayData = useMemo(() => {
     if (!selectedDate) return null
-    return sampleData.find(d => d.date === selectedDate)
-  }, [selectedDate, sampleData])
+    return calendarData.find(d => d.date === selectedDate)
+  }, [selectedDate, calendarData])
 
   // Calculate overall stats
   const stats = useMemo(() => {
-    const futureDays = sampleData.filter(d => !d.isPast)
-    const avgPrice = futureDays.reduce((sum, d) => sum + d.price, 0) / futureDays.length
-    const avgDemand = futureDays.reduce((sum, d) => sum + d.demand, 0) / futureDays.length
-    const maxPrice = Math.max(...futureDays.map(d => d.price))
-    const minPrice = Math.min(...futureDays.map(d => d.price))
+    if (calendarData.length === 0) {
+      return {
+        avgPrice: 0,
+        avgDemand: 0,
+        maxPrice: 0,
+        minPrice: 0,
+        totalRevenue: 0,
+      }
+    }
+
+    const futureDays = calendarData.filter(d => !d.isPast)
+    const daysToUse = futureDays.length > 0 ? futureDays : calendarData
+    const avgPrice = daysToUse.reduce((sum, d) => sum + d.price, 0) / daysToUse.length
+    const avgDemand = daysToUse.reduce((sum, d) => sum + d.demand, 0) / daysToUse.length
+    const maxPrice = Math.max(...daysToUse.map(d => d.price))
+    const minPrice = Math.min(...daysToUse.map(d => d.price))
 
     return {
       avgPrice: Math.round(avgPrice),
       avgDemand: Math.round(avgDemand * 100),
       maxPrice,
       minPrice,
-      totalRevenue: Math.round(futureDays.reduce((sum, d) => sum + d.price * d.occupancy, 0)),
+      totalRevenue: Math.round(daysToUse.reduce((sum, d) => sum + d.price * (d.occupancy || 0), 0)),
     }
-  }, [sampleData])
+  }, [calendarData])
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -179,12 +159,22 @@ export const PricingCalendarDemo: React.FC = () => {
 
         {/* Main Calendar */}
         <Card className="p-6">
-          <PriceDemandCalendar
-            data={sampleData}
-            currency="€"
-            onDateClick={handleDateClick}
-            onMonthChange={handleMonthChange}
-          />
+          {isLoading ? (
+            <div className="flex h-96 items-center justify-center">
+              <p className="text-muted">Loading calendar data...</p>
+            </div>
+          ) : calendarData.length === 0 ? (
+            <div className="flex h-96 items-center justify-center">
+              <p className="text-muted">No data available. Please upload pricing data first.</p>
+            </div>
+          ) : (
+            <PriceDemandCalendar
+              data={calendarData}
+              currency="€"
+              onDateClick={handleDateClick}
+              onMonthChange={handleMonthChange}
+            />
+          )}
         </Card>
 
         {/* Selected Date Details */}
