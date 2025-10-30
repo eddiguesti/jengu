@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { PriceDemandCalendar } from '../components/pricing/PriceDemandCalendar'
 import { Calendar, TrendingUp, DollarSign, Users } from 'lucide-react'
 import { Card } from '../components/ui/Card'
@@ -8,8 +8,9 @@ import type { DayData } from '../components/pricing/PriceDemandCalendar'
 
 export const PricingCalendarDemo: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
-  const [forecastData, setForecastData] = useState<any[]>([])
-  const [isForecastLoading, setIsForecastLoading] = useState(false)
+  const [forecastData, setForecastData] = useState<unknown[]>([])
+  const [forecastError, setForecastError] = useState<string | null>(null)
+  const lastFileIdRef = useRef<string>('')
 
   // Fetch real data from API
   const { data: uploadedFiles = [] } = useUploadedFiles()
@@ -19,26 +20,33 @@ export const PricingCalendarDemo: React.FC = () => {
   const firstFileId = validFiles[0]?.id || ''
   const { data: fileData = [], isLoading } = useFileData(firstFileId, 10000)
 
-  // Fetch demand forecast when data is loaded
+  // Fetch demand forecast when data is loaded (only once per file)
   useEffect(() => {
-    if (fileData.length > 0 && !isForecastLoading && forecastData.length === 0) {
+    // Check if file has changed - if so, reset forecast data
+    if (lastFileIdRef.current !== firstFileId) {
+      lastFileIdRef.current = firstFileId
+      setForecastData([])
+      setForecastError(null)
+      return // Exit early to let next render fetch data
+    }
+
+    // Only fetch if we have data and haven't fetched for this file yet
+    if (fileData.length > 0 && forecastData.length === 0 && !forecastError) {
       console.log('📊 Fetching demand forecast for', fileData.length, 'rows')
-      setIsForecastLoading(true)
-      forecastDemand({ data: fileData, daysAhead: 90 })
+
+      void forecastDemand({ data: fileData, daysAhead: 90 })
         .then(response => {
           console.log('📈 Demand forecast received:', response)
-          if (response.forecast) {
+          if (response.forecast && Array.isArray(response.forecast)) {
             setForecastData(response.forecast)
           }
         })
         .catch(error => {
           console.warn('⚠️ Failed to get demand forecast:', error)
-        })
-        .finally(() => {
-          setIsForecastLoading(false)
+          setForecastError(error instanceof Error ? error.message : 'Unknown error')
         })
     }
-  }, [fileData, forecastData.length, isForecastLoading])
+  }, [firstFileId, fileData, forecastData.length, forecastError])
 
   // Process real data + forecast for calendar
   const calendarData = useMemo(() => {
@@ -150,13 +158,13 @@ export const PricingCalendarDemo: React.FC = () => {
   }, [calendarData])
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="bg-background min-h-screen p-6">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
         <div>
           <div className="mb-2 flex items-center gap-3">
-            <Calendar className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold text-text">Price + Demand Calendar</h1>
+            <Calendar className="text-primary h-8 w-8" />
+            <h1 className="text-text text-3xl font-bold">Price + Demand Calendar</h1>
           </div>
           <p className="text-muted">
             Visualize pricing and demand patterns across time. Hover for details, click to select
@@ -169,44 +177,44 @@ export const PricingCalendarDemo: React.FC = () => {
           <Card className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="mb-1 text-xs text-muted">Avg Price (Next 90d)</p>
-                <p className="text-2xl font-bold text-text">€{stats.avgPrice}</p>
+                <p className="text-muted mb-1 text-xs">Avg Price (Next 90d)</p>
+                <p className="text-text text-2xl font-bold">€{stats.avgPrice}</p>
               </div>
-              <DollarSign className="h-5 w-5 text-primary" />
+              <DollarSign className="text-primary h-5 w-5" />
             </div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="mb-1 text-xs text-muted">Avg Demand</p>
-                <p className="text-2xl font-bold text-text">{stats.avgDemand}%</p>
+                <p className="text-muted mb-1 text-xs">Avg Demand</p>
+                <p className="text-text text-2xl font-bold">{stats.avgDemand}%</p>
               </div>
-              <TrendingUp className="h-5 w-5 text-success" />
+              <TrendingUp className="text-success h-5 w-5" />
             </div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="mb-1 text-xs text-muted">Price Range</p>
-                <p className="text-2xl font-bold text-text">
+                <p className="text-muted mb-1 text-xs">Price Range</p>
+                <p className="text-text text-2xl font-bold">
                   €{stats.minPrice}-{stats.maxPrice}
                 </p>
               </div>
-              <TrendingUp className="h-5 w-5 text-primary" />
+              <TrendingUp className="text-primary h-5 w-5" />
             </div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="mb-1 text-xs text-muted">Est. Revenue (90d)</p>
-                <p className="text-2xl font-bold text-text">
+                <p className="text-muted mb-1 text-xs">Est. Revenue (90d)</p>
+                <p className="text-text text-2xl font-bold">
                   €{(stats.totalRevenue / 1000).toFixed(1)}k
                 </p>
               </div>
-              <Users className="h-5 w-5 text-success" />
+              <Users className="text-success h-5 w-5" />
             </div>
           </Card>
         </div>
@@ -234,7 +242,7 @@ export const PricingCalendarDemo: React.FC = () => {
         {/* Selected Date Details */}
         {selectedDayData && (
           <Card className="p-6">
-            <h3 className="mb-4 text-lg font-semibold text-text">
+            <h3 className="text-text mb-4 text-lg font-semibold">
               Selected Date:{' '}
               {new Date(selectedDayData.date).toLocaleDateString('en-US', {
                 weekday: 'long',
@@ -243,22 +251,22 @@ export const PricingCalendarDemo: React.FC = () => {
                 day: 'numeric',
               })}
               {selectedDayData.isHoliday && (
-                <span className="ml-2 text-sm text-success">({selectedDayData.holidayName})</span>
+                <span className="text-success ml-2 text-sm">({selectedDayData.holidayName})</span>
               )}
             </h3>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {/* Pricing */}
               <div>
-                <h4 className="mb-3 text-sm font-medium text-muted">Pricing</h4>
+                <h4 className="text-muted mb-3 text-sm font-medium">Pricing</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted">Your Price:</span>
-                    <span className="font-semibold text-text">€{selectedDayData.price}</span>
+                    <span className="text-text font-semibold">€{selectedDayData.price}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted">Competitor Avg:</span>
-                    <span className="font-semibold text-text">
+                    <span className="text-text font-semibold">
                       €{selectedDayData.competitorPrice}
                     </span>
                   </div>
@@ -280,7 +288,7 @@ export const PricingCalendarDemo: React.FC = () => {
                     </span>
                   </div>
                   {selectedDayData.priceChange !== undefined && (
-                    <div className="flex justify-between border-t border-border pt-2">
+                    <div className="border-border flex justify-between border-t pt-2">
                       <span className="text-muted">vs. Yesterday:</span>
                       <span
                         className={`font-semibold ${
@@ -301,30 +309,30 @@ export const PricingCalendarDemo: React.FC = () => {
 
               {/* Demand */}
               <div>
-                <h4 className="mb-3 text-sm font-medium text-muted">Demand</h4>
+                <h4 className="text-muted mb-3 text-sm font-medium">Demand</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted">Demand Score:</span>
-                    <span className="font-semibold text-text">
+                    <span className="text-text font-semibold">
                       {Math.round(selectedDayData.demand * 100)}%
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted">Expected Occupancy:</span>
-                    <span className="font-semibold text-text">
+                    <span className="text-text font-semibold">
                       {Math.round(selectedDayData.occupancy * 100)}%
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted">Est. Revenue:</span>
-                    <span className="font-semibold text-text">
+                    <span className="text-text font-semibold">
                       €{Math.round(selectedDayData.price * selectedDayData.occupancy)}
                     </span>
                   </div>
 
                   {/* Demand bar */}
                   <div className="pt-2">
-                    <div className="h-2 overflow-hidden rounded-full bg-card">
+                    <div className="bg-card h-2 overflow-hidden rounded-full">
                       <div
                         className="h-full rounded-full transition-all duration-300"
                         style={{
@@ -344,25 +352,25 @@ export const PricingCalendarDemo: React.FC = () => {
 
               {/* Context */}
               <div>
-                <h4 className="mb-3 text-sm font-medium text-muted">Context</h4>
+                <h4 className="text-muted mb-3 text-sm font-medium">Context</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted">Day Type:</span>
-                    <span className="font-semibold text-text">
+                    <span className="text-text font-semibold">
                       {selectedDayData.isWeekend ? 'Weekend' : 'Weekday'}
                     </span>
                   </div>
                   {selectedDayData.isHoliday && (
                     <div className="flex justify-between">
                       <span className="text-muted">Holiday:</span>
-                      <span className="font-semibold text-success">
+                      <span className="text-success font-semibold">
                         {selectedDayData.holidayName}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span className="text-muted">Recommendation:</span>
-                    <span className="font-semibold text-text">
+                    <span className="text-text font-semibold">
                       {selectedDayData.demand > 0.8
                         ? 'Increase price'
                         : selectedDayData.demand > 0.6
@@ -377,9 +385,9 @@ export const PricingCalendarDemo: React.FC = () => {
         )}
 
         {/* Instructions */}
-        <Card className="border-primary border-opacity-20 bg-elevated p-6">
-          <h3 className="mb-2 text-sm font-semibold text-text">How to Use</h3>
-          <ul className="space-y-1 text-sm text-muted">
+        <Card className="border-primary bg-elevated border-opacity-20 p-6">
+          <h3 className="text-text mb-2 text-sm font-semibold">How to Use</h3>
+          <ul className="text-muted space-y-1 text-sm">
             <li>
               • <span className="font-medium">Hover</span> over any date to see detailed pricing
               breakdown
