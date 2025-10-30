@@ -20,10 +20,31 @@ export const PricingCalendarDemo: React.FC = () => {
   const firstFileId = validFiles[0]?.id || ''
   const { data: fileData = [], isLoading } = useFileData(firstFileId, 10000)
 
+  console.log('📅 PricingCalendar Debug:', {
+    uploadedFiles: uploadedFiles.length,
+    validFiles: validFiles.length,
+    firstFileId,
+    fileDataLength: fileData.length,
+    isLoading,
+    forecastDataLength: forecastData.length,
+    forecastError,
+    lastFileId: lastFileIdRef.current,
+  })
+
   // Fetch demand forecast when data is loaded (only once per file)
   useEffect(() => {
+    console.log('📅 useEffect triggered:', {
+      firstFileId,
+      lastFileId: lastFileIdRef.current,
+      fileDataLength: fileData.length,
+      forecastDataLength: forecastData.length,
+      forecastError,
+      isLoading,
+    })
+
     // Check if file has changed - if so, reset forecast data
     if (lastFileIdRef.current !== firstFileId) {
+      console.log('📅 File changed from', lastFileIdRef.current, 'to', firstFileId, '- resetting forecast')
       lastFileIdRef.current = firstFileId
       setForecastData([])
       setForecastError(null)
@@ -37,14 +58,32 @@ export const PricingCalendarDemo: React.FC = () => {
       void forecastDemand({ data: fileData, daysAhead: 90 })
         .then(response => {
           console.log('📈 Demand forecast received:', response)
-          if (response.forecast && Array.isArray(response.forecast)) {
-            setForecastData(response.forecast)
+          console.log('📈 Response keys:', Object.keys(response))
+
+          // The API returns { success: true, data: { forecast: [...] } }
+          const forecastArray = response.data?.forecast || response.forecast
+
+          console.log('📈 Forecast array exists?', !!forecastArray)
+          console.log('📈 Forecast is array?', Array.isArray(forecastArray))
+
+          if (forecastArray && Array.isArray(forecastArray)) {
+            console.log('📈 Setting forecast data, length:', forecastArray.length)
+            setForecastData(forecastArray)
+          } else {
+            console.warn('⚠️ Forecast data not in expected format:', response)
           }
         })
         .catch(error => {
           console.warn('⚠️ Failed to get demand forecast:', error)
           setForecastError(error instanceof Error ? error.message : 'Unknown error')
         })
+    } else {
+      console.log('📅 Not fetching forecast:', {
+        hasData: fileData.length > 0,
+        noForecast: forecastData.length === 0,
+        noError: !forecastError,
+        notLoading: !isLoading,
+      })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstFileId, fileData.length, forecastData.length, forecastError, isLoading])
