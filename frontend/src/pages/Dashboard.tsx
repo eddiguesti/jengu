@@ -53,6 +53,17 @@ export const Dashboard = () => {
 
   const hasData = fileData.length > 0
 
+  // Debug logging
+  console.log('📊 Dashboard Data Debug:', {
+    fileCount: uploadedFiles.length,
+    validFileCount: validFiles.length,
+    firstFileId,
+    dataLength: fileData.length,
+    isLoading,
+    hasError: !!error,
+    sampleRow: fileData[0],
+  })
+
   // Process real data from Supabase for charts and statistics
   const processedData = useMemo(() => {
     if (!fileData || fileData.length === 0) {
@@ -226,7 +237,7 @@ export const Dashboard = () => {
       })
     })
 
-    return {
+    const result = {
       totalRecords,
       avgPrice: Math.round(avgPrice),
       avgOccupancy: Math.round(avgOccupancy),
@@ -235,6 +246,18 @@ export const Dashboard = () => {
       priceTimeSeries,
       calendarData,
     }
+
+    console.log('📈 Processed Dashboard Data:', {
+      totalRecords: result.totalRecords,
+      avgPrice: result.avgPrice,
+      avgOccupancy: result.avgOccupancy,
+      revenueDataPoints: result.revenueData.length,
+      occupancyDataPoints: result.occupancyByDay.length,
+      priceTimeSeriesPoints: result.priceTimeSeries.length,
+      calendarDataPoints: result.calendarData.length,
+    })
+
+    return result
   }, [fileData])
 
   return (
