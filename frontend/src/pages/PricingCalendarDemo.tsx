@@ -1,12 +1,15 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { PriceDemandCalendar } from '../components/pricing/PriceDemandCalendar'
 import { Calendar, TrendingUp, DollarSign, Users } from 'lucide-react'
 import { Card } from '../components/ui/Card'
 import { useUploadedFiles, useFileData } from '../hooks/queries/useFileData'
+import { forecastDemand } from '../lib/api/services/analytics'
 import type { DayData } from '../components/pricing/PriceDemandCalendar'
 
 export const PricingCalendarDemo: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [forecastData, setForecastData] = useState<any[]>([])
+  const [isForecastLoading, setIsForecastLoading] = useState(false)
 
   // Fetch real data from API
   const { data: uploadedFiles = [] } = useUploadedFiles()
@@ -16,15 +19,43 @@ export const PricingCalendarDemo: React.FC = () => {
   const firstFileId = validFiles[0]?.id || ''
   const { data: fileData = [], isLoading } = useFileData(firstFileId, 10000)
 
-  // Process real data for calendar
+  // Fetch demand forecast when data is loaded
+  useEffect(() => {
+    if (fileData.length > 0 && !isForecastLoading && forecastData.length === 0) {
+      console.log('📊 Fetching demand forecast for', fileData.length, 'rows')
+      setIsForecastLoading(true)
+      forecastDemand({ data: fileData, daysAhead: 90 })
+        .then(response => {
+          console.log('📈 Demand forecast received:', response)
+          if (response.forecast) {
+            setForecastData(response.forecast)
+          }
+        })
+        .catch(error => {
+          console.warn('⚠️ Failed to get demand forecast:', error)
+        })
+        .finally(() => {
+          setIsForecastLoading(false)
+        })
+    }
+  }, [fileData, forecastData.length, isForecastLoading])
+
+  // Process real data + forecast for calendar
   const calendarData = useMemo(() => {
     if (!fileData || fileData.length === 0) {
       return []
     }
 
-    console.log('📅 Calendar: Processing', fileData.length, 'rows')
+    console.log('📅 Calendar: Processing', fileData.length, 'historical rows +', forecastData.length, 'forecast rows')
 
-    return fileData.map((row: any) => {
+    // Create a map of forecast data by date for easy lookup
+    const forecastMap = new Map()
+    forecastData.forEach((f: any) => {
+      forecastMap.set(f.date, f)
+    })
+
+    // Process historical data
+    const historical = fileData.map((row: any) => {
       const date = new Date(row.date)
       const dateStr = date.toISOString().split('T')[0]
       const isWeekend = row.isWeekend ?? (date.getDay() === 0 || date.getDay() === 6)
@@ -34,11 +65,15 @@ export const PricingCalendarDemo: React.FC = () => {
       let demand = parseFloat(row.occupancy || 0)
       if (demand > 1) demand = demand / 100 // Convert percentage to decimal
 
+      // Check if there's a forecast for this date (recommended price)
+      const forecast = forecastMap.get(dateStr)
+      const recommendedPrice = forecast?.predicted_price || forecast?.recommendedPrice
+
       return {
         date: dateStr,
-        price: parseFloat(row.price || 0),
-        demand,
-        occupancy: demand,
+        price: recommendedPrice || parseFloat(row.price || 0), // Use recommended price if available
+        demand: forecast?.predicted_demand || demand,
+        occupancy: forecast?.predicted_occupancy || demand,
         isWeekend,
         isHoliday: row.isHoliday || false,
         isPast,
@@ -50,7 +85,26 @@ export const PricingCalendarDemo: React.FC = () => {
         sunshineHours: row.sunshineHours,
       } as DayData
     })
-  }, [fileData])
+
+    // Add pure forecast dates (future dates not in historical data)
+    const historicalDates = new Set(fileData.map((r: any) => new Date(r.date).toISOString().split('T')[0]))
+    const futureForecast = forecastData
+      .filter((f: any) => !historicalDates.has(f.date))
+      .map((f: any) => {
+        const date = new Date(f.date)
+        return {
+          date: f.date,
+          price: f.predicted_price || f.recommendedPrice || 0,
+          demand: f.predicted_demand || 0.5,
+          occupancy: f.predicted_occupancy || f.predicted_demand || 0.5,
+          isWeekend: date.getDay() === 0 || date.getDay() === 6,
+          isHoliday: false,
+          isPast: false,
+        } as DayData
+      })
+
+    return [...historical, ...futureForecast]
+  }, [fileData, forecastData])
 
   const handleDateClick = (date: string) => {
     setSelectedDate(date)
