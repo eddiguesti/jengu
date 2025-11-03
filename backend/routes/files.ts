@@ -757,10 +757,10 @@ router.delete(
 
     console.log(`🗑️ Delete request for file ${fileId} by user ${userId}`)
 
-    // Verify ownership
+    // Verify ownership and get property details
     const { data: property, error: findError } = await supabaseAdmin
       .from('properties')
-      .select('id')
+      .select('id, fileName, filePath')
       .eq('id', fileId)
       .eq('userId', userId)
       .single()
@@ -770,7 +770,7 @@ router.delete(
       return sendError(res, 'NOT_FOUND', 'File not found')
     }
 
-    // Delete associated pricing data first
+    // 1. Delete associated pricing data (includes all enriched data)
     console.log(`🗑️ Deleting pricing_data for property ${fileId}...`)
     const { error: pricingDataError, count: pricingDataCount } = await supabaseAdmin
       .from('pricing_data')
@@ -783,9 +783,41 @@ router.delete(
       throw pricingDataError
     }
 
-    console.log(`✅ Deleted ${pricingDataCount || 0} pricing_data rows`)
+    console.log(`✅ Deleted ${pricingDataCount || 0} pricing_data rows (includes enriched data)`)
 
-    // Delete the property record
+    // 2. Clean up enrichment jobs from BullMQ
+    try {
+      console.log(`🗑️ Cleaning up enrichment jobs for ${fileId}...`)
+      const enrichmentJobs = await enrichmentQueue.getJobs(['active', 'waiting', 'delayed', 'completed', 'failed'])
+      let removedJobs = 0
+      for (const job of enrichmentJobs) {
+        if (job.data.propertyId === fileId) {
+          await job.remove()
+          removedJobs++
+        }
+      }
+      console.log(`✅ Removed ${removedJobs} enrichment jobs`)
+    } catch (error) {
+      console.warn(`⚠️ Failed to clean up enrichment jobs:`, error)
+      // Non-critical, continue
+    }
+
+    // 3. Delete physical CSV file from uploads directory
+    if (property.filePath) {
+      try {
+        console.log(`🗑️ Deleting physical file: ${property.filePath}`)
+        const fs = await import('fs/promises')
+        const path = await import('path')
+        const fullPath = path.resolve(process.cwd(), 'uploads', property.filePath)
+        await fs.unlink(fullPath)
+        console.log(`✅ Deleted physical file: ${property.fileName}`)
+      } catch (error) {
+        console.warn(`⚠️ Failed to delete physical file:`, error)
+        // Non-critical, file may already be deleted
+      }
+    }
+
+    // 4. Delete the property record
     console.log(`🗑️ Deleting property ${fileId}...`)
     const { error: deleteError } = await supabaseAdmin.from('properties').delete().eq('id', fileId)
 
@@ -799,9 +831,10 @@ router.delete(
 
     res.json({
       success: true,
-      message: 'File deleted successfully',
+      message: 'File and all enrichment data deleted successfully',
       deleted: {
         pricingDataRows: pricingDataCount || 0,
+        fileName: property.fileName,
       },
     })
   })

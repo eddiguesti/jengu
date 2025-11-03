@@ -63,21 +63,21 @@ export const Modal = ({
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
               className={clsx(
-                'w-full rounded-2xl border border-border bg-card shadow-elevated',
+                'border-border bg-card shadow-elevated w-full rounded-2xl border',
                 sizes[size]
               )}
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
               {(title || showCloseButton) && (
-                <div className="flex items-center justify-between border-b border-border p-6">
-                  {title && <h2 className="text-xl font-semibold text-text">{title}</h2>}
+                <div className="border-border flex items-center justify-between border-b p-6">
+                  {title && <h2 className="text-text text-xl font-semibold">{title}</h2>}
                   {showCloseButton && (
                     <button
                       onClick={onClose}
-                      className="ml-auto rounded-lg p-2 transition-colors hover:bg-elevated"
+                      className="hover:bg-elevated ml-auto rounded-lg p-2 transition-colors"
                     >
-                      <X className="h-5 w-5 text-muted" />
+                      <X className="text-muted h-5 w-5" />
                     </button>
                   )}
                 </div>
@@ -101,7 +101,7 @@ Modal.Body = ({ children, className }: { children: ReactNode; className?: string
 Modal.Footer = ({ children, className }: { children: ReactNode; className?: string }) => (
   <div
     className={clsx(
-      'mt-6 flex items-center justify-end gap-3 border-t border-border pt-4',
+      'border-border mt-6 flex items-center justify-end gap-3 border-t pt-4',
       className
     )}
   >

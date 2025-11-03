@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -16,8 +16,12 @@ import {
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useUploadedFiles, useFileData } from '../hooks/queries/useFileData'
+import { useQueryClient } from '@tanstack/react-query'
 import { PriceDemandCalendar } from '../components/pricing/PriceDemandCalendar'
 import type { DayData } from '../components/pricing/PriceDemandCalendar'
+import { getAdvancedPricingRecommendations } from '../lib/api/services/advancedPricing'
+import type { PricingRecommendation } from '../lib/api/services/advancedPricing'
+import apiClient from '../lib/api/client'
 import {
   LineChart,
   Line,
@@ -34,6 +38,7 @@ import {
 
 export const Dashboard = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   // Fetch files list and data using React Query
   const { data: uploadedFiles = [] } = useUploadedFiles()
@@ -45,6 +50,87 @@ export const Dashboard = () => {
 
   const firstFileId = validFiles[0]?.id || ''
   const { data: fileData = [], isLoading, error } = useFileData(firstFileId, 10000)
+
+  // ML Pricing Recommendations state
+  const [mlRecommendations, setMlRecommendations] = useState<Record<string, PricingRecommendation>>(
+    {}
+  )
+  const [mlLoading, setMlLoading] = useState(false)
+
+  // Competitor pricing state (median prices by date)
+  const [competitorData, setCompetitorData] = useState<Record<string, number>>({})
+
+  // Fetch ML recommendations when we have a valid file
+  useEffect(() => {
+    console.log('🔍 ML useEffect triggered:', { firstFileId, fileDataLength: fileData.length })
+    if (!firstFileId || fileData.length === 0) {
+      console.log('⏭️  Skipping ML fetch - no file or no data')
+      return
+    }
+
+    console.log('🚀 Fetching ML recommendations for property:', firstFileId)
+    setMlLoading(true)
+    getAdvancedPricingRecommendations({
+      propertyId: firstFileId,
+      days: 30,
+      strategy: 'balanced',
+    })
+      .then(response => {
+        console.log('📊 ML API response:', response)
+        // Convert array to lookup object by date
+        const lookup = response.recommendations.reduce(
+          (acc, rec) => {
+            acc[rec.date] = rec
+            return acc
+          },
+          {} as Record<string, PricingRecommendation>
+        )
+        setMlRecommendations(lookup)
+        console.log('✅ Loaded ML recommendations for', Object.keys(lookup).length, 'days')
+        console.log('📅 ML recommendation dates:', Object.keys(lookup).slice(0, 5))
+        console.log('📊 Sample ML recommendation:', lookup[Object.keys(lookup)[0]])
+      })
+      .catch(error => {
+        console.error('❌ Failed to load ML recommendations:', error)
+      })
+      .finally(() => {
+        setMlLoading(false)
+      })
+  }, [firstFileId, fileData.length])
+
+  // Fetch competitor median prices
+  useEffect(() => {
+    if (!firstFileId || fileData.length === 0) return
+
+    // Get date range from file data
+    const dates = fileData.map((row: any) => row.date).filter(Boolean)
+    if (dates.length === 0) return
+
+    const startDate = new Date(Math.min(...dates.map((d: string) => new Date(d).getTime())))
+    const endDate = new Date(Math.max(...dates.map((d: string) => new Date(d).getTime())))
+
+    // Fetch competitor data for date range
+    apiClient
+      .get(`/competitor-data/${firstFileId}/range`, {
+        params: {
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
+        },
+      })
+      .then(response => {
+        if (response.data.success && response.data.data) {
+          const lookup: Record<string, number> = {}
+          response.data.data.forEach((item: any) => {
+            lookup[item.date] = item.priceP50 // Median price
+          })
+          setCompetitorData(lookup)
+          console.log('✅ Loaded competitor data for', Object.keys(lookup).length, 'days')
+        }
+      })
+      .catch(error => {
+        console.log('ℹ️  No competitor data available:', error.message)
+      })
+  }, [firstFileId, fileData.length])
 
   // Log error for debugging
   if (error) {
@@ -202,7 +288,7 @@ export const Dashboard = () => {
       const avgPriceForDate =
         rows.reduce((sum, r) => sum + parseFloat(r.price || r.rate || 0), 0) / rows.length
 
-      let avgOccupancyForDate =
+      const avgOccupancyForDate =
         rows.reduce((sum, r) => {
           let occ = parseFloat(r.occupancy || r.occupancy_rate || 0)
           if (occ > 1 && occ <= 100) occ = occ / 100
@@ -223,7 +309,10 @@ export const Dashboard = () => {
       const precipitation = firstRow.precipitation ? parseFloat(firstRow.precipitation) : undefined
       const weatherCondition = firstRow.weather_condition || firstRow.weatherCondition
 
-      calendarData.push({
+      // Get ML recommendation for this date
+      const mlRec = mlRecommendations[dateStr]
+
+      const dayData = {
         date: dateStr,
         price: Math.round(avgPriceForDate),
         demand: demand,
@@ -235,7 +324,86 @@ export const Dashboard = () => {
         temperature,
         precipitation,
         weatherCondition,
-      })
+        // Competitor median price
+        competitorPrice: competitorData[dateStr],
+        // ML Pricing Recommendations
+        recommendedPrice: mlRec?.recommendedPrice,
+        predictedOccupancy: mlRec?.predictedOccupancy,
+        revenueImpact: mlRec?.revenueImpact,
+        confidence: mlRec?.confidence,
+        explanation: mlRec?.explanation,
+      }
+
+      // Debug first date with ML recommendations
+      if (mlRec && calendarData.length === 0) {
+        console.log('🔍 First calendar day with ML rec:', {
+          dateStr,
+          mlRec,
+          dayData,
+        })
+      }
+
+      calendarData.push(dayData)
+    })
+
+    // ✅ FIX: Generate future date entries for ML predictions (next 30 days)
+    // This is critical because ML API returns FUTURE dates only (today+1 to today+30)
+    // CSV data contains PAST dates only (historical training data)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Normalize to midnight for accurate comparison
+
+    for (let i = 1; i <= 30; i++) {
+      const futureDate = new Date(today)
+      futureDate.setDate(today.getDate() + i)
+      const dateStr = futureDate.toISOString().split('T')[0]
+
+      // Check if we already have data for this date from CSV
+      if (calendarData.some(d => d.date === dateStr)) {
+        continue // Skip if CSV already has this date
+      }
+
+      // Get ML recommendation for this future date
+      const mlRec = mlRecommendations[dateStr]
+
+      if (mlRec) {
+        const dayOfWeek = futureDate.getDay()
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+
+        // ✅ Use ML prediction as the primary price for future dates
+        const futureDayData = {
+          date: dateStr,
+          price: mlRec.recommendedPrice, // Use ML price as primary price
+          demand: mlRec.predictedOccupancy / 100,
+          occupancy: mlRec.predictedOccupancy / 100,
+          isWeekend,
+          isPast: false,
+          isHoliday: false,
+          // ML Pricing Recommendations (this will show lightning bolt icon)
+          recommendedPrice: mlRec.recommendedPrice,
+          predictedOccupancy: mlRec.predictedOccupancy,
+          revenueImpact: mlRec.revenueImpact,
+          confidence: mlRec.confidence,
+          explanation: mlRec.explanation,
+        }
+
+        // Debug first future date with ML predictions
+        if (i === 1) {
+          console.log('🔮 First FUTURE date with ML prediction:', {
+            dateStr,
+            mlRec,
+            futureDayData,
+          })
+        }
+
+        calendarData.push(futureDayData)
+      }
+    }
+
+    console.log('📊 Calendar data summary:', {
+      totalEntries: calendarData.length,
+      pastDates: calendarData.filter(d => d.isPast).length,
+      futureDates: calendarData.filter(d => !d.isPast).length,
+      withMLRecommendations: calendarData.filter(d => d.recommendedPrice).length,
     })
 
     const result = {
@@ -261,7 +429,7 @@ export const Dashboard = () => {
     }
 
     return result
-  }, [fileData])
+  }, [fileData, mlRecommendations, competitorData])
 
   return (
     <motion.div
@@ -273,24 +441,38 @@ export const Dashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="flex items-center gap-3 text-4xl font-bold text-text">
+          <h1 className="text-text flex items-center gap-3 text-4xl font-bold">
             Dashboard
             {isLoading && (
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
             )}
           </h1>
-          <p className="mt-2 text-muted">
+          <p className="text-muted mt-2">
             {hasData
               ? 'Real-time insights from your uploaded data'
               : 'Get started by uploading your data'}
           </p>
         </div>
-        {hasData && (
-          <Badge variant="success" className="px-4 py-2 text-base">
-            <Activity className="mr-2 h-4 w-4" />
-            {processedData.totalRecords.toLocaleString()} Records
-          </Badge>
-        )}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              queryClient.invalidateQueries()
+              setMlRecommendations({})
+              setCompetitorData({})
+              window.location.reload()
+            }}
+          >
+            🔄 Refresh Data
+          </Button>
+          {hasData && (
+            <Badge variant="success" className="px-4 py-2 text-base">
+              <Activity className="mr-2 h-4 w-4" />
+              {processedData.totalRecords.toLocaleString()} Records
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Price & Demand Calendar - Moved to top */}
@@ -304,12 +486,12 @@ export const Dashboard = () => {
             <Card.Header>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-xl bg-primary/10 p-2">
-                    <Calendar className="h-6 w-6 text-primary" />
+                  <div className="bg-primary/10 rounded-xl p-2">
+                    <Calendar className="text-primary h-6 w-6" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-text">Price & Demand Calendar</h2>
-                    <p className="mt-1 text-sm text-muted">
+                    <h2 className="text-text text-xl font-semibold">Price & Demand Calendar</h2>
+                    <p className="text-muted mt-1 text-sm">
                       Interactive calendar showing pricing and demand patterns from your data
                     </p>
                   </div>
@@ -433,14 +615,14 @@ export const Dashboard = () => {
       {!hasData && !isLoading && (
         <Card variant="elevated" className="py-20 text-center">
           <div className="mx-auto flex max-w-2xl flex-col items-center gap-6">
-            <div className="rounded-full bg-primary/10 p-6">
-              <Database className="h-16 w-16 text-primary" />
+            <div className="bg-primary/10 rounded-full p-6">
+              <Database className="text-primary h-16 w-16" />
             </div>
             <div>
-              <h2 className="mb-3 text-2xl font-bold text-text">
+              <h2 className="text-text mb-3 text-2xl font-bold">
                 Add Data to See Your Complete Dashboard
               </h2>
-              <p className="mb-6 text-lg text-muted">
+              <p className="text-muted mb-6 text-lg">
                 Upload your historical booking data to unlock powerful insights, analytics, and
                 AI-powered pricing recommendations.
               </p>
@@ -456,20 +638,20 @@ export const Dashboard = () => {
             </div>
 
             {/* Preview of what they'll get */}
-            <div className="mt-8 w-full border-t border-border pt-8">
-              <p className="mb-4 text-sm text-muted">Once you upload data, you&apos;ll see:</p>
+            <div className="border-border mt-8 w-full border-t pt-8">
+              <p className="text-muted mb-4 text-sm">Once you upload data, you&apos;ll see:</p>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="rounded-lg border border-border bg-elevated p-4">
-                  <BarChart3 className="mx-auto mb-2 h-6 w-6 text-primary" />
-                  <p className="text-xs font-medium text-text">Revenue Charts</p>
+                <div className="border-border bg-elevated rounded-lg border p-4">
+                  <BarChart3 className="text-primary mx-auto mb-2 h-6 w-6" />
+                  <p className="text-text text-xs font-medium">Revenue Charts</p>
                 </div>
-                <div className="rounded-lg border border-border bg-elevated p-4">
-                  <TrendingUp className="mx-auto mb-2 h-6 w-6 text-success" />
-                  <p className="text-xs font-medium text-text">Occupancy Trends</p>
+                <div className="border-border bg-elevated rounded-lg border p-4">
+                  <TrendingUp className="text-success mx-auto mb-2 h-6 w-6" />
+                  <p className="text-text text-xs font-medium">Occupancy Trends</p>
                 </div>
-                <div className="rounded-lg border border-border bg-elevated p-4">
-                  <Activity className="mx-auto mb-2 h-6 w-6 text-warning" />
-                  <p className="text-xs font-medium text-text">Price Analytics</p>
+                <div className="border-border bg-elevated rounded-lg border p-4">
+                  <Activity className="text-warning mx-auto mb-2 h-6 w-6" />
+                  <p className="text-text text-xs font-medium">Price Analytics</p>
                 </div>
               </div>
             </div>
@@ -489,18 +671,18 @@ export const Dashboard = () => {
               variant="elevated"
               className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg"
             >
-              <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-primary/5 transition-colors group-hover:bg-primary/10" />
+              <div className="bg-primary/5 group-hover:bg-primary/10 absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full transition-colors" />
               <div className="relative">
                 <div className="mb-4 flex items-center justify-between">
-                  <div className="rounded-xl bg-primary/10 p-3">
-                    <BarChart3 className="h-6 w-6 text-primary" />
+                  <div className="bg-primary/10 rounded-xl p-3">
+                    <BarChart3 className="text-primary h-6 w-6" />
                   </div>
                 </div>
-                <p className="mb-1 text-sm text-muted">Total Records</p>
-                <h3 className="text-3xl font-bold text-text">
+                <p className="text-muted mb-1 text-sm">Total Records</p>
+                <h3 className="text-text text-3xl font-bold">
                   {processedData.totalRecords.toLocaleString()}
                 </h3>
-                <div className="mt-3 flex items-center gap-1 text-xs text-muted">
+                <div className="text-muted mt-3 flex items-center gap-1 text-xs">
                   <span>From uploaded data</span>
                 </div>
               </div>
@@ -516,18 +698,18 @@ export const Dashboard = () => {
               variant="elevated"
               className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg"
             >
-              <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-success/5 transition-colors group-hover:bg-success/10" />
+              <div className="bg-success/5 group-hover:bg-success/10 absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full transition-colors" />
               <div className="relative">
                 <div className="mb-4 flex items-center justify-between">
-                  <div className="rounded-xl bg-success/10 p-3">
-                    <DollarSign className="h-6 w-6 text-success" />
+                  <div className="bg-success/10 rounded-xl p-3">
+                    <DollarSign className="text-success h-6 w-6" />
                   </div>
                 </div>
-                <p className="mb-1 text-sm text-muted">Average Price</p>
-                <h3 className="text-3xl font-bold text-text">
+                <p className="text-muted mb-1 text-sm">Average Price</p>
+                <h3 className="text-text text-3xl font-bold">
                   €{processedData.avgPrice.toLocaleString()}
                 </h3>
-                <div className="mt-3 flex items-center gap-1 text-xs text-muted">
+                <div className="text-muted mt-3 flex items-center gap-1 text-xs">
                   <span>Across all records</span>
                 </div>
               </div>
@@ -543,11 +725,11 @@ export const Dashboard = () => {
               variant="elevated"
               className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg"
             >
-              <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-warning/5 transition-colors group-hover:bg-warning/10" />
+              <div className="bg-warning/5 group-hover:bg-warning/10 absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full transition-colors" />
               <div className="relative">
                 <div className="mb-4 flex items-center justify-between">
-                  <div className="rounded-xl bg-warning/10 p-3">
-                    <TrendingUp className="h-6 w-6 text-warning" />
+                  <div className="bg-warning/10 rounded-xl p-3">
+                    <TrendingUp className="text-warning h-6 w-6" />
                   </div>
                   {processedData.avgOccupancy > 75 ? (
                     <Badge variant="success" size="sm">
@@ -565,9 +747,9 @@ export const Dashboard = () => {
                     </Badge>
                   )}
                 </div>
-                <p className="mb-1 text-sm text-muted">Occupancy Rate</p>
-                <h3 className="text-3xl font-bold text-text">{processedData.avgOccupancy}%</h3>
-                <div className="mt-3 flex items-center gap-1 text-xs text-muted">
+                <p className="text-muted mb-1 text-sm">Occupancy Rate</p>
+                <h3 className="text-text text-3xl font-bold">{processedData.avgOccupancy}%</h3>
+                <div className="text-muted mt-3 flex items-center gap-1 text-xs">
                   <span>Average across dataset</span>
                 </div>
               </div>
@@ -583,19 +765,19 @@ export const Dashboard = () => {
               variant="elevated"
               className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg"
             >
-              <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-primary/5 transition-colors group-hover:bg-primary/10" />
+              <div className="bg-primary/5 group-hover:bg-primary/10 absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full transition-colors" />
               <div className="relative">
                 <div className="mb-4 flex items-center justify-between">
-                  <div className="rounded-xl bg-primary/10 p-3">
-                    <Zap className="h-6 w-6 text-primary" />
+                  <div className="bg-primary/10 rounded-xl p-3">
+                    <Zap className="text-primary h-6 w-6" />
                   </div>
                   <Badge variant="primary" size="sm">
                     Ready
                   </Badge>
                 </div>
-                <p className="mb-1 text-sm text-muted">ML Predictions</p>
-                <h3 className="text-2xl font-bold text-primary">Available</h3>
-                <div className="mt-3 flex items-center gap-1 text-xs text-muted">
+                <p className="text-muted mb-1 text-sm">ML Predictions</p>
+                <h3 className="text-primary text-2xl font-bold">Available</h3>
+                <div className="text-muted mt-3 flex items-center gap-1 text-xs">
                   <span>View in Insights</span>
                 </div>
               </div>
@@ -612,8 +794,8 @@ export const Dashboard = () => {
             <Card.Header>
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-text">Revenue Performance</h2>
-                  <p className="mt-1 text-sm text-muted">Monthly revenue (last 6 months)</p>
+                  <h2 className="text-text text-xl font-semibold">Revenue Performance</h2>
+                  <p className="text-muted mt-1 text-sm">Monthly revenue (last 6 months)</p>
                 </div>
               </div>
             </Card.Header>
@@ -654,8 +836,8 @@ export const Dashboard = () => {
             <Card.Header>
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-text">Weekly Occupancy</h2>
-                  <p className="mt-1 text-sm text-muted">Average occupancy by day</p>
+                  <h2 className="text-text text-xl font-semibold">Weekly Occupancy</h2>
+                  <p className="text-muted mt-1 text-sm">Average occupancy by day</p>
                 </div>
               </div>
             </Card.Header>
@@ -687,8 +869,8 @@ export const Dashboard = () => {
           <Card.Header>
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-text">Price Trend</h2>
-                <p className="mt-1 text-sm text-muted">
+                <h2 className="text-text text-xl font-semibold">Price Trend</h2>
+                <p className="text-muted mt-1 text-sm">
                   Last {processedData.priceTimeSeries.length} days
                 </p>
               </div>
@@ -725,22 +907,22 @@ export const Dashboard = () => {
       {/* Quick Actions - Always show */}
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-semibold text-text">Quick Actions</h2>
-          <p className="text-sm text-muted">Manage your pricing intelligence</p>
+          <h2 className="text-text text-2xl font-semibold">Quick Actions</h2>
+          <p className="text-muted text-sm">Manage your pricing intelligence</p>
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Card
             variant="default"
-            className="group cursor-pointer transition-all hover:border-primary hover:shadow-lg"
+            className="hover:border-primary group cursor-pointer transition-all hover:shadow-lg"
             onClick={() => navigate('/data')}
           >
             <div className="flex items-start gap-4">
-              <div className="rounded-xl bg-primary/10 p-3 transition-colors group-hover:bg-primary/20">
-                <BarChart3 className="h-6 w-6 text-primary" />
+              <div className="bg-primary/10 group-hover:bg-primary/20 rounded-xl p-3 transition-colors">
+                <BarChart3 className="text-primary h-6 w-6" />
               </div>
               <div className="flex-1">
-                <h3 className="mb-1 text-lg font-semibold text-text">Upload Data</h3>
-                <p className="mb-4 text-sm text-muted">Import your historical booking data</p>
+                <h3 className="text-text mb-1 text-lg font-semibold">Upload Data</h3>
+                <p className="text-muted mb-4 text-sm">Import your historical booking data</p>
                 <Button variant="secondary" size="sm">
                   Go to Data →
                 </Button>
@@ -750,16 +932,16 @@ export const Dashboard = () => {
 
           <Card
             variant="default"
-            className="group cursor-pointer transition-all hover:border-primary hover:shadow-lg"
+            className="hover:border-primary group cursor-pointer transition-all hover:shadow-lg"
             onClick={() => navigate('/enrichment')}
           >
             <div className="flex items-start gap-4">
-              <div className="rounded-xl bg-success/10 p-3 transition-colors group-hover:bg-success/20">
-                <Activity className="h-6 w-6 text-success" />
+              <div className="bg-success/10 group-hover:bg-success/20 rounded-xl p-3 transition-colors">
+                <Activity className="text-success h-6 w-6" />
               </div>
               <div className="flex-1">
-                <h3 className="mb-1 text-lg font-semibold text-text">Enrich Dataset</h3>
-                <p className="mb-4 text-sm text-muted">Add weather, holidays, and features</p>
+                <h3 className="text-text mb-1 text-lg font-semibold">Enrich Dataset</h3>
+                <p className="text-muted mb-4 text-sm">Add weather, holidays, and features</p>
                 <Button variant="secondary" size="sm">
                   Go to Enrichment →
                 </Button>
@@ -769,16 +951,16 @@ export const Dashboard = () => {
 
           <Card
             variant="default"
-            className="group cursor-pointer transition-all hover:border-primary hover:shadow-lg"
+            className="hover:border-primary group cursor-pointer transition-all hover:shadow-lg"
             onClick={() => navigate('/insights')}
           >
             <div className="flex items-start gap-4">
-              <div className="rounded-xl bg-warning/10 p-3 transition-colors group-hover:bg-warning/20">
-                <TrendingUp className="h-6 w-6 text-warning" />
+              <div className="bg-warning/10 group-hover:bg-warning/20 rounded-xl p-3 transition-colors">
+                <TrendingUp className="text-warning h-6 w-6" />
               </div>
               <div className="flex-1">
-                <h3 className="mb-1 text-lg font-semibold text-text">View Insights</h3>
-                <p className="mb-4 text-sm text-muted">Explore pricing patterns and trends</p>
+                <h3 className="text-text mb-1 text-lg font-semibold">View Insights</h3>
+                <p className="text-muted mb-4 text-sm">Explore pricing patterns and trends</p>
                 <Button variant="primary" size="sm">
                   Go to Insights →
                 </Button>
@@ -792,17 +974,17 @@ export const Dashboard = () => {
       {!hasData && (
         <Card
           variant="elevated"
-          className="border-l-4 border-primary bg-gradient-to-r from-primary/5 to-transparent"
+          className="border-primary from-primary/5 border-l-4 bg-gradient-to-r to-transparent"
         >
           <div className="flex items-start gap-4">
-            <div className="rounded-xl bg-primary/10 p-4">
-              <Zap className="h-8 w-8 text-primary" />
+            <div className="bg-primary/10 rounded-xl p-4">
+              <Zap className="text-primary h-8 w-8" />
             </div>
             <div className="flex-1">
-              <h3 className="mb-2 text-xl font-semibold text-text">
+              <h3 className="text-text mb-2 text-xl font-semibold">
                 Welcome to Jengu Dynamic Pricing
               </h3>
-              <p className="mb-4 text-muted">
+              <p className="text-muted mb-4">
                 Start by uploading your booking data, then enrich it with weather and competitor
                 intelligence. Our ML models will help you optimize pricing for maximum revenue and
                 occupancy.

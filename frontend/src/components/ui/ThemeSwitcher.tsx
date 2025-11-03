@@ -13,7 +13,7 @@ export function ThemeSwitcher({ className = '', showLabel = false }: ThemeSwitch
   return (
     <button
       onClick={toggleTheme}
-      className={`ease-smooth focus-ring group relative flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 shadow-sm transition-all duration-fast hover:border-border-hover hover:bg-surface-hover hover:shadow-md-light dark:hover:shadow-md-dark ${className} `}
+      className={`ease-smooth focus-ring border-border bg-surface duration-fast hover:border-border-hover hover:bg-surface-hover hover:shadow-md-light dark:hover:shadow-md-dark group relative flex items-center gap-2 rounded-lg border px-3 py-2 shadow-sm transition-all ${className} `}
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
@@ -29,7 +29,7 @@ export function ThemeSwitcher({ className = '', showLabel = false }: ThemeSwitch
               transition={{ duration: 0.2, ease: [0.45, 0, 0.15, 1] }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <Moon className="h-5 w-5 text-primary" />
+              <Moon className="text-primary h-5 w-5" />
             </motion.div>
           ) : (
             <motion.div
@@ -40,7 +40,7 @@ export function ThemeSwitcher({ className = '', showLabel = false }: ThemeSwitch
               transition={{ duration: 0.2, ease: [0.45, 0, 0.15, 1] }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <Sun className="h-5 w-5 text-primary" />
+              <Sun className="text-primary h-5 w-5" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -48,13 +48,13 @@ export function ThemeSwitcher({ className = '', showLabel = false }: ThemeSwitch
 
       {/* Optional label */}
       {showLabel && (
-        <span className="text-sm font-medium text-text-secondary group-hover:text-text">
+        <span className="text-text-secondary group-hover:text-text text-sm font-medium">
           {theme === 'dark' ? 'Dark' : 'Light'}
         </span>
       )}
 
       {/* Hover effect - subtle glow */}
-      <div className="pointer-events-none absolute inset-0 rounded-lg bg-primary/5 opacity-0 transition-opacity duration-fast group-hover:opacity-100" />
+      <div className="bg-primary/5 duration-fast pointer-events-none absolute inset-0 rounded-lg opacity-0 transition-opacity group-hover:opacity-100" />
     </button>
   )
 }
@@ -72,7 +72,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       {/* Sliding indicator */}
       <motion.div
         layout
-        className={`flex h-6 w-6 items-center justify-center rounded-full bg-primary shadow-md ${theme === 'dark' ? 'ml-7' : 'ml-1'} `}
+        className={`bg-primary flex h-6 w-6 items-center justify-center rounded-full shadow-md ${theme === 'dark' ? 'ml-7' : 'ml-1'} `}
         transition={{
           type: 'spring',
           stiffness: 500,
@@ -88,7 +88,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
               exit={{ scale: 0.5, opacity: 0 }}
               transition={{ duration: 0.15 }}
             >
-              <Moon className="h-3.5 w-3.5 text-background" />
+              <Moon className="text-background h-3.5 w-3.5" />
             </motion.div>
           ) : (
             <motion.div
@@ -98,7 +98,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
               exit={{ scale: 0.5, opacity: 0 }}
               transition={{ duration: 0.15 }}
             >
-              <Sun className="h-3.5 w-3.5 text-background" />
+              <Sun className="text-background h-3.5 w-3.5" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -113,14 +113,14 @@ export function ThemeSegmentedControl({ className = '' }: { className?: string }
 
   return (
     <div
-      className={`relative flex items-center gap-1 rounded-lg border border-border bg-surface p-1 shadow-sm ${className} `}
+      className={`border-border bg-surface relative flex items-center gap-1 rounded-lg border p-1 shadow-sm ${className} `}
       role="radiogroup"
       aria-label="Theme selection"
     >
       {/* Background indicator */}
       <motion.div
         layout
-        className="absolute h-8 w-[calc(50%-0.25rem)] rounded-md bg-primary/10 shadow-sm"
+        className="bg-primary/10 absolute h-8 w-[calc(50%-0.25rem)] rounded-md shadow-sm"
         initial={false}
         animate={{
           x: theme === 'dark' ? 'calc(100% + 0.25rem)' : 0,
@@ -135,7 +135,7 @@ export function ThemeSegmentedControl({ className = '' }: { className?: string }
       {/* Light button */}
       <button
         onClick={() => setTheme('light')}
-        className={`focus-ring relative z-10 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 transition-colors duration-fast ${
+        className={`focus-ring duration-fast relative z-10 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 transition-colors ${
           theme === 'light' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
         } `}
         role="radio"
@@ -148,7 +148,7 @@ export function ThemeSegmentedControl({ className = '' }: { className?: string }
       {/* Dark button */}
       <button
         onClick={() => setTheme('dark')}
-        className={`focus-ring relative z-10 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 transition-colors duration-fast ${
+        className={`focus-ring duration-fast relative z-10 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 transition-colors ${
           theme === 'dark' ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
         } `}
         role="radio"

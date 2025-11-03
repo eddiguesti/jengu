@@ -280,7 +280,7 @@ export class CampingAndCoScraper {
           if (campsiteMatch) {
             try {
               // Clean up and parse JSON
-              let jsonStr = campsiteMatch[1]
+              const jsonStr = campsiteMatch[1]
                 .replace(/\/\/.*/g, '') // Remove comments
                 .replace(/\n/g, ' ')
                 .trim()

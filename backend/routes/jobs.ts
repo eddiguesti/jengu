@@ -141,7 +141,7 @@ router.get(
 
     // Verify job ownership (check if propertyId belongs to user)
     if (jobStatus.data && typeof jobStatus.data === 'object' && 'propertyId' in jobStatus.data) {
-      const propertyId = jobStatus.data.propertyId as string
+      const propertyId = jobStatus.data.propertyId
 
       const { data: property, error: propertyError } = await supabaseAdmin
         .from('properties')

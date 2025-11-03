@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import * as analyticsService from '@/lib/api/services/analytics'
+import * as advancedPricingService from '@/lib/api/services/advancedPricing'
 
 // Query keys factory
 export const analyticsKeys = {
@@ -9,6 +10,7 @@ export const analyticsKeys = {
   demand: (fileId: string) => [...analyticsKeys.all, 'demand', fileId] as const,
   weather: (fileId: string) => [...analyticsKeys.all, 'weather', fileId] as const,
   ai: (fileId: string) => [...analyticsKeys.all, 'ai', fileId] as const,
+  advanced: (propertyId: string) => [...analyticsKeys.all, 'advanced', propertyId] as const,
 }
 
 /**
@@ -84,5 +86,21 @@ export function useAIInsights(fileId: string, analyticsData: unknown) {
     enabled: !!fileId && !!analyticsData,
     staleTime: 30 * 60 * 1000, // AI insights expensive, cache 30 min
     retry: 1, // AI calls can fail, don't retry too much
+  })
+}
+
+/**
+ * Fetch advanced pricing analytics for a property
+ */
+export function useAdvancedAnalytics(propertyId: string | undefined) {
+  return useQuery({
+    queryKey: propertyId ? analyticsKeys.advanced(propertyId) : [],
+    queryFn: () => {
+      if (!propertyId) throw new Error('Property ID is required')
+      return advancedPricingService.getAdvancedPricingAnalytics(propertyId)
+    },
+    enabled: !!propertyId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   })
 }

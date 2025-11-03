@@ -97,7 +97,11 @@ router.post(
 
 /**
  * Get enrichment job status
- * GET /api/enrichment/status/:jobId
+ * GET /api/enrichment/status/:jobIdOrPropertyId
+ *
+ * Accepts either:
+ * - Full job ID: enrich-{propertyId}-{timestamp}
+ * - Property ID: {uuid} (will find latest job for this property)
  *
  * Response:
  * {
@@ -109,22 +113,72 @@ router.post(
  * }
  */
 router.get(
-  '/status/:jobId',
+  '/status/:jobIdOrPropertyId',
   authenticateUser,
   asyncHandler(async (req, res) => {
-    const { jobId } = req.params
+    const { jobIdOrPropertyId } = req.params
+    const userId = req.userId
 
-    if (!jobId) {
-      return sendError(res, 'VALIDATION', 'Missing jobId parameter')
+    if (!jobIdOrPropertyId) {
+      return sendError(res, 'VALIDATION', 'Missing jobId or propertyId parameter')
     }
 
-    console.log(`📊 Checking enrichment status for job: ${jobId}`)
+    console.log(`📊 Checking enrichment status for: ${jobIdOrPropertyId}`)
 
     try {
-      const jobStatus = await getJobStatus('enrichment', jobId)
+      let jobStatus = await getJobStatus('enrichment', jobIdOrPropertyId)
 
-      if (jobStatus.status === 'not_found') {
-        console.log(`⚠️  Job not found: ${jobId}`)
+      // If not found and looks like a property ID (UUID without prefix), find latest job
+      if (jobStatus.status === 'not_found' && !jobIdOrPropertyId.startsWith('enrich-')) {
+        console.log(`🔍 Not a job ID, searching for latest job for property: ${jobIdOrPropertyId}`)
+
+        // Verify property belongs to user
+        const { data: property, error: propertyError } = await supabaseAdmin
+          .from('properties')
+          .select('id')
+          .eq('id', jobIdOrPropertyId)
+          .eq('userId', userId)
+          .single()
+
+        if (propertyError || !property) {
+          return sendError(res, 'NOT_FOUND', 'Property not found or access denied')
+        }
+
+        // Find latest enrichment job for this property
+        const jobs = await enrichmentQueue.getJobs(['active', 'waiting', 'completed', 'failed', 'delayed'])
+        const propertyJobs = jobs
+          .filter(j => j.data && j.data.propertyId === jobIdOrPropertyId)
+          .sort((a, b) => b.timestamp - a.timestamp)
+
+        if (propertyJobs.length > 0) {
+          const latestJob = propertyJobs[0]
+          console.log(`✅ Found latest job: ${latestJob.id}`)
+          jobStatus = await getJobStatus('enrichment', latestJob.id!)
+        } else {
+          // No jobs found - check if property is already enriched
+          const { data: pricingData } = await supabaseAdmin
+            .from('pricing_data')
+            .select('temperature, is_holiday, day_of_week')
+            .eq('propertyId', jobIdOrPropertyId)
+            .not('temperature', 'is', null)
+            .limit(1)
+            .single()
+
+          if (pricingData) {
+            // Data is already enriched
+            return res.json({
+              status: 'complete',
+              progress: 100,
+              message: 'Data already enriched',
+              completed_features: ['temporal', 'weather', 'holidays'],
+            })
+          }
+
+          console.log(`⚠️  No enrichment jobs found for property: ${jobIdOrPropertyId}`)
+          return sendError(res, 'NOT_FOUND', 'No enrichment jobs found for this property')
+        }
+      } else if (jobStatus.status === 'not_found') {
+        console.log(`⚠️  Job not found: ${jobIdOrPropertyId}`)
         return sendError(res, 'NOT_FOUND', 'Enrichment job not found')
       }
 

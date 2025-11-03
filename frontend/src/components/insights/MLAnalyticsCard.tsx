@@ -33,11 +33,11 @@ export const MLAnalyticsCard: React.FC<MLAnalyticsCardProps> = ({
           <Card.Header>
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="flex items-center gap-2 text-xl font-semibold text-text">
-                  <TrendingUp className="h-5 w-5 text-primary" />
+                <h2 className="text-text flex items-center gap-2 text-xl font-semibold">
+                  <TrendingUp className="text-primary h-5 w-5" />
                   ML-Powered Demand Forecast
                 </h2>
-                <p className="mt-1 text-sm text-muted">
+                <p className="text-muted mt-1 text-sm">
                   {demandForecast.forecast.length} days ahead •{' '}
                   {demandForecast.method.replace(/_/g, ' ')}
                 </p>
@@ -46,14 +46,14 @@ export const MLAnalyticsCard: React.FC<MLAnalyticsCardProps> = ({
                 {demandForecast.accuracy && (
                   <>
                     <div className="text-right">
-                      <p className="text-xs text-muted">Model Accuracy (R²)</p>
-                      <p className="text-lg font-bold text-primary">
+                      <p className="text-muted text-xs">Model Accuracy (R²)</p>
+                      <p className="text-primary text-lg font-bold">
                         {(demandForecast.accuracy.r2 * 100).toFixed(0)}%
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-muted">Error (MAPE)</p>
-                      <p className="text-lg font-bold text-text">
+                      <p className="text-muted text-xs">Error (MAPE)</p>
+                      <p className="text-text text-lg font-bold">
                         {demandForecast.accuracy.mape.toFixed(1)}%
                       </p>
                     </div>
@@ -113,15 +113,15 @@ export const MLAnalyticsCard: React.FC<MLAnalyticsCardProps> = ({
             {/* Confidence Legend */}
             <div className="mt-4 flex items-center justify-center gap-6 text-xs">
               <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-success" />
+                <div className="bg-success h-3 w-3 rounded-full" />
                 <span className="text-muted">High Confidence</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-primary" />
+                <div className="bg-primary h-3 w-3 rounded-full" />
                 <span className="text-muted">Medium Confidence</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-warning" />
+                <div className="bg-warning h-3 w-3 rounded-full" />
                 <span className="text-muted">Low Confidence</span>
               </div>
             </div>
@@ -135,11 +135,11 @@ export const MLAnalyticsCard: React.FC<MLAnalyticsCardProps> = ({
           <Card.Header>
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="flex items-center gap-2 text-xl font-semibold text-text">
-                  <Activity className="h-5 w-5 text-primary" />
+                <h2 className="text-text flex items-center gap-2 text-xl font-semibold">
+                  <Activity className="text-primary h-5 w-5" />
                   Weather Correlation Analysis
                 </h2>
-                <p className="mt-1 text-sm text-muted">
+                <p className="text-muted mt-1 text-sm">
                   Statistical relationships between weather and business metrics
                 </p>
               </div>
@@ -161,8 +161,8 @@ export const MLAnalyticsCard: React.FC<MLAnalyticsCardProps> = ({
           <Card.Body>
             <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-3">
               {/* Temperature ↔ Price */}
-              <div className="rounded-xl border border-border bg-elevated p-6 text-center">
-                <p className="mb-2 text-sm text-muted">Temperature ↔ Price</p>
+              <div className="border-border bg-elevated rounded-xl border p-6 text-center">
+                <p className="text-muted mb-2 text-sm">Temperature ↔ Price</p>
                 <p
                   className={`mb-2 text-4xl font-bold ${
                     Math.abs(weatherAnalysis.correlations.temperaturePrice) > 0.5
@@ -175,7 +175,7 @@ export const MLAnalyticsCard: React.FC<MLAnalyticsCardProps> = ({
                   {weatherAnalysis.correlations.temperaturePrice > 0 ? '+' : ''}
                   {weatherAnalysis.correlations.temperaturePrice.toFixed(2)}
                 </p>
-                <p className="text-xs text-muted">
+                <p className="text-muted text-xs">
                   {Math.abs(weatherAnalysis.correlations.temperaturePrice) > 0.5
                     ? 'Strong'
                     : Math.abs(weatherAnalysis.correlations.temperaturePrice) > 0.3
@@ -186,8 +186,8 @@ export const MLAnalyticsCard: React.FC<MLAnalyticsCardProps> = ({
               </div>
 
               {/* Temperature ↔ Occupancy */}
-              <div className="rounded-xl border border-border bg-elevated p-6 text-center">
-                <p className="mb-2 text-sm text-muted">Temperature ↔ Occupancy</p>
+              <div className="border-border bg-elevated rounded-xl border p-6 text-center">
+                <p className="text-muted mb-2 text-sm">Temperature ↔ Occupancy</p>
                 <p
                   className={`mb-2 text-4xl font-bold ${
                     Math.abs(weatherAnalysis.correlations.temperatureOccupancy) > 0.5
@@ -200,7 +200,7 @@ export const MLAnalyticsCard: React.FC<MLAnalyticsCardProps> = ({
                   {weatherAnalysis.correlations.temperatureOccupancy > 0 ? '+' : ''}
                   {weatherAnalysis.correlations.temperatureOccupancy.toFixed(2)}
                 </p>
-                <p className="text-xs text-muted">
+                <p className="text-muted text-xs">
                   {Math.abs(weatherAnalysis.correlations.temperatureOccupancy) > 0.5
                     ? 'Strong'
                     : Math.abs(weatherAnalysis.correlations.temperatureOccupancy) > 0.3
@@ -211,8 +211,8 @@ export const MLAnalyticsCard: React.FC<MLAnalyticsCardProps> = ({
               </div>
 
               {/* Price ↔ Occupancy */}
-              <div className="rounded-xl border border-border bg-elevated p-6 text-center">
-                <p className="mb-2 text-sm text-muted">Price ↔ Occupancy</p>
+              <div className="border-border bg-elevated rounded-xl border p-6 text-center">
+                <p className="text-muted mb-2 text-sm">Price ↔ Occupancy</p>
                 <p
                   className={`mb-2 text-4xl font-bold ${
                     Math.abs(weatherAnalysis.correlations.priceOccupancy) > 0.5
@@ -225,7 +225,7 @@ export const MLAnalyticsCard: React.FC<MLAnalyticsCardProps> = ({
                   {weatherAnalysis.correlations.priceOccupancy > 0 ? '+' : ''}
                   {weatherAnalysis.correlations.priceOccupancy.toFixed(2)}
                 </p>
-                <p className="text-xs text-muted">
+                <p className="text-muted text-xs">
                   {Math.abs(weatherAnalysis.correlations.priceOccupancy) > 0.5
                     ? 'Strong'
                     : Math.abs(weatherAnalysis.correlations.priceOccupancy) > 0.3
@@ -239,16 +239,16 @@ export const MLAnalyticsCard: React.FC<MLAnalyticsCardProps> = ({
             {/* Weather Stats */}
             {weatherAnalysis.weatherStats && weatherAnalysis.weatherStats.length > 0 && (
               <div>
-                <h3 className="mb-3 text-sm font-semibold text-text">
+                <h3 className="text-text mb-3 text-sm font-semibold">
                   Weather Conditions Breakdown
                 </h3>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                   {weatherAnalysis.weatherStats.map((stat, index) => (
-                    <div key={index} className="rounded-lg border border-border bg-elevated p-4">
-                      <p className="mb-2 text-xs text-muted">{stat.weather}</p>
-                      <p className="text-lg font-bold text-text">€{stat.avgPrice}</p>
-                      <p className="text-xs text-muted">{stat.avgOccupancy}% occupancy</p>
-                      <p className="mt-1 text-xs text-muted">{stat.sampleSize} days</p>
+                    <div key={index} className="border-border bg-elevated rounded-lg border p-4">
+                      <p className="text-muted mb-2 text-xs">{stat.weather}</p>
+                      <p className="text-text text-lg font-bold">€{stat.avgPrice}</p>
+                      <p className="text-muted text-xs">{stat.avgOccupancy}% occupancy</p>
+                      <p className="text-muted mt-1 text-xs">{stat.sampleSize} days</p>
                     </div>
                   ))}
                 </div>

@@ -295,7 +295,7 @@ export class CompetitorGraphService {
       // Filter by exact distance and sort
       const hotelsWithDistance = (data || [])
         .map(hotel => {
-          const location = hotel.location as any
+          const location = hotel.location
           const distance = this.calculateHaversineDistance(
             lat,
             lon,
@@ -444,7 +444,7 @@ export class CompetitorGraphService {
     if (!reviewScore1 && !starRating1) return 0.5
     if (!reviewScore2 && !starRating2) return 0.5
 
-    let similarities: number[] = []
+    const similarities: number[] = []
 
     // Compare review scores (0-10 scale)
     if (reviewScore1 && reviewScore2) {

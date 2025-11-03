@@ -92,7 +92,7 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
       <Card variant="default" className={className}>
         <Card.Body>
           <div className="flex items-center justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+            <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
           </div>
         </Card.Body>
       </Card>
@@ -104,9 +104,9 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
       <Card variant="default" className={className}>
         <Card.Body>
           <div className="py-8 text-center">
-            <Target className="mx-auto mb-4 h-12 w-12 text-muted" />
+            <Target className="text-muted mx-auto mb-4 h-12 w-12" />
             <p className="text-muted">{error || 'No competitive index data available'}</p>
-            <p className="mt-2 text-xs text-muted">
+            <p className="text-muted mt-2 text-xs">
               Build competitor graph to enable competitive analysis
             </p>
           </div>
@@ -190,16 +190,16 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
         <Card.Header>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="flex items-center gap-2 text-xl font-semibold text-text">
-                <Target className="h-5 w-5 text-primary" />
+              <h2 className="text-text flex items-center gap-2 text-xl font-semibold">
+                <Target className="text-primary h-5 w-5" />
                 Neighborhood Competitive Index
               </h2>
-              <p className="mt-1 text-sm text-muted">
+              <p className="text-muted mt-1 text-sm">
                 {latestIndex.competitorsAnalyzed} competitors analyzed • Updated {latestIndex.date}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-4xl font-bold text-primary">
+              <p className="text-primary text-4xl font-bold">
                 {latestIndex.overallIndex.toFixed(1)}
               </p>
               <p className={`text-sm font-medium ${indexRating.color}`}>{indexRating.label}</p>
@@ -210,7 +210,7 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* Radar Chart */}
             <div>
-              <h3 className="mb-4 text-sm font-medium text-text">Competitive Profile</h3>
+              <h3 className="text-text mb-4 text-sm font-medium">Competitive Profile</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <RadarChart data={radarData}>
                   <PolarGrid stroke="#2A2A2A" />
@@ -238,7 +238,7 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
             <div className="space-y-4">
               {/* Market Position */}
               <div>
-                <p className="mb-2 text-xs text-muted">Market Position</p>
+                <p className="text-muted mb-2 text-xs">Market Position</p>
                 <Badge
                   variant="default"
                   className={getMarketPositionColor(latestIndex.marketPosition)}
@@ -251,14 +251,14 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
               <div className="space-y-3">
                 <div>
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="text-xs text-muted">Price Competitiveness</span>
-                    <span className="text-sm font-medium text-text">
+                    <span className="text-muted text-xs">Price Competitiveness</span>
+                    <span className="text-text text-sm font-medium">
                       {latestIndex.priceCompetitivenessScore.toFixed(1)}
                     </span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-gray-800">
                     <div
-                      className="h-2 rounded-full bg-primary"
+                      className="bg-primary h-2 rounded-full"
                       style={{ width: `${latestIndex.priceCompetitivenessScore}%` }}
                     />
                   </div>
@@ -266,8 +266,8 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
 
                 <div>
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="text-xs text-muted">Value Score</span>
-                    <span className="text-sm font-medium text-text">
+                    <span className="text-muted text-xs">Value Score</span>
+                    <span className="text-text text-sm font-medium">
                       {latestIndex.valueScore.toFixed(1)}
                     </span>
                   </div>
@@ -281,8 +281,8 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
 
                 <div>
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="text-xs text-muted">Positioning Score</span>
-                    <span className="text-sm font-medium text-text">
+                    <span className="text-muted text-xs">Positioning Score</span>
+                    <span className="text-text text-sm font-medium">
                       {latestIndex.positioningScore.toFixed(1)}
                     </span>
                   </div>
@@ -298,33 +298,33 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
               {/* Trend Indicators */}
               <div className="grid grid-cols-3 gap-2 pt-2">
                 <div className="text-center">
-                  <div className="mb-1 flex items-center justify-center gap-1 text-xs text-muted">
+                  <div className="text-muted mb-1 flex items-center justify-center gap-1 text-xs">
                     {getTrendIcon(latestIndex.indexChange1d)}
                     <span>1D</span>
                   </div>
-                  <span className="text-sm font-medium text-text">
+                  <span className="text-text text-sm font-medium">
                     {latestIndex.indexChange1d
                       ? `${latestIndex.indexChange1d > 0 ? '+' : ''}${latestIndex.indexChange1d.toFixed(1)}`
                       : '--'}
                   </span>
                 </div>
                 <div className="text-center">
-                  <div className="mb-1 flex items-center justify-center gap-1 text-xs text-muted">
+                  <div className="text-muted mb-1 flex items-center justify-center gap-1 text-xs">
                     {getTrendIcon(latestIndex.indexChange7d)}
                     <span>7D</span>
                   </div>
-                  <span className="text-sm font-medium text-text">
+                  <span className="text-text text-sm font-medium">
                     {latestIndex.indexChange7d
                       ? `${latestIndex.indexChange7d > 0 ? '+' : ''}${latestIndex.indexChange7d.toFixed(1)}`
                       : '--'}
                   </span>
                 </div>
                 <div className="text-center">
-                  <div className="mb-1 flex items-center justify-center gap-1 text-xs text-muted">
+                  <div className="text-muted mb-1 flex items-center justify-center gap-1 text-xs">
                     {getTrendIcon(latestIndex.indexChange30d)}
                     <span>30D</span>
                   </div>
-                  <span className="text-sm font-medium text-text">
+                  <span className="text-text text-sm font-medium">
                     {latestIndex.indexChange30d
                       ? `${latestIndex.indexChange30d > 0 ? '+' : ''}${latestIndex.indexChange30d.toFixed(1)}`
                       : '--'}
@@ -340,7 +340,7 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
       {sparklineData.length > 0 && (
         <Card variant="default">
           <Card.Header>
-            <h3 className="text-lg font-semibold text-text">30-Day Index Trend</h3>
+            <h3 className="text-text text-lg font-semibold">30-Day Index Trend</h3>
           </Card.Header>
           <Card.Body>
             <ResponsiveContainer width="100%" height={200}>
@@ -383,14 +383,14 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
         {latestIndex.competitiveAdvantage.length > 0 && (
           <Card variant="default">
             <Card.Header>
-              <h3 className="text-lg font-semibold text-green-400 text-text">
+              <h3 className="text-text text-lg font-semibold text-green-400">
                 ✓ Competitive Advantages
               </h3>
             </Card.Header>
             <Card.Body>
               <ul className="space-y-2">
                 {latestIndex.competitiveAdvantage.map((advantage, index) => (
-                  <li key={index} className="flex items-center gap-2 text-sm text-text">
+                  <li key={index} className="text-text flex items-center gap-2 text-sm">
                     <div className="h-1.5 w-1.5 rounded-full bg-green-400" />
                     {formatFactor(advantage)}
                   </li>
@@ -404,14 +404,14 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
         {latestIndex.competitiveWeakness.length > 0 && (
           <Card variant="default">
             <Card.Header>
-              <h3 className="text-lg font-semibold text-orange-400 text-text">
+              <h3 className="text-text text-lg font-semibold text-orange-400">
                 ⚠ Areas for Improvement
               </h3>
             </Card.Header>
             <Card.Body>
               <ul className="space-y-2">
                 {latestIndex.competitiveWeakness.map((weakness, index) => (
-                  <li key={index} className="flex items-center gap-2 text-sm text-text">
+                  <li key={index} className="text-text flex items-center gap-2 text-sm">
                     <div className="h-1.5 w-1.5 rounded-full bg-orange-400" />
                     {formatFactor(weakness)}
                   </li>
@@ -426,39 +426,39 @@ export const NeighborhoodIndexCard: React.FC<NeighborhoodIndexCardProps> = ({
       {latestIndex.propertyPrice && latestIndex.neighborhoodMedianPrice && (
         <Card variant="default">
           <Card.Header>
-            <h3 className="text-lg font-semibold text-text">Price Positioning</h3>
+            <h3 className="text-text text-lg font-semibold">Price Positioning</h3>
           </Card.Header>
           <Card.Body>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <div>
-                <p className="mb-1 text-xs text-muted">Your Price</p>
-                <p className="text-2xl font-bold text-primary">
+                <p className="text-muted mb-1 text-xs">Your Price</p>
+                <p className="text-primary text-2xl font-bold">
                   ${latestIndex.propertyPrice.toFixed(0)}
                 </p>
               </div>
               <div>
-                <p className="mb-1 text-xs text-muted">Neighborhood Median</p>
-                <p className="text-2xl font-bold text-text">
+                <p className="text-muted mb-1 text-xs">Neighborhood Median</p>
+                <p className="text-text text-2xl font-bold">
                   ${latestIndex.neighborhoodMedianPrice.toFixed(0)}
                 </p>
               </div>
               {latestIndex.pricePercentile !== undefined && (
                 <div>
-                  <p className="mb-1 text-xs text-muted">Price Percentile</p>
-                  <p className="text-2xl font-bold text-text">
+                  <p className="text-muted mb-1 text-xs">Price Percentile</p>
+                  <p className="text-text text-2xl font-bold">
                     {latestIndex.pricePercentile.toFixed(0)}%
                   </p>
                 </div>
               )}
               {latestIndex.propertyRating && latestIndex.avgCompetitorRating && (
                 <div>
-                  <p className="mb-1 text-xs text-muted">Rating vs Avg</p>
+                  <p className="text-muted mb-1 text-xs">Rating vs Avg</p>
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <p className="text-2xl font-bold text-text">
+                    <p className="text-text text-2xl font-bold">
                       {latestIndex.propertyRating.toFixed(1)}
                     </p>
-                    <span className="text-sm text-muted">
+                    <span className="text-muted text-sm">
                       ({latestIndex.avgCompetitorRating.toFixed(1)})
                     </span>
                   </div>

@@ -5,7 +5,7 @@ import { NavigationFlagToggle } from '@/components/dev/NavigationFlagToggle'
 
 export const Layout = () => {
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="bg-background flex min-h-screen">
       {/* Use SidebarV2 (new navigation) */}
       <SidebarV2 />
 
@@ -17,8 +17,8 @@ export const Layout = () => {
 
       <FloatingAssistant />
 
-      {/* Dev Tools: Navigation Flag Toggle (only in development) */}
-      <NavigationFlagToggle />
+      {/* Dev Tools: Navigation Flag Toggle - Disabled to avoid covering AI Assistant */}
+      {/* <NavigationFlagToggle /> */}
     </div>
   )
 }

@@ -67,9 +67,13 @@ export function useDeleteFile() {
   return useMutation({
     mutationFn: (fileId: string) => filesService.deleteFile(fileId),
     onSuccess: (_, fileId) => {
-      // Remove file from cache
+      // CRITICAL: Remove ALL cached data for this file to prevent stale data
       queryClient.invalidateQueries({ queryKey: fileKeys.lists() })
       queryClient.removeQueries({ queryKey: fileKeys.detail(fileId) })
+      queryClient.removeQueries({ queryKey: fileKeys.data(fileId) })
+
+      // Also invalidate all file-related queries to force fresh fetch
+      queryClient.invalidateQueries({ queryKey: fileKeys.all })
     },
   })
 }

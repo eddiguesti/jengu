@@ -34,6 +34,8 @@ import alertsRouter from './routes/alerts.js'
 import neighborhoodIndexRouter from './routes/neighborhoodIndex.js'
 import banditRouter from './routes/bandit.js'
 import enrichmentRouter from './routes/enrichment.js'
+import advancedPricingRouter from './routes/advancedPricing.js'
+import chatRouter from './routes/chat.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -93,12 +95,14 @@ app.use('/api/competitor', competitorRouter)
 app.use('/api/hotels', competitorRouter) // hotels/search is in competitor router
 app.use('/api/analytics', analyticsRouter)
 app.use('/api/pricing', pricingRouter)
+app.use('/api/pricing', advancedPricingRouter) // Advanced ML pricing engine
 app.use('/api/jobs', jobsRouter)
 app.use('/api/competitor-data', competitorDataRouter)
 app.use('/api/alerts', alertsRouter)
 app.use('/api/neighborhood-index', neighborhoodIndexRouter)
 app.use('/api/bandit', banditRouter)
 app.use('/api/enrichment', enrichmentRouter)
+app.use('/api/chat', chatRouter) // OpenAI chatbot assistant
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {

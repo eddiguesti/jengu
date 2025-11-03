@@ -114,12 +114,12 @@ export const CompetitorMonitor = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="bg-background min-h-screen p-6">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
         <div>
-          <h1 className="mb-2 flex items-center gap-3 text-4xl font-bold text-text">
-            <Tent className="h-10 w-10 text-primary" />
+          <h1 className="text-text mb-2 flex items-center gap-3 text-4xl font-bold">
+            <Tent className="text-primary h-10 w-10" />
             Competitor Discovery
           </h1>
           <p className="text-muted">
@@ -133,10 +133,10 @@ export const CompetitorMonitor = () => {
             <div className="space-y-4">
               {/* Location Input */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-text">📍 Location</label>
+                <label className="text-text mb-2 block text-sm font-medium">📍 Location</label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+                    <MapPin className="text-muted absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" />
                     <Input
                       type="text"
                       placeholder="e.g., Sanary-sur-Mer 83110, Paris 75001..."
@@ -165,7 +165,7 @@ export const CompetitorMonitor = () => {
                     )}
                   </Button>
                 </div>
-                <p className="mt-2 text-xs text-muted">
+                <p className="text-muted mt-2 text-xs">
                   💡 <strong>Include the 5-digit postal code</strong> for best results (e.g.,
                   "Sanary-sur-Mer 83110")
                 </p>
@@ -174,8 +174,8 @@ export const CompetitorMonitor = () => {
               {/* Radius Slider */}
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <label className="text-sm font-medium text-text">📏 Search Radius</label>
-                  <span className="text-sm font-semibold text-primary">{radiusKm} km</span>
+                  <label className="text-text text-sm font-medium">📏 Search Radius</label>
+                  <span className="text-primary text-sm font-semibold">{radiusKm} km</span>
                 </div>
                 <input
                   type="range"
@@ -184,9 +184,9 @@ export const CompetitorMonitor = () => {
                   step="5"
                   value={radiusKm}
                   onChange={e => setRadiusKm(parseInt(e.target.value))}
-                  className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-card accent-primary"
+                  className="bg-card accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg"
                 />
-                <div className="mt-1 flex justify-between text-xs text-muted">
+                <div className="text-muted mt-1 flex justify-between text-xs">
                   <span>5 km</span>
                   <span>50 km</span>
                 </div>
@@ -223,10 +223,10 @@ export const CompetitorMonitor = () => {
             className="flex items-center justify-between"
           >
             <div>
-              <h2 className="text-2xl font-bold text-text">
+              <h2 className="text-text text-2xl font-bold">
                 Found {campsites.length} Competitor{campsites.length !== 1 ? 's' : ''}
               </h2>
-              <p className="text-sm text-muted">
+              <p className="text-muted text-sm">
                 Within {radiusKm}km of {location}
               </p>
             </div>
@@ -242,9 +242,9 @@ export const CompetitorMonitor = () => {
         {/* Loading State */}
         {loading && (
           <Card className="p-12 text-center">
-            <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-primary" />
-            <p className="text-lg font-medium text-text">Discovering campsites...</p>
-            <p className="mt-2 text-sm text-muted">
+            <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
+            <p className="text-text text-lg font-medium">Discovering campsites...</p>
+            <p className="text-muted mt-2 text-sm">
               Searching camping-and-co.com for competitors near {location}
             </p>
           </Card>
@@ -280,8 +280,8 @@ export const CompetitorMonitor = () => {
         {/* Empty State */}
         {hasSearched && !loading && campsites.length === 0 && !error && (
           <Card className="p-12 text-center">
-            <Tent className="mx-auto mb-4 h-16 w-16 text-muted" />
-            <h2 className="mb-2 text-xl font-bold text-text">No Competitors Found</h2>
+            <Tent className="text-muted mx-auto mb-4 h-16 w-16" />
+            <h2 className="text-text mb-2 text-xl font-bold">No Competitors Found</h2>
             <p className="text-muted">
               Try searching in a different location or increasing the search radius
             </p>
@@ -291,12 +291,12 @@ export const CompetitorMonitor = () => {
         {/* Initial State */}
         {!hasSearched && !loading && (
           <Card className="p-12 text-center">
-            <MapPin className="mx-auto mb-4 h-16 w-16 text-primary" />
-            <h2 className="mb-2 text-xl font-bold text-text">Discover Competitor Campsites</h2>
+            <MapPin className="text-primary mx-auto mb-4 h-16 w-16" />
+            <h2 className="text-text mb-2 text-xl font-bold">Discover Competitor Campsites</h2>
             <p className="text-muted">
               Enter a location in France to find nearby competitors from camping-and-co.com
             </p>
-            <p className="mt-4 text-sm text-muted">
+            <p className="text-muted mt-4 text-sm">
               We'll fetch photos, pricing, distances, and more for each campsite
             </p>
           </Card>
@@ -361,8 +361,8 @@ const CampsiteCard: React.FC<CampsiteCardProps> = ({
             }}
           />
         ) : (
-          <div className="flex h-full items-center justify-center bg-elevated">
-            <Tent className="h-16 w-16 text-muted" />
+          <div className="bg-elevated flex h-full items-center justify-center">
+            <Tent className="text-muted h-16 w-16" />
           </div>
         )}
 
@@ -384,8 +384,8 @@ const CampsiteCard: React.FC<CampsiteCardProps> = ({
       <Card.Body className="space-y-3">
         {/* Name */}
         <div>
-          <h3 className="line-clamp-1 text-lg font-bold text-text">{campsite.name}</h3>
-          <p className="mt-1 flex items-center gap-1 text-sm text-muted">
+          <h3 className="text-text line-clamp-1 text-lg font-bold">{campsite.name}</h3>
+          <p className="text-muted mt-1 flex items-center gap-1 text-sm">
             <MapPin className="h-3 w-3" />
             {campsite.town}
             {campsite.region && `, ${campsite.region}`}
@@ -408,9 +408,9 @@ const CampsiteCard: React.FC<CampsiteCardProps> = ({
                 />
               ))}
             </div>
-            <span className="text-sm font-medium text-text">{campsite.rating}/5</span>
+            <span className="text-text text-sm font-medium">{campsite.rating}/5</span>
             {campsite.reviewCount > 0 && (
-              <span className="text-xs text-muted">({campsite.reviewCount} reviews)</span>
+              <span className="text-muted text-xs">({campsite.reviewCount} reviews)</span>
             )}
           </div>
         )}
@@ -418,8 +418,8 @@ const CampsiteCard: React.FC<CampsiteCardProps> = ({
         {/* Price */}
         {campsite.pricePreview && (
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-success">€{campsite.pricePreview.amount}</span>
-            <span className="text-sm text-muted">/ {campsite.pricePreview.period}</span>
+            <span className="text-success text-2xl font-bold">€{campsite.pricePreview.amount}</span>
+            <span className="text-muted text-sm">/ {campsite.pricePreview.period}</span>
           </div>
         )}
 
@@ -427,12 +427,12 @@ const CampsiteCard: React.FC<CampsiteCardProps> = ({
         {campsite.amenities.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {campsite.amenities.slice(0, 3).map((amenity, i) => (
-              <span key={i} className="rounded-full bg-elevated px-2 py-1 text-xs text-muted">
+              <span key={i} className="bg-elevated text-muted rounded-full px-2 py-1 text-xs">
                 {amenity}
               </span>
             ))}
             {campsite.amenities.length > 3 && (
-              <span className="rounded-full bg-elevated px-2 py-1 text-xs text-muted">
+              <span className="bg-elevated text-muted rounded-full px-2 py-1 text-xs">
                 +{campsite.amenities.length - 3} more
               </span>
             )}

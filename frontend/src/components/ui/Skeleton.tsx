@@ -14,7 +14,7 @@ interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
  * Base Skeleton component
  */
 export function Skeleton({ className, ...props }: SkeletonProps) {
-  return <div className={clsx('animate-pulse rounded-md bg-muted/50', className)} {...props} />
+  return <div className={clsx('bg-muted/50 animate-pulse rounded-md', className)} {...props} />
 }
 
 /**
@@ -46,7 +46,7 @@ export function ChartSkeleton({ className }: { className?: string }) {
  */
 export function CardSkeleton({ className }: { className?: string }) {
   return (
-    <div className={clsx('space-y-4 rounded-lg border border-border p-6', className)}>
+    <div className={clsx('border-border space-y-4 rounded-lg border p-6', className)}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <Skeleton className="h-5 w-32" />
@@ -69,7 +69,7 @@ export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; column
   return (
     <div className="space-y-3">
       {/* Table header */}
-      <div className="flex gap-4 border-b border-border pb-3">
+      <div className="border-border flex gap-4 border-b pb-3">
         {Array.from({ length: columns }).map((_, i) => (
           <Skeleton key={`header-${i}`} className="h-4 w-full" />
         ))}

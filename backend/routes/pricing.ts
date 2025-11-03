@@ -7,8 +7,9 @@ import { pricingQuoteSchema, pricingLearnSchema } from '../schemas/pricing.schem
 
 const router = Router()
 
-// Pricing service URL from environment (defaults to localhost for dev)
+// Pricing service configuration
 const PRICING_SERVICE_URL = process.env.PRICING_SERVICE_URL || 'http://localhost:8000'
+const PRICING_SERVICE_ENABLED = process.env.PRICING_SERVICE_ENABLED !== 'false' // Enabled by default
 
 /**
  * Call the Python pricing service /score endpoint
@@ -21,6 +22,11 @@ async function callPricingScore(body: unknown): Promise<{
   reasons?: string[]
   safety?: Record<string, unknown>
 }> {
+  // Check if pricing service is enabled
+  if (!PRICING_SERVICE_ENABLED) {
+    throw new Error('Pricing service is disabled. Set PRICING_SERVICE_ENABLED=true in .env to enable.')
+  }
+
   const res = await fetch(`${PRICING_SERVICE_URL}/score`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -50,6 +56,11 @@ async function callPricingLearn(batch: unknown[]): Promise<{
   processed: number
   message?: string
 }> {
+  // Check if pricing service is enabled
+  if (!PRICING_SERVICE_ENABLED) {
+    throw new Error('Pricing service is disabled. Set PRICING_SERVICE_ENABLED=true in .env to enable.')
+  }
+
   const res = await fetch(`${PRICING_SERVICE_URL}/learn`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -67,6 +78,52 @@ async function callPricingLearn(batch: unknown[]): Promise<{
     message?: string
   }
 }
+
+/**
+ * Check pricing service readiness
+ * GET /api/pricing/check-readiness
+ */
+router.get('/check-readiness', asyncHandler(async (req, res) => {
+  if (!PRICING_SERVICE_ENABLED) {
+    return res.json({
+      ready: false,
+      enabled: false,
+      message: 'Pricing service is disabled in configuration',
+    })
+  }
+
+  try {
+    // Try to ping the pricing service health endpoint
+    const healthRes = await fetch(`${PRICING_SERVICE_URL}/health`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(3000), // 3 second timeout
+    })
+
+    if (healthRes.ok) {
+      return res.json({
+        ready: true,
+        enabled: true,
+        message: 'Pricing service is ready',
+        url: PRICING_SERVICE_URL,
+      })
+    } else {
+      return res.json({
+        ready: false,
+        enabled: true,
+        message: `Pricing service responded with status ${healthRes.status}`,
+        url: PRICING_SERVICE_URL,
+      })
+    }
+  } catch (error: any) {
+    return res.json({
+      ready: false,
+      enabled: true,
+      message: `Cannot reach pricing service: ${error.message}`,
+      url: PRICING_SERVICE_URL,
+      hint: 'Make sure the pricing service is running. See PRICING-SERVICE-SETUP.md for setup instructions.',
+    })
+  }
+}))
 
 /**
  * Get a price quote for a specific stay date and product

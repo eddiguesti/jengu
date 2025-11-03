@@ -51,7 +51,7 @@ export function EnrichmentProgress({
     <>
       {/* Progress Bar */}
       {isInProgress && (
-        <div className={clsx('rounded-lg border border-border bg-white p-4 shadow-sm', className)}>
+        <div className={clsx('border-border rounded-lg border bg-white p-4 shadow-sm', className)}>
           <div className="flex items-center gap-3">
             <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
             <div className="flex-1">

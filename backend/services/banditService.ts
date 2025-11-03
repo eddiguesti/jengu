@@ -302,8 +302,8 @@ export class BanditService {
       let bestArmId = ''
       let bestQValue = -Infinity
       for (const [armId, stats] of Object.entries(armStatistics)) {
-        if ((stats as any).q_value > bestQValue) {
-          bestQValue = (stats as any).q_value
+        if ((stats).q_value > bestQValue) {
+          bestQValue = (stats).q_value
           bestArmId = armId
         }
       }
