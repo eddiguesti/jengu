@@ -1,25 +1,18 @@
 /**
- * Holiday Service with date-holidays (Offline)
- *
- * Replaced Calendarific API with free, offline date-holidays NPM package
- * No API key required, no rate limits, works offline
+ * Holiday Service with Caching
+ * Task3: Fetch and cache holiday data from Calendarific API
  *
  * Features:
  * - Postgres-based holiday cache (holiday_cache table)
- * - Offline holiday calculation using date-holidays
- * - Support for 100+ countries
- * - No API calls, no costs, no rate limits
- *
- * Installation:
- *   pnpm add date-holidays
+ * - Batch fetching by year to minimize API calls
+ * - Configurable via HOLIDAYS_ENABLED feature flag
+ * - Rate limit respect (Calendarific free tier: 1000 req/month)
  */
 
+import axios from 'axios'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-// Import will work after running: pnpm add date-holidays
-// @ts-ignore - Package will be installed
-import Holidays from 'date-holidays'
-
+const CALENDARIFIC_API_KEY = process.env.CALENDARIFIC_API_KEY
 const HOLIDAYS_ENABLED = process.env.HOLIDAYS_ENABLED !== 'false' // Default: enabled
 
 interface Holiday {
@@ -43,16 +36,20 @@ export function isHolidayEnrichmentEnabled(): boolean {
     return false
   }
 
-  // No API key needed anymore!
+  if (!CALENDARIFIC_API_KEY) {
+    console.warn('⚠️  CALENDARIFIC_API_KEY not set - holiday enrichment disabled')
+    return false
+  }
+
   return true
 }
 
 /**
- * Map common country codes to date-holidays format
- * date-holidays uses ISO 3166-1 alpha-2 codes (e.g., 'US', 'GB', 'FR')
+ * Round latitude/longitude to 2 decimals for cache hits
+ * 2 decimal precision ≈ 1.1km accuracy (good enough for weather)
  */
-function normalizeCountryCode(countryCode: string): string {
-  return countryCode.toUpperCase()
+function roundCoordinate(coord: number): number {
+  return Math.round(coord * 100) / 100
 }
 
 /**
@@ -94,30 +91,40 @@ export async function getHolidaysFromCache(
 }
 
 /**
- * Fetch holidays using date-holidays library (offline)
- * No API calls required!
+ * Fetch holidays from Calendarific API for a given year
  */
-function fetchHolidaysOffline(countryCode: string, year: number): Holiday[] {
+async function fetchHolidaysFromAPI(countryCode: string, year: number): Promise<Holiday[]> {
+  if (!CALENDARIFIC_API_KEY) {
+    throw new Error('CALENDARIFIC_API_KEY not configured')
+  }
+
   try {
-    const hd = new Holidays(normalizeCountryCode(countryCode))
+    const response = await axios.get('https://calendarific.com/api/v2/holidays', {
+      params: {
+        api_key: CALENDARIFIC_API_KEY,
+        country: countryCode.toUpperCase(),
+        year: year,
+        type: 'national,local', // Focus on national and local holidays
+      },
+      timeout: 10000,
+    })
 
-    // Get all holidays for the year
-    const holidays = hd.getHolidays(year)
-
-    if (!holidays || holidays.length === 0) {
-      console.warn(`⚠️  No holidays found for ${countryCode}/${year}`)
-      return []
+    if (response.data.meta.code !== 200) {
+      throw new Error(
+        `Calendarific API error: ${response.data.meta.error_detail || 'Unknown error'}`
+      )
     }
 
-    // Convert to our Holiday format
-    return holidays.map((h: any) => ({
-      date: h.date.split(' ')[0], // Extract YYYY-MM-DD from "YYYY-MM-DD HH:MM:SS"
+    const holidays: Holiday[] = response.data.response.holidays.map((h: any) => ({
+      date: h.date.iso.split('T')[0],
       name: h.name,
-      type: h.type || 'public',
+      type: h.type?.[0] || 'National',
     }))
+
+    return holidays
   } catch (error) {
-    console.error(`Failed to fetch holidays for ${countryCode}/${year}:`, (error as Error).message)
-    return []
+    const err = error as Error
+    throw new Error(`Failed to fetch holidays for ${countryCode}/${year}: ${err.message}`)
   }
 }
 
@@ -157,10 +164,8 @@ async function cacheHolidays(
 /**
  * Fetch holidays for a country and date range with caching
  * 1. Check cache first
- * 2. If missing, fetch from date-holidays library (offline)
+ * 2. If missing, fetch from API and cache
  * 3. Return holiday map
- *
- * No API calls, no rate limits, no costs!
  */
 export async function fetchHolidaysWithCache(
   supabase: SupabaseClient,
@@ -169,7 +174,7 @@ export async function fetchHolidaysWithCache(
   endDate: Date
 ): Promise<Record<string, string[]>> {
   if (!isHolidayEnrichmentEnabled()) {
-    console.log('ℹ️  Holiday enrichment disabled (HOLIDAYS_ENABLED=false)')
+    console.log('ℹ️  Holiday enrichment disabled (HOLIDAYS_ENABLED=false or no API key)')
     return {}
   }
 
@@ -189,29 +194,32 @@ export async function fetchHolidaysWithCache(
   const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i)
 
   // Check if we have complete coverage in cache
+  // For simplicity, fetch from API if cache is incomplete (< 50% of date range)
   const dateRange = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-  const cacheComplete = cachedDates > dateRange * 0.1 // More lenient - holidays are sparse
+  const cacheComplete = cachedDates > dateRange * 0.5
 
-  if (cacheComplete && cachedDates > 0) {
+  if (cacheComplete) {
     console.log(`✅ Using cached holidays (${cachedDates} dates)`)
     return cachedHolidays
   }
 
-  console.log(
-    `⚠️  Cache incomplete (${cachedDates}/${dateRange} dates) - generating from date-holidays...`
-  )
+  console.log(`⚠️  Cache incomplete (${cachedDates}/${dateRange} dates) - fetching from API...`)
 
-  // Step 3: Fetch missing years offline
+  // Step 3: Fetch missing years from API
   const allHolidays: Holiday[] = []
 
   for (const year of years) {
-    const yearHolidays = fetchHolidaysOffline(countryCode, year)
-    allHolidays.push(...yearHolidays)
-    console.log(`📅 Generated ${yearHolidays.length} holidays for ${year} (offline)`)
+    try {
+      const yearHolidays = await fetchHolidaysFromAPI(countryCode, year)
+      allHolidays.push(...yearHolidays)
+      console.log(`📅 Fetched ${yearHolidays.length} holidays for ${year}`)
 
-    // Cache immediately
-    if (yearHolidays.length > 0) {
+      // Cache immediately
       await cacheHolidays(supabase, countryCode, yearHolidays)
+    } catch (error) {
+      const err = error as Error
+      console.error(`Failed to fetch holidays for ${year}:`, err.message)
+      // Continue with other years
     }
   }
 
@@ -229,7 +237,7 @@ export async function fetchHolidaysWithCache(
     }
   })
 
-  console.log(`✅ Holidays generated and cached: ${Object.keys(holidayMap).length} holiday dates`)
+  console.log(`✅ Holidays fetched and cached: ${Object.keys(holidayMap).length} holiday dates`)
 
   return holidayMap
 }

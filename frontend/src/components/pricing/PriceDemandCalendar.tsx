@@ -12,6 +12,7 @@ import {
   Snowflake,
   CloudLightning,
   Tent,
+  Zap,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -31,6 +32,12 @@ export interface DayData {
   precipitation?: number
   weatherCondition?: string
   sunshineHours?: number
+  // ML Pricing Recommendations
+  recommendedPrice?: number
+  predictedOccupancy?: number
+  revenueImpact?: number
+  confidence?: 'very_high' | 'high' | 'medium' | 'low'
+  explanation?: string
 }
 
 interface PriceDemandCalendarProps {
@@ -56,43 +63,65 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
   const [hoveredDate, setHoveredDate] = useState<string | null>(null)
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
 
-  // Calculate min/max prices from data if not provided
+  // Calculate min/max prices and average from data if not provided
   const priceRange = useMemo(() => {
     const prices = data.map(d => d.price).filter(p => p > 0)
     return {
       min: minPrice ?? Math.min(...prices),
       max: maxPrice ?? Math.max(...prices),
+      avg: prices.reduce((sum, p) => sum + p, 0) / prices.length,
     }
   }, [data, minPrice, maxPrice])
 
-  // Get demand color based on 0-1 scale (cool blue → warm red)
-  const getDemandColor = (demand: number, isPast: boolean): string => {
-    if (isPast) return 'rgba(156, 163, 175, 0.1)' // gray-400 with low opacity
+  // Get background color based on price deviation from average
+  const getPriceDeviationColor = (price: number, isPast: boolean): string => {
+    if (isPast) return 'rgba(156, 163, 175, 0.15)' // gray-400 with low opacity
+    if (price === 0) return 'rgba(156, 163, 175, 0.1)'
 
-    // Cool to warm gradient
-    if (demand < 0.2) return 'rgba(219, 234, 254, 0.3)' // blue-100
-    if (demand < 0.4) return 'rgba(147, 197, 253, 0.4)' // blue-300
-    if (demand < 0.6) return 'rgba(96, 165, 250, 0.5)' // blue-400
-    if (demand < 0.7) return 'rgba(251, 191, 36, 0.4)' // amber-400
-    if (demand < 0.85) return 'rgba(251, 146, 60, 0.5)' // orange-400
-    return 'rgba(239, 68, 68, 0.6)' // red-500 (hot dates)
+    const avgPrice = priceRange.avg
+    const deviation = (price - avgPrice) / avgPrice
+
+    // Color scale based on price vs average:
+    // Green = cheap (good deal for customers)
+    // Yellow = average
+    // Orange/Red = expensive (premium pricing)
+    if (deviation < -0.2) return 'rgba(16, 185, 129, 0.2)' // green-500 - Very cheap
+    if (deviation < -0.1) return 'rgba(52, 211, 153, 0.15)' // green-400 - Cheap
+    if (deviation < 0.1) return 'rgba(251, 191, 36, 0.15)' // amber-400 - Average
+    if (deviation < 0.2) return 'rgba(251, 146, 60, 0.25)' // orange-400 - Above average
+    if (deviation < 0.3) return 'rgba(239, 68, 68, 0.3)' // red-500 - Expensive
+    return 'rgba(220, 38, 38, 0.4)' // red-600 - Very expensive
   }
 
-  // Get border color for special dates
+  // Get border color for special dates and ML confidence
   const getBorderColor = (day: DayData): string => {
+    // Priority: ML confidence > holiday > weekend
+    if (day.confidence) {
+      switch (day.confidence) {
+        case 'very_high':
+          return '#10B981' // green-500
+        case 'high':
+          return '#3B82F6' // blue-500
+        case 'medium':
+          return '#F59E0B' // amber-500
+        case 'low':
+          return '#6B7280' // gray-500
+      }
+    }
     if (day.isHoliday) return '#10B981' // green-500
     if (day.isWeekend) return '#EBFF57' // primary yellow
     return 'transparent'
   }
 
-  // Get price color relative to range
-  const getPriceColor = (price: number): string => {
-    const range = priceRange.max - priceRange.min
-    const position = (price - priceRange.min) / range
+  // Get price text color based on deviation from average
+  const getPriceTextColor = (price: number): string => {
+    const avgPrice = priceRange.avg
+    const deviation = (price - avgPrice) / avgPrice
 
-    if (position < 0.33) return '#9CA3AF' // Low price (gray)
-    if (position < 0.66) return '#FAFAFA' // Mid price (white)
-    return '#EBFF57' // High price (primary yellow)
+    if (deviation < -0.15) return '#10B981' // green-500 - Cheap
+    if (deviation < 0.15) return '#F3F4F6' // gray-100 - Average
+    if (deviation < 0.25) return '#F59E0B' // amber-500 - Above average
+    return '#EF4444' // red-500 - Expensive
   }
 
   // Format price
@@ -344,15 +373,20 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold text-text">{monthName}</h3>
-          <div className="flex items-center gap-1 text-xs text-muted">
+          <div className="flex items-center gap-2 text-xs text-muted">
             <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded-sm bg-gradient-to-r from-blue-100 to-blue-400" />
-              <span>Low demand</span>
+              <div className="h-3 w-3 rounded-sm border border-green-500/30 bg-green-500/20" />
+              <span>Cheap</span>
             </div>
-            <span className="mx-1">→</span>
+            <span>→</span>
             <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded-sm bg-gradient-to-r from-orange-400 to-red-500" />
-              <span>High demand</span>
+              <div className="h-3 w-3 rounded-sm border border-amber-400/30 bg-amber-400/15" />
+              <span>Average</span>
+            </div>
+            <span>→</span>
+            <div className="flex items-center gap-1">
+              <div className="h-3 w-3 rounded-sm border border-red-500/40 bg-red-500/30" />
+              <span>Expensive</span>
             </div>
           </div>
         </div>
@@ -398,11 +432,11 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
           return (
             <motion.div
               key={day.date}
-              className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg transition-all duration-200 ${isEmpty ? 'cursor-not-allowed opacity-30' : ''} ${isHovered ? 'z-10 scale-105 ring-2 ring-primary ring-opacity-50' : ''} ${isToday ? 'ring-2 ring-blue-400' : ''} `}
+              className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg border transition-all duration-200 ${isEmpty ? 'cursor-not-allowed opacity-30' : ''} ${isHovered ? 'z-10 scale-105 ring-2 ring-primary ring-opacity-50' : ''} ${isToday ? 'ring-2 ring-blue-400' : ''} `}
               style={{
-                backgroundColor: getDemandColor(day.demand, day.isPast || false),
+                backgroundColor: getPriceDeviationColor(day.price, day.isPast || false),
                 borderColor: getBorderColor(day),
-                borderWidth: day.isHoliday || day.isWeekend ? '2px' : '0',
+                borderWidth: day.confidence || day.isHoliday || day.isWeekend ? '2px' : '1px',
               }}
               onMouseEnter={e => handleMouseEnter(day, e)}
               onMouseLeave={handleMouseLeave}
@@ -415,31 +449,34 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
               whileTap={isEmpty ? {} : { scale: 0.98 }}
             >
               {/* Day number */}
-              <div className="absolute left-1 top-1 text-xs font-medium text-muted">
+              <div className="absolute left-1 top-1 text-xs font-semibold text-muted">
                 {new Date(day.date).getDate()}
               </div>
 
-              {/* Holiday indicator */}
-              {day.isHoliday && (
-                <div className="absolute right-1 top-1">
-                  <div className="h-1.5 w-1.5 rounded-full bg-success" />
-                </div>
-              )}
+              {/* Weather icon (top-right for ALL dates, not just future) */}
+              {(() => {
+                const weatherIcon = getWeatherIcon(day)
+                return weatherIcon ? (
+                  <motion.div
+                    className="absolute right-1 top-1"
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{
+                      delay: 0.05,
+                      duration: 0.2,
+                      ease: 'backOut',
+                    }}
+                  >
+                    {weatherIcon}
+                  </motion.div>
+                ) : null
+              })()}
 
-              {/* Weather icon (top-right for future dates) */}
-              {!day.isPast && getWeatherIcon(day) && (
-                <motion.div
-                  className="absolute right-1 top-1"
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{
-                    delay: 0.1,
-                    duration: 0.3,
-                    ease: 'backOut',
-                  }}
-                >
-                  {getWeatherIcon(day)}
-                </motion.div>
+              {/* Holiday indicator (moved to left side, below day number) */}
+              {day.isHoliday && (
+                <div className="absolute left-1 top-6">
+                  <div className="h-1.5 w-1.5 rounded-full bg-success shadow-sm" />
+                </div>
               )}
 
               {/* Perfect camping day indicator (tent icon) */}
@@ -469,31 +506,49 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
                 </motion.div>
               )}
 
-              {/* Price */}
+              {/* Price and occupancy info */}
               {!isEmpty && (
-                <div
-                  className="absolute inset-0 flex flex-col items-center justify-center"
-                  style={{ color: getPriceColor(day.price) }}
-                >
-                  <div className="text-sm font-bold">{formatPrice(day.price)}</div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+                  {/* Price with ML indicator */}
+                  <div
+                    className="flex items-center gap-0.5 text-sm font-bold drop-shadow-sm"
+                    style={{ color: getPriceTextColor(day.price) }}
+                  >
+                    {formatPrice(day.price)}
+                    {/* ML indicator */}
+                    {day.recommendedPrice && (
+                      <Zap
+                        className={`h-3 w-3 ${
+                          day.confidence === 'very_high'
+                            ? 'text-success'
+                            : day.confidence === 'high'
+                              ? 'text-primary'
+                              : day.confidence === 'medium'
+                                ? 'text-warning'
+                                : 'text-muted'
+                        }`}
+                      />
+                    )}
+                  </div>
 
-                  {/* Price change indicator */}
-                  {day.priceChange !== undefined && Math.abs(day.priceChange) > 2 && (
-                    <div className="mt-0.5 flex items-center gap-0.5 text-xs">
+                  {/* Occupancy percentage (new) */}
+                  {day.occupancy !== undefined && day.occupancy > 0 && (
+                    <div className="rounded bg-background/50 px-1.5 py-0.5 text-[10px] font-semibold text-gray-300 backdrop-blur-sm">
+                      {Math.round(day.occupancy * 100)}%
+                    </div>
+                  )}
+
+                  {/* Price change indicator (only show for significant changes) */}
+                  {day.priceChange !== undefined && Math.abs(day.priceChange) > 5 && (
+                    <div className="flex items-center gap-0.5 text-[10px]">
                       {day.priceChange > 0 ? (
-                        <TrendingUp className="h-3 w-3 text-success" />
-                      ) : day.priceChange < 0 ? (
-                        <TrendingDown className="h-3 w-3 text-error" />
+                        <TrendingUp className="h-2.5 w-2.5 text-success" />
                       ) : (
-                        <Minus className="h-3 w-3 text-muted" />
+                        <TrendingDown className="h-2.5 w-2.5 text-error" />
                       )}
                       <span
-                        className={`font-medium ${
-                          day.priceChange > 0
-                            ? 'text-success'
-                            : day.priceChange < 0
-                              ? 'text-error'
-                              : 'text-muted'
+                        className={`font-semibold ${
+                          day.priceChange > 0 ? 'text-success' : 'text-error'
                         }`}
                       >
                         {Math.abs(day.priceChange).toFixed(0)}%
@@ -618,13 +673,75 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
                   </div>
                 )}
 
-                {/* Competitor price */}
+                {/* Competitor median price */}
                 {hoveredDay.competitorPrice && (
                   <div className="mt-1.5 flex justify-between border-t border-border pt-1.5">
-                    <span className="text-muted">Competitor avg:</span>
+                    <span className="text-muted">Competitor median:</span>
                     <span className="font-semibold text-text">
                       {formatPrice(hoveredDay.competitorPrice)}
                     </span>
+                  </div>
+                )}
+
+                {/* ML Pricing Recommendations */}
+                {hoveredDay.recommendedPrice && (
+                  <div className="mt-2 space-y-1.5 border-t border-border pt-2">
+                    <div className="mb-1 flex items-center gap-1 text-xs font-semibold text-primary">
+                      <Zap className="h-3 w-3" />
+                      ML Recommendation
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted">Suggested Price:</span>
+                      <span className="font-bold text-primary">
+                        {formatPrice(hoveredDay.recommendedPrice)}
+                      </span>
+                    </div>
+                    {hoveredDay.predictedOccupancy !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted">Predicted Occupancy:</span>
+                        <span className="font-semibold text-text">
+                          {Math.round(hoveredDay.predictedOccupancy)}%
+                        </span>
+                      </div>
+                    )}
+                    {hoveredDay.revenueImpact !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-muted">Revenue Impact:</span>
+                        <span
+                          className={`font-bold ${
+                            hoveredDay.revenueImpact > 0
+                              ? 'text-success'
+                              : hoveredDay.revenueImpact < 0
+                                ? 'text-error'
+                                : 'text-muted'
+                          }`}
+                        >
+                          {hoveredDay.revenueImpact > 0 ? '+' : ''}
+                          {hoveredDay.revenueImpact.toFixed(1)}%
+                        </span>
+                      </div>
+                    )}
+                    {hoveredDay.confidence && (
+                      <div className="flex justify-between">
+                        <span className="text-muted">Confidence:</span>
+                        <span
+                          className={`text-xs font-semibold uppercase ${
+                            hoveredDay.confidence === 'very_high'
+                              ? 'text-success'
+                              : hoveredDay.confidence === 'high'
+                                ? 'text-primary'
+                                : hoveredDay.confidence === 'medium'
+                                  ? 'text-warning'
+                                  : 'text-muted'
+                          }`}
+                        >
+                          {hoveredDay.confidence.replace('_', ' ')}
+                        </span>
+                      </div>
+                    )}
+                    {hoveredDay.explanation && (
+                      <div className="mt-1 text-xs italic text-muted">{hoveredDay.explanation}</div>
+                    )}
                   </div>
                 )}
               </div>
@@ -668,7 +785,15 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
           <span>Today</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-muted">Price range:</span>
+          <Zap className="h-4 w-4 text-primary" />
+          <span>ML Recommendation</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-muted">Avg price:</span>
+          <span className="font-semibold text-text">{formatPrice(priceRange.avg)}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-muted">Range:</span>
           <span className="font-semibold text-text">
             {formatPrice(priceRange.min)} - {formatPrice(priceRange.max)}
           </span>

@@ -98,3 +98,22 @@ export const analyticsLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 })
+
+/**
+ * Chat endpoints limiter
+ * Stricter limits to prevent OpenAI API cost abuse
+ */
+export const chatLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 20, // 20 chat messages per minute
+  message: {
+    error: 'CHAT_RATE_LIMIT_EXCEEDED',
+    message: 'Too many chat messages. Please wait a minute.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: req => {
+    // Rate limit by userId if authenticated, otherwise by IP
+    return (req as any).userId || req.ip || 'unknown'
+  },
+})
