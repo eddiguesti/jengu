@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: jengu-backend-dev
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - FRONTEND_URL=http://localhost:5173
+      - REDIS_URL=redis://redis:6379
+    command: npm run dev
+
+  # Optional Redis service for queues
+  redis:
+    image: redis:7-alpine
+    container_name: jengu-redis
+    ports:
+      - "6379:6379"

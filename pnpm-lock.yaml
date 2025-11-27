@@ -35,6 +35,9 @@ importers:
       lint-staged:
         specifier: ^16.2.4
         version: 16.2.4
+      pnpm:
+        specifier: ^10.23.0
+        version: 10.23.0
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -3093,6 +3096,11 @@ packages:
   playwright@1.56.1:
     resolution: {integrity: sha512-aFi5B0WovBHTEvpM3DzXTUaeN6eN0qWnTkKx4NQaH4Wvcmc153PdaY2UBdSYKaGYw+UyWXSVyxDUg5DoPEttjw==}
     engines: {node: '>=18'}
+    hasBin: true
+
+  pnpm@10.23.0:
+    resolution: {integrity: sha512-IcTlaYACrel+Tv6Li0qJqN48haN5GflX56DzDzj7xbvdBZgP/ikXmy+25uaRJC4JjZRdFgF3LK0P71+2QR4qSw==}
+    engines: {node: '>=18.12'}
     hasBin: true
 
   possible-typed-array-names@1.1.0:
@@ -7092,6 +7100,8 @@ snapshots:
       playwright-core: 1.56.1
     optionalDependencies:
       fsevents: 2.3.2
+
+  pnpm@10.23.0: {}
 
   possible-typed-array-names@1.1.0: {}
 

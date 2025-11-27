@@ -17,8 +17,8 @@ interface WeatherImpactCardProps {
 }
 
 export const WeatherImpactCard: React.FC<WeatherImpactCardProps> = ({
-  weatherSensitivity,
-  optimalTemperatureRange,
+  weatherSensitivity = 0,
+  optimalTemperatureRange = [18, 25],
 }) => {
   // Create sample data points for temperature vs occupancy visualization
   const generateSampleData = () => {

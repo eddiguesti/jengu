@@ -18,9 +18,9 @@ interface PriceElasticityCardProps {
 }
 
 export const PriceElasticityCard: React.FC<PriceElasticityCardProps> = ({
-  elasticity,
-  weekendPremium,
-  holidayPremium,
+  elasticity = 0,
+  weekendPremium = 0,
+  holidayPremium = 0,
 }) => {
   // Interpret elasticity
   const getElasticityInterpretation = (value: number) => {

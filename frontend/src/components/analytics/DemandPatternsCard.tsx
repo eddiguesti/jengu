@@ -22,23 +22,27 @@ interface DemandPatternsCardProps {
 }
 
 export const DemandPatternsCard: React.FC<DemandPatternsCardProps> = ({
-  peakDays,
-  lowDays,
+  peakDays = [],
+  lowDays = [],
   demandPatterns,
 }) => {
   // Convert day of week data to chart format
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  const dayOfWeekData = Object.entries(demandPatterns.dayOfWeek || {}).map(([day, occupancy]) => ({
-    name: dayNames[parseInt(day)] || day,
-    occupancy: Math.round(occupancy),
-    isPeak: peakDays.includes(dayNames[parseInt(day)]),
-  }))
+  const dayOfWeekData = demandPatterns?.dayOfWeek
+    ? Object.entries(demandPatterns.dayOfWeek).map(([day, occupancy]) => ({
+        name: dayNames[parseInt(day)] || day,
+        occupancy: Math.round(occupancy),
+        isPeak: peakDays.includes(dayNames[parseInt(day)]),
+      }))
+    : []
 
   // Convert seasonal data to chart format
-  const seasonalData = Object.entries(demandPatterns.seasonal || {}).map(([season, occupancy]) => ({
-    name: season.charAt(0).toUpperCase() + season.slice(1),
-    occupancy: Math.round(occupancy),
-  }))
+  const seasonalData = demandPatterns?.seasonal
+    ? Object.entries(demandPatterns.seasonal).map(([season, occupancy]) => ({
+        name: season.charAt(0).toUpperCase() + season.slice(1),
+        occupancy: Math.round(occupancy),
+      }))
+    : []
 
   return (
     <Card>

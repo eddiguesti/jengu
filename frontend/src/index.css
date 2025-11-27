@@ -10,87 +10,95 @@
 
   :root,
   .light {
-    /* Light Theme - "Daylight" Mode */
-    /* Primary brand color - Blue for trust & action */
-    --color-primary: 0 102 255; /* #0066FF */
-    --color-primary-hover: 0 82 204; /* #0052CC */
-    --color-primary-light: 230 240 255; /* #E6F0FF */
-    --color-primary-dark: 0 61 153; /* #003D99 */
+    /* Light Theme - Premium Apple-inspired */
+    /* Primary brand color - Refined blue with depth */
+    --color-primary: 10 132 255; /* #0A84FF - iOS Blue */
+    --color-primary-hover: 0 113 227; /* #0071E3 - Apple Blue */
+    --color-primary-light: 235 245 255; /* #EBF5FF */
+    --color-primary-dark: 0 64 221; /* #0040DD */
 
-    /* Base surfaces - Warm neutrals with breathing room */
-    --color-background: 250 250 250; /* #FAFAFA - Main canvas */
+    /* Base surfaces - Clean, crisp whites */
+    --color-background: 245 245 247; /* #F5F5F7 - Apple gray bg */
     --color-surface: 255 255 255; /* #FFFFFF - Cards */
-    --color-surface-hover: 245 245 247; /* #F5F5F7 - Hover states */
-    --color-elevated: 255 255 255; /* #FFFFFF - Modals, popovers */
-    --color-elevated-hover: 248 249 250; /* #F8F9FA */
+    --color-surface-hover: 250 250 252; /* #FAFAFC - Subtle hover */
+    --color-elevated: 255 255 255; /* #FFFFFF - Modals */
+    --color-elevated-hover: 248 248 250; /* #F8F8FA */
 
-    /* Text hierarchy - Almost black to soft gray */
-    --color-text: 26 26 26; /* #1A1A1A - Primary text */
-    --color-text-secondary: 74 74 74; /* #4A4A4A - Body text */
-    --color-text-tertiary: 110 110 110; /* #6E6E6E - Captions */
-    --color-text-muted: 158 158 158; /* #9E9E9E - Disabled */
+    /* Text hierarchy - Apple-style contrast */
+    --color-text: 29 29 31; /* #1D1D1F - Apple black */
+    --color-text-secondary: 99 99 102; /* #636366 - Secondary */
+    --color-text-tertiary: 142 142 147; /* #8E8E93 - Tertiary */
+    --color-text-muted: 174 174 178; /* #AEAEB2 - Disabled */
 
-    /* Borders & dividers - Subtle separation */
-    --color-border: 229 231 235; /* #E5E7EB */
-    --color-border-hover: 209 213 219; /* #D1D5DB */
-    --color-divider: 243 244 246; /* #F3F4F6 */
+    /* Borders & dividers - Barely there */
+    --color-border: 229 229 234; /* #E5E5EA */
+    --color-border-hover: 199 199 204; /* #C7C7CC */
+    --color-divider: 242 242 247; /* #F2F2F7 */
 
-    /* Semantic colors - Vibrant but balanced */
-    --color-success: 0 135 90; /* #00875A - Green */
-    --color-success-light: 227 252 239; /* #E3FCEF */
-    --color-warning: 255 139 0; /* #FF8B00 - Orange */
-    --color-warning-light: 255 244 229; /* #FFF4E5 */
-    --color-error: 222 53 11; /* #DE350B - Red */
-    --color-error-light: 255 235 230; /* #FFEBE6 */
-    --color-info: 7 71 166; /* #0747A6 - Deep blue */
-    --color-info-light: 222 235 255; /* #DEEBFF */
+    /* Semantic colors - iOS palette */
+    --color-success: 52 199 89; /* #34C759 - iOS Green */
+    --color-success-light: 235 255 240; /* #EBFFF0 */
+    --color-warning: 255 149 0; /* #FF9500 - iOS Orange */
+    --color-warning-light: 255 248 235; /* #FFF8EB */
+    --color-error: 255 59 48; /* #FF3B30 - iOS Red */
+    --color-error-light: 255 238 236; /* #FFEEEC */
+    --color-info: 90 200 250; /* #5AC8FA - iOS Cyan */
+    --color-info-light: 235 250 255; /* #EBFAFF */
 
-    /* Shadows - Soft, layered depth */
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.04);
-    --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 8px rgba(0, 0, 0, 0.06);
-    --shadow-elevated: 0 8px 16px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
+    /* Premium shadows - Multi-layered depth */
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+    --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+    --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.04);
+
+    /* Premium glow effects */
+    --glow-primary: 0 0 20px rgba(10, 132, 255, 0.3);
+    --glow-success: 0 0 20px rgba(52, 199, 89, 0.3);
   }
 
   .dark {
-    /* Dark Theme - Existing premium dark mode */
-    /* Primary brand color - Neon yellow accent */
-    --color-primary: 235 255 87; /* #EBFF57 */
-    --color-primary-hover: 220 240 70; /* Slightly dimmer */
-    --color-primary-light: 50 50 20; /* Dark background for badges */
-    --color-primary-dark: 235 255 87; /* Same as primary in dark mode */
+    /* Dark Theme - Premium Apple-inspired dark mode */
+    /* Primary brand color - Vivid iOS blue for dark */
+    --color-primary: 10 132 255; /* #0A84FF - iOS Blue */
+    --color-primary-hover: 64 156 255; /* #409CFF - Lighter on hover */
+    --color-primary-light: 20 40 70; /* Dark blue bg for badges */
+    --color-primary-dark: 100 180 255; /* #64B4FF - Bright accent */
 
-    /* Base surfaces - Deep blacks with elevation */
-    --color-background: 10 10 10; /* #0A0A0A - Deep canvas */
-    --color-surface: 26 26 26; /* #1A1A1A - Cards */
-    --color-surface-hover: 36 36 36; /* #242424 - Hover states */
-    --color-elevated: 36 36 36; /* #242424 - Modals */
-    --color-elevated-hover: 46 46 46; /* #2E2E2E */
+    /* Base surfaces - Rich blacks with subtle elevation */
+    --color-background: 0 0 0; /* #000000 - True black */
+    --color-surface: 28 28 30; /* #1C1C1E - iOS dark card */
+    --color-surface-hover: 44 44 46; /* #2C2C2E - Hover */
+    --color-elevated: 44 44 46; /* #2C2C2E - Modals */
+    --color-elevated-hover: 58 58 60; /* #3A3A3C */
 
-    /* Text hierarchy - Bright to dim */
-    --color-text: 250 250 250; /* #FAFAFA - Primary text */
-    --color-text-secondary: 200 200 200; /* #C8C8C8 - Body text */
-    --color-text-tertiary: 156 163 175; /* #9CA3AF - Captions */
-    --color-text-muted: 115 115 115; /* #737373 - Disabled */
+    /* Text hierarchy - Balanced contrast */
+    --color-text: 255 255 255; /* #FFFFFF - Primary */
+    --color-text-secondary: 174 174 178; /* #AEAEB2 - Secondary */
+    --color-text-tertiary: 142 142 147; /* #8E8E93 - Tertiary */
+    --color-text-muted: 99 99 102; /* #636366 - Disabled */
 
-    /* Borders & dividers - Subtle in dark mode */
-    --color-border: 42 42 42; /* #2A2A2A */
-    --color-border-hover: 60 60 60; /* #3C3C3C */
-    --color-divider: 30 30 30; /* #1E1E1E */
+    /* Borders & dividers - Subtle separation */
+    --color-border: 56 56 58; /* #38383A */
+    --color-border-hover: 72 72 74; /* #48484A */
+    --color-divider: 36 36 38; /* #242426 */
 
-    /* Semantic colors - Vibrant for dark backgrounds */
-    --color-success: 16 185 129; /* #10B981 - Brighter green */
-    --color-success-light: 20 50 35; /* Dark green background */
-    --color-warning: 245 158 11; /* #F59E0B - Warm orange */
-    --color-warning-light: 50 40 20; /* Dark orange background */
-    --color-error: 239 68 68; /* #EF4444 - Bright red */
-    --color-error-light: 50 20 20; /* Dark red background */
-    --color-info: 59 130 246; /* #3B82F6 - Bright blue */
-    --color-info-light: 20 30 50; /* Dark blue background */
+    /* Semantic colors - iOS dark variants */
+    --color-success: 48 209 88; /* #30D158 - iOS Green dark */
+    --color-success-light: 20 60 35; /* Dark green bg */
+    --color-warning: 255 159 10; /* #FF9F0A - iOS Orange dark */
+    --color-warning-light: 60 45 20; /* Dark orange bg */
+    --color-error: 255 69 58; /* #FF453A - iOS Red dark */
+    --color-error-light: 60 25 25; /* Dark red bg */
+    --color-info: 100 210 255; /* #64D2FF - iOS Cyan dark */
+    --color-info-light: 20 50 70; /* Dark cyan bg */
 
-    /* Shadows - Deeper for dark mode */
-    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
-    --shadow-elevated: 0 12px 32px rgba(0, 0, 0, 0.5);
+    /* Premium shadows - Subtle glow in dark */
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.05);
+    --shadow-card-hover: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.1);
+    --shadow-elevated: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.1);
+
+    /* Premium glow effects */
+    --glow-primary: 0 0 30px rgba(10, 132, 255, 0.4);
+    --glow-success: 0 0 30px rgba(48, 209, 88, 0.4);
   }
 
   /* ============================================
@@ -166,12 +174,135 @@
 }
 
 @layer utilities {
+  /* ============================================
+     PREMIUM ANIMATIONS
+     Apple-inspired smooth transitions
+     ============================================ */
+
   .animate-fade-in {
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
   .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
+    animation: slideUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .animate-blur-in {
+    animation: blurIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  /* Spring animation for interactive elements */
+  .transition-spring {
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Smooth Apple-style transition */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Premium hover lift with shadow */
+  .hover-lift {
+    @apply transition-all duration-300;
+    transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  /* Interactive scale effect */
+  .press-scale {
+    @apply transition-transform duration-150;
+    transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .press-scale:active {
+    transform: scale(0.97);
+  }
+
+  /* Keyframes */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes blurIn {
+    from {
+      opacity: 0;
+      filter: blur(10px);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  @keyframes glow {
+    from {
+      box-shadow: var(--glow-primary);
+    }
+    to {
+      box-shadow: 0 0 40px rgba(10, 132, 255, 0.5);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
   }
 
   .scrollbar-hide {

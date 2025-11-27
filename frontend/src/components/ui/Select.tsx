@@ -1,4 +1,4 @@
-import { forwardRef, SelectHTMLAttributes } from 'react'
+import { forwardRef, SelectHTMLAttributes, ReactNode } from 'react'
 import clsx from 'clsx'
 import { ChevronDown } from 'lucide-react'
 
@@ -6,11 +6,12 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string
   error?: string
   helperText?: string
-  options: { value: string; label: string }[]
+  options?: { value: string; label: string }[]
+  children?: ReactNode
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, helperText, className, options, ...props }, ref) => {
+  ({ label, error, helperText, className, options, children, ...props }, ref) => {
     return (
       <div className="space-y-2">
         {label && <label className="text-text block text-sm font-medium">{label}</label>}
@@ -31,11 +32,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             )}
             {...props}
           >
-            {options.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
+            {children
+              ? children
+              : options?.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
           </select>
           <ChevronDown className="text-muted pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2" />
         </div>

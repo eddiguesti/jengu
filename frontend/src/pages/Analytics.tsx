@@ -8,13 +8,13 @@ import { PriceElasticityCard } from '@/components/analytics/PriceElasticityCard'
 import { DemandPatternsCard } from '@/components/analytics/DemandPatternsCard'
 import { WeatherImpactCard } from '@/components/analytics/WeatherImpactCard'
 import { useAdvancedAnalytics } from '@/hooks/queries/useAnalytics'
-import { useFiles } from '@/hooks/queries/useFileData'
+import { useUploadedFiles } from '@/hooks/queries/useFileData'
 
 /**
  * Analytics Page - Comprehensive pricing analytics dashboard
  */
 export const Analytics = () => {
-  const { data: files } = useFiles()
+  const { data: files } = useUploadedFiles()
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('')
 
   // Auto-select first file if available
