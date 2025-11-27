@@ -56,36 +56,36 @@ export class ErrorBoundary extends React.Component<Props, State> {
       // Default error UI
       return (
         <div className="bg-background flex min-h-screen items-center justify-center px-4">
-          <div className="border-border bg-card w-full max-w-md space-y-6 rounded-lg border p-8 text-center shadow-lg">
+          <div className="border-border bg-surface w-full max-w-md space-y-6 rounded-2xl border p-8 text-center shadow-lg">
             <div className="flex justify-center">
-              <div className="bg-destructive/10 rounded-full p-4">
-                <AlertTriangle className="text-destructive h-12 w-12" />
+              <div className="bg-error/10 rounded-full p-4">
+                <AlertTriangle className="text-error h-12 w-12" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <h1 className="text-foreground text-2xl font-bold">Something went wrong</h1>
-              <p className="text-muted-foreground">
-                We encountered an unexpected error. Our team has been notified and we're working on
+              <h1 className="text-text text-2xl font-bold">Something went wrong</h1>
+              <p className="text-muted">
+                We encountered an unexpected error. Our team has been notified and we&apos;re working on
                 a fix.
               </p>
             </div>
 
             {this.state.error && import.meta.env.MODE === 'development' && (
-              <div className="bg-muted rounded-lg p-4 text-left">
-                <p className="text-destructive font-mono text-sm">{this.state.error.message}</p>
+              <div className="bg-elevated rounded-xl p-4 text-left">
+                <p className="text-error font-mono text-sm">{this.state.error.message}</p>
               </div>
             )}
 
             <button
               onClick={this.handleReset}
-              className="text-primary-foreground bg-primary hover:bg-primary/90 inline-flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3 font-medium transition-colors"
+              className="bg-primary text-background hover:bg-primary/90 inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold transition-all duration-200"
             >
               <RefreshCw className="h-4 w-4" />
               Reload Page
             </button>
 
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted text-xs">
               If the problem persists, please contact support
             </p>
           </div>
@@ -106,10 +106,10 @@ export function PartialErrorBoundary({ children }: { children: React.ReactNode }
   return (
     <ErrorBoundary
       fallback={
-        <div className="border-destructive/50 bg-destructive/10 rounded-lg border p-6 text-center">
-          <AlertTriangle className="text-destructive mx-auto mb-2 h-8 w-8" />
-          <p className="text-destructive font-medium">Failed to load this section</p>
-          <p className="text-muted-foreground mt-1 text-sm">
+        <div className="border-error/30 bg-error/10 rounded-xl border p-6 text-center">
+          <AlertTriangle className="text-error mx-auto mb-2 h-8 w-8" />
+          <p className="text-error font-medium">Failed to load this section</p>
+          <p className="text-muted mt-1 text-sm">
             Try refreshing the page. If the problem persists, contact support.
           </p>
         </div>

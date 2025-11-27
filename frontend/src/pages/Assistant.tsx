@@ -4,8 +4,8 @@ import { MessageCircle, Send, Sparkles, Loader2, AlertCircle } from 'lucide-reac
 import { Card, Button } from '../components/ui'
 import clsx from 'clsx'
 import { sendMessage, type Message, type AssistantContext } from '../lib/api/services/assistant'
-import { useBusinessStore } from '../store/useBusinessStore'
-import { useDataStore } from '../store/useDataStore'
+import { useBusinessStore } from '../stores/useBusinessStore'
+import { useDataStore } from '../stores/useDataStore'
 
 const SUGGESTED_QUESTIONS = [
   'What are my top pricing recommendations for this week?',

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import * as settingsService from '@/lib/api/services/settings'
-import { useBusinessStore } from '@/store/useBusinessStore'
+import { useBusinessStore } from '@/stores/useBusinessStore'
 
 // Re-export service types
 export type { BusinessSettings } from '@/lib/api/services/settings'

@@ -3,7 +3,7 @@
  * Use this when files keep reappearing after deletion
  */
 
-import { useDataStore } from '../store/useDataStore'
+import { useDataStore } from '../stores/useDataStore'
 import { QueryClient } from '@tanstack/react-query'
 
 /**

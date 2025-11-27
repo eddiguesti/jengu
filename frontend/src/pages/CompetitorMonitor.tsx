@@ -10,11 +10,14 @@ import {
   ExternalLink,
   Heart,
   TrendingUp,
+  Eye,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import apiClient from '../lib/api/client'
+import { toast } from '../stores/useToastStore'
 import clsx from 'clsx'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -97,12 +100,15 @@ export const CompetitorMonitor = () => {
         // Add to monitoring set
         setMonitoringIds(prev => new Set(prev).add(campsite.id))
 
-        // Show success message (you can replace this with a toast notification)
-        alert(`✅ Now monitoring ${campsite.name}!\n\nPricing data will be scraped daily.`)
+        // Show success toast
+        toast.success(
+          `Now monitoring ${campsite.name}`,
+          'Pricing data will be scraped daily.'
+        )
       }
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || 'Failed to start monitoring'
-      alert(`❌ Error: ${errorMsg}`)
+      toast.error('Failed to start monitoring', errorMsg)
     } finally {
       // Remove from loading set
       setMonitoringLoading(prev => {
@@ -117,14 +123,22 @@ export const CompetitorMonitor = () => {
     <div className="bg-background min-h-screen p-6">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-text mb-2 flex items-center gap-3 text-4xl font-bold">
-            <Tent className="text-primary h-10 w-10" />
-            Competitor Discovery
-          </h1>
-          <p className="text-muted">
-            Find and track competitor campsites in France using camping-and-co.com
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-text mb-2 flex items-center gap-3 text-4xl font-bold">
+              <Tent className="text-primary h-10 w-10" />
+              Competitor Discovery
+            </h1>
+            <p className="text-muted">
+              Find and track competitor campsites in France using camping-and-co.com
+            </p>
+          </div>
+          <Link to="/pricing/competitors/monitored">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              View Monitored
+            </Button>
+          </Link>
         </div>
 
         {/* Search Section */}

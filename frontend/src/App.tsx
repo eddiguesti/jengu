@@ -4,6 +4,8 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { Layout } from './components/layout/Layout'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { queryClient } from './lib/query/queryClient'
+import { ToastContainer } from './components/ui/Toast'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import Auth from './pages/Auth'
 
 // Lazy load pages for better performance
@@ -15,6 +17,9 @@ const PricingEngine = lazy(() =>
 const Assistant = lazy(() => import('./pages/Assistant').then(m => ({ default: m.Assistant })))
 const CompetitorMonitor = lazy(() =>
   import('./pages/CompetitorMonitor').then(m => ({ default: m.CompetitorMonitor }))
+)
+const MonitoredCompetitors = lazy(() =>
+  import('./pages/MonitoredCompetitors').then(m => ({ default: m.MonitoredCompetitors }))
 )
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })))
 
@@ -53,11 +58,13 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <BrowserRouter>
+            <ToastContainer />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
               {/* Public routes */}
               <Route path="/login" element={<Auth />} />
               <Route path="/signup" element={<Auth />} />
@@ -85,6 +92,7 @@ function App() {
                 <Route path="pricing">
                   <Route path="optimizer" element={<PricingEngine />} />
                   <Route path="competitors" element={<CompetitorMonitor />} />
+                  <Route path="competitors/monitored" element={<MonitoredCompetitors />} />
                   <Route path="calendar" element={<PricingCalendarDemo />} />
                   <Route index element={<Navigate to="/pricing/optimizer" replace />} />
                 </Route>
@@ -120,11 +128,12 @@ function App() {
                 {/* 404 Fallback */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </AuthProvider>
-    </QueryClientProvider>
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   )
 }
 
