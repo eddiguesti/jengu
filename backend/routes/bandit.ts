@@ -190,7 +190,7 @@ router.get(
       return sendError(res, 'NOT_FOUND', 'Property not found')
     }
 
-    const { data: actions, error } = await supabaseAdmin
+    const { data: actions, error } = await (supabaseAdmin as any)
       .from('bandit_actions')
       .select('*')
       .eq('property_id', propertyId)

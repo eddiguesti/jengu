@@ -14,9 +14,10 @@ export function setupWebSocketServer(httpServer: HTTPServer): SocketIOServer {
       origin: (origin, callback) => {
         // In development, always allow both common Vite ports
         // In production, use FRONTEND_URL from env
-        const allowedOrigins = process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL
-          ? [process.env.FRONTEND_URL]
-          : ['http://localhost:5173', 'http://localhost:5174']
+        const allowedOrigins =
+          process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL
+            ? [process.env.FRONTEND_URL]
+            : ['http://localhost:5173', 'http://localhost:5174']
 
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true)
@@ -170,7 +171,7 @@ function setupWorkerListeners(io: SocketIOServer) {
 
       logger.info('📡 Competitor worker events connected to WebSocket')
     })
-    .catch(err => {
+    .catch(() => {
       logger.warn('Competitor worker not started, skipping WebSocket setup')
     })
 
@@ -201,7 +202,7 @@ function setupWorkerListeners(io: SocketIOServer) {
 
       logger.info('📡 Analytics worker events connected to WebSocket')
     })
-    .catch(err => {
+    .catch(() => {
       logger.warn('Analytics worker not started, skipping WebSocket setup')
     })
 }

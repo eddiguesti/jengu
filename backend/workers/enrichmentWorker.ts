@@ -46,11 +46,11 @@ async function processEnrichmentJob(job: Job<EnrichmentJobData>) {
 
     await job.updateProgress(20)
 
-    // Mark property as enriching
+    // Mark property as processing (actively being enriched)
     await supabaseAdmin
       .from('properties')
       .update({
-        enrichmentstatus: 'pending',
+        enrichmentstatus: 'processing',
       })
       .eq('id', propertyId)
 

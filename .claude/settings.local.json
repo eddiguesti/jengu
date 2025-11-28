@@ -43,7 +43,17 @@
       "Bash(cat:*)",
       "Bash(pnpm run type-check:frontend:*)",
       "Bash(find:*)",
-      "Bash(gh --version:*)"
+      "Bash(gh --version:*)",
+      "Bash(npx tsx:*)",
+      "Bash(pnpm run type-check:backend:*)",
+      "Bash(npx tsc:*)",
+      "Bash(lsof:*)",
+      "Bash(redis-server:*)",
+      "Bash(docker run:*)",
+      "Bash(docker start:*)",
+      "Bash(/opt/homebrew/bin/brew install:*)",
+      "Bash(/opt/homebrew/bin/brew services start:*)",
+      "Bash(/opt/homebrew/bin/redis-cli:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,6 +1,25 @@
 version: '3.8'
 
+# Full development stack with Redis, API server, and workers
+# Usage: docker-compose -f docker-compose.dev.yml up -d
+
 services:
+  # Redis for BullMQ job queues
+  redis:
+    image: redis:7-alpine
+    container_name: jengu-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API server
   backend:
     build: .
     container_name: jengu-backend-dev
@@ -15,11 +34,29 @@ services:
       - PORT=3001
       - FRONTEND_URL=http://localhost:5173
       - REDIS_URL=redis://redis:6379
-    command: npm run dev
+    command: pnpm run dev
+    depends_on:
+      redis:
+        condition: service_healthy
 
-  # Optional Redis service for queues
-  redis:
-    image: redis:7-alpine
-    container_name: jengu-redis
-    ports:
-      - "6379:6379"
+  # Background workers (competitor scraping, enrichment, cron)
+  worker:
+    build: .
+    container_name: jengu-worker-dev
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - COMPETITOR_WORKER_CONCURRENCY=2
+      - ENRICHMENT_WORKER_CONCURRENCY=3
+      - ENABLE_AUTO_ANALYTICS=true
+    command: pnpm run worker
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  redis-data:

@@ -2,10 +2,12 @@
  * Data Enrichment Service
  * Enriches pricing data with weather, holidays, and temporal features
  * Task3: Now with caching support for weather and holidays
+ * Task: Added French school holiday enrichment support
  */
 
 import { fetchWeatherWithCache } from './weatherCacheService.js'
 import { fetchHolidaysWithCache, isHolidayEnrichmentEnabled } from './holidayService.js'
+import { getSchoolHolidayInfo, getSchoolHolidayZoneString } from './schoolHolidayService.js'
 
 /**
  * Enrich property data with weather information (Supabase version)
@@ -364,8 +366,119 @@ export async function enrichWithHolidays(
 }
 
 /**
+ * Enrich property data with French school holiday information
+ * @param {string} propertyId - Property UUID
+ * @param {object} supabaseClient - Supabase client instance
+ *
+ * This enriches pricing_data with:
+ * - is_school_holiday: boolean
+ * - school_holiday_zone: 'A' | 'B' | 'C' | 'A,B' | 'A,C' | 'B,C' | 'ALL' | null
+ *
+ * Note: This is France-specific. For other countries, this would need to be extended.
+ */
+export async function enrichWithSchoolHolidays(
+  propertyId: string,
+  supabaseClient: any
+): Promise<any> {
+  const startTime = Date.now()
+
+  console.log(`🏫 Starting school holiday enrichment for property ${propertyId}...`)
+
+  // Get all dates from pricing data for this property
+  const { data: pricingData, error } = await supabaseClient
+    .from('pricing_data')
+    .select('id, date, is_school_holiday') // Include is_school_holiday to check if already enriched
+    .eq('propertyId', propertyId)
+    .order('date', { ascending: true })
+
+  if (error || !pricingData || pricingData.length === 0) {
+    console.log('⚠️  No pricing data found for school holiday enrichment')
+    return { enriched: 0, total: 0, duration: Date.now() - startTime }
+  }
+
+  const dates = pricingData.map((d: any) => new Date(d.date))
+  const minDate = dates[0]
+  const maxDate = dates[dates.length - 1]
+
+  console.log(
+    `📅 Date range: ${minDate.toISOString().split('T')[0]} to ${maxDate.toISOString().split('T')[0]}`
+  )
+
+  // Process school holidays (no API needed - uses local data)
+  let enrichedCount = 0
+  let skippedCount = 0
+  let schoolHolidayCount = 0
+  const BATCH_SIZE = 100
+
+  for (let i = 0; i < pricingData.length; i += BATCH_SIZE) {
+    const batch = pricingData.slice(i, i + BATCH_SIZE)
+
+    // Parallel batch updates for performance
+    const updatePromises = batch
+      .filter((row: any) => {
+        // Skip if already enriched (idempotent)
+        if (row.is_school_holiday !== null) {
+          skippedCount++
+          return false
+        }
+        return true
+      })
+      .map(async (row: any) => {
+        const date = new Date(row.date)
+        const holidayInfo = getSchoolHolidayInfo(date)
+        const zoneString = getSchoolHolidayZoneString(date)
+
+        const { error: updateError } = await supabaseClient
+          .from('pricing_data')
+          .update({
+            is_school_holiday: holidayInfo.isHoliday,
+            school_holiday_zone: zoneString,
+          })
+          .eq('id', row.id)
+          .is('is_school_holiday', null) // Idempotent: only update if null
+
+        if (updateError) {
+          console.warn(`Failed to update row ${row.id}:`, updateError.message)
+          return { success: false, isHoliday: false }
+        }
+
+        return { success: true, isHoliday: holidayInfo.isHoliday }
+      })
+
+    // Wait for all updates in batch to complete
+    const results = await Promise.allSettled(updatePromises)
+    const successfulResults = results.filter(
+      (r): r is PromiseFulfilledResult<{ success: boolean; isHoliday: boolean }> =>
+        r.status === 'fulfilled' && r.value.success
+    )
+    enrichedCount += successfulResults.length
+    schoolHolidayCount += successfulResults.filter(r => r.value.isHoliday).length
+
+    console.log(
+      `📊 Enriched ${i + batch.length}/${pricingData.length} rows (${schoolHolidayCount} school holidays found, ${skippedCount} already enriched)...`
+    )
+  }
+
+  const duration = Date.now() - startTime
+
+  console.log(`✅ School holiday enrichment complete:`)
+  console.log(`   - Updated: ${enrichedCount} rows`)
+  console.log(`   - School holidays found: ${schoolHolidayCount} dates`)
+  console.log(`   - Skipped (already enriched): ${skippedCount} rows`)
+  console.log(`   - Duration: ${(duration / 1000).toFixed(2)}s`)
+
+  return {
+    enriched: enrichedCount,
+    schoolHolidaysFound: schoolHolidayCount,
+    skipped: skippedCount,
+    total: pricingData.length,
+    duration,
+  }
+}
+
+/**
  * Complete enrichment pipeline (Supabase version)
- * Enriches property data with weather, holidays, and temporal features
+ * Enriches property data with weather, holidays, school holidays, and temporal features
  */
 export async function enrichPropertyData(
   propertyId: string,
@@ -379,6 +492,7 @@ export async function enrichPropertyData(
     temporal: any
     weather: any
     holidays: any
+    schoolHolidays: any
     summary: {
       totalDuration: number
       totalEnriched: number
@@ -388,6 +502,7 @@ export async function enrichPropertyData(
     temporal: null,
     weather: null,
     holidays: null,
+    schoolHolidays: null,
     summary: {
       totalDuration: 0,
       totalEnriched: 0,
@@ -422,12 +537,25 @@ export async function enrichPropertyData(
       results.holidays = { skipped: true, reason: 'No country code provided' }
     }
 
+    // Enrich with French school holidays (always runs - uses local data, no API)
+    // This is France-specific; for other countries, check countryCode === 'FR'
+    if (countryCode === 'FR') {
+      results.schoolHolidays = await enrichWithSchoolHolidays(propertyId, supabaseClient)
+    } else {
+      console.log('⚠️  Skipping school holiday enrichment - only supported for France (FR)')
+      results.schoolHolidays = {
+        skipped: true,
+        reason: 'Only supported for France (countryCode=FR)',
+      }
+    }
+
     // Calculate summary metrics
     const totalDuration = Date.now() - totalStartTime
     const totalEnriched =
       (results.temporal?.enriched || 0) +
       (results.weather?.enriched || 0) +
-      (results.holidays?.enriched || 0)
+      (results.holidays?.enriched || 0) +
+      (results.schoolHolidays?.enriched || 0)
 
     const cacheHitRate = results.weather?.cacheHitRate || 0
 

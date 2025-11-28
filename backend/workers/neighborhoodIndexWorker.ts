@@ -4,7 +4,7 @@
  * Task 15: Competitor Graph & Neighborhood Index
  */
 
-import { Worker, QueueScheduler, Queue } from 'bullmq'
+import { Worker, Queue } from 'bullmq'
 import { createRedisConnection } from '../lib/queue/connection.js'
 import { supabaseAdmin } from '../lib/supabase.js'
 import { NeighborhoodIndexService } from '../services/neighborhoodIndexService.js'
@@ -228,16 +228,12 @@ async function buildMissingCompetitorGraphs(): Promise<void> {
 
 /**
  * Set up cron scheduler
+ * In BullMQ v4+, QueueScheduler is removed - Worker handles repeatable jobs automatically
  */
-export async function startNeighborhoodIndexScheduler(): Promise<void> {
-  // Create queue scheduler (handles delayed/repeat jobs)
-  const scheduler = new QueueScheduler(QUEUE_NAME, {
-    connection: createRedisConnection(),
-  })
+export async function startNeighborhoodIndexScheduler(): Promise<Worker> {
+  logger.info('🔧 Starting neighborhood index scheduler...')
 
-  logger.info('🔧 Neighborhood index scheduler initialized')
-
-  // Add repeatable jobs
+  // Add repeatable jobs (BullMQ persists these in Redis)
   await neighborhoodIndexQueue.add(
     'daily-index-computation',
     {},
@@ -286,22 +282,32 @@ export async function startNeighborhoodIndexScheduler(): Promise<void> {
     logger.error({ err: error }, `❌ Neighborhood index job failed: ${job?.name}`)
   })
 
+  worker.on('error', error => {
+    logger.error({ err: error }, '❌ Neighborhood index worker error')
+  })
+
+  logger.info('🚀 Neighborhood index worker started')
+
+  return worker
+}
+
+// Graceful shutdown helper
+export async function stopNeighborhoodIndexWorker(worker: Worker): Promise<void> {
+  logger.info('🛑 Neighborhood index worker shutting down...')
+  await worker.close()
+  logger.info('✅ Neighborhood index worker stopped')
+}
+
+// Start scheduler if run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const worker = await startNeighborhoodIndexScheduler()
+
   // Graceful shutdown
   const shutdown = async () => {
-    logger.info('🛑 Neighborhood index scheduler shutting down...')
-    await worker.close()
-    await scheduler.close()
+    await stopNeighborhoodIndexWorker(worker)
     process.exit(0)
   }
 
   process.on('SIGINT', shutdown)
   process.on('SIGTERM', shutdown)
-}
-
-// Start scheduler if run directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  startNeighborhoodIndexScheduler().catch(error => {
-    logger.error({ err: error }, '❌ Failed to start neighborhood index scheduler')
-    process.exit(1)
-  })
 }

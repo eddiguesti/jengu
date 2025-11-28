@@ -105,8 +105,9 @@ router.get(
     console.log(`✅ Loaded ${historicalData.length} days of enriched data`)
 
     // Calculate current average price
-    const prices = historicalData.map(d => d.price).filter(p => p > 0)
-    const currentAveragePrice = prices.reduce((a, b) => a + b, 0) / prices.length
+    const prices = historicalData.map(d => d.price).filter((p): p is number => p != null && p > 0)
+    const currentAveragePrice =
+      prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : 0
 
     console.log(`💰 Current average price: €${currentAveragePrice.toFixed(2)}`)
 
@@ -120,18 +121,21 @@ router.get(
 
     try {
       // Get property location for weather forecast
-      const { data: propertyDetails } = await supabaseAdmin
+      const { data: propertyDetails } = (await supabaseAdmin
         .from('properties')
         .select('latitude, longitude')
         .eq('id', propertyId)
-        .single()
+        .single()) as { data: { latitude?: number; longitude?: number } | null }
 
       if (propertyDetails?.latitude && propertyDetails?.longitude) {
-        console.log(`🌤️  Fetching weather forecast for (${propertyDetails.latitude}, ${propertyDetails.longitude})...`)
+        console.log(
+          `🌤️  Fetching weather forecast for (${propertyDetails.latitude}, ${propertyDetails.longitude})...`
+        )
 
         // Open-Meteo Free API - 16 day forecast (no API key needed)
         const maxForecastDays = Math.min(forecastDays, 16) // API limit
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?` +
+        const weatherUrl =
+          `https://api.open-meteo.com/v1/forecast?` +
           `latitude=${propertyDetails.latitude}&` +
           `longitude=${propertyDetails.longitude}&` +
           `daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&` +
@@ -141,7 +145,15 @@ router.get(
         const weatherResponse = await fetch(weatherUrl)
 
         if (weatherResponse.ok) {
-          const weatherData = await weatherResponse.json()
+          const weatherData = (await weatherResponse.json()) as {
+            daily: {
+              time: string[]
+              temperature_2m_max: number[]
+              temperature_2m_min: number[]
+              precipitation_sum: number[]
+              weathercode: number[]
+            }
+          }
 
           futureWeather = weatherData.daily.time.map((date: string, i: number) => {
             const tempMax = weatherData.daily.temperature_2m_max[i]
@@ -163,13 +175,15 @@ router.get(
               date,
               temperature: Math.round(avgTemp * 10) / 10,
               weatherCondition: condition,
-              precipitation: Math.round(precipitation * 10) / 10
+              precipitation: Math.round(precipitation * 10) / 10,
             }
           })
 
           console.log(`✅ Fetched weather forecast for ${futureWeather.length} days`)
         } else {
-          console.warn(`⚠️  Weather API returned ${weatherResponse.status}, using historical patterns`)
+          console.warn(
+            `⚠️  Weather API returned ${weatherResponse.status}, using historical patterns`
+          )
         }
       } else {
         console.warn('⚠️  No location data for property, skipping weather forecast')
@@ -179,21 +193,26 @@ router.get(
       // Continue without weather forecast - model will use historical patterns
     }
 
-    // Fetch future holidays from cache
-    const { data: futureHolidays } = await supabaseAdmin
-      .from('holiday_cache')
-      .select('date, holiday_name')
-      .gte('date', new Date().toISOString().split('T')[0])
-      .lte(
-        'date',
-        new Date(Date.now() + forecastDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      )
+    // Fetch future holidays from cache (if table exists)
+    let holidaysList: { date: string; holidayName: string }[] = []
+    try {
+      const { data: futureHolidays } = await (supabaseAdmin as any)
+        .from('holiday_cache')
+        .select('date, holiday_name')
+        .gte('date', new Date().toISOString().split('T')[0])
+        .lte(
+          'date',
+          new Date(Date.now() + forecastDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        )
 
-    const holidaysList =
-      futureHolidays?.map(h => ({
-        date: h.date,
-        holidayName: h.holiday_name,
-      })) || []
+      holidaysList =
+        futureHolidays?.map((h: any) => ({
+          date: h.date,
+          holidayName: h.holiday_name,
+        })) || []
+    } catch {
+      // Table may not exist
+    }
 
     console.log(`🎉 Found ${holidaysList.length} upcoming holidays in forecast period`)
 
@@ -206,7 +225,7 @@ router.get(
     }
 
     const recommendations = generateAdvancedPricingRecommendations(
-      historicalData,
+      historicalData as any,
       forecastDays,
       currentAveragePrice,
       futureWeather,
@@ -215,7 +234,7 @@ router.get(
     )
 
     // Calculate analytics
-    const analytics = calculatePricingAnalytics(historicalData)
+    const analytics = calculatePricingAnalytics(historicalData as any)
 
     console.log(`\n✅ Generated ${recommendations.length} pricing recommendations`)
     console.log(`📊 Price elasticity: ${analytics.priceElasticity.toFixed(2)}`)
@@ -327,7 +346,7 @@ router.get(
       return sendError(res, 'INSUFFICIENT_DATA', 'At least 14 days of data required')
     }
 
-    const analytics = calculatePricingAnalytics(historicalData)
+    const analytics = calculatePricingAnalytics(historicalData as any)
 
     res.json({
       success: true,

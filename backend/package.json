@@ -15,7 +15,12 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "tsx test/api-integration.test.ts",
-    "test:generate-data": "tsx test/e2e-test-data.ts"
+    "test:generate-data": "tsx test/e2e-test-data.ts",
+    "worker": "tsx worker.ts",
+    "worker:competitor": "tsx workers/competitorWorker.ts",
+    "worker:cron": "tsx workers/competitorCronWorker.ts",
+    "worker:enrichment": "tsx workers/enrichmentWorker.ts",
+    "dev:all": "concurrently \"pnpm run dev\" \"pnpm run worker\""
   },
   "keywords": [
     "api",
@@ -64,6 +69,7 @@
     "@types/node": "^24.8.0",
     "@types/supertest": "^6.0.3",
     "@vitest/ui": "^3.2.4",
+    "concurrently": "^9.1.0",
     "supertest": "^7.1.4",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",

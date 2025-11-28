@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Save, Building2, MapPin, DollarSign, Clock, CheckCircle2, Loader2 } from 'lucide-react'
 import { Card, Button, Input, Select } from '../components/ui'
-import { useBusinessStore } from '../store'
+import { useBusinessStore } from '../stores'
 import { useBusinessProfile, useUpdateBusinessProfile } from '../hooks/queries/useBusinessSettings'
 import axios from 'axios'
 

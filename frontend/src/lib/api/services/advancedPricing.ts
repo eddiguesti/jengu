@@ -37,6 +37,7 @@ export interface PricingAnalytics {
     seasonal: Record<string, number>
     dayOfWeek: Record<string, number>
   }
+  averageRevenue?: number
 }
 
 export interface AdvancedPricingResponse {

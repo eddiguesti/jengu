@@ -570,6 +570,7 @@ class PricingEngine:
 
         # Holiday features
         features['is_holiday'] = float(context.get('isHoliday', 0))
+        features['is_school_holiday'] = float(context.get('isSchoolHoliday', 0))
 
         # Competitor features
         features['comp_p10'] = float(comp_p10 if comp_p10 else 0)
@@ -604,6 +605,7 @@ class PricingEngine:
         # Interaction features
         features['weekend_summer'] = float(features['is_weekend'] * features.get('season_Summer', 0))
         features['holiday_weekend'] = float(features['is_holiday'] * features['is_weekend'])
+        features['school_holiday_weekend'] = float(features['is_school_holiday'] * features['is_weekend'])
         features['occupancy_weekend'] = float(occupancy_rate * features['is_weekend'])
         features['last_minute_weekend'] = float(features['is_last_minute'] * features['is_weekend'])
 

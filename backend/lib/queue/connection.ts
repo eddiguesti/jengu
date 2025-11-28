@@ -3,7 +3,7 @@
  * Manages Redis connection lifecycle and settings
  */
 
-import Redis from 'ioredis'
+import { Redis } from 'ioredis'
 import { logger } from '../../middleware/logger.js'
 
 // Redis connection options with resilience

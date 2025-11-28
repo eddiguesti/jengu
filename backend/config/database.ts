@@ -30,9 +30,11 @@ const REPLICA_URL = process.env.SUPABASE_REPLICA_URL || PRIMARY_URL
 const REPLICA_ANON_KEY = process.env.SUPABASE_REPLICA_ANON_KEY || PRIMARY_ANON_KEY
 const REPLICA_SERVICE_KEY = process.env.SUPABASE_REPLICA_SERVICE_ROLE_KEY || PRIMARY_SERVICE_KEY
 
-// Connection pool configuration
-const POOL_SIZE = parseInt(process.env.DB_POOL_SIZE || '10', 10)
-const POOL_TIMEOUT = parseInt(process.env.DB_POOL_TIMEOUT || '20000', 10)
+// Connection pool configuration (reserved for future use)
+
+const _POOL_SIZE = parseInt(process.env.DB_POOL_SIZE || '10', 10)
+
+const _POOL_TIMEOUT = parseInt(process.env.DB_POOL_TIMEOUT || '20000', 10)
 
 // ============================================================================
 // Client Instances
@@ -194,7 +196,7 @@ export function getClient(operation: 'read' | 'write', useServiceRole = false): 
 export async function checkPrimaryConnection(): Promise<boolean> {
   try {
     const client = getPrimaryClient(true)
-    const { data, error } = await client.from('properties').select('count').limit(1)
+    const { error } = await client.from('properties').select('count').limit(1)
 
     if (error) {
       console.error('❌ Primary database connection failed:', error.message)
@@ -221,7 +223,7 @@ export async function checkReplicaConnection(): Promise<boolean> {
 
   try {
     const client = getReplicaClient(true)
-    const { data, error } = await client.from('properties').select('count').limit(1)
+    const { error } = await client.from('properties').select('count').limit(1)
 
     if (error) {
       console.error('❌ Read replica connection failed:', error.message)

@@ -507,7 +507,7 @@ router.post(
       console.log(`✅ Processing complete: ${totalRows} rows, ${columnCount} columns`)
       fs.unlinkSync(filePath)
 
-      // Background enrichment
+      // Background enrichment via job queue
       setImmediate(async () => {
         try {
           console.log(`\n🔍 Checking for enrichment settings...`)
@@ -526,48 +526,70 @@ router.post(
           }
 
           if (settings && settings.latitude && settings.longitude) {
-            console.log(`\n🌤️  Starting automatic enrichment for property ${property.id}...`)
+            console.log(`\n🌤️  Queueing automatic enrichment for property ${property.id}...`)
             console.log(`📍 Location: ${settings.latitude}, ${settings.longitude}`)
 
-            const enrichmentResult = await enrichPropertyData(
-              property.id,
-              {
-                location: {
-                  latitude: settings.latitude,
-                  longitude: settings.longitude,
-                },
-                countryCode: settings.country || 'FR',
-                calendarificApiKey: process.env.CALENDARIFIC_API_KEY,
+            // Mark as pending BEFORE queueing so UI shows progress
+            await supabaseAdmin
+              .from('properties')
+              .update({ enrichmentstatus: 'pending' })
+              .eq('id', property.id)
+
+            // Queue enrichment job (non-blocking)
+            const jobId = await enqueueEnrichment({
+              propertyId: property.id,
+              userId,
+              location: {
+                latitude: settings.latitude,
+                longitude: settings.longitude,
               },
-              supabaseAdmin
-            )
+              countryCode: settings.country || 'FR',
+              calendarificApiKey: process.env.CALENDARIFIC_API_KEY,
+            })
 
-            if (enrichmentResult.success) {
-              console.log(`✅ Auto-enrichment complete:`, enrichmentResult.results)
-
-              const { error: enrichUpdateError } = await supabaseAdmin
-                .from('properties')
-                .update({
-                  enrichmentstatus: 'completed',
-                  enrichedat: new Date().toISOString(),
-                })
-                .eq('id', property.id)
-
-              if (enrichUpdateError) {
-                console.error('⚠️  Failed to update enrichment status:', enrichUpdateError)
-              } else {
-                console.log(`✅ Property marked as enriched`)
-              }
-            } else {
-              console.warn(`⚠️  Auto-enrichment failed:`, enrichmentResult.error)
+            // If sync mode (Redis unavailable), run enrichment directly
+            if (jobId.startsWith('sync-')) {
+              console.log('🔄 Running enrichment synchronously (Redis unavailable)...')
 
               await supabaseAdmin
                 .from('properties')
-                .update({
-                  enrichmentstatus: 'failed',
-                  enrichmenterror: enrichmentResult.error,
-                })
+                .update({ enrichmentstatus: 'processing' })
                 .eq('id', property.id)
+
+              const enrichmentResult = await enrichPropertyData(
+                property.id,
+                {
+                  location: {
+                    latitude: settings.latitude,
+                    longitude: settings.longitude,
+                  },
+                  countryCode: settings.country || 'FR',
+                  calendarificApiKey: process.env.CALENDARIFIC_API_KEY,
+                },
+                supabaseAdmin
+              )
+
+              if (enrichmentResult.success) {
+                console.log(`✅ Auto-enrichment complete:`, enrichmentResult.results)
+                await supabaseAdmin
+                  .from('properties')
+                  .update({
+                    enrichmentstatus: 'completed',
+                    enrichedat: new Date().toISOString(),
+                  })
+                  .eq('id', property.id)
+              } else {
+                console.warn(`⚠️  Auto-enrichment failed:`, enrichmentResult.error)
+                await supabaseAdmin
+                  .from('properties')
+                  .update({
+                    enrichmentstatus: 'failed',
+                    enrichmenterror: enrichmentResult.error,
+                  })
+                  .eq('id', property.id)
+              }
+            } else {
+              console.log(`📥 Enrichment job queued: ${jobId}`)
             }
           } else {
             console.log(`ℹ️  No coordinates in business settings - skipping auto-enrichment`)
@@ -788,7 +810,13 @@ router.delete(
     // 2. Clean up enrichment jobs from BullMQ
     try {
       console.log(`🗑️ Cleaning up enrichment jobs for ${fileId}...`)
-      const enrichmentJobs = await enrichmentQueue.getJobs(['active', 'waiting', 'delayed', 'completed', 'failed'])
+      const enrichmentJobs = await enrichmentQueue.getJobs([
+        'active',
+        'waiting',
+        'delayed',
+        'completed',
+        'failed',
+      ])
       let removedJobs = 0
       for (const job of enrichmentJobs) {
         if (job.data.propertyId === fileId) {
@@ -883,7 +911,51 @@ router.post(
         calendarificApiKey: process.env.CALENDARIFIC_API_KEY,
       })
 
-      // Return immediately with job ID
+      // If Redis not available (sync mode), run enrichment synchronously
+      if (jobId.startsWith('sync-')) {
+        console.log('🔄 Running enrichment synchronously (Redis unavailable)...')
+
+        // Update property status
+        await supabaseAdmin
+          .from('properties')
+          .update({ enrichment_status: 'processing' })
+          .eq('id', fileId)
+
+        // Run enrichment synchronously
+        const result = await enrichPropertyData(
+          fileId,
+          {
+            location: {
+              latitude: parseFloat(latitude),
+              longitude: parseFloat(longitude),
+            },
+            countryCode: country || 'FR',
+            calendarificApiKey: process.env.CALENDARIFIC_API_KEY,
+          },
+          supabaseAdmin
+        )
+
+        // Update status based on result
+        await supabaseAdmin
+          .from('properties')
+          .update({
+            enrichment_status: result.success ? 'completed' : 'failed',
+            enrichment_error: result.success ? null : result.error,
+          })
+          .eq('id', fileId)
+
+        console.log('✅ Synchronous enrichment complete:', result)
+
+        return res.json({
+          success: true,
+          message: 'Enrichment completed',
+          jobId,
+          status: 'completed',
+          result,
+        })
+      }
+
+      // Return immediately with job ID (async mode)
       res.json({
         success: true,
         message: 'Enrichment job queued successfully',

@@ -80,12 +80,25 @@ export const analyticsQueue = new Queue<AnalyticsJobData>('analytics-heavy', {
   },
 })
 
-// Log queue creation
-logger.info('📦 BullMQ Queues initialized:', {
-  enrichment: enrichmentQueue.name,
-  competitor: competitorQueue.name,
-  analytics: analyticsQueue.name,
+// Cron queue for scheduled jobs (separate from main competitor queue)
+export const cronQueue = new Queue('cron', {
+  ...defaultQueueOptions,
+  defaultJobOptions: {
+    ...defaultQueueOptions.defaultJobOptions,
+    attempts: 1, // Cron jobs should not retry - next scheduled run will occur
+  },
 })
+
+// Log queue creation
+logger.info(
+  {
+    enrichment: enrichmentQueue.name,
+    competitor: competitorQueue.name,
+    analytics: analyticsQueue.name,
+    cron: cronQueue.name,
+  },
+  '📦 BullMQ Queues initialized'
+)
 
 // Job priority levels
 export enum JobPriority {
@@ -100,18 +113,27 @@ export async function enqueueEnrichment(
   data: EnrichmentJobData,
   priority: JobPriority = JobPriority.NORMAL
 ): Promise<string> {
-  const job = await enrichmentQueue.add('enrich-property', data, {
-    jobId: `enrich-${data.propertyId}-${Date.now()}`,
-    priority, // Add priority support
-  })
+  try {
+    const job = await enrichmentQueue.add('enrich-property', data, {
+      jobId: `enrich-${data.propertyId}-${Date.now()}`,
+      priority, // Add priority support
+    })
 
-  logger.info(`📥 Enrichment job enqueued: ${job.id}`, {
-    propertyId: data.propertyId,
-    userId: data.userId,
-    priority,
-  })
+    logger.info(
+      {
+        propertyId: data.propertyId,
+        userId: data.userId,
+        priority,
+      },
+      `📥 Enrichment job enqueued: ${job.id}`
+    )
 
-  return job.id!
+    return job.id!
+  } catch (error) {
+    // If enqueueing fails (Redis down), return sync placeholder
+    logger.warn({ error }, '⚠️  Failed to enqueue job - enrichment will run synchronously')
+    return `sync-${data.propertyId}-${Date.now()}`
+  }
 }
 
 // Helper function to add competitor job
@@ -124,11 +146,14 @@ export async function enqueueCompetitor(
     priority,
   })
 
-  logger.info(`📥 Competitor job enqueued: ${job.id}`, {
-    propertyId: data.propertyId,
-    location: data.location,
-    priority,
-  })
+  logger.info(
+    {
+      propertyId: data.propertyId,
+      location: data.location,
+      priority,
+    },
+    `📥 Competitor job enqueued: ${job.id}`
+  )
 
   return job.id!
 }
@@ -143,11 +168,14 @@ export async function enqueueAnalytics(
     priority,
   })
 
-  logger.info(`📥 Analytics job enqueued: ${job.id}`, {
-    propertyId: data.propertyId,
-    analysisType: data.analysisType,
-    priority,
-  })
+  logger.info(
+    {
+      propertyId: data.propertyId,
+      analysisType: data.analysisType,
+      priority,
+    },
+    `📥 Analytics job enqueued: ${job.id}`
+  )
 
   return job.id!
 }
@@ -188,7 +216,12 @@ export async function getJobStatus(
 export async function closeQueues(): Promise<void> {
   logger.info('🔌 Closing BullMQ queues...')
 
-  await Promise.all([enrichmentQueue.close(), competitorQueue.close(), analyticsQueue.close()])
+  await Promise.all([
+    enrichmentQueue.close(),
+    competitorQueue.close(),
+    analyticsQueue.close(),
+    cronQueue.close(),
+  ])
 
   logger.info('✅ All queues closed')
 }

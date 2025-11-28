@@ -4,7 +4,6 @@ import {
   ChevronRight,
   TrendingUp,
   TrendingDown,
-  Minus,
   Sun,
   Cloud,
   CloudRain,
@@ -501,7 +500,7 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
                 >
                   <Tent
                     className="h-4 w-4 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.7)]"
-                    title="Perfect camping conditions!"
+                    aria-label="Perfect camping conditions!"
                   />
                 </motion.div>
               )}
@@ -648,7 +647,10 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
                         <span className="flex items-center gap-1 font-semibold text-text">
                           {hoveredDay.temperature.toFixed(1)}°C
                           {isPerfectCampingDay(hoveredDay) && (
-                            <Tent className="h-3 w-3 text-green-400" title="Perfect camping!" />
+                            <Tent
+                              className="h-3 w-3 text-green-400"
+                              aria-label="Perfect camping!"
+                            />
                           )}
                         </span>
                       </div>
@@ -704,7 +706,7 @@ export const PriceDemandCalendar: React.FC<PriceDemandCalendarProps> = ({
                         </span>
                       </div>
                     )}
-                    {hoveredDay.revenueImpact !== undefined && (
+                    {hoveredDay.revenueImpact != null && (
                       <div className="flex justify-between">
                         <span className="text-muted">Revenue Impact:</span>
                         <span

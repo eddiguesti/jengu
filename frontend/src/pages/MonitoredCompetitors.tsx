@@ -21,21 +21,42 @@ import { toast } from '../stores/useToastStore'
 import clsx from 'clsx'
 import { motion, AnimatePresence } from 'framer-motion'
 
+// Raw API response uses snake_case from database
+interface CompetitorApiResponse {
+  id: string
+  name: string
+  url: string
+  photo_url: string | null
+  photos?: string[]
+  town: string
+  region: string
+  latitude: number | null
+  longitude: number | null
+  rating: number | null
+  review_count: number | null
+  created_at: string
+  last_scraped_at: string | null
+  is_monitoring: boolean
+}
+
+// Frontend interface uses camelCase
 interface MonitoredCompetitor {
   id: string
   name: string
   url: string
   photoUrl: string | null
+  photos?: string[]
   town: string
   region: string
   coordinates: {
     latitude: number
     longitude: number
-  }
+  } | null
   rating: number | null
   reviewCount: number | null
   createdAt: string
   lastScraped: string | null
+  isMonitoring: boolean
   latestPricing?: {
     price: number
     scrapedAt: string
@@ -44,6 +65,26 @@ interface MonitoredCompetitor {
     price: number
     scrapedAt: string
   }>
+}
+
+// Transform API response to frontend format
+function transformCompetitor(raw: CompetitorApiResponse): MonitoredCompetitor {
+  return {
+    id: raw.id,
+    name: raw.name,
+    url: raw.url,
+    photoUrl: raw.photo_url,
+    photos: raw.photos,
+    town: raw.town,
+    region: raw.region,
+    coordinates:
+      raw.latitude && raw.longitude ? { latitude: raw.latitude, longitude: raw.longitude } : null,
+    rating: raw.rating,
+    reviewCount: raw.review_count,
+    createdAt: raw.created_at,
+    lastScraped: raw.last_scraped_at,
+    isMonitoring: raw.is_monitoring,
+  }
 }
 
 export const MonitoredCompetitors = () => {
@@ -56,9 +97,11 @@ export const MonitoredCompetitors = () => {
     setLoading(true)
     setError(null)
     try {
-      // This endpoint needs to be created on the backend
+      // Backend returns { success, data: { competitors: [...], total, monitoring } }
       const response = await apiClient.get('/competitor/monitor/list')
-      setCompetitors(response.data.data || [])
+      const rawCompetitors: CompetitorApiResponse[] = response.data.data?.competitors || []
+      // Transform snake_case API response to camelCase frontend format
+      setCompetitors(rawCompetitors.map(transformCompetitor))
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load monitored competitors')
       setCompetitors([])
@@ -117,25 +160,23 @@ export const MonitoredCompetitors = () => {
   }
 
   return (
-    <div className="bg-background min-h-screen p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
             <Link
               to="/pricing/competitors"
-              className="text-muted hover:text-text mb-4 inline-flex items-center gap-2 text-sm transition-colors"
+              className="mb-4 inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-text"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Discovery
             </Link>
-            <h1 className="text-text mb-2 flex items-center gap-3 text-4xl font-bold">
-              <BarChart3 className="text-primary h-10 w-10" />
+            <h1 className="mb-2 flex items-center gap-3 text-4xl font-bold text-text">
+              <BarChart3 className="h-10 w-10 text-primary" />
               Monitored Competitors
             </h1>
-            <p className="text-muted">
-              Track pricing changes from your competitors over time
-            </p>
+            <p className="text-muted">Track pricing changes from your competitors over time</p>
           </div>
           <Button
             variant="outline"
@@ -151,8 +192,8 @@ export const MonitoredCompetitors = () => {
         {/* Loading State */}
         {loading && (
           <Card className="p-12 text-center">
-            <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
-            <p className="text-text text-lg font-medium">Loading monitored competitors...</p>
+            <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-primary" />
+            <p className="text-lg font-medium text-text">Loading monitored competitors...</p>
           </Card>
         )}
 
@@ -166,7 +207,7 @@ export const MonitoredCompetitors = () => {
             >
               <Card className="border-error/30 bg-error/10">
                 <Card.Body>
-                  <div className="text-error flex items-center gap-2">
+                  <div className="flex items-center gap-2 text-error">
                     <span>{error}</span>
                   </div>
                 </Card.Body>
@@ -178,9 +219,9 @@ export const MonitoredCompetitors = () => {
         {/* Empty State */}
         {!loading && !error && competitors.length === 0 && (
           <Card className="p-12 text-center">
-            <Tent className="text-muted mx-auto mb-4 h-16 w-16" />
-            <h2 className="text-text mb-2 text-xl font-bold">No Monitored Competitors</h2>
-            <p className="text-muted mb-6">
+            <Tent className="mx-auto mb-4 h-16 w-16 text-muted" />
+            <h2 className="mb-2 text-xl font-bold text-text">No Monitored Competitors</h2>
+            <p className="mb-6 text-muted">
               Start monitoring competitors from the discovery page to see their pricing history
             </p>
             <Link to="/pricing/competitors">
@@ -197,12 +238,12 @@ export const MonitoredCompetitors = () => {
               <Card.Body>
                 <div className="grid grid-cols-3 gap-6">
                   <div className="text-center">
-                    <p className="text-muted text-sm">Total Monitored</p>
-                    <p className="text-text text-3xl font-bold">{competitors.length}</p>
+                    <p className="text-sm text-muted">Total Monitored</p>
+                    <p className="text-3xl font-bold text-text">{competitors.length}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-muted text-sm">Avg. Competitor Price</p>
-                    <p className="text-success text-3xl font-bold">
+                    <p className="text-sm text-muted">Avg. Competitor Price</p>
+                    <p className="text-3xl font-bold text-success">
                       {competitors.some(c => c.latestPricing)
                         ? `€${Math.round(
                             competitors.reduce((sum, c) => sum + (c.latestPricing?.price || 0), 0) /
@@ -212,8 +253,8 @@ export const MonitoredCompetitors = () => {
                     </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-muted text-sm">Last Updated</p>
-                    <p className="text-text text-lg font-medium">
+                    <p className="text-sm text-muted">Last Updated</p>
+                    <p className="text-lg font-medium text-text">
                       {competitors.some(c => c.lastScraped)
                         ? formatDate(
                             competitors
@@ -259,8 +300,8 @@ export const MonitoredCompetitors = () => {
                               }}
                             />
                           ) : (
-                            <div className="bg-elevated flex h-full items-center justify-center">
-                              <Tent className="text-muted h-12 w-12" />
+                            <div className="flex h-full items-center justify-center bg-elevated">
+                              <Tent className="h-12 w-12 text-muted" />
                             </div>
                           )}
                         </div>
@@ -269,8 +310,8 @@ export const MonitoredCompetitors = () => {
                         <div className="flex flex-1 flex-col p-4">
                           <div className="mb-auto flex items-start justify-between">
                             <div>
-                              <h3 className="text-text text-lg font-bold">{competitor.name}</h3>
-                              <p className="text-muted flex items-center gap-1 text-sm">
+                              <h3 className="text-lg font-bold text-text">{competitor.name}</h3>
+                              <p className="flex items-center gap-1 text-sm text-muted">
                                 <MapPin className="h-3 w-3" />
                                 {competitor.town}
                                 {competitor.region && `, ${competitor.region}`}
@@ -278,11 +319,9 @@ export const MonitoredCompetitors = () => {
                               {competitor.rating && (
                                 <div className="mt-1 flex items-center gap-1">
                                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                  <span className="text-text text-sm">
-                                    {competitor.rating}/5
-                                  </span>
+                                  <span className="text-sm text-text">{competitor.rating}/5</span>
                                   {competitor.reviewCount && (
-                                    <span className="text-muted text-xs">
+                                    <span className="text-xs text-muted">
                                       ({competitor.reviewCount} reviews)
                                     </span>
                                   )}
@@ -295,16 +334,14 @@ export const MonitoredCompetitors = () => {
                               {competitor.latestPricing ? (
                                 <>
                                   <div className="flex items-center justify-end gap-2">
-                                    <span className="text-text text-2xl font-bold">
+                                    <span className="text-2xl font-bold text-text">
                                       €{competitor.latestPricing.price}
                                     </span>
                                     {trend && trend.direction !== 'same' && (
                                       <span
                                         className={clsx(
                                           'flex items-center gap-1 text-sm font-medium',
-                                          trend.direction === 'up'
-                                            ? 'text-error'
-                                            : 'text-success'
+                                          trend.direction === 'up' ? 'text-error' : 'text-success'
                                         )}
                                       >
                                         {trend.direction === 'up' ? (
@@ -316,17 +353,17 @@ export const MonitoredCompetitors = () => {
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-muted mt-1 text-xs">/ night</p>
+                                  <p className="mt-1 text-xs text-muted">/ night</p>
                                 </>
                               ) : (
-                                <span className="text-muted text-sm">No pricing data</span>
+                                <span className="text-sm text-muted">No pricing data</span>
                               )}
                             </div>
                           </div>
 
                           {/* Footer */}
                           <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4">
-                            <div className="text-muted flex items-center gap-1 text-xs">
+                            <div className="flex items-center gap-1 text-xs text-muted">
                               <Clock className="h-3 w-3" />
                               Last updated: {formatDate(competitor.lastScraped)}
                             </div>

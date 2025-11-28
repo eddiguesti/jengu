@@ -110,11 +110,11 @@ router.post('/login', async (req: Request, res: Response) => {
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      logger.warn({ reqId, errors: error.errors }, 'Login validation failed')
+      logger.warn({ reqId, errors: error.issues }, 'Login validation failed')
       return res.status(400).json({
         error: 'VALIDATION_ERROR',
         message: 'Invalid input',
-        details: error.errors,
+        details: error.issues,
       })
     }
 
@@ -198,11 +198,11 @@ router.post('/signup', async (req: Request, res: Response) => {
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      logger.warn({ reqId, errors: error.errors }, 'Signup validation failed')
+      logger.warn({ reqId, errors: error.issues }, 'Signup validation failed')
       return res.status(400).json({
         error: 'VALIDATION_ERROR',
         message: 'Invalid input',
-        details: error.errors,
+        details: error.issues,
       })
     }
 

@@ -22,6 +22,7 @@ import type { DayData } from '../components/pricing/PriceDemandCalendar'
 import { getAdvancedPricingRecommendations } from '../lib/api/services/advancedPricing'
 import type { PricingRecommendation } from '../lib/api/services/advancedPricing'
 import apiClient from '../lib/api/client'
+import { MetricsBar, calculateMetrics } from '../components/dashboard/MetricsBar'
 import {
   LineChart,
   Line,
@@ -55,7 +56,7 @@ export const Dashboard = () => {
   const [mlRecommendations, setMlRecommendations] = useState<Record<string, PricingRecommendation>>(
     {}
   )
-  const [mlLoading, setMlLoading] = useState(false)
+  const [, setMlLoading] = useState(false)
 
   // Competitor pricing state (median prices by date)
   const [competitorData, setCompetitorData] = useState<Record<string, number>>({})
@@ -158,9 +159,11 @@ export const Dashboard = () => {
         totalRecords: 0,
         avgPrice: 0,
         avgOccupancy: 0,
-        revenueData: [],
-        occupancyByDay: [],
-        priceTimeSeries: [],
+        revenueData: [] as { month: string; revenue: number; avgRevenue: number }[],
+        occupancyByDay: [] as { day: string; occupancy: number }[],
+        priceTimeSeries: [] as { date: string; price: number }[],
+        calendarData: [] as DayData[],
+        metrics: null,
       }
     }
 
@@ -406,6 +409,9 @@ export const Dashboard = () => {
       withMLRecommendations: calendarData.filter(d => d.recommendedPrice).length,
     })
 
+    // Calculate KPI metrics for the MetricsBar
+    const metrics = calculateMetrics(fileData)
+
     const result = {
       totalRecords,
       avgPrice: Math.round(avgPrice),
@@ -414,6 +420,7 @@ export const Dashboard = () => {
       occupancyByDay,
       priceTimeSeries,
       calendarData,
+      metrics,
     }
 
     console.log('📈 Processed Dashboard Data:')
@@ -441,13 +448,13 @@ export const Dashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-text flex items-center gap-3 text-4xl font-bold">
+          <h1 className="flex items-center gap-3 text-4xl font-bold text-text">
             Dashboard
             {isLoading && (
-              <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             )}
           </h1>
-          <p className="text-muted mt-2">
+          <p className="mt-2 text-muted">
             {hasData
               ? 'Real-time insights from your uploaded data'
               : 'Get started by uploading your data'}
@@ -475,7 +482,18 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Price & Demand Calendar - Moved to top */}
+      {/* KPI Metrics Bar - First thing users see */}
+      {hasData && processedData.metrics && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <MetricsBar data={processedData.metrics} currency="€" isLoading={isLoading} />
+        </motion.div>
+      )}
+
+      {/* Price & Demand Calendar */}
       {hasData && processedData.calendarData && processedData.calendarData.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -486,12 +504,12 @@ export const Dashboard = () => {
             <Card.Header>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="bg-primary/10 rounded-xl p-2">
-                    <Calendar className="text-primary h-6 w-6" />
+                  <div className="rounded-xl bg-primary/10 p-2">
+                    <Calendar className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h2 className="text-text text-xl font-semibold">Price & Demand Calendar</h2>
-                    <p className="text-muted mt-1 text-sm">
+                    <h2 className="text-xl font-semibold text-text">Price & Demand Calendar</h2>
+                    <p className="mt-1 text-sm text-muted">
                       Interactive calendar showing pricing and demand patterns from your data
                     </p>
                   </div>
@@ -615,14 +633,14 @@ export const Dashboard = () => {
       {!hasData && !isLoading && (
         <Card variant="elevated" className="py-20 text-center">
           <div className="mx-auto flex max-w-2xl flex-col items-center gap-6">
-            <div className="bg-primary/10 rounded-full p-6">
-              <Database className="text-primary h-16 w-16" />
+            <div className="rounded-full bg-primary/10 p-6">
+              <Database className="h-16 w-16 text-primary" />
             </div>
             <div>
-              <h2 className="text-text mb-3 text-2xl font-bold">
+              <h2 className="mb-3 text-2xl font-bold text-text">
                 Add Data to See Your Complete Dashboard
               </h2>
-              <p className="text-muted mb-6 text-lg">
+              <p className="mb-6 text-lg text-muted">
                 Upload your historical booking data to unlock powerful insights, analytics, and
                 AI-powered pricing recommendations.
               </p>
@@ -638,20 +656,20 @@ export const Dashboard = () => {
             </div>
 
             {/* Preview of what they'll get */}
-            <div className="border-border mt-8 w-full border-t pt-8">
-              <p className="text-muted mb-4 text-sm">Once you upload data, you&apos;ll see:</p>
+            <div className="mt-8 w-full border-t border-border pt-8">
+              <p className="mb-4 text-sm text-muted">Once you upload data, you&apos;ll see:</p>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="border-border bg-elevated rounded-lg border p-4">
-                  <BarChart3 className="text-primary mx-auto mb-2 h-6 w-6" />
-                  <p className="text-text text-xs font-medium">Revenue Charts</p>
+                <div className="rounded-lg border border-border bg-elevated p-4">
+                  <BarChart3 className="mx-auto mb-2 h-6 w-6 text-primary" />
+                  <p className="text-xs font-medium text-text">Revenue Charts</p>
                 </div>
-                <div className="border-border bg-elevated rounded-lg border p-4">
-                  <TrendingUp className="text-success mx-auto mb-2 h-6 w-6" />
-                  <p className="text-text text-xs font-medium">Occupancy Trends</p>
+                <div className="rounded-lg border border-border bg-elevated p-4">
+                  <TrendingUp className="mx-auto mb-2 h-6 w-6 text-success" />
+                  <p className="text-xs font-medium text-text">Occupancy Trends</p>
                 </div>
-                <div className="border-border bg-elevated rounded-lg border p-4">
-                  <Activity className="text-warning mx-auto mb-2 h-6 w-6" />
-                  <p className="text-text text-xs font-medium">Price Analytics</p>
+                <div className="rounded-lg border border-border bg-elevated p-4">
+                  <Activity className="mx-auto mb-2 h-6 w-6 text-warning" />
+                  <p className="text-xs font-medium text-text">Price Analytics</p>
                 </div>
               </div>
             </div>
@@ -671,18 +689,18 @@ export const Dashboard = () => {
               variant="elevated"
               className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg"
             >
-              <div className="bg-primary/5 group-hover:bg-primary/10 absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full transition-colors" />
+              <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-primary/5 transition-colors group-hover:bg-primary/10" />
               <div className="relative">
                 <div className="mb-4 flex items-center justify-between">
-                  <div className="bg-primary/10 rounded-xl p-3">
-                    <BarChart3 className="text-primary h-6 w-6" />
+                  <div className="rounded-xl bg-primary/10 p-3">
+                    <BarChart3 className="h-6 w-6 text-primary" />
                   </div>
                 </div>
-                <p className="text-muted mb-1 text-sm">Total Records</p>
-                <h3 className="text-text text-3xl font-bold">
+                <p className="mb-1 text-sm text-muted">Total Records</p>
+                <h3 className="text-3xl font-bold text-text">
                   {processedData.totalRecords.toLocaleString()}
                 </h3>
-                <div className="text-muted mt-3 flex items-center gap-1 text-xs">
+                <div className="mt-3 flex items-center gap-1 text-xs text-muted">
                   <span>From uploaded data</span>
                 </div>
               </div>
@@ -698,18 +716,18 @@ export const Dashboard = () => {
               variant="elevated"
               className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg"
             >
-              <div className="bg-success/5 group-hover:bg-success/10 absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full transition-colors" />
+              <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-success/5 transition-colors group-hover:bg-success/10" />
               <div className="relative">
                 <div className="mb-4 flex items-center justify-between">
-                  <div className="bg-success/10 rounded-xl p-3">
-                    <DollarSign className="text-success h-6 w-6" />
+                  <div className="rounded-xl bg-success/10 p-3">
+                    <DollarSign className="h-6 w-6 text-success" />
                   </div>
                 </div>
-                <p className="text-muted mb-1 text-sm">Average Price</p>
-                <h3 className="text-text text-3xl font-bold">
+                <p className="mb-1 text-sm text-muted">Average Price</p>
+                <h3 className="text-3xl font-bold text-text">
                   €{processedData.avgPrice.toLocaleString()}
                 </h3>
-                <div className="text-muted mt-3 flex items-center gap-1 text-xs">
+                <div className="mt-3 flex items-center gap-1 text-xs text-muted">
                   <span>Across all records</span>
                 </div>
               </div>
@@ -725,11 +743,11 @@ export const Dashboard = () => {
               variant="elevated"
               className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg"
             >
-              <div className="bg-warning/5 group-hover:bg-warning/10 absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full transition-colors" />
+              <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-warning/5 transition-colors group-hover:bg-warning/10" />
               <div className="relative">
                 <div className="mb-4 flex items-center justify-between">
-                  <div className="bg-warning/10 rounded-xl p-3">
-                    <TrendingUp className="text-warning h-6 w-6" />
+                  <div className="rounded-xl bg-warning/10 p-3">
+                    <TrendingUp className="h-6 w-6 text-warning" />
                   </div>
                   {processedData.avgOccupancy > 75 ? (
                     <Badge variant="success" size="sm">
@@ -747,9 +765,9 @@ export const Dashboard = () => {
                     </Badge>
                   )}
                 </div>
-                <p className="text-muted mb-1 text-sm">Occupancy Rate</p>
-                <h3 className="text-text text-3xl font-bold">{processedData.avgOccupancy}%</h3>
-                <div className="text-muted mt-3 flex items-center gap-1 text-xs">
+                <p className="mb-1 text-sm text-muted">Occupancy Rate</p>
+                <h3 className="text-3xl font-bold text-text">{processedData.avgOccupancy}%</h3>
+                <div className="mt-3 flex items-center gap-1 text-xs text-muted">
                   <span>Average across dataset</span>
                 </div>
               </div>
@@ -765,19 +783,19 @@ export const Dashboard = () => {
               variant="elevated"
               className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg"
             >
-              <div className="bg-primary/5 group-hover:bg-primary/10 absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full transition-colors" />
+              <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-primary/5 transition-colors group-hover:bg-primary/10" />
               <div className="relative">
                 <div className="mb-4 flex items-center justify-between">
-                  <div className="bg-primary/10 rounded-xl p-3">
-                    <Zap className="text-primary h-6 w-6" />
+                  <div className="rounded-xl bg-primary/10 p-3">
+                    <Zap className="h-6 w-6 text-primary" />
                   </div>
                   <Badge variant="primary" size="sm">
                     Ready
                   </Badge>
                 </div>
-                <p className="text-muted mb-1 text-sm">ML Predictions</p>
-                <h3 className="text-primary text-2xl font-bold">Available</h3>
-                <div className="text-muted mt-3 flex items-center gap-1 text-xs">
+                <p className="mb-1 text-sm text-muted">ML Predictions</p>
+                <h3 className="text-2xl font-bold text-primary">Available</h3>
+                <div className="mt-3 flex items-center gap-1 text-xs text-muted">
                   <span>View in Insights</span>
                 </div>
               </div>
@@ -794,8 +812,8 @@ export const Dashboard = () => {
             <Card.Header>
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-text text-xl font-semibold">Revenue Performance</h2>
-                  <p className="text-muted mt-1 text-sm">Monthly revenue (last 6 months)</p>
+                  <h2 className="text-xl font-semibold text-text">Revenue Performance</h2>
+                  <p className="mt-1 text-sm text-muted">Monthly revenue (last 6 months)</p>
                 </div>
               </div>
             </Card.Header>
@@ -836,8 +854,8 @@ export const Dashboard = () => {
             <Card.Header>
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-text text-xl font-semibold">Weekly Occupancy</h2>
-                  <p className="text-muted mt-1 text-sm">Average occupancy by day</p>
+                  <h2 className="text-xl font-semibold text-text">Weekly Occupancy</h2>
+                  <p className="mt-1 text-sm text-muted">Average occupancy by day</p>
                 </div>
               </div>
             </Card.Header>
@@ -869,8 +887,8 @@ export const Dashboard = () => {
           <Card.Header>
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-text text-xl font-semibold">Price Trend</h2>
-                <p className="text-muted mt-1 text-sm">
+                <h2 className="text-xl font-semibold text-text">Price Trend</h2>
+                <p className="mt-1 text-sm text-muted">
                   Last {processedData.priceTimeSeries.length} days
                 </p>
               </div>
@@ -907,22 +925,22 @@ export const Dashboard = () => {
       {/* Quick Actions - Always show */}
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-text text-2xl font-semibold">Quick Actions</h2>
-          <p className="text-muted text-sm">Manage your pricing intelligence</p>
+          <h2 className="text-2xl font-semibold text-text">Quick Actions</h2>
+          <p className="text-sm text-muted">Manage your pricing intelligence</p>
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Card
             variant="default"
-            className="hover:border-primary group cursor-pointer transition-all hover:shadow-lg"
+            className="group cursor-pointer transition-all hover:border-primary hover:shadow-lg"
             onClick={() => navigate('/data')}
           >
             <div className="flex items-start gap-4">
-              <div className="bg-primary/10 group-hover:bg-primary/20 rounded-xl p-3 transition-colors">
-                <BarChart3 className="text-primary h-6 w-6" />
+              <div className="rounded-xl bg-primary/10 p-3 transition-colors group-hover:bg-primary/20">
+                <BarChart3 className="h-6 w-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="text-text mb-1 text-lg font-semibold">Upload Data</h3>
-                <p className="text-muted mb-4 text-sm">Import your historical booking data</p>
+                <h3 className="mb-1 text-lg font-semibold text-text">Upload Data</h3>
+                <p className="mb-4 text-sm text-muted">Import your historical booking data</p>
                 <Button variant="secondary" size="sm">
                   Go to Data →
                 </Button>
@@ -932,16 +950,16 @@ export const Dashboard = () => {
 
           <Card
             variant="default"
-            className="hover:border-primary group cursor-pointer transition-all hover:shadow-lg"
+            className="group cursor-pointer transition-all hover:border-primary hover:shadow-lg"
             onClick={() => navigate('/enrichment')}
           >
             <div className="flex items-start gap-4">
-              <div className="bg-success/10 group-hover:bg-success/20 rounded-xl p-3 transition-colors">
-                <Activity className="text-success h-6 w-6" />
+              <div className="rounded-xl bg-success/10 p-3 transition-colors group-hover:bg-success/20">
+                <Activity className="h-6 w-6 text-success" />
               </div>
               <div className="flex-1">
-                <h3 className="text-text mb-1 text-lg font-semibold">Enrich Dataset</h3>
-                <p className="text-muted mb-4 text-sm">Add weather, holidays, and features</p>
+                <h3 className="mb-1 text-lg font-semibold text-text">Enrich Dataset</h3>
+                <p className="mb-4 text-sm text-muted">Add weather, holidays, and features</p>
                 <Button variant="secondary" size="sm">
                   Go to Enrichment →
                 </Button>
@@ -951,16 +969,16 @@ export const Dashboard = () => {
 
           <Card
             variant="default"
-            className="hover:border-primary group cursor-pointer transition-all hover:shadow-lg"
+            className="group cursor-pointer transition-all hover:border-primary hover:shadow-lg"
             onClick={() => navigate('/insights')}
           >
             <div className="flex items-start gap-4">
-              <div className="bg-warning/10 group-hover:bg-warning/20 rounded-xl p-3 transition-colors">
-                <TrendingUp className="text-warning h-6 w-6" />
+              <div className="rounded-xl bg-warning/10 p-3 transition-colors group-hover:bg-warning/20">
+                <TrendingUp className="h-6 w-6 text-warning" />
               </div>
               <div className="flex-1">
-                <h3 className="text-text mb-1 text-lg font-semibold">View Insights</h3>
-                <p className="text-muted mb-4 text-sm">Explore pricing patterns and trends</p>
+                <h3 className="mb-1 text-lg font-semibold text-text">View Insights</h3>
+                <p className="mb-4 text-sm text-muted">Explore pricing patterns and trends</p>
                 <Button variant="primary" size="sm">
                   Go to Insights →
                 </Button>
@@ -974,17 +992,17 @@ export const Dashboard = () => {
       {!hasData && (
         <Card
           variant="elevated"
-          className="border-primary from-primary/5 border-l-4 bg-gradient-to-r to-transparent"
+          className="border-l-4 border-primary bg-gradient-to-r from-primary/5 to-transparent"
         >
           <div className="flex items-start gap-4">
-            <div className="bg-primary/10 rounded-xl p-4">
-              <Zap className="text-primary h-8 w-8" />
+            <div className="rounded-xl bg-primary/10 p-4">
+              <Zap className="h-8 w-8 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="text-text mb-2 text-xl font-semibold">
+              <h3 className="mb-2 text-xl font-semibold text-text">
                 Welcome to Jengu Dynamic Pricing
               </h3>
-              <p className="text-muted mb-4">
+              <p className="mb-4 text-muted">
                 Start by uploading your booking data, then enrich it with weather and competitor
                 intelligence. Our ML models will help you optimize pricing for maximum revenue and
                 occupancy.

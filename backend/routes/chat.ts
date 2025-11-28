@@ -73,11 +73,11 @@ router.post(
       console.log(`   🔍 Fetching fresh context from database`)
 
       // Get comprehensive user context from database
-      const { data: filesData } = await supabaseAdmin
+      const { data: filesData } = (await supabaseAdmin
         .from('properties')
-        .select('id, name, enrichmentStatus, actualRows, uploadedAt')
+        .select('id, name, enrichmentstatus, actualRows, uploadedAt')
         .eq('userId', userId)
-        .order('uploadedAt', { ascending: false })
+        .order('uploadedAt', { ascending: false })) as { data: any[] | null }
 
       // Get recent pricing data summary
       const { data: recentPricing, count: totalRecords } = await supabaseAdmin
@@ -88,7 +88,7 @@ router.post(
         .limit(100)
 
       // Calculate data insights
-      const hasEnrichedData = filesData?.some(f => f.enrichmentStatus === 'completed')
+      const hasEnrichedData = filesData?.some((f: any) => f.enrichmentstatus === 'completed')
       const avgPrice = recentPricing?.length
         ? recentPricing.reduce((sum, r) => sum + (r.price || 0), 0) / recentPricing.length
         : 0
@@ -98,18 +98,19 @@ router.post(
 
       dataStats = {
         totalFiles: filesData?.length || 0,
-        enrichedFiles: filesData?.filter(f => f.enrichmentStatus === 'completed').length || 0,
+        enrichedFiles:
+          filesData?.filter((f: any) => f.enrichmentstatus === 'completed').length || 0,
         totalRecords: totalRecords || 0,
         avgPrice: avgPrice ? Math.round(avgPrice) : null,
         avgOccupancy: avgOccupancy ? Math.round(avgOccupancy * 100) : null,
         latestDate: recentPricing?.[0]?.date || null,
-        hasEnrichedData,
+        hasEnrichedData: hasEnrichedData ?? false,
       }
 
       files =
-        filesData?.map(f => ({
+        filesData?.map((f: any) => ({
           name: f.name,
-          enriched: f.enrichmentStatus === 'completed',
+          enriched: f.enrichmentstatus === 'completed',
           rows: f.actualRows,
         })) || []
 
@@ -126,11 +127,11 @@ router.post(
       files,
     }
 
-    try {
-      // Check for quick response keywords (fallback)
-      const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || ''
-      const quickResponseKey = Object.keys(quickResponses).find(key => lastMessage.includes(key))
+    // Check for quick response keywords (fallback)
+    const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || ''
+    const foundQuickResponseKey = Object.keys(quickResponses).find(key => lastMessage.includes(key))
 
+    try {
       // Streaming response
       if (stream) {
         console.log('🌊 Starting streaming response...')
@@ -170,10 +171,10 @@ router.post(
       console.error('❌ Chat completion failed:', error)
 
       // Fallback to quick response if available
-      if (quickResponseKey) {
+      if (foundQuickResponseKey) {
         return res.json({
           success: true,
-          message: quickResponses[quickResponseKey],
+          message: quickResponses[foundQuickResponseKey],
           fallback: true,
         })
       }
@@ -198,13 +199,13 @@ router.get(
     const userId = req.userId!
 
     // Get user context to provide relevant suggestions
-    const { data: files } = await supabaseAdmin
+    const { data: files } = (await supabaseAdmin
       .from('properties')
-      .select('id, name, enrichmentStatus')
-      .eq('userId', userId)
+      .select('id, name, enrichmentstatus')
+      .eq('userId', userId)) as { data: any[] | null }
 
     const hasFiles = (files?.length || 0) > 0
-    const hasUnenrichedFiles = files?.some(f => f.enrichmentStatus !== 'completed')
+    const hasUnenrichedFiles = files?.some((f: any) => f.enrichmentstatus !== 'completed')
 
     const suggestions = []
 
@@ -299,16 +300,20 @@ router.post(
     console.log(`   Arguments:`, functionArgs)
 
     // This is a placeholder - frontend will handle most function execution
-    // But we can log analytics here
-    await supabaseAdmin.from('user_actions').insert({
-      user_id: userId,
-      action_type: 'ai_function_call',
-      action_data: {
-        function: functionName,
-        arguments: functionArgs,
-      },
-      created_at: new Date().toISOString(),
-    })
+    // But we can log analytics here (if table exists)
+    try {
+      await (supabaseAdmin as any).from('user_actions').insert({
+        user_id: userId,
+        action_type: 'ai_function_call',
+        action_data: {
+          function: functionName,
+          arguments: functionArgs,
+        },
+        created_at: new Date().toISOString(),
+      })
+    } catch {
+      // Table may not exist, ignore
+    }
 
     res.json({
       success: true,

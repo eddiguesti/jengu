@@ -82,7 +82,7 @@ router.post(
  */
 router.get(
   '/sanary-campsites',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     const scraper = new SanaryCampingScraper()
 
     try {
@@ -275,7 +275,7 @@ router.post(
 
     try {
       // Check if already monitoring (using admin client to bypass RLS)
-      const { data: existing } = await supabaseAdmin
+      const { data: existing } = await (supabaseAdmin as any)
         .from('competitors')
         .select('id, is_monitoring')
         .eq('user_id', userId)
@@ -284,7 +284,7 @@ router.post(
 
       if (existing) {
         // Update existing competitor to resume monitoring
-        const { data: updated, error: updateError } = await supabaseAdmin
+        const { data: updated, error: updateError } = await (supabaseAdmin as any)
           .from('competitors')
           .update({
             is_monitoring: true,
@@ -306,7 +306,7 @@ router.post(
       }
 
       // Insert new competitor (using admin client to bypass RLS)
-      const { data: competitor, error: insertError } = await supabaseAdmin
+      const { data: competitor, error: insertError } = await (supabaseAdmin as any)
         .from('competitors')
         .insert({
           user_id: userId,
@@ -371,7 +371,7 @@ router.post(
     console.log(`⏸️  User ${userId} stopping monitoring: ${competitorId}`)
 
     try {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await (supabaseAdmin as any)
         .from('competitors')
         .update({ is_monitoring: false })
         .eq('id', competitorId)
@@ -414,7 +414,7 @@ router.get(
     console.log(`📋 Fetching monitored competitors for user: ${userId}`)
 
     try {
-      const { data: competitors, error } = await supabaseAdmin
+      const { data: competitors, error } = await (supabaseAdmin as any)
         .from('competitors')
         .select('*')
         .eq('user_id', userId)
@@ -427,7 +427,7 @@ router.get(
         data: {
           competitors: competitors || [],
           total: competitors?.length || 0,
-          monitoring: competitors?.filter(c => c.is_monitoring).length || 0,
+          monitoring: competitors?.filter((c: any) => c.is_monitoring).length || 0,
         },
       })
     } catch (error: any) {
@@ -453,7 +453,7 @@ router.delete(
     console.log(`🗑️  User ${userId} deleting competitor: ${competitorId}`)
 
     try {
-      const { error } = await supabaseAdmin
+      const { error } = await (supabaseAdmin as any)
         .from('competitors')
         .delete()
         .eq('id', competitorId)

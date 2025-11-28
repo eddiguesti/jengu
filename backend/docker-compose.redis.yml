@@ -1,0 +1,26 @@
+version: '3.8'
+
+# Redis only - for local development when running API and workers directly
+# Usage: docker-compose -f docker-compose.redis.yml up -d
+#
+# After starting Redis:
+#   Terminal 1: pnpm run dev        # Start API server
+#   Terminal 2: pnpm run worker     # Start all workers
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: jengu-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  redis-data:

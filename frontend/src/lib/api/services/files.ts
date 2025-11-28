@@ -10,7 +10,7 @@ export interface UploadedFile {
   uploadedAt: string
   uploaded_at?: string
   status: string
-  enrichment_status?: 'none' | 'pending' | 'completed' | 'failed'
+  enrichment_status?: 'none' | 'pending' | 'processing' | 'completed' | 'failed'
   enriched_at?: string
   preview?: unknown[]
   actualRows?: number

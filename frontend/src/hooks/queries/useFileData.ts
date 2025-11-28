@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as filesService from '@/lib/api/services/files'
+import { toast } from '@/stores/useToastStore'
 
 // Query keys factory
 export const fileKeys = {
@@ -51,9 +52,20 @@ export function useUploadFile() {
       formData.append('file', file)
       return filesService.uploadFile(formData)
     },
-    onSuccess: () => {
+    onSuccess: response => {
       // Invalidate and refetch file list
       queryClient.invalidateQueries({ queryKey: fileKeys.lists() })
+
+      // Show toast notification about background enrichment
+      if (response?.file) {
+        toast.success(
+          'Upload successful!',
+          `${response.file.rows?.toLocaleString() || 'Your'} rows uploaded. Weather & holiday data will be added in the background.`
+        )
+      }
+    },
+    onError: (error: Error) => {
+      toast.error('Upload failed', error.message || 'Please try again')
     },
   })
 }
@@ -97,11 +109,24 @@ export function useEnrichFile() {
     }) => {
       return filesService.enrichFile(fileId, { latitude, longitude, country })
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (response, variables) => {
       // Invalidate the specific file's data
       queryClient.invalidateQueries({ queryKey: fileKeys.data(variables.fileId) })
       queryClient.invalidateQueries({ queryKey: fileKeys.detail(variables.fileId) })
       queryClient.invalidateQueries({ queryKey: fileKeys.lists() })
+
+      // Show toast based on enrichment status
+      if (response?.status === 'queued') {
+        toast.info(
+          'Enrichment started',
+          'Weather & holiday data is being added in the background. You can keep working!'
+        )
+      } else if (response?.status === 'completed') {
+        toast.success('Enrichment complete!', 'Weather & holiday data has been added to your file.')
+      }
+    },
+    onError: (error: Error) => {
+      toast.error('Enrichment failed', error.message || 'Please try again')
     },
   })
 }
